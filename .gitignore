@@ -5,3 +5,4 @@ dist
 *.zip
 .vscode
 .DS_Store
+metadata.json
