@@ -24,6 +24,8 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [customGenre, setCustomGenre] = useState('');
+  const [customVibe, setCustomVibe] = useState('');
 
   const handleGenreToggle = (genre: string) => {
     setInputs(prev => ({
@@ -41,6 +43,26 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
         ? prev.vibe.filter(v => v !== vibe)
         : [...prev.vibe, vibe]
     }));
+  };
+
+  const handleAddCustomGenre = () => {
+    if (customGenre.trim() && !inputs.genre.includes(customGenre.trim())) {
+      setInputs(prev => ({
+        ...prev,
+        genre: [...prev.genre, customGenre.trim()]
+      }));
+      setCustomGenre('');
+    }
+  };
+
+  const handleAddCustomVibe = () => {
+    if (customVibe.trim() && !inputs.vibe.includes(customVibe.trim())) {
+      setInputs(prev => ({
+        ...prev,
+        vibe: [...prev.vibe, customVibe.trim()]
+      }));
+      setCustomVibe('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,7 +98,7 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Genre(s) *
           </label>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto mb-3">
             {GENRE_SUGGESTIONS.slice(0, 20).map(genre => (
               <button
                 key={genre}
@@ -92,9 +114,41 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
               </button>
             ))}
           </div>
+          
+          {/* Custom Genre Input */}
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Add custom genre..."
+              value={customGenre}
+              onChange={(e) => setCustomGenre(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomGenre())}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              onClick={handleAddCustomGenre}
+              variant="secondary"
+              size="sm"
+              disabled={!customGenre.trim()}
+            >
+              Add
+            </Button>
+          </div>
+          
           {inputs.genre.length > 0 && (
             <div className="mt-2 text-xs text-gray-400">
-              Selected: {inputs.genre.join(', ')}
+              Selected: {inputs.genre.map(genre => (
+                <span key={genre} className="inline-flex items-center gap-1 mr-2">
+                  {genre}
+                  <button
+                    type="button"
+                    onClick={() => handleGenreToggle(genre)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -104,7 +158,7 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Vibe/Mood
           </label>
-          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto mb-3">
             {VIBE_SUGGESTIONS.slice(0, 15).map(vibe => (
               <button
                 key={vibe}
@@ -120,6 +174,43 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
               </button>
             ))}
           </div>
+          
+          {/* Custom Vibe Input */}
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Add custom vibe..."
+              value={customVibe}
+              onChange={(e) => setCustomVibe(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomVibe())}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              onClick={handleAddCustomVibe}
+              variant="secondary"
+              size="sm"
+              disabled={!customVibe.trim()}
+            >
+              Add
+            </Button>
+          </div>
+          
+          {inputs.vibe.length > 0 && (
+            <div className="mt-2 text-xs text-gray-400">
+              Selected: {inputs.vibe.map(vibe => (
+                <span key={vibe} className="inline-flex items-center gap-1 mr-2">
+                  {vibe}
+                  <button
+                    type="button"
+                    onClick={() => handleVibeToggle(vibe)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Advanced Options Toggle */}
