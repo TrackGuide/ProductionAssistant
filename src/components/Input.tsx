@@ -1,1 +1,3 @@
-import { Input } from './Input.tsx';
+export const Input = () => {
+  return <input />;
+};
