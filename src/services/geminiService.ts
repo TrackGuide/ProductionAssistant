@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, GenerateContentResponse } from "@google/generative-ai";
 import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME, MIDI_DRUM_MAP } from '../constants.ts';
+import { Input } from './Input.tsx';
 
 const apiKey = process.env.API_KEY || 'demo-key';
 if (!process.env.API_KEY) {
