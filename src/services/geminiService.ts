@@ -30,7 +30,7 @@ const generatePrompt = (inputs: UserInputs): string => {
         // Check for general brands if specific plugin not found
         if (inputs.plugins.toLowerCase().includes("arturia") && specificPluginName.toLowerCase().includes("arturia")) return `\`${specificPluginName}\``;
         if (inputs.plugins.toLowerCase().includes("native instruments") || inputs.plugins.toLowerCase().includes("komplete")) {
-              if (["massive", "kontakt", "reaktor", "guitar rig", "battery"].some(ni => specificPluginName.toLowerCase().includes(ni))) return `\`${specificPluginName}\``;
+             if (["massive", "kontakt", "reaktor", "guitar rig", "battery"].some(ni => specificPluginName.toLowerCase().includes(ni))) return `\`${specificPluginName}\``;
         }
         if (inputs.plugins.toLowerCase().includes("fabfilter") && specificPluginName.toLowerCase().includes("fabfilter")) return `\`${specificPluginName}\``;
         if (inputs.plugins.toLowerCase().includes("soundtoys") && specificPluginName.toLowerCase().includes("soundtoys")) return `\`${specificPluginName}\``;
@@ -177,7 +177,7 @@ This TrackGuide for ${genreText} (${vibeText}) using ${inputs.daw || 'your DAW'}
 };
 
 
-export const generateGuidebookContent = async (inputs: UserInputs): Promise<AsyncIterable<GenerateContentResponse>> => {
+export const generateGuidebookContent = async (inputs: UserInputs): Promise<string> => {
   if (!process.env.API_KEY) {
     // Return demo content in demo mode
     const demoContent = `# TrackGuide for ${inputs.songTitle || 'Your Track'}
