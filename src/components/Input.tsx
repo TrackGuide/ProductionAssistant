@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -6,7 +5,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   wrapperClassName?: string;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, id, wrapperClassName, ...props }, ref) => {
     return (
       <div className={wrapperClassName}>
@@ -23,3 +22,5 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+
+export default Input;
