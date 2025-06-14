@@ -1,10 +1,10 @@
 import React from 'react';
 import { Input } from './components/Input';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent';
-import MixComparator from './components/MixComparator';
-import EQCheatSheet from './components/EQCheatSheet';
-import LibraryModal from './components/LibraryModal';
-import AIAssistant from './components/AIAssistant';
+import { MixComparator } from './components/MixComparator';
+import { EQCheatSheet }  from './components/EQCheatSheet';
+import { LibraryModal } from './components/LibraryModal';
+import { AIAssistant } from './components/AIAssistant';
 import './index.css'; // assumes global styles are here
 
 const App: React.FC = () => {
