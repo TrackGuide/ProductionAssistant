@@ -1,5 +1,5 @@
 import React from 'react';
-import Input from './components/Input';
+import { Input } from './components/Input';
 import MidiGeneratorComponent from './components/MidiGeneratorComponent';
 import MixComparator from './components/MixComparator';
 import EQCheatSheet from './components/EQCheatSheet';
