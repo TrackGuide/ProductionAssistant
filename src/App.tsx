@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TrackInputForm } from './components/TrackInputForm';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent';
 import { MixComparator } from './components/MixComparator';
+import { MixFeedback } from './components/MixFeedback';
 import { EQCheatSheet }  from './components/EQCheatSheet';
 import { LibraryModal } from './components/LibraryModal';
 import { AIAssistant } from './components/AIAssistant';
@@ -139,6 +140,7 @@ const App: React.FC = () => {
       content: (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div className="space-y-6">
+            <MixFeedback />
             <EQCheatSheet />
           </div>
           <div className="space-y-6">
@@ -150,19 +152,17 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div className="min-h-screen text-white font-sans">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold tracking-tight text-center">🎛️ TrackGuide AI</h1>
-          <p className="text-gray-400 text-sm text-center mt-1">Your smart studio assistant — never your replacement.</p>
-        </div>
+      <header className="text-center py-8 px-6">
+        <h1 className="text-4xl font-bold neon-text mb-2">TrackGuide</h1>
+        <p className="text-gray-400 text-lg">Your AI Music Production Assistant</p>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-6xl mx-auto px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Tab System */}
+          {/* Main Content Area */}
           <div className="lg:col-span-3">
             <TabSystem tabs={tabs} defaultTab="trackguide" />
           </div>

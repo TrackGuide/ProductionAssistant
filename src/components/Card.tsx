@@ -18,7 +18,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   return (
     <div 
-      className={`bg-gray-800 shadow-lg rounded-lg overflow-hidden ${className}`}
+      className={`glass shadow-lg rounded-lg overflow-hidden hover-glow ${className}`}
       {...rest}
     >
       {title && (

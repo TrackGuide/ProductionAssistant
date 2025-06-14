@@ -168,11 +168,19 @@ export const TrackInputForm: React.FC<TrackInputFormProps> = ({ onSubmit }) => {
               rows={2}
             />
             
-            <Input
-              placeholder="Reference track URL (optional)..."
-              value={inputs.referenceTrack || ''}
-              onChange={(e) => setInputs(prev => ({ ...prev, referenceTrack: e.target.value }))}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Reference Track (Optional)
+              </label>
+              <Input
+                placeholder="e.g., Spotify/YouTube link or 'Artist - Song Name'"
+                value={inputs.referenceTrack || ''}
+                onChange={(e) => setInputs(prev => ({ ...prev, referenceTrack: e.target.value }))}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Share a reference track to help inform the track guide generation
+              </p>
+            </div>
           </div>
         )}
 
