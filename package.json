@@ -1,4 +1,3 @@
-
 {
   "name": "trackguide",
   "version": "0.0.1",
@@ -12,7 +11,8 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "vite": "^4.0.0",
-    "typescript": "^4.0.0"
+    "@vitejs/plugin-react": "^4.5.2",
+    "typescript": "^4.0.0",
+    "vite": "^4.0.0"
   }
 }
