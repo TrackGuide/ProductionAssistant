@@ -1,11 +1,11 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { UserInputs, MidiSettings, GeneratedMidiPatterns, MixFeedbackInputs, MidiNote } from '../types.ts'; // MidiNote was implicitly used by fileToGenerativePart but not imported
+import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME, MIDI_DRUM_MAP } from '../constants.ts';
 
-const apiKey = process.env.API_KEY;
-if (!apiKey) {
-  console.error("API_KEY is not set. Please ensure the API_KEY environment variable is configured. App may not function correctly.");
+const apiKey = process.env.API_KEY || 'demo-key';
+if (!process.env.API_KEY) {
+  console.warn("API_KEY is not set. Using demo mode - AI features will return placeholder content.");
 }
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
@@ -53,15 +53,16 @@ const generatePrompt = (inputs: UserInputs): string => {
 
 
   return `
-You are TrackGuideAI, an expert music production assistant. Generate a comprehensive TrackGuide based on the following user inputs.
-The user wants to create a song with the following characteristics:
-- Project Title (User Provided): ${songTitleText || "Not specified"}
-- Genre(s): ${genreText}
-- Artist/Song Reference(s): ${artistRefText}
-- Vibe/Mood(s): ${vibeText}
-- Preferred DAW: ${inputs.daw || "Not specified, suggest generally or for Ableton Live/Logic Pro"}
-- Available Plugins: ${pluginsText}
-- Available Instruments: ${instrumentsText}
+You are TrackGuideAI, an expert music production assistant. Create a concise, actionable TrackGuide for:
+
+**PROJECT SPECS:**
+- Title: ${songTitleText || "Generate creative title"}
+- Genre: ${genreText}
+- Reference: ${artistRefText}
+- Vibe: ${vibeText}
+- DAW: ${inputs.daw || "General/Ableton/Logic"}
+- Plugins: ${pluginsText}
+- Instruments: ${instrumentsText}
 
 **IMPORTANT INSTRUCTIONS FOR AI (OVERALL):**
 - **STYLE:** Follow a "Quick Reference / Cheat Sheet Style" for Section 3 (Instrument & Sound Design) and Section 4 (Harmony, Melody & Rhythmic Core). Be extremely concise and actionable.
@@ -178,12 +179,60 @@ This TrackGuide for ${genreText} (${vibeText}) using ${inputs.daw || 'your DAW'}
 
 
 export const generateGuidebookContent = async (inputs: UserInputs): Promise<AsyncIterable<GenerateContentResponse>> => {
-  if (!apiKey) {
-    const errorMessage = "API Key not configured. Cannot connect to Gemini API. Please ensure the API_KEY environment variable is properly set.";
-    console.error(errorMessage);
-    // Return a Promise that rejects, or an AsyncIterable that yields an error.
-    // For simplicity with caller, let's make it a rejecting promise that the caller can await.
-    return Promise.reject(new Error(errorMessage));
+  if (!process.env.API_KEY) {
+    // Return demo content in demo mode
+    const demoContent = `# TrackGuide for ${inputs.songTitle || 'Your Track'}
+
+## Demo Mode
+This is demo content. To use AI features, please set your API_KEY environment variable.
+
+## 1. Track Overview
+**Genre:** ${inputs.genre.join(', ') || 'Not specified'}
+**Vibe:** ${inputs.vibe.join(', ') || 'Not specified'}
+**BPM:** ${inputs.bpm || 'Not specified'}
+
+## 2. Arrangement Structure
+- **Intro:** 8 bars
+- **Verse:** 16 bars  
+- **Chorus:** 16 bars
+- **Bridge:** 8 bars
+- **Outro:** 8 bars
+
+## 3. Instrumentation Guide
+### 🥁 Drums
+**Style:** Standard pattern for your genre
+**Programming Tips:**
+- Keep it simple and groove-focused
+- Layer percussion for texture
+
+### 🎸 Bass
+**Style:** Follow the root progression
+**Programming Tips:**
+- Lock with the kick drum
+- Add subtle variations
+
+## 4. Harmony & Melody
+**Chord Progressions:**
+- Try: I - V - vi - IV
+- Or: vi - IV - I - V
+
+**Key Suggestions:**
+- Major keys for uplifting feel
+- Minor keys for emotional depth`;
+
+    // Create a mock async iterable that yields demo content
+    const mockResponse = {
+      text: () => demoContent,
+      candidates: [{
+        content: {
+          parts: [{ text: demoContent }]
+        }
+      }]
+    };
+
+    return (async function* () {
+      yield mockResponse as GenerateContentResponse;
+    })();
   }
   try {
     const prompt = generatePrompt(inputs);
@@ -314,10 +363,52 @@ Generate the MIDI patterns now.
 };
 
 export const generateMidiPatternSuggestions = async (settings: MidiSettings): Promise<AsyncIterable<GenerateContentResponse>> => {
-  if (!apiKey) {
-    const errorMessage = "API Key not configured. Cannot connect to Gemini API for MIDI generation.";
-    console.error(errorMessage);
-    return Promise.reject(new Error(errorMessage));
+  if (!process.env.API_KEY) {
+    // Return demo MIDI patterns
+    const demoMidiData = {
+      drums: {
+        pattern: [
+          { note: 36, velocity: 100, time: 0, duration: 0.25 },
+          { note: 38, velocity: 80, time: 0.5, duration: 0.25 },
+          { note: 36, velocity: 100, time: 1, duration: 0.25 },
+          { note: 38, velocity: 80, time: 1.5, duration: 0.25 }
+        ]
+      },
+      melody: {
+        pattern: [
+          { note: 60, velocity: 70, time: 0, duration: 0.5 },
+          { note: 62, velocity: 70, time: 0.5, duration: 0.5 },
+          { note: 64, velocity: 70, time: 1, duration: 0.5 },
+          { note: 65, velocity: 70, time: 1.5, duration: 0.5 }
+        ]
+      },
+      bass: {
+        pattern: [
+          { note: 48, velocity: 90, time: 0, duration: 1 },
+          { note: 50, velocity: 90, time: 1, duration: 1 }
+        ]
+      },
+      harmony: {
+        pattern: [
+          { note: 60, velocity: 60, time: 0, duration: 2 },
+          { note: 64, velocity: 60, time: 0, duration: 2 },
+          { note: 67, velocity: 60, time: 0, duration: 2 }
+        ]
+      }
+    };
+
+    const mockResponse = {
+      text: () => JSON.stringify(demoMidiData),
+      candidates: [{
+        content: {
+          parts: [{ text: JSON.stringify(demoMidiData) }]
+        }
+      }]
+    };
+
+    return (async function* () {
+      yield mockResponse as GenerateContentResponse;
+    })();
   }
   try {
     const prompt = generateMidiPrompt(settings);
@@ -413,10 +504,28 @@ Provide comprehensive, constructive, and actionable feedback on the mix. Structu
 };
 
 export const generateMixFeedback = async (inputs: MixFeedbackInputs): Promise<string> => {
-  if (!apiKey) {
-    const errorMessage = "API Key not configured. Cannot connect to Gemini API for mix feedback.";
-    console.error(errorMessage);
-    return Promise.reject(new Error(errorMessage));
+  if (!process.env.API_KEY) {
+    return `# Mix Feedback (Demo Mode)
+
+**Note:** This is demo content. To get AI-powered mix analysis, please set your API_KEY environment variable.
+
+## General Mix Feedback
+Based on your notes: "${inputs.userNotes || 'No specific notes provided'}"
+
+### Common Mix Considerations:
+- **Balance:** Check if all elements sit well together
+- **EQ:** Look for frequency conflicts, especially in the low-mids (200-500Hz)
+- **Dynamics:** Consider compression on individual tracks and bus compression
+- **Stereo Image:** Use panning and stereo effects to create width
+- **Depth:** Use reverb and delay to create spatial depth
+
+### Suggested Next Steps:
+1. A/B your mix against reference tracks in the same genre
+2. Check your mix on different playback systems
+3. Take breaks and return with fresh ears
+4. Consider getting feedback from other producers
+
+To get detailed, AI-powered analysis of your specific mix, please configure your API key.`;
   }
   if (!inputs.audioFile) {
     return Promise.reject(new Error("No audio file provided for mix feedback."));
@@ -459,5 +568,99 @@ export const generateMixFeedback = async (inputs: MixFeedbackInputs): Promise<st
         }
     }
     return Promise.reject(new Error(specificMessage));
+  }
+};
+
+const generateAIAssistantPrompt = (userMessage: string, context: any): string => {
+  const { currentGuidebook, userInputs, conversationHistory } = context;
+  
+  let contextInfo = "";
+  if (currentGuidebook) {
+    contextInfo += `\n\nCURRENT TRACKGUIDE CONTEXT:\n${currentGuidebook.substring(0, 1500)}...`;
+  }
+  if (userInputs && Object.keys(userInputs).length > 0) {
+    contextInfo += `\n\nUSER PROJECT INPUTS:\n${JSON.stringify(userInputs, null, 2)}`;
+  }
+  if (conversationHistory && conversationHistory.length > 0) {
+    contextInfo += `\n\nRECENT CONVERSATION:\n${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}`;
+  }
+
+  return `You are an expert AI music production assistant helping a producer with their track. You have deep knowledge of:
+- Music production techniques and workflows
+- Genre-specific production approaches
+- Mixing and mastering
+- Sound design and synthesis
+- Arrangement and composition
+- DAW-specific tips and tricks
+- Music theory as it applies to production
+
+GUIDELINES:
+- Be helpful, encouraging, and specific in your advice
+- Reference the user's current project context when relevant
+- Provide actionable suggestions they can implement
+- Ask clarifying questions when needed
+- Keep responses focused and practical
+- Use professional terminology but explain complex concepts clearly
+- If suggesting changes to their TrackGuide, be specific about what and why
+
+USER'S QUESTION/MESSAGE:
+${userMessage}
+
+CONTEXT:${contextInfo}
+
+Respond as a knowledgeable production mentor who understands their specific project and goals.`;
+};
+
+export const generateAIAssistantResponse = async (userMessage: string, context: any): Promise<AsyncIterable<GenerateContentResponse>> => {
+  if (!process.env.API_KEY) {
+    // Return demo AI assistant response
+    const demoResponse = `Thanks for your question: "${userMessage}"
+
+I'm currently running in demo mode since no API key is configured. To get personalized AI assistance with your music production, please set up your API_KEY environment variable.
+
+In the meantime, here are some general tips:
+- Focus on getting a solid foundation with drums and bass
+- Use reference tracks to guide your mix decisions  
+- Don't over-complicate your arrangements
+- Trust your ears and take breaks when mixing
+
+Would you like me to help with anything specific about music production?`;
+
+    const mockResponse = {
+      text: () => demoResponse,
+      candidates: [{
+        content: {
+          parts: [{ text: demoResponse }]
+        }
+      }]
+    };
+
+    return (async function* () {
+      yield mockResponse as GenerateContentResponse;
+    })();
+  }
+
+  try {
+    const prompt = generateAIAssistantPrompt(userMessage, context);
+    const stream = await ai.models.generateContentStream({
+        model: GEMINI_MODEL_NAME,
+        contents: prompt,
+    });
+    return stream;
+
+  } catch (error) {
+    console.error("Error generating AI Assistant response:", error);
+    let specificMessage = "An unknown error occurred while generating AI Assistant response.";
+    if (error instanceof Error) {
+        specificMessage = error.message; 
+        if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
+            specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
+        } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+             specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+        } else {
+            specificMessage = `Failed to generate AI Assistant response: ${error.message}`;
+        }
+    }
+    throw new Error(specificMessage);
   }
 };

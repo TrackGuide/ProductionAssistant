@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../types.ts';
 import { generateMidiPatternSuggestions } from '../services/geminiService.ts';
 import { generateMidiFile, downloadMidi } from '../services/midiService.ts';
@@ -8,7 +8,7 @@ import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Spinner } from './Spinner.tsx';
 import { Input } from './Input.tsx';
-import { MusicNoteIcon, PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
+import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
 import { MIDI_SCALES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants.ts';
 
 interface MidiGeneratorProps {
@@ -184,9 +184,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     });
   };
 
-  const handleGeneratePatterns = async () => {
+  const handleGeneratePatterns = async (specificTrack?: KeyOfGeneratedMidiPatterns) => {
     setIsLoading(true);
-    setLoadingMessage('Regenerating MIDI patterns...');
+    const trackName = specificTrack ? specificTrack.charAt(0).toUpperCase() + specificTrack.slice(1) : 'all tracks';
+    setLoadingMessage(specificTrack ? `Regenerating ${trackName}...` : 'Regenerating MIDI patterns...');
     setError(null);
     if (isPlayingRef.current) {
         stopPlayback();
@@ -197,10 +198,14 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     const primaryGenre = currentGuidebookEntry.genre?.[0] || settings.genre;
     const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry.content);
     
+    // If regenerating a specific track, only target that instrument
+    const targetInstruments = specificTrack ? [specificTrack] : settings.targetInstruments;
+    
     const settingsForGeneration = {
         ...settings, 
         guidebookContext: richContextForRegeneration, 
-        genre: primaryGenre 
+        genre: primaryGenre,
+        targetInstruments
     };
 
     let accumulatedMidiJson = "";
@@ -225,15 +230,25 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           }
           patternsData.drums = lowercasedDrums;
       }
-      setPatterns(patternsData);
-      onUpdateGuidebookEntryMidi(settingsForGeneration, patternsData); 
+      
+      // If regenerating a specific track, merge with existing patterns
+      if (specificTrack && patterns) {
+        const updatedPatterns = { ...patterns, ...patternsData };
+        setPatterns(updatedPatterns);
+        onUpdateGuidebookEntryMidi(settings, updatedPatterns);
+      } else {
+        setPatterns(patternsData);
+        onUpdateGuidebookEntryMidi(settingsForGeneration, patternsData);
+      }
     } catch (err: any) {
       console.error("MIDI Generation Error:", err);
       const specificMessage = err.message.toLowerCase().includes("json")
         ? `AI returned invalid JSON for MIDI patterns. (${err.message})`
         : `Failed to generate MIDI patterns: ${err.message}`;
       setError(specificMessage);
-      setPatterns(null); // Clear previous patterns on error
+      if (!specificTrack) {
+        setPatterns(null); // Only clear all patterns if not regenerating a specific track
+      }
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -378,28 +393,43 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     return (
       <Card title={title} className="bg-gray-700/50" contentClassName="p-3">
         {renderPatternPreview(patternData, title)}
-        <div className="mt-3 flex gap-2 items-center">
+        <div className="mt-3 space-y-2">
+          <div className="flex gap-2 items-center">
+            <Button 
+              size="sm" 
+              variant="secondary"
+              onClick={() => handlePlaySingleTrack(trackType)}
+              disabled={!hasData || isPlaying}
+              className="px-2.5 py-1.5 flex-1"
+              title={`Preview ${title}`}
+              leftIcon={<PlayIcon className="w-4 h-4"/>}
+            >
+              Preview
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleDownloadSingleTrack(trackType)}
+              className="p-1.5 flex-none" 
+              title={`Download ${title} MIDI`}
+              aria-label={`Download ${title} MIDI`}
+              disabled={!hasData}
+            >
+              <DownloadIcon className="w-4 h-4"/>
+            </Button>
+          </div>
           <Button 
             size="sm" 
-            variant="secondary"
-            onClick={() => handlePlaySingleTrack(trackType)}
-            disabled={!hasData || isPlaying}
-            className="px-2.5 py-1.5 flex-1 min-w-[calc(50%-0.25rem)]"
-            title={`Preview ${title}`}
-            leftIcon={<PlayIcon className="w-4 h-4"/>}
+            variant="primary"
+            onClick={() => handleGeneratePatterns(trackType)}
+            disabled={isLoading}
+            className="w-full px-2.5 py-1.5"
+            title={`Regenerate ${title} only`}
+            leftIcon={<RefreshIcon className="w-4 h-4" isSpinning={isLoading && loadingMessage.toLowerCase().includes(trackType.toLowerCase())}/>}
           >
-            Preview
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => handleDownloadSingleTrack(trackType)}
-            className="p-1.5 flex-none" 
-            title={`Download ${title} MIDI`}
-            aria-label={`Download ${title} MIDI`}
-            disabled={!hasData}
-          >
-            <DownloadIcon className="w-4 h-4"/>
+            {isLoading && loadingMessage.toLowerCase().includes(trackType.toLowerCase()) 
+              ? `Regenerating...` 
+              : `Regenerate ${title}`}
           </Button>
         </div>
       </Card>
@@ -532,7 +562,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 ))}
             </div>
           </div>
-          <Button onClick={handleGeneratePatterns} disabled={isLoading || settings.targetInstruments.length === 0} className="w-full" leftIcon={<RefreshIcon className="w-5 h-5" isSpinning={isLoading}/>}>
+          <Button onClick={() => handleGeneratePatterns()} disabled={isLoading || settings.targetInstruments.length === 0} className="w-full" leftIcon={<RefreshIcon className="w-5 h-5" isSpinning={isLoading}/>}>
             {isLoading ? (loadingMessage || 'Regenerating MIDI Patterns...') : (settings.targetInstruments.length === 0 ? 'Select instruments first' : 'Regenerate MIDI Patterns')}
           </Button>
         </div>

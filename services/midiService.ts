@@ -36,7 +36,7 @@ const addNotesToTrack = (
        const startTick = Math.round(event.time * 128);
 
         trackInstance.addEvent(new MidiWriter.NoteEvent({
-            pitch: pitches,
+            pitch: pitches.map(p => `${p}`) as any,
             duration: `T${durationTicks}`,
             startTick: startTick,
             velocity: event.velocity || (isChordTrack ? 90 : 100),
@@ -59,7 +59,7 @@ const addDrumHitsToTrack = (trackInstance: InstanceType<typeof MidiWriter.Track>
       const durationTicks = Math.round(hit.duration * 128);
       const startTick = Math.round(hit.time * 128);
       trackInstance.addEvent(new MidiWriter.NoteEvent({
-        pitch: [midiPitch],
+        pitch: [`${midiPitch}`] as any,
         duration: `T${durationTicks}`,
         startTick: startTick,
         velocity: hit.velocity || 100,
@@ -85,10 +85,10 @@ export const generateMidiFile = (
 
   const configureAndAddTrack = (trackInstance: InstanceType<typeof MidiWriter.Track> | null) => {
     if (trackInstance) {
-        trackInstance.setTempo(settings.tempo);
+        trackInstance.setTempo(settings.tempo, 0);
         // Provide all 4 arguments to setTimeSignature, using common defaults for the last two.
         // This can resolve issues if TypeScript typings are strict about these optional params.
-        trackInstance.setTimeSignature(settings.timeSignature[0], settings.timeSignature[1], 24, 8);
+        trackInstance.setTimeSignature(settings.timeSignature[0], settings.timeSignature[1]);
         // Key signature can be added if MidiWriter supports it easily and it's desired
         // trackInstance.addKeySignature(settings.key); // Example, check MidiWriter docs for exact usage if needed
     }

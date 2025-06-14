@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
 import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback } from './services/geminiService.ts';
 import { Input } from './components/Input.tsx';
@@ -7,12 +7,14 @@ import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
-import { SparklesIcon, SaveIcon, TrashIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon } from './components/icons.tsx';
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, MIDI_TARGET_INSTRUMENTS, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY, MIDI_SONG_SECTIONS } from './constants.ts';
+import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon } from './components/icons.tsx';
+import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
+import { AIAssistant } from './components/AIAssistant.tsx';
+import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
-import { initializeAudio, stopPlayback } from './services/audioService.ts';
-import { generateMidiFile, downloadMidi } from './services/midiService.ts';
+import { stopPlayback } from './services/audioService.ts';
 
 
 const initialInputsState: UserInputs = {
@@ -162,6 +164,11 @@ const App: React.FC = () => {
   const [activeGuidebookDetails, setActiveGuidebookDetails] = useState<GuidebookEntry | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState<boolean>(false);
   const [copyStatus, setCopyStatus] = useState<string>('');
+  
+  // New feature states
+  const [showEQCheatSheet, setShowEQCheatSheet] = useState<boolean>(false);
+  const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
+  const [useMarkdownRenderer, setUseMarkdownRenderer] = useState<boolean>(true);
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -308,8 +315,9 @@ const App: React.FC = () => {
       setLoadingMessage('TrackGuide is generating...');
       const guidebookStream = await generateGuidebookContent(inputs);
       for await (const chunk of guidebookStream) {
-        finalGuidebookContent += chunk.text;
-        setGeneratedGuidebook(prev => prev + chunk.text);
+        const chunkText = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
+        finalGuidebookContent += chunkText;
+        setGeneratedGuidebook(prev => prev + chunkText);
       }
 
       setLoadingMessage('Initial MIDI patterns are generating...');
@@ -359,7 +367,8 @@ const App: React.FC = () => {
         const midiStream = await generateMidiPatternSuggestions(finalMidiSettings);
         let accumulatedMidiJson = "";
         for await (const chunk of midiStream) {
-          accumulatedMidiJson += chunk.text;
+          const chunkText = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
+          accumulatedMidiJson += chunkText;
         }
         
         let jsonStr = accumulatedMidiJson.trim();
@@ -874,24 +883,56 @@ const App: React.FC = () => {
         <p className="text-gray-400 mt-2 text-lg">Your AI Music Production Assistant</p>
       </header>
       
-      <div className="mb-8 flex justify-center space-x-3 md:space-x-4 border-b border-gray-700 pb-3">
-        <Button
-          onClick={() => setActiveView('trackGuide')}
-          variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
-          className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-purple-600 shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
-          leftIcon={<PencilSquareIcon className="w-5 h-5"/>}
-        >
-          TrackGuide AI
-        </Button>
-        <Button
-          onClick={() => setActiveView('mixFeedback')}
-          variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-           className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-teal-600 shadow-lg !focus:ring-teal-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-           style={activeView === 'mixFeedback' ? { backgroundColor: '#0D9488', borderColor: '#0D9488' } : {}}
-          leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
-        >
-          Mix Feedback AI
-        </Button>
+      <div className="mb-8 flex flex-col items-center space-y-4">
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <Button
+            onClick={() => setActiveView('trackGuide')}
+            variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
+            className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-purple-600 shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
+            leftIcon={<PencilSquareIcon className="w-5 h-5"/>}
+          >
+            TrackGuide AI
+          </Button>
+          <Button
+            onClick={() => setActiveView('mixFeedback')}
+            variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
+             className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-teal-600 shadow-lg !focus:ring-teal-500' : 'bg-gray-700 hover:bg-gray-600'}`}
+             style={activeView === 'mixFeedback' ? { backgroundColor: '#0D9488', borderColor: '#0D9488' } : {}}
+            leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
+          >
+            Mix Feedback AI
+          </Button>
+        </div>
+        
+        <div className="flex justify-center space-x-2 md:space-x-3 border-b border-gray-700 pb-3">
+          <Button
+            onClick={() => setShowEQCheatSheet(true)}
+            variant="outline"
+            size="sm"
+            className="text-xs md:text-sm"
+            leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
+          >
+            EQ Cheat Sheet
+          </Button>
+          <Button
+            onClick={() => setShowAIAssistant(true)}
+            variant="outline"
+            size="sm"
+            className="text-xs md:text-sm"
+            leftIcon={<SparklesIcon className="w-4 h-4"/>}
+          >
+            AI Assistant
+          </Button>
+          <Button
+            onClick={() => setUseMarkdownRenderer(!useMarkdownRenderer)}
+            variant="outline"
+            size="sm"
+            className="text-xs md:text-sm"
+            leftIcon={<BookOpenIcon className="w-4 h-4"/>}
+          >
+            {useMarkdownRenderer ? 'Simple View' : 'Rich View'}
+          </Button>
+        </div>
       </div>
 
 
@@ -1039,7 +1080,19 @@ const App: React.FC = () => {
                         {activeGuidebookDetails.generatedMidiPatterns && <p className="mt-1 text-green-400"><MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.</p>}
                     </div>
                   )}
-                  {renderMarkdown(generatedGuidebook)}
+                  {useMarkdownRenderer ? (
+                    <MarkdownRenderer 
+                      content={generatedGuidebook}
+                      title={activeGuidebookDetails?.title}
+                      onCopy={() => handleCopyFormattedContent('guidebook-display')}
+                      onExportPDF={() => {
+                        // TODO: Implement PDF export functionality
+                        console.log('PDF export not yet implemented');
+                      }}
+                    />
+                  ) : (
+                    renderMarkdown(generatedGuidebook)
+                  )}
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Receiving content..." />}
                 </div>
               </Card>
@@ -1193,6 +1246,20 @@ const App: React.FC = () => {
           onCreateNew={resetFormForNewGuidebook}
         />
       )}
+
+      <EQCheatSheet 
+        isOpen={showEQCheatSheet} 
+        onClose={() => setShowEQCheatSheet(false)} 
+      />
+
+      <AIAssistant
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+        currentGuidebook={activeGuidebookDetails || undefined}
+        userInputs={inputs}
+        onUpdateGuidebook={(content) => setGeneratedGuidebook(content)}
+        onUpdateInputs={(newInputs) => setInputs(prev => ({ ...prev, ...newInputs }))}
+      />
 
        <footer className="text-center mt-16 py-8 border-t border-gray-700/60">
         <p className="text-sm text-gray-500">{APP_TITLE} - AI Production Assistant</p>

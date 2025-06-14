@@ -4,7 +4,7 @@ import { GuidebookEntry } from '../types';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Card } from './Card';
-import { BookOpenIcon, TrashIcon, CloseIcon, PlusIcon, MusicNoteIcon } from './icons';
+import { BookOpenIcon, TrashIcon, CloseIcon, PlusIcon, MusicNoteIcon, PencilSquareIcon } from './icons';
 
 interface LibraryModalProps {
   library: GuidebookEntry[];
@@ -12,6 +12,7 @@ interface LibraryModalProps {
   onLoadEntry: (entry: GuidebookEntry) => void;
   onDeleteEntry: (id: string) => void;
   onCreateNew: () => void;
+  onEditEntry?: (entry: GuidebookEntry) => void;
 }
 
 export const LibraryModal: React.FC<LibraryModalProps> = ({ 
@@ -19,14 +20,52 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
   onClose, 
   onLoadEntry, 
   onDeleteEntry, 
-  onCreateNew 
+  onCreateNew,
+  onEditEntry
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterBy, setFilterBy] = useState<'all' | 'genre' | 'artist' | 'vibe'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'genre'>('date');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const filteredLibrary = library.filter(entry => 
-    entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.genre.join(', ').toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const filteredLibrary = library.filter(entry => {
+    const searchLower = searchTerm.toLowerCase();
+    const titleMatch = entry.title.toLowerCase().includes(searchLower);
+    const genreMatch = entry.genre.join(', ').toLowerCase().includes(searchLower);
+    const artistMatch = entry.artistReference.toLowerCase().includes(searchLower);
+    const vibeMatch = entry.vibe.join(', ').toLowerCase().includes(searchLower);
+    
+    if (filterBy === 'all') {
+      return titleMatch || genreMatch || artistMatch || vibeMatch;
+    } else if (filterBy === 'genre') {
+      return genreMatch;
+    } else if (filterBy === 'artist') {
+      return artistMatch;
+    } else if (filterBy === 'vibe') {
+      return vibeMatch;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === 'date') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    } else if (sortBy === 'title') {
+      return a.title.localeCompare(b.title);
+    } else if (sortBy === 'genre') {
+      return a.genre.join(', ').localeCompare(b.genre.join(', '));
+    }
+    return 0;
+  });
+
+  const handleDeleteClick = (id: string) => {
+    if (confirmDelete === id) {
+      onDeleteEntry(id);
+      setConfirmDelete(null);
+    } else {
+      setConfirmDelete(id);
+      // Auto-cancel confirmation after 3 seconds
+      setTimeout(() => setConfirmDelete(null), 3000);
+    }
+  };
 
   return (
     <div 
@@ -50,15 +89,43 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
           </Button>
         </div>
 
-        <div className="px-6 py-4">
-          <Input 
-            type="search"
-            placeholder="Search by title or genre..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-4 bg-gray-700 border-gray-600 placeholder-gray-500"
-            aria-label="Search library"
-          />
+        <div className="px-6 py-4 border-b border-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Input 
+                type="search"
+                placeholder="Search by title, genre, artist, or vibe..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-gray-700 border-gray-600 placeholder-gray-500"
+                aria-label="Search library"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select 
+                value={filterBy} 
+                onChange={(e) => setFilterBy(e.target.value as any)}
+                className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                <option value="all">All Fields</option>
+                <option value="genre">Genre</option>
+                <option value="artist">Artist</option>
+                <option value="vibe">Vibe</option>
+              </select>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                <option value="date">Date</option>
+                <option value="title">Title</option>
+                <option value="genre">Genre</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-3 text-sm text-gray-400">
+            {filteredLibrary.length} of {library.length} entries
+          </div>
         </div>
 
         <div className="flex-grow overflow-y-auto px-6 pb-6 space-y-3 custom-scrollbar pr-3">
@@ -72,17 +139,65 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
                 <div className="flex justify-between items-start">
                   <div className="flex-grow min-w-0">
                     <h4 className="font-semibold text-purple-300 truncate text-lg" title={entry.title}>{entry.title}</h4>
-                    <p className="text-sm text-gray-400 truncate" title={Array.isArray(entry.genre) ? entry.genre.join(', ') : entry.genre}>
-                      {Array.isArray(entry.genre) ? entry.genre.join(', ') : entry.genre}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Created: {new Date(entry.createdAt).toLocaleDateString()}
-                      {entry.generatedMidiPatterns && <MusicNoteIcon className="w-3 h-3 text-green-400 inline-block ml-2" title="MIDI available" />}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-400 truncate" title={Array.isArray(entry.genre) ? entry.genre.join(', ') : entry.genre}>
+                        <span className="font-medium">Genre:</span> {Array.isArray(entry.genre) ? entry.genre.join(', ') : entry.genre}
+                      </p>
+                      {entry.artistReference && (
+                        <p className="text-sm text-gray-400 truncate" title={entry.artistReference}>
+                          <span className="font-medium">Artist:</span> {entry.artistReference}
+                        </p>
+                      )}
+                      {entry.vibe.length > 0 && (
+                        <p className="text-sm text-gray-400 truncate" title={entry.vibe.join(', ')}>
+                          <span className="font-medium">Vibe:</span> {entry.vibe.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center mt-2">
+                      <p className="text-xs text-gray-500">
+                        Created: {new Date(entry.createdAt).toLocaleDateString()}
+                      </p>
+                      {entry.generatedMidiPatterns && (
+                        <MusicNoteIcon className="w-3 h-3 text-green-400 ml-2" title="MIDI patterns available" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-end shrink-0 ml-3 mt-1 sm:mt-0">
-                     <Button onClick={() => onLoadEntry(entry)} size="sm" variant="outline" className="text-xs px-3 py-1.5 w-full sm:w-auto" leftIcon={<BookOpenIcon className="w-4 h-4"/>}>Load</Button>
-                     <Button onClick={() => onDeleteEntry(entry.id)} size="sm" variant="danger" className="text-xs px-3 py-1.5 w-full sm:w-auto" leftIcon={<TrashIcon className="w-4 h-4"/>} />
+                  <div className="flex flex-col space-y-2 items-end shrink-0 ml-3">
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={() => onLoadEntry(entry)} 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-xs px-3 py-1.5" 
+                        leftIcon={<BookOpenIcon className="w-4 h-4"/>}
+                      >
+                        Load
+                      </Button>
+                      {onEditEntry && (
+                        <Button 
+                          onClick={() => onEditEntry(entry)} 
+                          size="sm" 
+                          variant="secondary" 
+                          className="text-xs px-3 py-1.5" 
+                          leftIcon={<PencilSquareIcon className="w-4 h-4"/>}
+                          title="Edit entry"
+                        >
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                    <Button 
+                      onClick={() => handleDeleteClick(entry.id)} 
+                      size="sm" 
+                      variant={confirmDelete === entry.id ? "danger" : "outline"} 
+                      className={`text-xs px-3 py-1.5 transition-all ${
+                        confirmDelete === entry.id ? 'bg-red-600 hover:bg-red-700' : ''
+                      }`}
+                      leftIcon={<TrashIcon className="w-4 h-4"/>}
+                    >
+                      {confirmDelete === entry.id ? 'Confirm Delete' : 'Delete'}
+                    </Button>
                   </div>
                 </div>
               </div>
