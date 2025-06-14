@@ -1,5 +1,4 @@
-
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/generative-ai";
 import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME, MIDI_DRUM_MAP } from '../constants.ts';
 
@@ -31,7 +30,7 @@ const generatePrompt = (inputs: UserInputs): string => {
         // Check for general brands if specific plugin not found
         if (inputs.plugins.toLowerCase().includes("arturia") && specificPluginName.toLowerCase().includes("arturia")) return `\`${specificPluginName}\``;
         if (inputs.plugins.toLowerCase().includes("native instruments") || inputs.plugins.toLowerCase().includes("komplete")) {
-             if (["massive", "kontakt", "reaktor", "guitar rig", "battery"].some(ni => specificPluginName.toLowerCase().includes(ni))) return `\`${specificPluginName}\``;
+              if (["massive", "kontakt", "reaktor", "guitar rig", "battery"].some(ni => specificPluginName.toLowerCase().includes(ni))) return `\`${specificPluginName}\``;
         }
         if (inputs.plugins.toLowerCase().includes("fabfilter") && specificPluginName.toLowerCase().includes("fabfilter")) return `\`${specificPluginName}\``;
         if (inputs.plugins.toLowerCase().includes("soundtoys") && specificPluginName.toLowerCase().includes("soundtoys")) return `\`${specificPluginName}\``;
@@ -251,7 +250,7 @@ This is demo content. To use AI features, please set your API_KEY environment va
         if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
             specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
         } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-             specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+              specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
         } else {
             specificMessage = `Failed to generate TrackGuide: ${error.message}`;
         }
@@ -424,7 +423,7 @@ export const generateMidiPatternSuggestions = async (settings: MidiSettings): Pr
   } catch (error) {
     console.error("Error initiating MIDI pattern stream:", error);
     let specificMessage = "An unknown error occurred while initiating MIDI pattern stream.";
-     if (error instanceof Error) {
+      if (error instanceof Error) {
         specificMessage = error.message; 
         if (error.message.includes("API key not valid")) {
             specificMessage = "Invalid API Key for MIDI generation. Please check your API key.";
@@ -558,11 +557,11 @@ To get detailed, AI-powered analysis of your specific mix, please configure your
         if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
             specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
         } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-             specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+              specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
         } else if (error.message.includes("Candidate was blocked")) {
             specificMessage = "The response for mix feedback was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
         } else if (error.message.includes("audio")) { 
-             specificMessage = `There was an issue processing the audio file with the AI. Ensure it's a common format and not too large. (${error.message})`;
+              specificMessage = `There was an issue processing the audio file with the AI. Ensure it's a common format and not too large. (${error.message})`;
         } else {
             specificMessage = `Failed to generate mix feedback: ${error.message}`;
         }
@@ -656,7 +655,7 @@ Would you like me to help with anything specific about music production?`;
         if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
             specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
         } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-             specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+              specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
         } else {
             specificMessage = `Failed to generate AI Assistant response: ${error.message}`;
         }
