@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerateContentResponse } from "@google/generative-ai";
 import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME, MIDI_DRUM_MAP } from '../constants.ts';
 
@@ -6,7 +6,7 @@ const apiKey = process.env.API_KEY || 'demo-key';
 if (!process.env.API_KEY) {
   console.warn("API_KEY is not set. Using demo mode - AI features will return placeholder content.");
 }
-const ai = new GoogleGenAI({ apiKey: apiKey });
+const ai = new GoogleGenerativeAI({ apiKey: apiKey });
 
 
 const generatePrompt = (inputs: UserInputs): string => {
