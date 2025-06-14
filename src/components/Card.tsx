@@ -22,11 +22,11 @@ export const Card: React.FC<CardProps> = ({
       {...rest}
     >
       {title && (
-        <div className={`px-4 py-3 border-b border-gray-700 ${titleClassName}`}>
-          <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+        <div className={`px-4 py-2 border-b border-gray-700 ${titleClassName}`}>
+          <h3 className="text-base font-semibold text-gray-100">{title}</h3>
         </div>
       )}
-      <div className={`p-4 ${contentClassName}`}>
+      <div className={`p-3 ${contentClassName}`}>
         {children}
       </div>
     </div>
