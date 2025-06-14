@@ -11,8 +11,6 @@ const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 /**
  * Generate MIDI pattern suggestions based on a text prompt.
- * @param prompt - The prompt string describing desired MIDI characteristics.
- * @returns A string of generated pattern suggestions.
  */
 export const generateMidiPatternSuggestions = async (prompt: string): Promise<string> => {
   try {
@@ -21,6 +19,6 @@ export const generateMidiPatternSuggestions = async (prompt: string): Promise<st
     return response.text();
   } catch (error) {
     console.error('Gemini API error:', error);
-    return 'Cmaj7 - Am - F - G'; // fallback pattern
+    return 'Cmaj7 - Am - F - G'; // fallback
   }
 };
