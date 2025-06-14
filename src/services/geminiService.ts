@@ -1,40 +1,26 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Get API key from environment variables
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Log warning if API key is missing
-if (!apiKey) {
-  console.warn("API_KEY is not set. Using demo mode - AI features will return placeholder content.");
+if (!API_KEY) {
+  console.warn('API_KEY is not set. Using demo mode - AI features will return placeholder content.');
 }
 
-// Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI(apiKey || "dummy-key");
+const genAI = new GoogleGenerativeAI(API_KEY || 'demo-key');
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-// Helper function to generate content
-export async function generateContent(prompt: string, model = "gemini-pro") {
+/**
+ * Generate MIDI pattern suggestions based on a text prompt.
+ * @param prompt - The prompt string describing desired MIDI characteristics.
+ * @returns A string of generated pattern suggestions.
+ */
+export const generateMidiPatternSuggestions = async (prompt: string): Promise<string> => {
   try {
-    // If no API key, return placeholder content
-    if (!apiKey) {
-      return {
-        text: "This is placeholder content because the API key is not configured.",
-        isDemoMode: true
-      };
-    }
-    
-    // Generate content using the Gemini API
-    const geminiModel = genAI.getGenerativeModel({ model });
-    const result = await geminiModel.generateContent(prompt);
-    
-    return {
-      text: result.response.text(),
-      isDemoMode: false
-    };
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
   } catch (error) {
-    console.error("Error generating content:", error);
-    throw error;
+    console.error('Gemini API error:', error);
+    return 'Cmaj7 - Am - F - G'; // fallback pattern
   }
-}
-
-// Export the genAI instance for direct access if needed
-export default genAI;
+};
