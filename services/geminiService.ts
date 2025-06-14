@@ -62,14 +62,14 @@ You are TrackGuideAI, an expert music production assistant. Create a concise, ac
 - Vibe: ${vibeText}
 - DAW: ${inputs.daw || "General/Ableton/Logic"}
 - Plugins: ${pluginsText}
-- Instruments: ${instrumentsText}
+- Instruments: ${instrumentsText}${inputs.referenceTrack ? `\n- Reference Track: ${inputs.referenceTrack}` : ''}
 
 **IMPORTANT INSTRUCTIONS FOR AI (OVERALL):**
 - **STYLE:** Follow a "Quick Reference / Cheat Sheet Style" for Section 3 (Instrument & Sound Design) and Section 4 (Harmony, Melody & Rhythmic Core). Be extremely concise and actionable.
 - **TERMINOLOGY:** Use professional music production terminology.
 - **MARKDOWN:** Use Markdown for formatting (e.g., #, ##, ### for headings, bullet points for lists).
 - **CONCISENESS (Sections 1, 2, 5):** Keep these sections brief and to the point.
-- **EMOJIS (Section 3):** Use a relevant emoji before each instrument name heading (e.g., ### 🥁 Drums & Percussion).
+- **EMOJIS (Section 3):** Use a relevant emoji before each instrument name heading (e.g., ### 🥁 Drums & Percussion).${inputs.referenceTrack ? `\n- **REFERENCE TRACK:** Analyze and incorporate elements from the provided reference track "${inputs.referenceTrack}" into your recommendations. Consider its arrangement, sound design, mix characteristics, and production techniques.` : ''}
 
 **SECTION 3: INSTRUMENT & SOUND DESIGN GUIDE - "QUICK REFERENCE" FORMATTING:**
 For EACH instrument/category in Section 3:

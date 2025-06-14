@@ -22,6 +22,7 @@ export interface UserInputs {
   daw: string;
   plugins: string;
   availableInstruments?: string;
+  referenceTrack?: string;
 }
 
 export interface MidiNote {

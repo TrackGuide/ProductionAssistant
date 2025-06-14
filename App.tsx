@@ -11,6 +11,7 @@ import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
+import MixComparator from './components/MixComparator.tsx';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
@@ -169,6 +170,7 @@ const App: React.FC = () => {
   const [showEQCheatSheet, setShowEQCheatSheet] = useState<boolean>(false);
   const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
   const [useMarkdownRenderer, setUseMarkdownRenderer] = useState<boolean>(true);
+  const [showMixComparator, setShowMixComparator] = useState<boolean>(false);
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -272,6 +274,12 @@ const App: React.FC = () => {
   const extractAiGeneratedTitleFromMarkdown = (markdownText: string): string | null => {
     const match = markdownText.match(/^#\s*TRACKGUIDE:\s*"?([^"\n]+)"?/im);
     return match && match[1] ? match[1].trim() : null;
+  };
+
+  const handleMixAnalysis = async (mixA: File | null, mixB: File | null) => {
+    // This would integrate with audio analysis service in production
+    // For now, the component handles demo analysis internally
+    console.log('Analyzing mixes:', mixA?.name, mixB?.name);
   };
 
   const resetFormForNewGuidebook = () => {
@@ -924,6 +932,14 @@ const App: React.FC = () => {
             AI Assistant
           </Button>
           <Button
+            onClick={() => setShowMixComparator(true)}
+            variant="outline"
+            size="sm"
+            className="text-xs md:text-sm"
+          >
+            🎚️ Mix Comparator
+          </Button>
+          <Button
             onClick={() => setUseMarkdownRenderer(!useMarkdownRenderer)}
             variant="outline"
             size="sm"
@@ -1023,6 +1039,7 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <Textarea label="Available Instruments (Optional)" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Guitar, Analog Synth, MPC, Vocals" />
+                  <Input label="Reference Track (Optional)" name="referenceTrack" value={inputs.referenceTrack || ''} onChange={handleInputChange} placeholder="e.g., Spotify/YouTube link or artist - song name" />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<SparklesIcon className="w-5 h-5"/>}>
                   {isLoading ? (loadingMessage || 'Generating...') : 'Generate TrackGuide'}
@@ -1259,6 +1276,11 @@ const App: React.FC = () => {
         userInputs={inputs}
         onUpdateGuidebook={(content) => setGeneratedGuidebook(content)}
         onUpdateInputs={(newInputs) => setInputs(prev => ({ ...prev, ...newInputs }))}
+      />
+      <MixComparator
+        isOpen={showMixComparator}
+        onClose={() => setShowMixComparator(false)}
+        onAnalyze={handleMixAnalysis}
       />
 
        <footer className="text-center mt-16 py-8 border-t border-gray-700/60">
