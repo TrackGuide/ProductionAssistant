@@ -218,99 +218,22 @@ const generateMidiPrompt = (settings: MidiSettings): string => {
   const { key, tempo, timeSignature, chordProgression, genre, bars, targetInstruments, guidebookContext, songSection } = settings;
   const instrumentsToGenerate = targetInstruments.join(', ');
 
-  const drumMapInfo = `Drum elements should map to these General MIDI (GM) notes if possible: ${Object.entries(MIDI_DRUM_MAP).map(([name, note]) => `${name}: ${note}`).join(', ')}. Common names like 'kick', 'snare', 'closed_hihat', 'open_hihat', 'crash', 'ride', 'tom_low', 'tom_mid', 'tom_high' are preferred for drum part keys in the JSON.`;
+  // Simplified prompt for faster generation
+  return `Generate MIDI patterns in JSON format for ${genre} music.
 
-  const songSectionInstruction = songSection && songSection !== "General Loop" 
-    ? `The MIDI patterns should be specifically tailored for the **'${songSection}'** song section. This means:
-    - If '${songSection}' is 'Intro' or 'Outro', patterns might be sparser, build anticipation, or fade out.
-    - If '${songSection}' is 'Verse', patterns should support lyrical content, perhaps with less density than a chorus.
-    - If '${songSection}' is 'Pre-Chorus' or 'Build-up', intensity and density should gradually increase.
-    - If '${songSection}' is 'Chorus' or 'Drop', patterns should be high-energy, full, and memorable.
-    - If '${songSection}' is 'Bridge', patterns might offer contrast, explore a different harmonic or rhythmic feel.
-    - If '${songSection}' is 'Solo', accompanying patterns should be supportive and not overshadow the lead.
-    - If '${songSection}' is 'Breakdown', patterns might be very sparse, rhythmic, or percussive.
-    - If '${songSection}' is 'Fill', it should be a short, transitional pattern.
-    Consider these characteristics for density, rhythmic complexity, melodic range, and overall energy.`
-    : "Generate a general-purpose loop suitable for the main part of a song or as a foundational idea.";
+Context: Key=${key}, Tempo=${tempo}BPM, Time=${timeSignature[0]}/${timeSignature[1]}, Chords=${chordProgression}, Bars=${bars}, Section=${songSection || "General"}
+Instruments: ${instrumentsToGenerate}
+${guidebookContext ? `Style: ${guidebookContext.substring(0, 200)}...` : ''}
 
+Return JSON with keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
 
-  return `
-You are an expert MIDI pattern generator. Based on the following musical parameters, create MIDI patterns in JSON format.
-Your primary goal is to generate musically interesting and varied patterns that are **strongly influenced by the guidebookContext AND the specified songSection**.
-Do NOT just generate generic patterns or simple root notes for basslines if the context or section suggests more complexity or specific styles.
+Format:
+- "chords": [{"time": 0, "name": "C", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 80}]
+- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 90}] (MIDI 12-59 only)
+- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 85}]
+- "drums": {"kick": [{"time": 0, "duration": 0.1, "velocity": 100}], "snare": [{"time": 1, "duration": 0.1, "velocity": 90}]}
 
-Musical Context:
-- Key: ${key}
-- Tempo: ${tempo} BPM
-- Time Signature: ${timeSignature[0]}/${timeSignature[1]}
-- Chord Progression: ${chordProgression} (Interpret this creatively within the given key, guidebookContext, and songSection.)
-- Genre: ${genre}
-- Number of Bars: ${bars}
-- Song Section Focus: ${songSection || "General Loop"}
-- Instruments to Generate: ${instrumentsToGenerate}
-${guidebookContext ? `- Additional Context from TrackGuide (CRITICALLY IMPORTANT: Use this to inform pattern style, complexity, melodic contour, rhythmic feel, harmonic voicings, and overall musical character for EACH instrument. For example, if context mentions 'syncopated funk guitar riff', the chord/melody parts should reflect that rhythmic complexity. If 'ethereal, evolving pads', chords should be sustained, possibly with slow filter-like voice leading. If 'aggressive metal chugs', bass/chords should be tight and percussive. If 'complex polyrhythms for experimental electronic music', the drum patterns should be intricate and layered, not just a basic rock beat.):\n${guidebookContext}` : ''}
-
-**Song Section Influence (VERY IMPORTANT):**
-${songSectionInstruction}
-
-Output Format Instructions:
-Return a single JSON object. The top-level keys should be the instrument types requested (e.g., "chords", "bassline", "melody", "drums").
-If an instrument is not generated or not applicable, omit its key or set its value to null.
-
-1.  "chords": An array of chord events.
-    -   **Influence from Context & Section:** Interpret the \`chordProgression\` using voicings, rhythms, and densities appropriate for the \`genre\`, \`guidebookContext\`, AND \`songSection\`. A 'Chorus' section might have fuller, more sustained chords than a sparse 'Intro'.
-    -   Each event object should have: "time", "name", "duration", "notes" (array of { "pitch", "midi" }), "velocity".
-
-2.  "bassline": An array of note objects.
-    -   **Influence from Context & Section:** Bassline should lock with the groove and complement chords, reflecting the energy of the \`songSection\`. A 'Verse' might have a more melodic bassline, while a 'Drop' might have a simpler, powerful sub.
-    -   **OCTAVE RANGE (VERY IMPORTANT): Bassline notes MUST predominantly be in MIDI octaves 0, 1, or 2 (MIDI notes 12-47). Notes up to MIDI note 59 (B3) can be used sparingly.**
-    -   Each note object should have: "time", "pitch", "midi", "duration", "velocity".
-
-3.  "melody": An array of note objects.
-    -   **Influence from Context & Section:** Melodic ideas should fit the \`songSection\`. Lead melodies are more common in 'Chorus' or 'Solo' sections, while 'Verse' melodies might be more subtle.
-    -   Each note object should have: "time", "pitch", "midi", "duration", "velocity".
-
-4.  "drums": An object where keys are drum element names.
-    -   **Influence from Context & Section:** Drum patterns MUST reflect the \`style\`, \`energy\`, and \`songSection\`. An 'Intro' might use minimal percussion, while a 'Chorus' or 'Drop' would have a full, driving beat. 'Fills' should be short and transitional.
-    -   The value for each drum element is an array of hit objects: "time", "duration", "velocity".
-    ${drumMapInfo}
-
-Velocity, Dynamics, and Expression Instructions (VERY IMPORTANT, influenced by songSection):
--   **General:** Vary velocities for musicality. A 'Build-up' section should show increasing velocity/intensity.
--   **Chords:** Nuanced velocity for voicings. 'Sustained pads' in an 'Intro' (lower avg velocity 70-85), 'rhythmic stabs' in a 'Chorus' (higher avg 90-110).
--   **Bassline & Melody:** Dynamic changes. Emphasize strong notes. Melodies in a 'Chorus' might be louder than in a 'Verse'.
--   **Drums (CRITICAL, informed by context AND songSection):**
-    -   **Kick:** Strong beats (100-120 in high energy sections). Softer for syncopation/ghosts (70-90).
-    -   **Snare:** Backbeats strong (100-120). Ghost notes very soft (20-50). Rolls/fills dynamic, often leading into higher energy sections.
-    -   **Hi-Hats (Closed):** Dynamic pattern. Accents (80-95), unaccented (50-70). More open/active hats in higher energy sections.
-    -   **Hi-Hats (Open) / Cymbals:** Typically accented (90-115). Crashes mark section changes, especially into 'Chorus' or 'Drop'.
-    -   **Overall Drum Feel:** Consider \`guidebookContext\` and \`songSection\`. Funk: very dynamic. Techno: might be more consistent. 'Intro' drums sparser than 'Chorus' drums.
-
-General Rules for all patterns:
--   All "time" values are relative to the start of the ${bars}-bar pattern.
--   Ensure notes and chords fit within the "key" and are harmonically related to the "chordProgression" as interpreted through the lens of the "guidebookContext" and "songSection".
--   Make the patterns musically coherent.
--   "duration" should be musically sensible.
--   Provide MIDI note numbers ("midi"). Middle C is C4 (MIDI note 60).
--   If you cannot generate a specific requested instrument pattern meaningfully, omit it or set to null.
-
-**AVOID GENERIC PATTERNS. The \`guidebookContext\` and \`songSection\` are paramount for making these MIDI patterns unique, varied, and fitting. If the context is rich with musical descriptors, or the section implies specific energy, the MIDI MUST reflect that richness.**
-
-Example of a "chords" event:
-{ "time": 0, "name": "Am7", "duration": 4, "notes": [{ "pitch": "A3", "midi": 57 }, { "pitch": "C4", "midi": 60 }, { "pitch": "E4", "midi": 64 }, { "pitch": "G4", "midi": 67 }], "velocity": 90 }
-
-Example of a "melody" note:
-{ "time": 0.5, "pitch": "G4", "midi": 67, "duration": 0.5, "velocity": 85 }
-
-Example of a "drums" structure:
-"drums": {
-  "kick": [{ "time": 0, "duration": 0.1, "velocity": 120 }, { "time": 0.75, "duration": 0.1, "velocity": 90 }, { "time": 1, "duration": 0.1, "velocity": 115 }],
-  "snare": [{ "time": 1, "duration": 0.1, "velocity": 110 }],
-  "closed_hihat": [{ "time": 0, "duration": 0.05, "velocity": 80 }, { "time": 0.25, "duration": 0.05, "velocity": 60 }, { "time": 0.5, "duration": 0.05, "velocity": 75 }, { "time": 0.75, "duration": 0.05, "velocity": 60 }, ...]
-}
-
-Generate the MIDI patterns now.
-  `;
+Make patterns musically appropriate for ${songSection || "general"} section in ${genre} style.`;
 };
 
 export const generateMidiPatternSuggestions = async (settings: MidiSettings): Promise<AsyncIterable<GenerateContentResponse>> => {
