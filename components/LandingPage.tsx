@@ -64,19 +64,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       {/* Hero Section */}
       <section className="relative px-6 py-16">
         <div className="max-w-7xl mx-auto">
-          {/* Centered Logo and Tagline */}
-          <div className="text-center mb-16">
-            <div className="flex justify-center mb-6">
-              <TrackGuideLogo className="h-16 w-16 text-orange-500" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Produce Smarter. Create More.
-            </h2>
-            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-              Tell us what you're envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.
-            </p>
-          </div>
-          
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
@@ -281,123 +268,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Live Demo Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              See TrackGuide in Action
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Watch how TrackGuide AI analyzes your input and generates comprehensive production blueprints in real-time
-            </p>
-          </div>
-          
-          <div className="flex justify-center">
-            <div className="relative h-96 w-full max-w-2xl">
-              {/* Animated Demo Interface */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8 overflow-hidden">
-                {/* Terminal-style header */}
-                <div className="flex items-center space-x-2 mb-6">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div className="text-xs text-gray-400 ml-2">TrackGuide AI Studio</div>
-                </div>
 
-                <div className="space-y-4">
-                  {/* Typing animation */}
-                  <div className="text-xs text-gray-300">
-                    <span className="text-orange-500">&gt;</span> 
-                    <span className="animate-pulse">Analyzing your input...</span>
-                  </div>
-
-                  {/* Progress indicators with staggered animations */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">Genre Analysis:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1000 ease-out" 
-                             style={{width: '90%'}}></div>
-                      </div>
-                      <div className="text-xs text-green-400">✓</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">Structure:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1500 ease-out" 
-                             style={{width: '85%'}}></div>
-                      </div>
-                      <div className="text-xs text-green-400">✓</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">MIDI Gen:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-2000 ease-out animate-pulse" 
-                             style={{width: '95%'}}></div>
-                      </div>
-                      <div className="text-xs text-orange-400 animate-spin">⟳</div>
-                    </div>
-                  </div>
-
-                  {/* Results with fade-in animation */}
-                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30 animate-pulse">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                      <span className="text-white font-medium text-sm">Blueprint Generated</span>
-                    </div>
-                    <div className="text-xs text-gray-300 space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Future Bass + Melodic Dubstep</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>F# Minor, 140 BPM</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Chord progression: i-VI-III-VII</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* MIDI visualization */}
-                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                      <span className="text-white font-medium text-sm">MIDI Patterns Ready</span>
-                    </div>
-                    <div className="flex space-x-1">
-                      {[...Array(12)].map((_, i) => (
-                        <div key={i} 
-                             className="w-1 bg-orange-500 rounded-full animate-pulse" 
-                             style={{
-                               height: `${Math.random() * 20 + 10}px`,
-                               animationDelay: `${i * 0.1}s`
-                             }}></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Floating particles */}
-              <div className="absolute top-4 right-4 w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
-              <div className="absolute bottom-8 left-8 w-1 h-1 bg-orange-500 rounded-full animate-ping" 
-                   style={{animationDelay: '1s'}}></div>
-              <div className="absolute top-16 left-16 w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" 
-                   style={{animationDelay: '2s'}}></div>
-              
-              {/* Geometric accents with rotation */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 border-2 border-orange-500 transform rotate-45 animate-spin" 
-                   style={{animation: 'spin 8s linear infinite'}}></div>
-              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-orange-500 rounded-full animate-bounce" 
-                   style={{animationDelay: '0.5s'}}></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Divider Section - Transition to Investor Content */}
       <section className="relative px-6 py-16 bg-gradient-to-b from-black/20 to-black/40">
@@ -409,6 +280,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <p className="text-xl text-gray-300">
             Transforming the $43B music production industry
           </p>
+        </div>
+      </section>
+
+      {/* Modern Era of Production Section */}
+      <section className="relative px-6 py-20 bg-black/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                Navigating the
+                <span className="block text-orange-500">Modern Era of Production</span>
+              </h2>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Too many tools. Not enough direction.
+              </p>
+              
+              <div className="grid gap-6">
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <p className="text-gray-300">
+                    Without a clear structure, many producers struggle to turn inspiration into finished tracks.
+                  </p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <p className="text-gray-300">
+                    Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
+                  </p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <p className="text-gray-300">
+                    A constant stream of flashy tools distracts from understanding core production fundamentals.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right side geometric elements */}
+            <div className="relative h-96">
+              <div className="absolute top-0 right-0 w-48 h-48">
+                <div className="w-full h-full border-2 border-orange-500 transform rotate-45"></div>
+                <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45"></div>
+              </div>
+              <div className="absolute bottom-0 left-0 w-32 h-32">
+                <div className="w-full h-full border-2 border-orange-500"></div>
+                <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -477,53 +395,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
                   <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Modern Era of Production Section */}
-      <section className="relative px-6 py-20 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Navigating the
-                <span className="block text-orange-500">Modern Era of Production</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Too many tools. Not enough direction.
-              </p>
-              
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Without a clear structure, many producers struggle to turn inspiration into finished tracks.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    A constant stream of flashy tools distracts from understanding core production fundamentals.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Right side geometric elements */}
-            <div className="relative h-96">
-              <div className="absolute top-0 right-0 w-48 h-48">
-                <div className="w-full h-full border-2 border-orange-500 transform rotate-45"></div>
-                <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45"></div>
-              </div>
-              <div className="absolute bottom-0 left-0 w-32 h-32">
-                <div className="w-full h-full border-2 border-orange-500"></div>
-                <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500"></div>
               </div>
             </div>
           </div>
@@ -684,27 +555,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
 
 
-      {/* CTA Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center relative">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Ready to Transform Your Music Production?
+
+
+      {/* Investor CTA Section */}
+      <section className="px-6 py-20 bg-black/30">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Interested in Investing?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
+            TrackGuide is revolutionizing music production with AI-powered assistance. Join us in empowering the next generation of creators.
           </p>
-          <button
-            onClick={onGetStarted}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-4 rounded-lg font-bold text-xl transition-all transform hover:scale-105 inline-flex items-center space-x-3 shadow-xl"
+          <a
+            href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
           >
-            <TrackGuideLogo className="h-6 w-6" />
-            <span>Start Creating Now</span>
-          </button>
-          <p className="text-gray-500 mt-4">Free to start • No credit card required</p>
-          
-          {/* Geometric accents */}
-          <div className="absolute -top-8 -left-8 w-16 h-16 border-2 border-orange-500 transform rotate-45 opacity-30"></div>
-          <div className="absolute -bottom-8 -right-8 w-12 h-12 bg-orange-500 rounded-full opacity-30"></div>
+            <span>Contact for Investment Opportunities</span>
+          </a>
+          <p className="text-gray-500 mt-4">dustinspaceproductions@gmail.com</p>
         </div>
       </section>
 
@@ -722,7 +590,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </div>
             </div>
             <div className="text-gray-400 text-center md:text-right">
-              <p>&copy; 2024 TrackGuide. Empowering music creators worldwide.</p>
+              <p>&copy; 2025 TrackGuide. Empowering music creators worldwide.</p>
             </div>
           </div>
         </div>

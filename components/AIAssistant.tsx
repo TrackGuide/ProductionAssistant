@@ -125,7 +125,7 @@ What would you like to work on today?`,
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 h-[600px] max-h-[80vh]">
       <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
-        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-orange-600 to-orange-500">
+        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600">
           <div className="flex items-center">
             <SparklesIcon className="w-5 h-5 text-white mr-2" />
             <h2 className="text-lg font-bold text-white">Production Coach</h2>
@@ -149,7 +149,7 @@ What would you like to work on today?`,
               <div
                 className={`max-w-[85%] p-2 rounded-lg text-sm ${
                   message.role === 'user'
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-purple-600 text-white'
                     : 'bg-gray-700 text-gray-100'
                 }`}
               >
