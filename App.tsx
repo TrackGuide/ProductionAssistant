@@ -959,7 +959,8 @@ const App: React.FC = () => {
         </button>
       </header>
       
-     <nav className="mb-8 flex flex-col items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
+     + <nav className="mb-8 flex flex-col justify-center items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
+
 
   <Button
     size="sm"
