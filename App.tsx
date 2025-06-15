@@ -959,43 +959,46 @@ const App: React.FC = () => {
         </button>
       </header>
       
-      <div className="mb-8 flex justify-center space-x-2 md:space-x-3 border-b border-orange-500/20 pb-3 relative z-10">
-        <Button
-          onClick={() => setActiveView('trackGuide')}
-          variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
-          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-orange-500 shadow-lg hover:bg-orange-600' : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'}`}
-          leftIcon={<PencilSquareIcon className="w-4 h-4"/>}
-        >
-          TrackGuide AI
-        </Button>
-        <Button
-          onClick={() => setActiveView('mixFeedback')}
-          variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-orange-500 shadow-lg hover:bg-orange-600' : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'}`}
-          leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
-        >
-          Mix Feedback AI
-        </Button>
-        
-        {/* Production Tools */}
-        <Button
-          onClick={() => setShowAIAssistant(true)}
-          variant="secondary"
-          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-          leftIcon={<TrackGuideLogo className="w-4 h-4"/>}
-        >
-          Production Coach
-        </Button>
-        <Button
-          onClick={() => setShowEQCheatSheet(true)}
-          variant="secondary"
-          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-          leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
-        >
-          EQ Guide
-        </Button>
+     <nav className="mb-8 flex flex-col md:flex-row items-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'trackGuide'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('trackGuide')}
+    variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
+    leftIcon={<PencilSquareIcon className="w-4 h-4" />}
+  >
+    TrackGuide AI
+  </Button>
 
-      </div>
+  <Button
+    size="sm"
+    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
+    onClick={() => setActiveView('mixFeedback')}
+    variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
+    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+  >
+    Mix Feedback AI
+  </Button>
+
+  <Button
+    size="sm"
+    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
+    onClick={() => setShowAIAssistant(true)}
+    variant="secondary"
+    leftIcon={<TrackGuideLogo className="w-4 h-4" />}
+  >
+    Production Coach
+  </Button>
+
+  <Button
+    size="sm"
+    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
+    onClick={() => set
+
 
 
       {activeView === 'trackGuide' && (
