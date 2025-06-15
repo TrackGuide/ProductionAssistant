@@ -123,42 +123,37 @@ What would you like to work on today?`,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl h-[80vh] bg-gray-800 shadow-xl border border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+    <div className="fixed bottom-4 right-4 z-50 w-96 h-[600px] max-h-[80vh]">
+      <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
+        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600">
           <div className="flex items-center">
-            <SparklesIcon className="w-6 h-6 text-purple-400 mr-2" />
-            <h2 className="text-xl font-bold text-white">AI Production Assistant</h2>
-            {currentGuidebook && (
-              <span className="ml-3 px-2 py-1 bg-purple-600 text-white text-xs rounded">
-                Working on: {currentGuidebook.title}
-              </span>
-            )}
+            <SparklesIcon className="w-5 h-5 text-white mr-2" />
+            <h2 className="text-lg font-bold text-white">Production Coach</h2>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={clearConversation} variant="outline" size="sm">
-              Clear Chat
+          <div className="flex gap-1">
+            <Button onClick={clearConversation} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+              Clear
             </Button>
-            <Button onClick={onClose} variant="outline" size="sm">
-              <CloseIcon className="w-4 h-4" />
+            <Button onClick={onClose} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+              ✕
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-lg ${
+                className={`max-w-[85%] p-2 rounded-lg text-sm ${
                   message.role === 'user'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-700 text-gray-100'
                 }`}
               >
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 <div className="text-xs opacity-70 mt-1">
                   {message.timestamp.toLocaleTimeString()}
                 </div>
@@ -168,7 +163,7 @@ What would you like to work on today?`,
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-gray-700 text-gray-100 p-3 rounded-lg">
+              <div className="bg-gray-700 text-gray-100 p-2 rounded-lg text-sm">
                 <Spinner text="AI is thinking..." />
               </div>
             </div>
@@ -177,22 +172,23 @@ What would you like to work on today?`,
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-3 border-t border-gray-700 bg-gray-800/50">
           <div className="flex gap-2">
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Ask me anything about your track, production techniques, or improvements..."
+              placeholder="Ask about production techniques..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1"
+              className="flex-1 text-sm"
               disabled={isLoading}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
               variant="primary"
+              size="sm"
             >
               Send
             </Button>

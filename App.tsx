@@ -1246,12 +1246,13 @@ const App: React.FC = () => {
               <div className="space-y-3">
                 <Button
                   onClick={() => setShowMixComparator(true)}
-                  variant="secondary"
-                  className="w-full px-3 py-2 text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
-                  leftIcon={<UploadIcon className="w-4 h-4"/>}
+                  variant="primary"
+                  className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg"
+                  leftIcon={<UploadIcon className="w-5 h-5"/>}
                 >
-                  Mix Compare
+                  🎵 Compare Your Mix
                 </Button>
+                <p className="text-xs text-gray-400 text-center">Upload two versions to compare side-by-side</p>
               </div>
             </Card>
           </div>

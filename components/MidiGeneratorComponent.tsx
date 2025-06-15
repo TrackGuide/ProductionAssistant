@@ -514,7 +514,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
-                Tempo (BPM) <span className="text-xs text-gray-400">{getTempoRangeText(settings.genre)} | Guidebook: {parsedGuidebookBpm || "N/A"}</span>
+                Tempo (BPM) <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
               </label>
               <Input 
                 type="number" 
