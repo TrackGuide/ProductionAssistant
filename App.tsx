@@ -1203,9 +1203,11 @@ const App: React.FC = () => {
             {/* Initial Placeholder or if no content and not loading/error */}
             {!isLoading && !generatedGuidebook && !error && !activeGuidebookDetails && ( 
               <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
-                  <TrackGuideLogo className="w-20 h-20 mb-6 opacity-80"/>
+                  <div className="flex justify-center mb-6">
+                    <TrackGuideLogo className="w-20 h-20 opacity-80 text-orange-500"/>
+                  </div>
                   <h3 className="text-2xl font-semibold text-gray-200 mb-2">Produce Smarter. Create More.</h3>
-                  <p className="text-gray-400 max-w-md">Tell us what you’re envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.</p>
+                  <p className="text-gray-400 max-w-md mx-auto">Tell us what you’re envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.</p>
               </Card>
             )}
           </div>

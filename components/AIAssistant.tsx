@@ -123,7 +123,7 @@ What would you like to work on today?`,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 h-[600px] max-h-[80vh]">
+    <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh]">
       <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
         <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600">
           <div className="flex items-center">
