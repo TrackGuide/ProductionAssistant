@@ -400,44 +400,105 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
 
             <div className="relative h-96">
-              {/* Demo preview with geometric elements */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8">
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <h4 className="text-lg font-semibold text-white mb-2">Live Demo Preview</h4>
-                    <p className="text-gray-400 text-sm">See TrackGuide in action</p>
+              {/* Animated Demo Interface */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8 overflow-hidden">
+                {/* Terminal-style header */}
+                <div className="flex items-center space-x-2 mb-6">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="text-xs text-gray-400 ml-2">TrackGuide AI Studio</div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Typing animation */}
+                  <div className="text-xs text-gray-300">
+                    <span className="text-orange-500">></span> 
+                    <span className="animate-pulse">Analyzing your input...</span>
                   </div>
 
-                  <div className="bg-black/30 rounded-lg p-4 border-l-4 border-orange-500">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                      <span className="text-white font-medium">TrackGuide Generated</span>
+                  {/* Progress indicators with staggered animations */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">Genre Analysis:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1000 ease-out" 
+                             style={{width: '90%'}}></div>
+                      </div>
+                      <div className="text-xs text-green-400">✓</div>
                     </div>
-                    <div className="text-sm text-gray-400">
-                      ✓ Genre: Future Bass + Melodic Dubstep<br/>
-                      ✓ Key: F# Minor, BPM: 140<br/>
-                      ✓ Structure: Intro → Build → Drop → Break<br/>
-                      ✓ Production techniques & mixing tips
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">Structure:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1500 ease-out" 
+                             style={{width: '85%'}}></div>
+                      </div>
+                      <div className="text-xs text-green-400">✓</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">MIDI Gen:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-2000 ease-out animate-pulse" 
+                             style={{width: '95%'}}></div>
+                      </div>
+                      <div className="text-xs text-orange-400 animate-spin">⟳</div>
                     </div>
                   </div>
 
-                  <div className="bg-black/30 rounded-lg p-4 border-l-4 border-orange-500">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                      <span className="text-white font-medium">MIDI Patterns Generated</span>
+                  {/* Results with fade-in animation */}
+                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30 animate-pulse">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                      <span className="text-white font-medium text-sm">Blueprint Generated</span>
                     </div>
-                    <div className="text-sm text-gray-400">
-                      ✓ Chord progression: i-VI-III-VII<br/>
-                      ✓ Bassline, melody & drum patterns<br/>
-                      ✓ Ready for DAW export
+                    <div className="text-xs text-gray-300 space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>Future Bass + Melodic Dubstep</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>F# Minor, 140 BPM</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>Chord progression: i-VI-III-VII</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* MIDI visualization */}
+                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                      <span className="text-white font-medium text-sm">MIDI Patterns Ready</span>
+                    </div>
+                    <div className="flex space-x-1">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} 
+                             className="w-1 bg-orange-500 rounded-full animate-pulse" 
+                             style={{
+                               height: `${Math.random() * 20 + 10}px`,
+                               animationDelay: `${i * 0.1}s`
+                             }}></div>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Geometric accent */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 border-2 border-orange-500 transform rotate-45"></div>
-              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-orange-500 rounded-full"></div>
+              {/* Floating particles */}
+              <div className="absolute top-4 right-4 w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
+              <div className="absolute bottom-8 left-8 w-1 h-1 bg-orange-500 rounded-full animate-ping" 
+                   style={{animationDelay: '1s'}}></div>
+              <div className="absolute top-16 left-16 w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" 
+                   style={{animationDelay: '2s'}}></div>
+              
+              {/* Geometric accents with rotation */}
+              <div className="absolute -top-4 -right-4 w-16 h-16 border-2 border-orange-500 transform rotate-45 animate-spin" 
+                   style={{animation: 'spin 8s linear infinite'}}></div>
+              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-orange-500 rounded-full animate-bounce" 
+                   style={{animationDelay: '0.5s'}}></div>
             </div>
           </div>
         </div>
