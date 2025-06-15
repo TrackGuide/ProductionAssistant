@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
-import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback } from './services/geminiService.ts';
-import { Input } from './components/Input.tsx';
-import { Textarea } from './components/Textarea.tsx';
-import { Button } from './components/Button.tsx';
-import { Card } from './components/Card.tsx';
-import { Spinner } from './components/Spinner.tsx';
-import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon } from './components/icons.tsx';
-import { EQCheatSheet } from './components/EQCheatSheet.tsx';
-import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
-import { AIAssistant } from './components/AIAssistant.tsx';
-import MixComparator from './components/MixComparator.tsx';
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
+import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types';
+import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback } from './services/geminiService';
+import { Input } from './components/Input';
+import { Textarea } from './components/Textarea';
+import { Button } from './components/Button';
+import { Card } from './components/Card';
+import { Spinner } from './components/Spinner';
+import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon } from './components/icons';
+import { EQCheatSheet } from './components/EQCheatSheet';
+import { MarkdownRenderer } from './components/MarkdownRenderer';
+import { AIAssistant } from './components/AIAssistant';
+import MixComparator from './components/MixComparator';
+import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants';
 import MidiGeneratorComponent from './components/MidiGeneratorComponent';
-import { LibraryModal } from './components/LibraryModal.tsx';
-import { stopPlayback } from './services/audioService.ts';
+import { LibraryModal } from './components/LibraryModal';
+import { stopPlayback } from './services/audioService';
 import './pages/MainPage.css'; // Import the CSS for the main grid layout
 
 // Import the components for the three-column layout
-import BlueprintYourSound from './components/BlueprintYourSound.tsx';
-import TrackGuide from './components/TrackGuide.tsx';
+import BlueprintYourSound from './components/BlueprintYourSound';
+import TrackGuide from './components/TrackGuide';
 
 // Import parser functions if they're in a separate file
 import { 
