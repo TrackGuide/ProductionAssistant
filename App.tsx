@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
 import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback } from './services/geminiService.ts';
 import { Input } from './components/Input.tsx';
@@ -7,12 +7,11 @@ import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
-import { SparklesIcon, SaveIcon, TrashIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon } from './components/icons.tsx';
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, MIDI_TARGET_INSTRUMENTS, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY, MIDI_SONG_SECTIONS } from './constants.ts';
+import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon, CloseIcon } from './components/icons.tsx';
+import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
-import { initializeAudio, stopPlayback } from './services/audioService.ts';
-import { generateMidiFile, downloadMidi } from './services/midiService.ts';
+import { stopPlayback } from './services/audioService.ts';
 
 
 const initialInputsState: UserInputs = {
@@ -137,6 +136,32 @@ const extractEssentialMidiContext = (guidebookContent: string): string => {
   essentialContext += extractSectionContent(guidebookContent, harmonySectionRegex);
   
   return essentialContext.trim() || "General musical context not fully parsed. Focus on genre and vibe.";
+};
+
+const extractStructuralBlueprint = (guidebookContent: string): { section: string; duration: string; description: string }[] => {
+  if (!guidebookContent) return [];
+  
+  const structuralSectionRegex = /^##\s*2\.\s*Structural Blueprint/im;
+  const structuralContent = extractSectionContent(guidebookContent, structuralSectionRegex);
+  
+  if (!structuralContent) return [];
+  
+  const sections: { section: string; duration: string; description: string }[] = [];
+  const lines = structuralContent.split('\n');
+  
+  for (const line of lines) {
+    // Look for patterns like "**Intro (0:00-0:15):** Description"
+    const match = line.match(/\*\*([^(]+)\s*\(([^)]+)\):\*\*\s*(.*)/);
+    if (match) {
+      sections.push({
+        section: match[1].trim(),
+        duration: match[2].trim(),
+        description: match[3].trim()
+      });
+    }
+  }
+  
+  return sections;
 };
 
 const parseSuggestedTitleFromMarkdownStream = (markdownText: string): string | null => {
@@ -896,8 +921,8 @@ const App: React.FC = () => {
 
 
       {activeView === 'trackGuide' && (
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
-          <div className="md:col-span-4 space-y-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-3 space-y-6">
             <Card title="Blueprint Your Sound" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
@@ -994,7 +1019,7 @@ const App: React.FC = () => {
             </Card>
           </div>
 
-          <div className="md:col-span-8 space-y-6">
+          <div className="lg:col-span-5 space-y-6">
             {/* Main Error */}
             {error && !isLoading && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
@@ -1022,6 +1047,8 @@ const App: React.FC = () => {
                   <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
                     <Button onClick={handleSaveToLibrary} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
                     <Button onClick={() => handleCopyFormattedContent('guidebook-content-display')} variant="outline" leftIcon={<CopyIcon />}>Copy TrackGuide</Button>
+                    <div className="flex-grow"></div>
+                    <Button onClick={resetFormForNewGuidebook} variant="outline" size="sm" className="!border-gray-500 !text-gray-400 hover:!bg-gray-600 hover:!text-white" leftIcon={<CloseIcon />}>Close</Button>
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                   </div>
                 )}
@@ -1039,6 +1066,34 @@ const App: React.FC = () => {
                         {activeGuidebookDetails.generatedMidiPatterns && <p className="mt-1 text-green-400"><MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.</p>}
                     </div>
                   )}
+                  {activeGuidebookDetails && !isLoading && (() => {
+                    const structuralBlueprint = extractStructuralBlueprint(activeGuidebookDetails.content);
+                    return structuralBlueprint.length > 0 && (
+                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break">
+                        <strong className="text-purple-300 block mb-3 text-base">Structural Blueprint:</strong>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse border border-gray-600 bg-gray-800 text-xs">
+                            <thead className="bg-purple-800/30">
+                              <tr className="border-b border-gray-500">
+                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Section</th>
+                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Duration</th>
+                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Description</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {structuralBlueprint.map((item, index) => (
+                                <tr key={index} className="border-b border-gray-600 hover:bg-gray-700/50 transition-colors duration-150">
+                                  <td className="p-2 text-gray-300 border border-gray-600 font-medium">{item.section}</td>
+                                  <td className="p-2 text-gray-300 border border-gray-600">{item.duration}</td>
+                                  <td className="p-2 text-gray-300 border border-gray-600">{item.description}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {renderMarkdown(generatedGuidebook)}
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Receiving content..." />}
                 </div>
@@ -1073,6 +1128,30 @@ const App: React.FC = () => {
                   <SparklesIcon className="w-20 h-20 text-purple-500 mb-6 opacity-80"/>
                   <h3 className="text-2xl font-semibold text-gray-200 mb-2">Produce Smarter. Create More.</h3>
                   <p className="text-gray-400 max-w-md">Tell us what you’re envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.</p>
+              </Card>
+            )}
+          </div>
+
+          {/* Third Column: MIDI Generator */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* MIDI Generator appears after text is complete and activeGuidebookDetails is set and not main error */}
+            {activeGuidebookDetails && !isLoading && generatedGuidebook && !error && (
+              <MidiGeneratorComponent 
+                  currentGuidebookEntry={activeGuidebookDetails}
+                  mainAppInputs={inputs}
+                  onUpdateGuidebookEntryMidi={handleUpdateGuidebookEntryMidi}
+                  parsedGuidebookBpm={parseBpmFromGuidebook(activeGuidebookDetails.content)}
+                  parsedGuidebookKey={parseKeyFromGuidebook(activeGuidebookDetails.content)}
+                  parsedGuidebookChordProg={parseChordProgressionFromGuidebook(activeGuidebookDetails.content)}
+              />
+            )}
+            
+            {/* MIDI Generator Placeholder */}
+            {!activeGuidebookDetails && !isLoading && (
+              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
+                  <MusicNoteIcon className="w-20 h-20 text-blue-500 mb-6 opacity-80"/>
+                  <h3 className="text-2xl font-semibold text-gray-200 mb-2">MIDI Generator</h3>
+                  <p className="text-gray-400 max-w-md">Generate a TrackGuide first to unlock MIDI pattern creation.</p>
               </Card>
             )}
           </div>

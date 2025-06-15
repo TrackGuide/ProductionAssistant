@@ -34,9 +34,17 @@ const addNotesToTrack = (
     if (pitches.length > 0) {
        const durationTicks = Math.round(event.duration * 128); // 128 ticks per beat (quarter note) is default
        const startTick = Math.round(event.time * 128);
+       
+       // Convert MIDI numbers to note names
+       const noteNames = pitches.map(midiNum => {
+         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+         const octave = Math.floor(midiNum / 12) - 1;
+         const noteName = noteNames[midiNum % 12];
+         return `${noteName}${octave}`;
+       });
 
         trackInstance.addEvent(new MidiWriter.NoteEvent({
-            pitch: pitches,
+            pitch: (noteNames.length === 1 ? noteNames[0] : noteNames) as any,
             duration: `T${durationTicks}`,
             startTick: startTick,
             velocity: event.velocity || (isChordTrack ? 90 : 100),
@@ -58,8 +66,14 @@ const addDrumHitsToTrack = (trackInstance: InstanceType<typeof MidiWriter.Track>
     hits.forEach((hit: DrumHit) => {
       const durationTicks = Math.round(hit.duration * 128);
       const startTick = Math.round(hit.time * 128);
+      // Convert MIDI number to note name for drums
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const octave = Math.floor(midiPitch / 12) - 1;
+      const noteName = noteNames[midiPitch % 12];
+      const drumNoteName = `${noteName}${octave}`;
+      
       trackInstance.addEvent(new MidiWriter.NoteEvent({
-        pitch: [midiPitch],
+        pitch: drumNoteName as any,
         duration: `T${durationTicks}`,
         startTick: startTick,
         velocity: hit.velocity || 100,
@@ -85,10 +99,10 @@ export const generateMidiFile = (
 
   const configureAndAddTrack = (trackInstance: InstanceType<typeof MidiWriter.Track> | null) => {
     if (trackInstance) {
-        trackInstance.setTempo(settings.tempo);
+        trackInstance.setTempo(settings.tempo, 0);
         // Provide all 4 arguments to setTimeSignature, using common defaults for the last two.
         // This can resolve issues if TypeScript typings are strict about these optional params.
-        trackInstance.setTimeSignature(settings.timeSignature[0], settings.timeSignature[1], 24, 8);
+        trackInstance.setTimeSignature(settings.timeSignature[0], settings.timeSignature[1]);
         // Key signature can be added if MidiWriter supports it easily and it's desired
         // trackInstance.addKeySignature(settings.key); // Example, check MidiWriter docs for exact usage if needed
     }

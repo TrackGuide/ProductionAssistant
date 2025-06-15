@@ -138,7 +138,7 @@ const scheduleNote = (
 
 // Memoized settings for loop duration calculation
 let lastSettingsForLoopDuration: Pick<MidiSettings, 'tempo' | 'bars' | 'timeSignature'> | null = null;
-let cachedLoopDurationSeconds: number = 0;
+// let cachedLoopDurationSeconds: number = 0;
 
 const getLoopDurationSeconds = (): number => {
     if (!lastSettingsForLoopDuration) throw new Error("Settings not available for loop duration calculation.");

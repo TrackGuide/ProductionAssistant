@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { UserInputs, MidiSettings, GeneratedMidiPatterns, MixFeedbackInputs, MidiNote } from '../types.ts'; // MidiNote was implicitly used by fileToGenerativePart but not imported
+import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME, MIDI_DRUM_MAP } from '../constants.ts';
 
 const apiKey = process.env.API_KEY;

@@ -12,6 +12,10 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      server: {
+        host: true,
+        allowedHosts: ['work-1-fychmxbgoxsycaji.prod-runtime.all-hands.dev', 'work-2-fychmxbgoxsycaji.prod-runtime.all-hands.dev']
       }
     };
 });

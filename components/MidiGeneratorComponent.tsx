@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../types.ts';
 import { generateMidiPatternSuggestions } from '../services/geminiService.ts';
 import { generateMidiFile, downloadMidi } from '../services/midiService.ts';
@@ -8,7 +8,7 @@ import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Spinner } from './Spinner.tsx';
 import { Input } from './Input.tsx';
-import { MusicNoteIcon, PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
+import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
 import { MIDI_SCALES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants.ts';
 
 interface MidiGeneratorProps {
@@ -306,6 +306,73 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       alert(`No ${trackType} data to download or error in generation.`);
     }
   };
+
+  const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
+    if (!patterns) return;
+    
+    setIsLoading(true);
+    setLoadingMessage(`Regenerating ${trackType}...`);
+    setError(null);
+    
+    if (isPlayingRef.current) {
+        stopPlayback();
+        setIsPlaying(false);
+    }
+    await initializeAudio();
+
+    const primaryGenre = currentGuidebookEntry.genre?.[0] || settings.genre;
+    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry.content);
+
+    // Preserve original settings for single track regeneration
+    const preservedSettings = {
+        ...settings,
+        guidebookContext: richContextForRegeneration,
+        genre: primaryGenre,
+        // Keep only the specific track type for regeneration
+        targetInstruments: [trackType]
+    };
+
+    let accumulatedMidiJson = "";
+    try {
+      const midiStream = await generateMidiPatternSuggestions(preservedSettings);
+      for await (const chunk of midiStream) {
+        accumulatedMidiJson += chunk.text;
+      }
+
+      let jsonStr = accumulatedMidiJson.trim();
+      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+      const match = jsonStr.match(fenceRegex);
+      if (match && match[2]) {
+        jsonStr = match[2].trim();
+      }
+
+      const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+      
+      // Preserve existing patterns and only update the regenerated track
+      const updatedPatterns = {
+        ...patterns,
+        [trackType]: newPatternsData[trackType]
+      };
+      
+      if (trackType === 'drums' && newPatternsData.drums) {
+          const lowercasedDrums: any = {};
+          for (const key in newPatternsData.drums) {
+              lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
+          }
+          updatedPatterns.drums = lowercasedDrums;
+      }
+      
+      setPatterns(updatedPatterns);
+      onUpdateGuidebookEntryMidi(settings, updatedPatterns);
+      setLoadingMessage('');
+    } catch (err) {
+      console.error('Error regenerating single track:', err);
+      setError(`Failed to regenerate ${trackType}. Please try again.`);
+      setLoadingMessage('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const getTempoRangeText = (genreKey: string) => {
     const range = MIDI_TEMPO_RANGES[genreKey] || MIDI_TEMPO_RANGES.Default;
@@ -384,11 +451,22 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             variant="secondary"
             onClick={() => handlePlaySingleTrack(trackType)}
             disabled={!hasData || isPlaying}
-            className="px-2.5 py-1.5 flex-1 min-w-[calc(50%-0.25rem)]"
+            className="px-2.5 py-1.5 flex-1"
             title={`Preview ${title}`}
             leftIcon={<PlayIcon className="w-4 h-4"/>}
           >
             Preview
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleRegenerateSingleTrack(trackType)}
+            className="p-1.5 flex-none" 
+            title={`Regenerate ${title}`}
+            aria-label={`Regenerate ${title}`}
+            disabled={isLoading}
+          >
+            <RefreshIcon className="w-4 h-4" isSpinning={isLoading && loadingMessage.includes(trackType)}/>
           </Button>
           <Button 
             size="sm" 
@@ -436,7 +514,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
-                Tempo (BPM) <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookBpm || "N/A"})</span>
+                Tempo (BPM) <span className="text-xs text-gray-400">{getTempoRangeText(settings.genre)} | Guidebook: {parsedGuidebookBpm || "N/A"}</span>
               </label>
               <Input 
                 type="number" 
