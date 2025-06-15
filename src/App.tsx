@@ -12,7 +12,7 @@ import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
 import MixComparator from './components/MixComparator.tsx';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
-import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
+import MidiGeneratorComponent from './components/MidiGeneratorComponent';
 import { LibraryModal } from './components/LibraryModal.tsx';
 import { stopPlayback } from './services/audioService.ts';
 import './pages/MainPage.css'; // Import the CSS for the main grid layout
