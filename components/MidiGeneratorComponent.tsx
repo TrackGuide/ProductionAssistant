@@ -311,7 +311,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     if (!patterns) return;
     
     setIsLoading(true);
-    setLoadingMessage(`Regenerating ${trackType}...`);
+    setLoadingMessage('Generating MIDI...');
     setError(null);
     
     if (isPlayingRef.current) {

@@ -877,8 +877,20 @@ const App: React.FC = () => {
 
   if (userProvidedSongTitle) {
       trackGuideCardTitle = `TrackGuide: ${userProvidedSongTitle}`;
-  } else if (activeGuidebookDetails?.title && activeGuidebookDetails.title !== `TrackGuide for ${inputs.genre.join(', ') || 'Unknown Genre'}`) {
-      trackGuideCardTitle = `TrackGuide: ${activeGuidebookDetails.title}`;
+  } else if (activeGuidebookDetails?.title) {
+      // Extract the actual generated title from the stored title or content
+      const storedTitle = activeGuidebookDetails.title;
+      if (storedTitle.startsWith('TrackGuide for ')) {
+          // If it's a fallback title, try to get the AI-generated title from content
+          const aiGeneratedTitle = extractAiGeneratedTitleFromMarkdown(activeGuidebookDetails.content);
+          if (aiGeneratedTitle) {
+              trackGuideCardTitle = `TrackGuide: ${aiGeneratedTitle}`;
+          } else {
+              trackGuideCardTitle = storedTitle;
+          }
+      } else {
+          trackGuideCardTitle = `TrackGuide: ${storedTitle}`;
+      }
   } else if (isLoading && activeView === 'trackGuide') {
       const streamedSuggestedTitle = parseSuggestedTitleFromMarkdownStream(generatedGuidebook);
       if (streamedSuggestedTitle) {
@@ -933,7 +945,7 @@ const App: React.FC = () => {
           className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
           leftIcon={<SparklesIcon className="w-4 h-4"/>}
         >
-          Chat Bot
+          Production Coach
         </Button>
         <Button
           onClick={() => setShowEQCheatSheet(true)}
@@ -943,14 +955,7 @@ const App: React.FC = () => {
         >
           EQ Guide
         </Button>
-        <Button
-          onClick={() => setShowMixComparator(true)}
-          variant="secondary"
-          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
-          leftIcon={<UploadIcon className="w-4 h-4"/>}
-        >
-          Mix Compare
-        </Button>
+
       </div>
 
 
@@ -1053,7 +1058,7 @@ const App: React.FC = () => {
             </Card>
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-9 space-y-6">
             {/* Main Error */}
             {error && !isLoading && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
@@ -1166,29 +1171,7 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* Third Column: MIDI Generator */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* MIDI Generator appears after text is complete and activeGuidebookDetails is set and not main error */}
-            {activeGuidebookDetails && !isLoading && generatedGuidebook && !error && (
-              <MidiGeneratorComponent 
-                  currentGuidebookEntry={activeGuidebookDetails}
-                  mainAppInputs={inputs}
-                  onUpdateGuidebookEntryMidi={handleUpdateGuidebookEntryMidi}
-                  parsedGuidebookBpm={parseBpmFromGuidebook(activeGuidebookDetails.content)}
-                  parsedGuidebookKey={parseKeyFromGuidebook(activeGuidebookDetails.content)}
-                  parsedGuidebookChordProg={parseChordProgressionFromGuidebook(activeGuidebookDetails.content)}
-              />
-            )}
-            
-            {/* MIDI Generator Placeholder */}
-            {!activeGuidebookDetails && !isLoading && (
-              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
-                  <MusicNoteIcon className="w-20 h-20 text-blue-500 mb-6 opacity-80"/>
-                  <h3 className="text-2xl font-semibold text-gray-200 mb-2">MIDI Generator</h3>
-                  <p className="text-gray-400 max-w-md">Generate a TrackGuide first to unlock MIDI pattern creation.</p>
-              </Card>
-            )}
-          </div>
+
         </div>
       )}
 
@@ -1257,6 +1240,19 @@ const App: React.FC = () => {
                   Clear Mix Form
                 </Button>
               </form>
+            </Card>
+            
+            <Card title="Mix Tools" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+              <div className="space-y-3">
+                <Button
+                  onClick={() => setShowMixComparator(true)}
+                  variant="secondary"
+                  className="w-full px-3 py-2 text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+                  leftIcon={<UploadIcon className="w-4 h-4"/>}
+                >
+                  Mix Compare
+                </Button>
+              </div>
             </Card>
           </div>
           <div className="md:col-span-8 space-y-6">

@@ -172,7 +172,7 @@ Provide a **concise Markdown table** for a typical song structure for the genre(
 - ✔ Don't be afraid to [a general creative encouragement, e.g., break conventions slightly for a memorable track].
 
 ---
-This TrackGuide for ${genreText} (${vibeText}) using ${inputs.daw || 'your DAW'} is a starting point. Experiment, trust your ears, and enjoy the creative journey!
+This TrackGuide for "${songTitleText || `${genreText} (${vibeText})`}" using ${inputs.daw || 'your DAW'} is a starting point. Experiment, trust your ears, and enjoy the creative journey!
 `;
 };
 
