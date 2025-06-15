@@ -64,14 +64,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       {/* Hero Section */}
       <section className="relative px-6 py-16">
         <div className="max-w-7xl mx-auto">
+          {/* Centered Logo and Tagline */}
+          <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <TrackGuideLogo className="h-16 w-16 text-orange-500" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Produce Smarter. Create More.
+            </h2>
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+              Tell us what you're envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.
+            </p>
+          </div>
+          
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
                 <span className="text-orange-500">AI Studio Assistant:</span>
-                <span className="block text-white mt-2">
+                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
                   A Complement to Creativity,
                 </span>
-                <span className="block text-white mt-2">
+                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
                   Not a Substitute.
                 </span>
               </h1>
@@ -191,13 +204,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span className="text-white font-bold">AI</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-3">TrackGuide AI</h3>
-              <p className="text-gray-300 mb-4">Generate comprehensive, custom production guides based on your genre, vibe, and reference artists.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Genre-specific arrangements</li>
-                <li>• Sound design recommendations</li>
-                <li>• Mixing & mastering tips</li>
-                <li>• Reference track analysis</li>
-              </ul>
+              <p className="text-gray-300">Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.</p>
             </div>
 
             {/* MIDI Generator */}
@@ -205,44 +212,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white font-bold">♪</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Smart MIDI Generator</h3>
-              <p className="text-gray-300 mb-4">Create intelligent musical patterns that match your track's context and style.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Chord progressions</li>
-                <li>• Basslines & melodies</li>
-                <li>• Drum patterns</li>
-                <li>• Arpeggios & sequences</li>
-              </ul>
+              <h3 className="text-xl font-bold text-white mb-3">Integrated MIDI Generator</h3>
+              <p className="text-gray-300">Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track's context.</p>
             </div>
 
-            {/* Mix Feedback */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🎚</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback & Analysis</h3>
-              <p className="text-gray-300 mb-4">Upload tracks for AI-powered analysis and detailed mixing recommendations.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Frequency analysis</li>
-                <li>• Dynamic range assessment</li>
-                <li>• Stereo imaging feedback</li>
-                <li>• EQ & compression tips</li>
-              </ul>
-            </div>
-
-            {/* Track Comparator */}
+            {/* Mix Compare */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-white font-bold">⚖</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Track Comparator</h3>
-              <p className="text-gray-300 mb-4">Compare different versions of your tracks side-by-side with visual analysis.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• A/B testing interface</li>
-                <li>• Waveform comparison</li>
-                <li>• Spectral analysis</li>
-                <li>• Version history tracking</li>
-              </ul>
+              <h3 className="text-xl font-bold text-white mb-3">Mix Compare</h3>
+              <p className="text-gray-300">Upload tracks for AI-powered analysis and compare different versions side-by-side.</p>
             </div>
 
             {/* Production Coach */}
@@ -251,73 +231,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span className="text-white font-bold">💬</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Live Production Coach</h3>
-              <p className="text-gray-300 mb-4">Interactive AI chatbot providing real-time production advice and guidance.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Real-time Q&A support</li>
-                <li>• Technique explanations</li>
-                <li>• Workflow optimization</li>
-                <li>• Creative problem solving</li>
-              </ul>
+              <p className="text-gray-300">Interactive chatbot providing real-time production advice and guidance.</p>
             </div>
 
-            {/* Sample Library */}
+            {/* Mix Feedback */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">📚</span>
+                <span className="text-white font-bold">🎚</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Curated Sample Library</h3>
-              <p className="text-gray-300 mb-4">Access high-quality samples and loops organized by genre and mood.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Genre-specific collections</li>
-                <li>• Royalty-free samples</li>
-                <li>• BPM & key matching</li>
-                <li>• AI-powered recommendations</li>
-              </ul>
+              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
+              <p className="text-gray-300">Upload tracks for AI-powered analysis and detailed mixing recommendations.</p>
             </div>
 
-            {/* Project Templates */}
+            {/* EQ Cheat Sheet */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">📋</span>
+                <span className="text-white font-bold">📊</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Project Templates</h3>
-              <p className="text-gray-300 mb-4">Start with professional project templates for every genre and style.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• DAW-specific templates</li>
-                <li>• Pre-configured routing</li>
-                <li>• Effect chain presets</li>
-                <li>• Arrangement layouts</li>
-              </ul>
-            </div>
-
-            {/* Collaboration Tools */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🤝</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Collaboration Hub</h3>
-              <p className="text-gray-300 mb-4">Share projects and collaborate with other producers seamlessly.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Project sharing</li>
-                <li>• Real-time feedback</li>
-                <li>• Version control</li>
-                <li>• Community features</li>
-              </ul>
-            </div>
-
-            {/* Learning Resources */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🎓</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Learning Resources</h3>
-              <p className="text-gray-300 mb-4">Comprehensive tutorials and educational content to improve your skills.</p>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Video tutorials</li>
-                <li>• Production masterclasses</li>
-                <li>• Theory explanations</li>
-                <li>• Industry insights</li>
-              </ul>
+              <h3 className="text-xl font-bold text-white mb-3">EQ Cheat Sheet</h3>
+              <p className="text-gray-300">Quick reference guide for EQ frequencies and their effects on different instruments and sounds.</p>
             </div>
           </div>
         </div>
@@ -330,7 +262,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             Ready to Transform Your Music Production?
           </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            Join thousands of producers who are already creating smarter with TrackGuide AI
+            From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
           </p>
           
           <div className="bg-gray-800/50 rounded-2xl p-8 max-w-md mx-auto border border-orange-500/20">
@@ -349,42 +281,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Core Features Section */}
+      {/* Live Demo Section */}
       <section className="px-6 py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Everything You Need to Create
-              </h2>
-              <p className="text-xl text-gray-300">
-                From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
-              </p>
-              
-              <div className="space-y-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">TrackGuide AI</h4>
-                  <p className="text-gray-300">Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Integrated MIDI Generator</h4>
-                  <p className="text-gray-300">Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track's context.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Mix Feedback with Comparator</h4>
-                  <p className="text-gray-300">Upload tracks for AI-powered analysis and compare different versions side-by-side.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Live Production Coach</h4>
-                  <p className="text-gray-300">Interactive chatbot providing real-time production advice and guidance.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative h-96">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              See TrackGuide in Action
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Watch how TrackGuide AI analyzes your input and generates comprehensive production blueprints in real-time
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="relative h-96 w-full max-w-2xl">
               {/* Animated Demo Interface */}
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8 overflow-hidden">
                 {/* Terminal-style header */}
@@ -781,7 +691,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             Ready to Transform Your Music Production?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of producers who are already using TrackGuide to create better music faster.
+            From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
           </p>
           <button
             onClick={onGetStarted}
