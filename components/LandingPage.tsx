@@ -66,13 +66,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
                 <span className="text-orange-500">AI Studio Assistant:</span>
-                <span className="block text-white mt-2">
-                  A Complement to Creativity,
-                </span>
-                <span className="block text-white mt-2">
-                  Not a Substitute.
+                <span className="text-white">
+                  A Complement to Creativity, Not a Substitute.
                 </span>
               </h1>
               <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
@@ -524,8 +521,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Early Traction &
-                <span className="block text-orange-500">Market Validation</span>
+                <span className="text-orange-500">Market Validation</span>
               </h2>
               
               <div className="grid gap-6">

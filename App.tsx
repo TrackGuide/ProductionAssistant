@@ -1153,9 +1153,9 @@ const App: React.FC = () => {
                           <table className="w-full border-collapse border border-gray-600 bg-gray-800 text-xs">
                             <thead className="bg-orange-800/30">
                               <tr className="border-b border-gray-500">
-                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Section</th>
-                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Duration</th>
-                                <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Description</th>
+                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Section</th>
+                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Duration</th>
+                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Description</th>
                               </tr>
                             </thead>
                             <tbody>
