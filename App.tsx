@@ -14,6 +14,7 @@ import { LibraryModal } from './components/LibraryModal.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
 import MixComparator from './components/MixComparator.tsx';
+import { LandingPage } from './components/LandingPage.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
 
@@ -177,7 +178,7 @@ const parseSuggestedTitleFromMarkdownStream = (markdownText: string): string | n
 
 
 const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<ActiveView>('trackGuide');
+  const [activeView, setActiveView] = useState<ActiveView>('landing');
   const [inputs, setInputs] = useState<UserInputs>(initialInputsState);
   const [currentGenreText, setCurrentGenreText] = useState('');
   const [currentVibeText, setCurrentVibeText] = useState('');
@@ -910,20 +911,52 @@ const App: React.FC = () => {
   }
 
 
+  // Show landing page if activeView is 'landing'
+  if (activeView === 'landing') {
+    return <LandingPage onGetStarted={() => setActiveView('trackGuide')} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-6 lg:p-8">
-      <header className="text-center mb-6">
-        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400">
-          {APP_TITLE}
-        </h1>
-        <p className="text-gray-400 mt-2 text-lg">Your AI Music Production Assistant</p>
+    <div className="min-h-screen bg-[#2B2B2B] text-gray-100 p-4 md:p-6 lg:p-8 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, #FF5722 1px, transparent 0)`,
+          backgroundSize: '40px 40px'
+        }}></div>
+      </div>
+      
+      {/* Geometric Elements */}
+      <div className="absolute top-10 right-10 w-32 h-32 opacity-10">
+        <div className="w-full h-full border-2 border-orange-500 transform rotate-12"></div>
+        <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12"></div>
+      </div>
+      
+      <header className="text-center mb-6 relative z-10">
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="w-8 h-8 bg-orange-500 transform rotate-45 flex items-center justify-center">
+            <div className="w-4 h-4 bg-white transform -rotate-45"></div>
+          </div>
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              {APP_TITLE}
+            </h1>
+            <p className="text-gray-400 text-lg">Your Smartest Studio Assistant</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setActiveView('landing')}
+          className="mt-2 text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
+        >
+          ← Back to Landing
+        </button>
       </header>
       
-      <div className="mb-8 flex justify-center space-x-2 md:space-x-3 border-b border-gray-700 pb-3">
+      <div className="mb-8 flex justify-center space-x-2 md:space-x-3 border-b border-orange-500/20 pb-3 relative z-10">
         <Button
           onClick={() => setActiveView('trackGuide')}
           variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
-          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-purple-600 shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
+          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-orange-500 shadow-lg hover:bg-orange-600' : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'}`}
           leftIcon={<PencilSquareIcon className="w-4 h-4"/>}
         >
           TrackGuide AI
@@ -931,8 +964,7 @@ const App: React.FC = () => {
         <Button
           onClick={() => setActiveView('mixFeedback')}
           variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-           className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-teal-600 shadow-lg !focus:ring-teal-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-           style={activeView === 'mixFeedback' ? { backgroundColor: '#0D9488', borderColor: '#0D9488' } : {}}
+          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-orange-500 shadow-lg hover:bg-orange-600' : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'}`}
           leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
         >
           Mix Feedback AI
@@ -942,7 +974,7 @@ const App: React.FC = () => {
         <Button
           onClick={() => setShowAIAssistant(true)}
           variant="secondary"
-          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
           leftIcon={<SparklesIcon className="w-4 h-4"/>}
         >
           Production Coach
@@ -950,7 +982,7 @@ const App: React.FC = () => {
         <Button
           onClick={() => setShowEQCheatSheet(true)}
           variant="secondary"
-          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
           leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
         >
           EQ Guide

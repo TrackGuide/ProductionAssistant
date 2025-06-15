@@ -14,8 +14,9 @@ export default defineConfig(({ mode }) => {
         }
       },
       server: {
-        host: true,
-        allowedHosts: ['work-1-fychmxbgoxsycaji.prod-runtime.all-hands.dev', 'work-2-fychmxbgoxsycaji.prod-runtime.all-hands.dev']
+        host: '0.0.0.0',
+        port: 12000,
+        allowedHosts: true
       }
     };
 });

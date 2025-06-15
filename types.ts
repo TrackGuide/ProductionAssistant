@@ -80,4 +80,4 @@ export interface MixFeedbackInputs {
   userNotes: string;
 }
 
-export type ActiveView = 'trackGuide' | 'mixFeedback';
+export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback';
