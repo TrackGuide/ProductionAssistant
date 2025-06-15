@@ -261,56 +261,69 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Navigating the AI Challenge Section */}
-      <section className="relative px-6 py-20 bg-black/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Navigating the
-                <span className="block text-orange-500">AI Challenge</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Empowering the artist vs. replacing the craft
-              </p>
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Without a clear structure, many producers struggle to turn inspiration into finished tracks.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    A constant stream of flashy tools distracts from understanding core production fundamentals.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="relative h-96">
-              <div className="absolute top-0 right-0 w-48 h-48">
-                <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-                <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-              </div>
-              <div className="absolute bottom-0 left-0 w-32 h-32">
-                <div className="w-full h-full border-2 border-orange-500" />
-                <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
-              </div>
-              {/* Floating text accents */}
-              <div className="absolute top-4 right-8 text-xs text-orange-500 transform rotate-12">AI innovation vs. tradition</div>
-              <div className="absolute bottom-8 left-4 text-xs text-orange-500 transform -rotate-12">Collaboration vs. replacement</div>
-              <div className="absolute top-16 left-16 text-xs text-orange-500 transform rotate-45">Human story</div>
-              {/* Connecting lines */}
-              <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 rotate-45" />
-              <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 -rotate-45" />
-            </div>
+    {/* Navigating the AI Challenge Section */}
+<section className="relative px-6 py-20 bg-black/30">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* Left-side geometric accents */}
+      <div className="relative h-96">
+        <div className="absolute top-0 left-0 w-48 h-48">
+          <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
+          <div className="absolute top-4 left-4 w-40 h-40 bg-orange-500 transform rotate-45" />
+        </div>
+        <div className="absolute bottom-0 right-0 w-32 h-32">
+          <div className="w-full h-full border-2 border-orange-500" />
+          <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500" />
+        </div>
+
+        {/* Floating text elements */}
+        <div className="absolute top-4 left-8 text-xs text-orange-500 transform rotate-12">
+          AI innovation vs. tradition
+        </div>
+        <div className="absolute bottom-8 right-4 text-xs text-orange-500 transform -rotate-12">
+          Collaboration vs. replacement
+        </div>
+        <div className="absolute top-16 right-16 text-xs text-orange-500 transform rotate-45">
+          Human story
+        </div>
+
+        {/* Connecting lines */}
+        <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+        <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+      </div>
+
+      {/* Right-side content */}
+      <div className="space-y-8">
+        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+          Balancing
+          <span className="block text-orange-500">AI and Artistry</span>
+        </h2>
+        <p className="text-xl text-gray-300 leading-relaxed">
+          Empowering the artist vs. replacing the craft
+        </p>
+
+        <div className="grid gap-6">
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Without a clear structure, many producers struggle to turn inspiration into finished tracks.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              A constant stream of flashy tools distracts from understanding core production fundamentals.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       {/* Creator Economy Stats Section */}
       <section className="px-6 py-20">
