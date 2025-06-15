@@ -38,29 +38,17 @@ const App: React.FC = () => {
         
         {activeView === 'trackGuide' && (
           <div className="main-grid">
-            <Suspense fallback={<LoadingComponent />}>
-              <BlueprintYourSound />
-            </Suspense>
-            
-            <Suspense fallback={<LoadingComponent />}>
-              <TrackGuide />
-            </Suspense>
-            
-            {activeGuidebookDetails ? (
-              <Suspense fallback={<LoadingComponent />}>
-                <MidiGeneratorComponent
-                  currentGuidebookEntry={activeGuidebookDetails}
-                  mainAppInputs={inputs}
-                  onUpdateGuidebookEntryMidi={handleUpdateGuidebookEntryMidi}
-                  parsedGuidebookBpm={parseBpmFromGuidebook(activeGuidebookDetails?.content || '')}
-                  parsedGuidebookKey={parseKeyFromGuidebook(activeGuidebookDetails?.content || '')}
-                  parsedGuidebookChordProg={parseChordProgressionFromGuidebook(activeGuidebookDetails?.content || '')}
-                />
-              </Suspense>
-            ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <p>Generate a track guide to enable MIDI generation</p>
-              </div>
+            <BlueprintYourSound />
+            <TrackGuide />
+            {activeGuidebookDetails && (
+              <MidiGeneratorComponent
+                currentGuidebookEntry={activeGuidebookDetails}
+                mainAppInputs={inputs}
+                onUpdateGuidebookEntryMidi={handleUpdateGuidebookEntryMidi}
+                parsedGuidebookBpm={parseBpmFromGuidebook(activeGuidebookDetails?.content || '')}
+                parsedGuidebookKey={parseKeyFromGuidebook(activeGuidebookDetails?.content || '')}
+                parsedGuidebookChordProg={parseChordProgressionFromGuidebook(activeGuidebookDetails?.content || '')}
+              />
             )}
           </div>
         )}
