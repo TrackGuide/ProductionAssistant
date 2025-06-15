@@ -1,3 +1,4 @@
+// Button.tsx
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,15 +17,7 @@ export const Button: React.FC<ButtonProps> = ({
   rightIcon,
   ...props
 }) => {
-  // ⚡️ MOBILE-FIRST with full-width on phones, auto-width at md+
-  const baseStyles = `
-    inline-flex items-center justify-center
-    w-full md:w-auto
-    font-semibold rounded-md shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
-    transition-colors duration-150
-    disabled:opacity-50 disabled:cursor-not-allowed
-  `;
+  const baseStyles = "inline-flex items-center justify-center font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantStyles = {
     primary:   "bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500",
@@ -33,11 +26,10 @@ export const Button: React.FC<ButtonProps> = ({
     danger:    "bg-red-600     hover:bg-red-700 text-white focus:ring-red-500",
   };
 
-  // Smaller padding/text on mobile, original sizes at md+
   const sizeStyles = {
-    sm: "px-2 py-1 text-sm       md:px-3 md:py-1.5 md:text-sm",
-    md: "px-2 py-1 text-sm       md:px-4 md:py-2   md:text-base",
-    lg: "px-3 py-1.5 text-base   md:px-6 md:py-3   md:text-lg",
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2   text-base",
+    lg: "px-6 py-3   text-lg",
   };
 
   return (
