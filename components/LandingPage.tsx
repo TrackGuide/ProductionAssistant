@@ -320,50 +320,57 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Navigating the AI Challenge Section */}
-      <section className="relative px-6 py-20 bg-black/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Navigating the
-                <span className="block text-orange-500">AI Challenge</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Empowering the artist vs. replacing the craft
-              </p>
-              
-     <div className="grid gap-6">
-  <div className="border-l-4 border-orange-500 pl-6">
-    <p className="text-gray-300">
-      Without a clear structure, many producers struggle to turn inspiration into finished tracks.
-    </p>
+    {/* Navigating the AI Challenge Section */}
+<section className="relative px-6 py-20 bg-black/30">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      
+      {/* Left content */}
+      <div className="space-y-8">
+        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+          Navigating the
+          <span className="block text-orange-500">AI Challenge</span>
+        </h2>
+        <p className="text-xl text-gray-300 leading-relaxed">
+          Empowering the artist vs. replacing the craft
+        </p>
+        
+        {/* Simplified three-item list */}
+        <div className="grid gap-6">
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Without a clear structure, many producers struggle to turn inspiration into finished tracks.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              A constant stream of flashy tools distracts from understanding core production fundamentals.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Right-side geometric elements */}
+      <div className="relative h-96">
+        <div className="absolute top-0 right-0 w-48 h-48">
+          <div className="w-full h-full border-2 border-orange-500 transform rotate-45"></div>
+          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45"></div>
+        </div>
+        <div className="absolute bottom-0 left-0 w-32 h-32">
+          <div className="w-full h-full border-2 border-orange-500"></div>
+          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500"></div>
+        </div>
+      </div>
+      
+    </div>
   </div>
-  <div className="border-l-4 border-orange-500 pl-6">
-    <p className="text-gray-300">
-      Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
-    </p>
-  </div>
-  <div className="border-l-4 border-orange-500 pl-6">
-    <p className="text-gray-300">
-      A constant stream of flashy tools distracts from understanding core production fundamentals.
-    </p>
-  </div>
-</div>
+</section>
 
-
-            <div className="relative h-96">
-              {/* Abstract geometric visualization */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-80 h-80">
-                  {/* Central geometric shape */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-32 h-32 bg-orange-500 transform rotate-45 flex items-center justify-center">
-                      <div className="w-20 h-20 bg-gray-900 transform -rotate-45 flex items-center justify-center">
-                        <div className="w-12 h-12 bg-orange-500 transform rotate-45"></div>
-                      </div>
-                    </div>
-                  </div>
                   
                   {/* Floating text elements */}
                   <div className="absolute top-4 right-8 text-xs text-orange-500 transform rotate-12">
