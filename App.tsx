@@ -8,6 +8,13 @@ import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon, CloseIcon } from './components/icons.tsx';
+
+// Custom TrackGuide Logo Component
+const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <div className={`${className} bg-orange-500 transform rotate-45 flex items-center justify-center`}>
+    <div className="w-1/2 h-1/2 bg-white transform -rotate-45"></div>
+  </div>
+);
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
@@ -645,7 +652,7 @@ const App: React.FC = () => {
         const restOfLine = boldLabelMatch[2];
         elements.push(
           <p key={key} className="my-2.5 text-gray-300 leading-relaxed break-words">
-            <strong className="text-purple-300 font-semibold mr-1.5">{label}:</strong> 
+            <strong className="text-orange-300 font-semibold mr-1.5">{label}:</strong> 
             <span dangerouslySetInnerHTML={{ __html: String.prototype.substring.call(restOfLine, 0).replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/✔\s/g, '<span class="text-green-400 mr-1">✔</span>') }} /> 
           </p>
         );
@@ -660,22 +667,22 @@ const App: React.FC = () => {
       if (lineContent.startsWith('# TRACKGUIDE:')) {
         const titleMatch = lineContent.match(/^#\s*TRACKGUIDE:\s*"?([^"\n]+)"?/i);
         const actualTitle = titleMatch && titleMatch[1] ? titleMatch[1].trim() : "Generated TrackGuide";
-        elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-purple-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-purple-400 opacity-80" />{actualTitle}</h1>); return;
+        elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-orange-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-orange-400 opacity-80" />{actualTitle}</h1>); return;
       }
-      if (lineContent.startsWith('# ') && !isMixFeedback) { elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-purple-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-purple-400 opacity-80" />{String.prototype.substring.call(processedLine, 2)}</h1>); return; }
-      if (lineContent.startsWith('# ') && isMixFeedback) { elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-teal-300 break-words flex items-center"><AdjustmentsHorizontalIcon className="w-6 h-6 mr-3 text-teal-400 opacity-80" />{String.prototype.substring.call(processedLine, 2)}</h1>); return; }
+      if (lineContent.startsWith('# ') && !isMixFeedback) { elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-orange-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-orange-400 opacity-80" />{String.prototype.substring.call(processedLine, 2)}</h1>); return; }
+      if (lineContent.startsWith('# ') && isMixFeedback) { elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-orange-300 break-words flex items-center"><AdjustmentsHorizontalIcon className="w-6 h-6 mr-3 text-orange-400 opacity-80" />{String.prototype.substring.call(processedLine, 2)}</h1>); return; }
       
       if (lineContent.startsWith('## ')) { 
         const titleText = String.prototype.substring.call(processedLine, 3);
-        const iconColor = isMixFeedback ? "text-teal-500" : "text-purple-500";
-        const titleColor = isMixFeedback ? "text-teal-400" : "text-purple-400";
+        const iconColor = "text-orange-500";
+        const titleColor = "text-orange-400";
         const IconComponent = isMixFeedback ? AdjustmentsHorizontalIcon : MusicNoteIcon;
         elements.push(<h2 key={key} className={`text-2xl font-semibold mt-10 mb-4 pt-4 border-t border-gray-700 ${titleColor} break-words flex items-center guidebook-section-break`}><IconComponent className={`w-5 h-5 mr-2 ${iconColor} opacity-70`} />{titleText}</h2>); 
         return; 
       }
       if (lineContent.startsWith('### ')) { 
         const sectionTitleText = String.prototype.substring.call(processedLine, 4);
-        const titleColor = isMixFeedback ? "text-teal-300" : "text-purple-300";
+        const titleColor = "text-orange-300";
         elements.push(<h3 key={key} className={`text-xl font-medium mt-6 mb-3 ${titleColor} break-words`}>{sectionTitleText}</h3>); 
         return; 
       }
@@ -731,8 +738,8 @@ const App: React.FC = () => {
             const headerTextRowNode = currentTableRows.pop(); 
             if (React.isValidElement<React.HTMLAttributes<HTMLTableRowElement>>(headerTextRowNode)) {
               const headerTextRow = headerTextRowNode;
-              const headerBaseColor = isMixFeedback ? "bg-teal-800/30" : "bg-purple-800/30";
-              const headerTextColor = isMixFeedback ? "text-teal-200" : "text-purple-200";
+              const headerBaseColor = "bg-orange-800/30";
+              const headerTextColor = "text-orange-200";
               const styledHeaderCells = React.Children.map(headerTextRow.props.children, (childNode: React.ReactNode) => {
                 if (React.isValidElement(childNode)) {
                   const tdCell = childNode as React.ReactElement<React.TdHTMLAttributes<HTMLTableCellElement>>;
@@ -803,12 +810,12 @@ const App: React.FC = () => {
   }> = ({ selections, onRemove }) => (
     <div className="flex flex-wrap gap-2 mt-2 mb-2 min-h-[2.25rem]">
       {selections.map(selection => (
-        <span key={selection} className="flex items-center px-3 py-1 bg-purple-600 text-white text-xs font-medium rounded-full shadow-md hover:bg-purple-700 transition-colors">
+        <span key={selection} className="flex items-center px-3 py-1 bg-orange-600 text-white text-xs font-medium rounded-full shadow-md hover:bg-orange-700 transition-colors">
           {selection}
           <button 
             type="button" 
             onClick={() => onRemove(selection)}
-            className="ml-1.5 -mr-0.5 p-0.5 text-purple-200 hover:text-white rounded-full focus:outline-none focus:bg-purple-800 transition-colors"
+            className="ml-1.5 -mr-0.5 p-0.5 text-orange-200 hover:text-white rounded-full focus:outline-none focus:bg-orange-800 transition-colors"
             aria-label={`Remove ${selection}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -975,7 +982,7 @@ const App: React.FC = () => {
           onClick={() => setShowAIAssistant(true)}
           variant="secondary"
           className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-          leftIcon={<SparklesIcon className="w-4 h-4"/>}
+          leftIcon={<TrackGuideLogo className="w-4 h-4"/>}
         >
           Production Coach
         </Button>
@@ -1064,7 +1071,7 @@ const App: React.FC = () => {
                           onClick={() => handleDAWSuggestionClick(suggestion)}
                           className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ease-in-out shadow-sm hover:shadow-md ${
                               inputs.daw === suggestion 
-                              ? 'bg-purple-600 text-white ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-800' 
+                              ? 'bg-orange-600 text-white ring-2 ring-orange-400 ring-offset-2 ring-offset-gray-800' 
                               : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-gray-100'
                           }`}
                           >
@@ -1079,7 +1086,7 @@ const App: React.FC = () => {
                 <div>
                   <Textarea label="Available Instruments (Optional)" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Guitar, Analog Synth, MPC, Vocals" />
                 </div>
-                <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<SparklesIcon className="w-5 h-5"/>}>
+                <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<TrackGuideLogo className="w-5 h-5"/>}>
                   {isLoading ? (loadingMessage || 'Generating...') : 'Generate TrackGuide'}
                 </Button>
                 <div className="flex space-x-2 mt-3">
@@ -1126,7 +1133,7 @@ const App: React.FC = () => {
                 <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-18rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {activeGuidebookDetails && !isLoading && (
                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
-                        <strong className="text-purple-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
+                        <strong className="text-orange-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
                         <p><strong>Project Title:</strong> {activeGuidebookDetails.title}</p>
                         <p><strong>Genre(s):</strong> {Array.isArray(activeGuidebookDetails.genre) ? activeGuidebookDetails.genre.join(', ') : activeGuidebookDetails.genre}</p>
                         <p><strong>Artist/Song Ref:</strong> {activeGuidebookDetails.artistReference || "N/A"}</p>
@@ -1141,10 +1148,10 @@ const App: React.FC = () => {
                     const structuralBlueprint = extractStructuralBlueprint(activeGuidebookDetails.content);
                     return structuralBlueprint.length > 0 && (
                       <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break">
-                        <strong className="text-purple-300 block mb-3 text-base">Structural Blueprint:</strong>
+                        <strong className="text-orange-300 block mb-3 text-base">Structural Blueprint:</strong>
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse border border-gray-600 bg-gray-800 text-xs">
-                            <thead className="bg-purple-800/30">
+                            <thead className="bg-orange-800/30">
                               <tr className="border-b border-gray-500">
                                 <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Section</th>
                                 <th className="p-2 font-semibold text-purple-200 text-left border border-gray-500">Duration</th>
@@ -1196,7 +1203,7 @@ const App: React.FC = () => {
             {/* Initial Placeholder or if no content and not loading/error */}
             {!isLoading && !generatedGuidebook && !error && !activeGuidebookDetails && ( 
               <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
-                  <SparklesIcon className="w-20 h-20 text-purple-500 mb-6 opacity-80"/>
+                  <TrackGuideLogo className="w-20 h-20 mb-6 opacity-80"/>
                   <h3 className="text-2xl font-semibold text-gray-200 mb-2">Produce Smarter. Create More.</h3>
                   <p className="text-gray-400 max-w-md">Tell us what you’re envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.</p>
               </Card>
@@ -1215,13 +1222,13 @@ const App: React.FC = () => {
                 <div>
                   <label htmlFor="mix-audio-file" className="block text-sm font-medium text-gray-300 mb-1">Audio File (.mp3, .wav, etc.)</label>
                   <div 
-                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${mixFeedbackError && mixFeedbackInputs.audioFile === null ? 'border-red-500' : 'border-gray-600'} border-dashed rounded-md cursor-pointer hover:border-teal-500 transition-colors`}
+                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${mixFeedbackError && mixFeedbackInputs.audioFile === null ? 'border-red-500' : 'border-gray-600'} border-dashed rounded-md cursor-pointer hover:border-orange-500 transition-colors`}
                     onClick={() => audioFileInputRef.current?.click()}
-                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-teal-500');}}
-                    onDragLeave={(e) => e.currentTarget.classList.remove('border-teal-500')}
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-orange-500');}}
+                    onDragLeave={(e) => e.currentTarget.classList.remove('border-orange-500')}
                     onDrop={(e) => {
                         e.preventDefault();
-                        e.currentTarget.classList.remove('border-teal-500');
+                        e.currentTarget.classList.remove('border-orange-500');
                         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                             const file = e.dataTransfer.files[0];
                              if (file.size > MAX_AUDIO_FILE_SIZE_BYTES) {
@@ -1238,7 +1245,7 @@ const App: React.FC = () => {
                     <div className="space-y-1 text-center">
                       <UploadIcon className="mx-auto h-12 w-12 text-gray-500" />
                       <div className="flex text-sm text-gray-400">
-                        <span className="relative rounded-md font-medium text-teal-400 hover:text-teal-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 focus-within:ring-teal-500">
+                        <span className="relative rounded-md font-medium text-orange-400 hover:text-orange-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 focus-within:ring-orange-500">
                           <span>Upload a file</span>
                         </span>
                         <input id="mix-audio-file" name="mix-audio-file" type="file" className="sr-only" accept="audio/*" onChange={handleMixAudioFileChange} ref={audioFileInputRef} />
@@ -1263,12 +1270,12 @@ const App: React.FC = () => {
                 <Button 
                     type="submit" 
                     disabled={isGeneratingMixFeedback || !mixFeedbackInputs.audioFile} 
-                    className="w-full text-base py-2.5 !bg-teal-600 hover:!bg-teal-700 focus:!ring-teal-500"
+                    className="w-full text-base py-2.5 !bg-orange-600 hover:!bg-orange-700 focus:!ring-orange-500"
                     leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
                  >
                   {isGeneratingMixFeedback ? 'Analyzing Mix...' : 'Get Mix Feedback'}
                 </Button>
-                <Button type="button" onClick={resetMixFeedbackForm} variant="outline" className="w-full !border-teal-500 !text-teal-400 hover:!bg-teal-500 hover:!text-white">
+                <Button type="button" onClick={resetMixFeedbackForm} variant="outline" className="w-full !border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white">
                   Clear Mix Form
                 </Button>
               </form>
@@ -1279,7 +1286,7 @@ const App: React.FC = () => {
                 <Button
                   onClick={() => setShowMixComparator(true)}
                   variant="primary"
-                  className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg"
+                  className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
                   leftIcon={<UploadIcon className="w-5 h-5"/>}
                 >
                   🎵 Compare Your Mix
@@ -1291,7 +1298,7 @@ const App: React.FC = () => {
           <div className="md:col-span-8 space-y-6">
             {isGeneratingMixFeedback && (
               <div className="flex justify-center items-center h-full min-h-[300px]">
-                <Spinner size="lg" color="text-teal-500" text="AI is analyzing your mix... this may take a moment."/>
+                <Spinner size="lg" color="text-orange-500" text="AI is analyzing your mix... this may take a moment."/>
               </div>
             )}
             {mixFeedbackError && !isGeneratingMixFeedback && (
@@ -1304,10 +1311,10 @@ const App: React.FC = () => {
               <Card 
                 title="AI Mix Feedback Report" 
                 className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
-                titleClassName="border-b border-gray-700 text-xl !text-teal-300"
+                titleClassName="border-b border-gray-700 text-xl !text-orange-300"
               >
                  <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
-                  <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-teal-500 !text-teal-400 hover:!bg-teal-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
+                  <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-18rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
@@ -1317,7 +1324,7 @@ const App: React.FC = () => {
             )}
             {!isGeneratingMixFeedback && !mixFeedbackResult && !mixFeedbackError && (
               <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
-                  <AdjustmentsHorizontalIcon className="w-20 h-20 text-teal-500 mb-6 opacity-80"/>
+                  <AdjustmentsHorizontalIcon className="w-20 h-20 text-orange-500 mb-6 opacity-80"/>
                   <h3 className="text-2xl font-semibold text-gray-200 mb-2">Refine Your Sound.</h3>
                   <p className="text-gray-400 max-w-md">Upload your mix, add some notes, and get detailed feedback from our AI mixing engineer.</p>
               </Card>

@@ -1,6 +1,13 @@
 import React from 'react';
 import { SparklesIcon, MusicNoteIcon, BookOpenIcon, AdjustmentsHorizontalIcon, PlayIcon, ChartBarIcon, UserGroupIcon, LightBulbIcon } from './icons.tsx';
 
+// Custom TrackGuide Logo Component
+const TrackGuideLogo = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <div className={`${className} bg-orange-500 transform rotate-45 flex items-center justify-center`}>
+    <div className="w-1/2 h-1/2 bg-white transform -rotate-45"></div>
+  </div>
+);
+
 interface LandingPageProps {
   onGetStarted: () => void;
 }
@@ -60,14 +67,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
-                AI Studio Assistant:
+                <span className="text-orange-500">AI Studio Assistant:</span>
                 <span className="block text-white mt-2">
-                  A Complement to
+                  A Complement to Creativity,
                 </span>
                 <span className="block text-white mt-2">
-                  Creativity,
-                </span>
-                <span className="block text-orange-500 mt-2">
                   Not a Substitute.
                 </span>
               </h1>
@@ -103,10 +107,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               onClick={onGetStarted}
               className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
             >
-              <SparklesIcon className="h-6 w-6" />
+              <TrackGuideLogo className="h-6 w-6" />
               <span>Start Creating</span>
             </button>
-            <button className="border-2 border-orange-500 hover:bg-orange-500 text-orange-500 hover:text-white px-10 py-4 rounded-lg font-bold text-lg transition-all">
+            <button 
+              onClick={() => {
+                const demoSection = document.getElementById('demo-section');
+                if (demoSection) {
+                  demoSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="border-2 border-orange-500 hover:bg-orange-500 text-orange-500 hover:text-white px-10 py-4 rounded-lg font-bold text-lg transition-all"
+            >
               Watch Demo
             </button>
           </div>
@@ -114,14 +126,99 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
       
-      {/* DAW Challenge Section */}
+      {/* How It Works Section */}
+      <section className="relative px-6 py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              How TrackGuide Works
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              From concept to creation in three simple steps
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-white">1</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white">Describe Your Vision</h3>
+              <p className="text-gray-300">
+                Tell us your genre, vibe, and creative goals. Our AI understands your artistic intent.
+              </p>
+            </div>
+            
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-white">2</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white">Get Your Blueprint</h3>
+              <p className="text-gray-300">
+                Receive a detailed production guide with arrangement tips, sound design, and MIDI foundations.
+              </p>
+            </div>
+            
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-white">3</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white">Create & Refine</h3>
+              <p className="text-gray-300">
+                Use our tools to generate MIDI, get mix feedback, and bring your vision to life.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="relative px-6 py-20 bg-black/20">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Start Creating Today
+          </h2>
+          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
+            Join thousands of producers who are already creating smarter with TrackGuide AI
+          </p>
+          
+          <div className="bg-gray-800/50 rounded-2xl p-8 max-w-md mx-auto border border-orange-500/20">
+            <h3 className="text-2xl font-bold text-white mb-4">Free to Start</h3>
+            <p className="text-gray-300 mb-6">
+              Get started with TrackGuide AI at no cost. Upgrade when you're ready for more.
+            </p>
+            <button 
+              onClick={onGetStarted}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-xl"
+            >
+              Start Creating Free
+            </button>
+            <p className="text-gray-500 text-sm mt-4">No credit card required</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Divider Section - Transition to Investor Content */}
+      <section className="relative px-6 py-16 bg-gradient-to-b from-black/20 to-black/40">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="w-32 h-1 bg-orange-500 mx-auto mb-8"></div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            The Investment Opportunity
+          </h2>
+          <p className="text-xl text-gray-300">
+            Transforming the $43B music production industry
+          </p>
+        </div>
+      </section>
+
+      {/* Modern Era of Production Section */}
       <section className="relative px-6 py-20 bg-black/20">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
                 Navigating the
-                <span className="block text-white">DAW Challenge</span>
+                <span className="block text-orange-500">Modern Era of Production</span>
               </h2>
               <p className="text-xl text-gray-300 leading-relaxed">
                 Too many tools. Not enough direction.
@@ -271,7 +368,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
       
       {/* Core Features Section */}
-      <section className="px-6 py-20">
+      <section id="demo-section" className="px-6 py-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
@@ -381,6 +478,102 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
+      {/* Business Model Section */}
+      <section className="px-6 py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Scalable Business Model
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Multiple revenue streams with high margins and strong network effects
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+              <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
+              <p className="text-gray-300 mb-6">
+                Recurring revenue from premium features, advanced AI models, and unlimited generations.
+              </p>
+              <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+              <h3 className="text-2xl font-bold text-white mb-4">Marketplace</h3>
+              <p className="text-gray-300 mb-6">
+                Commission from sample packs, presets, and templates created by our community.
+              </p>
+              <div className="text-orange-500 font-bold text-lg">30% Commission</div>
+            </div>
+            
+            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+              <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
+              <p className="text-gray-300 mb-6">
+                Custom solutions for record labels, music schools, and production companies.
+              </p>
+              <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Traction Section */}
+      <section className="px-6 py-20 bg-black/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                Early Traction &
+                <span className="block text-orange-500">Market Validation</span>
+              </h2>
+              
+              <div className="grid gap-6">
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">10K+</h3>
+                  <p className="text-gray-300">Beta users in first 6 months</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">4.8/5</h3>
+                  <p className="text-gray-300">Average user rating</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">65%</h3>
+                  <p className="text-gray-300">Monthly active user retention</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">$43B</h3>
+                  <p className="text-gray-300">Total addressable market size</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative h-96">
+              {/* Growth chart visualization */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-80 h-80">
+                  {/* Chart bars */}
+                  <div className="absolute bottom-0 left-8 w-8 h-16 bg-orange-500 opacity-60"></div>
+                  <div className="absolute bottom-0 left-20 w-8 h-24 bg-orange-500 opacity-70"></div>
+                  <div className="absolute bottom-0 left-32 w-8 h-32 bg-orange-500 opacity-80"></div>
+                  <div className="absolute bottom-0 left-44 w-8 h-40 bg-orange-500 opacity-90"></div>
+                  <div className="absolute bottom-0 left-56 w-8 h-48 bg-orange-500"></div>
+                  
+                  {/* Trend line */}
+                  <div className="absolute bottom-16 left-12 w-52 h-0.5 bg-orange-500 transform rotate-12"></div>
+                  
+                  {/* Grid lines */}
+                  <div className="absolute bottom-0 left-0 w-72 h-0.5 bg-gray-600 opacity-30"></div>
+                  <div className="absolute bottom-16 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
+                  <div className="absolute bottom-32 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
+                  <div className="absolute bottom-48 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="px-6 py-20">
         <div className="max-w-4xl mx-auto text-center relative">
@@ -394,7 +587,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             onClick={onGetStarted}
             className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-4 rounded-lg font-bold text-xl transition-all transform hover:scale-105 inline-flex items-center space-x-3 shadow-xl"
           >
-            <SparklesIcon className="h-6 w-6" />
+            <TrackGuideLogo className="h-6 w-6" />
             <span>Start Creating Now</span>
           </button>
           <p className="text-gray-500 mt-4">Free to start • No credit card required</p>
