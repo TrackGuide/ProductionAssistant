@@ -940,6 +940,19 @@ const App: React.FC = () => {
       </div>
       
       <header className="text-center mb-6 relative z-10">
+        {/* Centered Logo and Tagline */}
+        <div className="mb-8">
+          <div className="flex justify-center mb-4">
+            <TrackGuideLogo className="h-12 w-12 text-orange-500" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+            Produce Smarter. Create More.
+          </h2>
+          <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">
+            Tell us what you're envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.
+          </p>
+        </div>
+        
         <div className="flex items-center justify-center space-x-3 mb-4">
           <div className="w-8 h-8 bg-orange-500 transform rotate-45 flex items-center justify-center">
             <div className="w-4 h-4 bg-white transform -rotate-45"></div>
