@@ -110,17 +110,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <TrackGuideLogo className="h-6 w-6" />
               <span>Start Creating</span>
             </button>
-            <button 
-              onClick={() => {
-                const demoSection = document.getElementById('demo-section');
-                if (demoSection) {
-                  demoSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="border-2 border-orange-500 hover:bg-orange-500 text-orange-500 hover:text-white px-10 py-4 rounded-lg font-bold text-lg transition-all"
-            >
-              Watch Demo
-            </button>
+           
           </div>
 
         </div>
