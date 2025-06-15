@@ -333,29 +333,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Empowering the artist vs. replacing the craft
               </p>
               
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-lg font-bold text-white mb-2">The allure of one-click track generation</h3>
-                  <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-lg font-bold text-white mb-2">AI models trained on existing content risk</h3>
-                  <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-lg font-bold text-white mb-2">Speed can come at the cost of authenticity—</h3>
-                  <p className="text-gray-400">where do we draw the line between productivity and creative depth?</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-lg font-bold text-white mb-2">As AI-generated content increases, so do legal and</h3>
-                  <p className="text-gray-400">ethical questions around authorship, royalties, and intellectual property.</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-lg font-bold text-white mb-2">As AI automates production, it threatens</h3>
-                  <p className="text-gray-400">the mentorship and hands-on practice that cultivate artistry and technical skill.</p>
-                </div>
-              </div>
-            </div>
+     <div className="grid gap-6">
+  <div className="border-l-4 border-orange-500 pl-6">
+    <p className="text-gray-300">
+      Without a clear structure, many producers struggle to turn inspiration into finished tracks.
+    </p>
+  </div>
+  <div className="border-l-4 border-orange-500 pl-6">
+    <p className="text-gray-300">
+      Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
+    </p>
+  </div>
+  <div className="border-l-4 border-orange-500 pl-6">
+    <p className="text-gray-300">
+      A constant stream of flashy tools distracts from understanding core production fundamentals.
+    </p>
+  </div>
+</div>
+
 
             <div className="relative h-96">
               {/* Abstract geometric visualization */}
