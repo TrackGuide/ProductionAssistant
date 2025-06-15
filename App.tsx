@@ -997,7 +997,13 @@ const App: React.FC = () => {
   <Button
     size="sm"
     className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-    onClick={() => set
+    onClick={() => setShowEQCheatSheet(true)}
+    variant="secondary"
+    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+  >
+    EQ Guide
+  </Button>
+</nav>
 
 
 
