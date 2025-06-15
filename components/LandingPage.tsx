@@ -66,10 +66,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
                 <span className="text-orange-500">AI Studio Assistant:</span>
-                <span className="text-white">
-                  A Complement to Creativity, Not a Substitute.
+                <span className="block text-white mt-2">
+                  A Complement to Creativity,
+                </span>
+                <span className="block text-white mt-2">
+                  Not a Substitute.
                 </span>
               </h1>
               <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
@@ -169,11 +172,162 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
+      {/* Comprehensive Features Section */}
+      <section className="relative px-6 py-20 bg-black/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Complete Production Toolkit
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Every tool you need to take your music from idea to finished track
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* TrackGuide AI */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">AI</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">TrackGuide AI</h3>
+              <p className="text-gray-300 mb-4">Generate comprehensive, custom production guides based on your genre, vibe, and reference artists.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Genre-specific arrangements</li>
+                <li>• Sound design recommendations</li>
+                <li>• Mixing & mastering tips</li>
+                <li>• Reference track analysis</li>
+              </ul>
+            </div>
+
+            {/* MIDI Generator */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">♪</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Smart MIDI Generator</h3>
+              <p className="text-gray-300 mb-4">Create intelligent musical patterns that match your track's context and style.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Chord progressions</li>
+                <li>• Basslines & melodies</li>
+                <li>• Drum patterns</li>
+                <li>• Arpeggios & sequences</li>
+              </ul>
+            </div>
+
+            {/* Mix Feedback */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">🎚</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback & Analysis</h3>
+              <p className="text-gray-300 mb-4">Upload tracks for AI-powered analysis and detailed mixing recommendations.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Frequency analysis</li>
+                <li>• Dynamic range assessment</li>
+                <li>• Stereo imaging feedback</li>
+                <li>• EQ & compression tips</li>
+              </ul>
+            </div>
+
+            {/* Track Comparator */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">⚖</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Track Comparator</h3>
+              <p className="text-gray-300 mb-4">Compare different versions of your tracks side-by-side with visual analysis.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• A/B testing interface</li>
+                <li>• Waveform comparison</li>
+                <li>• Spectral analysis</li>
+                <li>• Version history tracking</li>
+              </ul>
+            </div>
+
+            {/* Production Coach */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">💬</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Live Production Coach</h3>
+              <p className="text-gray-300 mb-4">Interactive AI chatbot providing real-time production advice and guidance.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Real-time Q&A support</li>
+                <li>• Technique explanations</li>
+                <li>• Workflow optimization</li>
+                <li>• Creative problem solving</li>
+              </ul>
+            </div>
+
+            {/* Sample Library */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">📚</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Curated Sample Library</h3>
+              <p className="text-gray-300 mb-4">Access high-quality samples and loops organized by genre and mood.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Genre-specific collections</li>
+                <li>• Royalty-free samples</li>
+                <li>• BPM & key matching</li>
+                <li>• AI-powered recommendations</li>
+              </ul>
+            </div>
+
+            {/* Project Templates */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">📋</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Project Templates</h3>
+              <p className="text-gray-300 mb-4">Start with professional project templates for every genre and style.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• DAW-specific templates</li>
+                <li>• Pre-configured routing</li>
+                <li>• Effect chain presets</li>
+                <li>• Arrangement layouts</li>
+              </ul>
+            </div>
+
+            {/* Collaboration Tools */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">🤝</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Collaboration Hub</h3>
+              <p className="text-gray-300 mb-4">Share projects and collaborate with other producers seamlessly.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Project sharing</li>
+                <li>• Real-time feedback</li>
+                <li>• Version control</li>
+                <li>• Community features</li>
+              </ul>
+            </div>
+
+            {/* Learning Resources */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">🎓</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Learning Resources</h3>
+              <p className="text-gray-300 mb-4">Comprehensive tutorials and educational content to improve your skills.</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Video tutorials</li>
+                <li>• Production masterclasses</li>
+                <li>• Theory explanations</li>
+                <li>• Industry insights</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="relative px-6 py-20 bg-black/20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Start Creating Today
+            Ready to Transform Your Music Production?
           </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
             Join thousands of producers who are already creating smarter with TrackGuide AI
@@ -195,6 +349,146 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
+      {/* Core Features Section */}
+      <section className="px-6 py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                Everything You Need to Create
+              </h2>
+              <p className="text-xl text-gray-300">
+                From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h4 className="text-xl font-semibold text-white mb-2">TrackGuide AI</h4>
+                  <p className="text-gray-300">Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h4 className="text-xl font-semibold text-white mb-2">Integrated MIDI Generator</h4>
+                  <p className="text-gray-300">Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track's context.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h4 className="text-xl font-semibold text-white mb-2">Mix Feedback with Comparator</h4>
+                  <p className="text-gray-300">Upload tracks for AI-powered analysis and compare different versions side-by-side.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h4 className="text-xl font-semibold text-white mb-2">Live Production Coach</h4>
+                  <p className="text-gray-300">Interactive chatbot providing real-time production advice and guidance.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative h-96">
+              {/* Animated Demo Interface */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8 overflow-hidden">
+                {/* Terminal-style header */}
+                <div className="flex items-center space-x-2 mb-6">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="text-xs text-gray-400 ml-2">TrackGuide AI Studio</div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Typing animation */}
+                  <div className="text-xs text-gray-300">
+                    <span className="text-orange-500">&gt;</span> 
+                    <span className="animate-pulse">Analyzing your input...</span>
+                  </div>
+
+                  {/* Progress indicators with staggered animations */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">Genre Analysis:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1000 ease-out" 
+                             style={{width: '90%'}}></div>
+                      </div>
+                      <div className="text-xs text-green-400">✓</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">Structure:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1500 ease-out" 
+                             style={{width: '85%'}}></div>
+                      </div>
+                      <div className="text-xs text-green-400">✓</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-gray-400 w-20">MIDI Gen:</div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-2000 ease-out animate-pulse" 
+                             style={{width: '95%'}}></div>
+                      </div>
+                      <div className="text-xs text-orange-400 animate-spin">⟳</div>
+                    </div>
+                  </div>
+
+                  {/* Results with fade-in animation */}
+                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30 animate-pulse">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                      <span className="text-white font-medium text-sm">Blueprint Generated</span>
+                    </div>
+                    <div className="text-xs text-gray-300 space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>Future Bass + Melodic Dubstep</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>F# Minor, 140 BPM</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-400">✓</span>
+                        <span>Chord progression: i-VI-III-VII</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* MIDI visualization */}
+                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                      <span className="text-white font-medium text-sm">MIDI Patterns Ready</span>
+                    </div>
+                    <div className="flex space-x-1">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} 
+                             className="w-1 bg-orange-500 rounded-full animate-pulse" 
+                             style={{
+                               height: `${Math.random() * 20 + 10}px`,
+                               animationDelay: `${i * 0.1}s`
+                             }}></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Floating particles */}
+              <div className="absolute top-4 right-4 w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
+              <div className="absolute bottom-8 left-8 w-1 h-1 bg-orange-500 rounded-full animate-ping" 
+                   style={{animationDelay: '1s'}}></div>
+              <div className="absolute top-16 left-16 w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" 
+                   style={{animationDelay: '2s'}}></div>
+              
+              {/* Geometric accents with rotation */}
+              <div className="absolute -top-4 -right-4 w-16 h-16 border-2 border-orange-500 transform rotate-45 animate-spin" 
+                   style={{animation: 'spin 8s linear infinite'}}></div>
+              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-orange-500 rounded-full animate-bounce" 
+                   style={{animationDelay: '0.5s'}}></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Divider Section - Transition to Investor Content */}
       <section className="relative px-6 py-16 bg-gradient-to-b from-black/20 to-black/40">
         <div className="max-w-7xl mx-auto text-center">
@@ -205,6 +499,77 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <p className="text-xl text-gray-300">
             Transforming the $43B music production industry
           </p>
+        </div>
+      </section>
+
+      {/* Navigating the AI Challenge Section */}
+      <section className="relative px-6 py-20 bg-black/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                Navigating the
+                <span className="block text-orange-500">AI Challenge</span>
+              </h2>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Empowering the artist vs. replacing the craft
+              </p>
+              
+              <div className="grid gap-6">
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-lg font-bold text-white mb-2">The allure of one-click track generation</h3>
+                  <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-lg font-bold text-white mb-2">AI models trained on existing content risk</h3>
+                  <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-lg font-bold text-white mb-2">Speed can come at the cost of authenticity—</h3>
+                  <p className="text-gray-400">where do we draw the line between productivity and creative depth?</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-lg font-bold text-white mb-2">As AI-generated content increases, so do legal and</h3>
+                  <p className="text-gray-400">ethical questions around authorship, royalties, and intellectual property.</p>
+                </div>
+                <div className="border-l-4 border-orange-500 pl-6">
+                  <h3 className="text-lg font-bold text-white mb-2">As AI automates production, it threatens</h3>
+                  <p className="text-gray-400">the mentorship and hands-on practice that cultivate artistry and technical skill.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative h-96">
+              {/* Abstract geometric visualization */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-80 h-80">
+                  {/* Central geometric shape */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-32 h-32 bg-orange-500 transform rotate-45 flex items-center justify-center">
+                      <div className="w-20 h-20 bg-gray-900 transform -rotate-45 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-orange-500 transform rotate-45"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Floating text elements */}
+                  <div className="absolute top-4 right-8 text-xs text-orange-500 transform rotate-12">
+                    AI innovation vs. tradition
+                  </div>
+                  <div className="absolute bottom-8 left-4 text-xs text-orange-500 transform -rotate-12">
+                    Collaboration vs. replacement
+                  </div>
+                  <div className="absolute top-16 left-16 text-xs text-orange-500 transform rotate-45">
+                    Human story
+                  </div>
+                  
+                  {/* Connecting lines */}
+                  <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+                  <div className="absolute top-1/2 left-1/2 w-40 h-0.5 bg-orange-500 opacity-30 transform -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -363,178 +728,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
         </div>
       </section>
-      
-      {/* Core Features Section */}
-      <section id="demo-section" className="px-6 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Everything You Need to Create
-              </h2>
-              <p className="text-xl text-gray-300">
-                From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
-              </p>
-              
-              <div className="space-y-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">TrackGuide AI</h4>
-                  <p className="text-gray-300">Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Integrated MIDI Generator</h4>
-                  <p className="text-gray-300">Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track's context.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Mix Feedback with Comparator</h4>
-                  <p className="text-gray-300">Upload tracks for AI-powered analysis and compare different versions side-by-side.</p>
-                </div>
-                
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h4 className="text-xl font-semibold text-white mb-2">Live Production Coach</h4>
-                  <p className="text-gray-300">Interactive chatbot providing real-time production advice and guidance.</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="relative h-96">
-              {/* Animated Demo Interface */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-orange-500/30 p-8 overflow-hidden">
-                {/* Terminal-style header */}
-                <div className="flex items-center space-x-2 mb-6">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div className="text-xs text-gray-400 ml-2">TrackGuide AI Studio</div>
-                </div>
 
-                <div className="space-y-4">
-                  {/* Typing animation */}
-                  <div className="text-xs text-gray-300">
-                    <span className="text-orange-500">></span> 
-                    <span className="animate-pulse">Analyzing your input...</span>
-                  </div>
 
-                  {/* Progress indicators with staggered animations */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">Genre Analysis:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1000 ease-out" 
-                             style={{width: '90%'}}></div>
-                      </div>
-                      <div className="text-xs text-green-400">✓</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">Structure:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-1500 ease-out" 
-                             style={{width: '85%'}}></div>
-                      </div>
-                      <div className="text-xs text-green-400">✓</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-xs text-gray-400 w-20">MIDI Gen:</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-orange-400 h-full rounded-full transition-all duration-2000 ease-out animate-pulse" 
-                             style={{width: '95%'}}></div>
-                      </div>
-                      <div className="text-xs text-orange-400 animate-spin">⟳</div>
-                    </div>
-                  </div>
-
-                  {/* Results with fade-in animation */}
-                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30 animate-pulse">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                      <span className="text-white font-medium text-sm">Blueprint Generated</span>
-                    </div>
-                    <div className="text-xs text-gray-300 space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Future Bass + Melodic Dubstep</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>F# Minor, 140 BPM</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-400">✓</span>
-                        <span>Chord progression: i-VI-III-VII</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* MIDI visualization */}
-                  <div className="bg-black/40 rounded-lg p-3 border border-orange-500/30">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                      <span className="text-white font-medium text-sm">MIDI Patterns Ready</span>
-                    </div>
-                    <div className="flex space-x-1">
-                      {[...Array(12)].map((_, i) => (
-                        <div key={i} 
-                             className="w-1 bg-orange-500 rounded-full animate-pulse" 
-                             style={{
-                               height: `${Math.random() * 20 + 10}px`,
-                               animationDelay: `${i * 0.1}s`
-                             }}></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Floating particles */}
-              <div className="absolute top-4 right-4 w-2 h-2 bg-orange-500 rounded-full animate-ping"></div>
-              <div className="absolute bottom-8 left-8 w-1 h-1 bg-orange-500 rounded-full animate-ping" 
-                   style={{animationDelay: '1s'}}></div>
-              <div className="absolute top-16 left-16 w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" 
-                   style={{animationDelay: '2s'}}></div>
-              
-              {/* Geometric accents with rotation */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 border-2 border-orange-500 transform rotate-45 animate-spin" 
-                   style={{animation: 'spin 8s linear infinite'}}></div>
-              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-orange-500 rounded-full animate-bounce" 
-                   style={{animationDelay: '0.5s'}}></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="px-6 py-20 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Trusted by Music Creators Worldwide
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Join thousands of producers, beatmakers, and artists who are already using TrackGuide to elevate their music production.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">5K+</div>
-              <div className="text-gray-400">TrackGuides Created</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">30+</div>
-              <div className="text-gray-400">Music Genres</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">10K+</div>
-              <div className="text-gray-400">MIDI Patterns Generated</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">24/7</div>
-              <div className="text-gray-400">AI Production Coach</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Business Model Section */}
       <section className="px-6 py-20">
@@ -576,60 +772,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Traction Section */}
-      <section className="px-6 py-20 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                <span className="text-orange-500">Market Validation</span>
-              </h2>
-              
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">10K+</h3>
-                  <p className="text-gray-300">Beta users in first 6 months</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">4.8/5</h3>
-                  <p className="text-gray-300">Average user rating</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">65%</h3>
-                  <p className="text-gray-300">Monthly active user retention</p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">$43B</h3>
-                  <p className="text-gray-300">Total addressable market size</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="relative h-96">
-              {/* Growth chart visualization */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-80 h-80">
-                  {/* Chart bars */}
-                  <div className="absolute bottom-0 left-8 w-8 h-16 bg-orange-500 opacity-60"></div>
-                  <div className="absolute bottom-0 left-20 w-8 h-24 bg-orange-500 opacity-70"></div>
-                  <div className="absolute bottom-0 left-32 w-8 h-32 bg-orange-500 opacity-80"></div>
-                  <div className="absolute bottom-0 left-44 w-8 h-40 bg-orange-500 opacity-90"></div>
-                  <div className="absolute bottom-0 left-56 w-8 h-48 bg-orange-500"></div>
-                  
-                  {/* Trend line */}
-                  <div className="absolute bottom-16 left-12 w-52 h-0.5 bg-orange-500 transform rotate-12"></div>
-                  
-                  {/* Grid lines */}
-                  <div className="absolute bottom-0 left-0 w-72 h-0.5 bg-gray-600 opacity-30"></div>
-                  <div className="absolute bottom-16 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
-                  <div className="absolute bottom-32 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
-                  <div className="absolute bottom-48 left-0 w-72 h-0.5 bg-gray-600 opacity-20"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
       <section className="px-6 py-20">
