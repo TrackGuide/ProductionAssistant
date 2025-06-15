@@ -12,7 +12,8 @@
     "@google/genai": "^0.12.0",
     "midi-writer-js": "2.1.4",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

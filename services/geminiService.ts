@@ -461,3 +461,64 @@ export const generateMixFeedback = async (inputs: MixFeedbackInputs): Promise<st
     return Promise.reject(new Error(specificMessage));
   }
 };
+
+export const generateAIAssistantResponse = async (
+  message: string,
+  context?: {
+    currentGuidebook?: any;
+    userInputs?: any;
+  }
+): Promise<string> => {
+  if (!apiKey) {
+    const errorMessage = "API Key not configured. Cannot connect to Gemini API.";
+    console.error(errorMessage);
+    return Promise.reject(new Error(errorMessage));
+  }
+
+  try {
+    const contextInfo = context ? `
+Current project context:
+- Genre: ${context.userInputs?.genre || 'Not specified'}
+- Vibe: ${context.userInputs?.vibe || 'Not specified'}
+- DAW: ${context.userInputs?.daw || 'Not specified'}
+- Current guidebook: ${context.currentGuidebook?.title || 'None'}
+` : '';
+
+    const prompt = `You are an AI music production assistant. Help the user with their music production questions.
+
+${contextInfo}
+
+User question: ${message}
+
+Provide helpful, concise advice related to music production, mixing, sound design, or composition. Keep responses practical and actionable.`;
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: { parts: [{ text: prompt }] },
+    });
+
+    const responseText = response.text;
+    if (typeof responseText !== 'string') {
+      console.error("Received non-text response from Gemini API:", response);
+      throw new Error("Received an unexpected response format from Gemini API.");
+    }
+    return responseText;
+
+  } catch (error) {
+    console.error("Error generating AI assistant response:", error);
+    let specificMessage = "An unknown error occurred while generating response.";
+    if (error instanceof Error) {
+      specificMessage = error.message;
+      if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
+        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
+      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+      } else if (error.message.includes("Candidate was blocked")) {
+        specificMessage = "The response was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
+      } else {
+        specificMessage = `Failed to generate response: ${error.message}`;
+      }
+    }
+    return Promise.reject(new Error(specificMessage));
+  }
+};

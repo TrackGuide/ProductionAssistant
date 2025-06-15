@@ -85,16 +85,7 @@ What would you like to work on today?`,
         conversationHistory: messages.slice(-6) // Last 6 messages for context
       };
 
-      const response = await generateAIAssistantResponse(userMessage.content, context);
-      
-      let assistantContent = '';
-      for await (const chunk of response) {
-        if (typeof chunk.text === 'function') {
-          assistantContent += chunk.text();
-        } else {
-          assistantContent += chunk.text || '';
-        }
-      }
+      const assistantContent = await generateAIAssistantResponse(userMessage.content, context);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

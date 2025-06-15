@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, X, Play, Pause, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
+import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon } from './icons.tsx';
 
 interface MixComparatorProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
             🎚️ Mix Comparator
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <X size={24} />
+            <CloseIcon className="w-6 h-6" />
           </button>
         </div>
 
@@ -83,7 +83,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
             <h3 className="text-lg font-semibold text-white mb-4">Mix A (Original)</h3>
             {mixA ? (
               <div className="text-green-400">
-                <Play size={24} className="mx-auto mb-2" />
+                <PlayIcon className="w-6 h-6 mx-auto mb-2" />
                 <p>{mixA.name}</p>
                 <button 
                   onClick={() => setMixA(null)}
@@ -94,7 +94,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
               </div>
             ) : (
               <label className="cursor-pointer">
-                <Upload size={48} className="mx-auto mb-4 text-gray-400" />
+                <UploadIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-400 mb-2">Upload audio file</p>
                 <p className="text-sm text-gray-500">MP3, WAV, FLAC</p>
                 <input
@@ -112,7 +112,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
             <h3 className="text-lg font-semibold text-white mb-4">Mix B (Revised) - Optional</h3>
             {mixB ? (
               <div className="text-green-400">
-                <Play size={24} className="mx-auto mb-2" />
+                <PlayIcon className="w-6 h-6 mx-auto mb-2" />
                 <p>{mixB.name}</p>
                 <button 
                   onClick={() => setMixB(null)}
@@ -123,7 +123,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
               </div>
             ) : (
               <label className="cursor-pointer">
-                <Upload size={48} className="mx-auto mb-4 text-gray-400" />
+                <UploadIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-400 mb-2">Upload audio file</p>
                 <p className="text-sm text-gray-500">MP3, WAV, FLAC</p>
                 <input
@@ -149,7 +149,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
             onClick={reset}
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
           >
-            <RotateCcw size={20} />
+            <RefreshIcon className="w-5 h-5" />
             Reset
           </button>
         </div>

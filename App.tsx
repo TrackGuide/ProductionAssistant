@@ -11,6 +11,9 @@ import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
+import { AIAssistant } from './components/AIAssistant.tsx';
+import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+import MixComparator from './components/MixComparator.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
 
@@ -187,6 +190,11 @@ const App: React.FC = () => {
   const [activeGuidebookDetails, setActiveGuidebookDetails] = useState<GuidebookEntry | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState<boolean>(false);
   const [copyStatus, setCopyStatus] = useState<string>('');
+  
+  // New tool modals state
+  const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
+  const [showEQCheatSheet, setShowEQCheatSheet] = useState<boolean>(false);
+  const [showMixComparator, setShowMixComparator] = useState<boolean>(false);
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -899,23 +907,49 @@ const App: React.FC = () => {
         <p className="text-gray-400 mt-2 text-lg">Your AI Music Production Assistant</p>
       </header>
       
-      <div className="mb-8 flex justify-center space-x-3 md:space-x-4 border-b border-gray-700 pb-3">
+      <div className="mb-8 flex justify-center space-x-2 md:space-x-3 border-b border-gray-700 pb-3">
         <Button
           onClick={() => setActiveView('trackGuide')}
           variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
-          className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-purple-600 shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
-          leftIcon={<PencilSquareIcon className="w-5 h-5"/>}
+          className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'trackGuide' ? 'bg-purple-600 shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
+          leftIcon={<PencilSquareIcon className="w-4 h-4"/>}
         >
           TrackGuide AI
         </Button>
         <Button
           onClick={() => setActiveView('mixFeedback')}
           variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-           className={`px-4 py-2 text-sm md:text-base rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-teal-600 shadow-lg !focus:ring-teal-500' : 'bg-gray-700 hover:bg-gray-600'}`}
+           className={`px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${activeView === 'mixFeedback' ? 'bg-teal-600 shadow-lg !focus:ring-teal-500' : 'bg-gray-700 hover:bg-gray-600'}`}
            style={activeView === 'mixFeedback' ? { backgroundColor: '#0D9488', borderColor: '#0D9488' } : {}}
-          leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
+          leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
         >
           Mix Feedback AI
+        </Button>
+        
+        {/* Production Tools */}
+        <Button
+          onClick={() => setShowAIAssistant(true)}
+          variant="secondary"
+          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+          leftIcon={<SparklesIcon className="w-4 h-4"/>}
+        >
+          Chat Bot
+        </Button>
+        <Button
+          onClick={() => setShowEQCheatSheet(true)}
+          variant="secondary"
+          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+          leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4"/>}
+        >
+          EQ Guide
+        </Button>
+        <Button
+          onClick={() => setShowMixComparator(true)}
+          variant="secondary"
+          className="px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700 hover:bg-gray-600"
+          leftIcon={<UploadIcon className="w-4 h-4"/>}
+        >
+          Mix Compare
         </Button>
       </div>
 
@@ -1270,6 +1304,34 @@ const App: React.FC = () => {
           onLoadEntry={handleLoadFromLibrary}
           onDeleteEntry={handleDeleteFromLibrary}
           onCreateNew={resetFormForNewGuidebook}
+        />
+      )}
+
+      {/* Production Tools Modals */}
+      {showAIAssistant && (
+        <AIAssistant
+          isOpen={showAIAssistant}
+          onClose={() => setShowAIAssistant(false)}
+          currentGuidebook={activeGuidebookDetails || undefined}
+          userInputs={inputs}
+        />
+      )}
+
+      {showEQCheatSheet && (
+        <EQCheatSheet
+          isOpen={showEQCheatSheet}
+          onClose={() => setShowEQCheatSheet(false)}
+        />
+      )}
+
+      {showMixComparator && (
+        <MixComparator
+          isOpen={showMixComparator}
+          onClose={() => setShowMixComparator(false)}
+          onAnalyze={(mixA, mixB) => {
+            // Handle mix analysis here
+            console.log('Analyzing mixes:', mixA, mixB);
+          }}
         />
       )}
 
