@@ -320,11 +320,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-    {/* Navigating the AI Challenge Section */}
+{/* Navigating the AI Challenge Section */}
 <section className="relative px-6 py-20 bg-black/30">
   <div className="max-w-7xl mx-auto">
     <div className="grid lg:grid-cols-2 gap-12 items-center">
-      
+
       {/* Left content */}
       <div className="space-y-8">
         <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
@@ -334,7 +334,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <p className="text-xl text-gray-300 leading-relaxed">
           Empowering the artist vs. replacing the craft
         </p>
-        
+
         {/* Simplified three-item list */}
         <div className="grid gap-6">
           <div className="border-l-4 border-orange-500 pl-6">
@@ -354,22 +354,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
         </div>
       </div>
-      
+
       {/* Right-side geometric elements */}
       <div className="relative h-96">
         <div className="absolute top-0 right-0 w-48 h-48">
-          <div className="w-full h-full border-2 border-orange-500 transform rotate-45"></div>
-          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45"></div>
+          <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
+          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
         </div>
         <div className="absolute bottom-0 left-0 w-32 h-32">
-          <div className="w-full h-full border-2 border-orange-500"></div>
-          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500"></div>
+          <div className="w-full h-full border-2 border-orange-500" />
+          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
         </div>
       </div>
-      
+
     </div>
   </div>
 </section>
+
 
                   
                   {/* Floating text elements */}
