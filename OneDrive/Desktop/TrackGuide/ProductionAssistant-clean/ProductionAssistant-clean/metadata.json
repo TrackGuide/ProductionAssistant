@@ -1,0 +1,7 @@
+
+{
+  "name": "TrackGuide",
+  "description": "An application that generates a detailed song creation TrackGuide based on user inputs like genre, artist reference, and vibe, using the Gemini API.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
