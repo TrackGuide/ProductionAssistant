@@ -322,7 +322,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 {/* Navigating the AI Challenge Section (graphic left on desktop, below on mobile) */}
-<section className="relative px-6 py-20 bg-black bg-[url('/grid-orange.svg')] bg-top bg-repeat">
+<section className="px-6 py-20 bg-black">
   {/* Mobile Layout */}
   <div className="block lg:hidden space-y-12">
     <div className="space-y-8">
