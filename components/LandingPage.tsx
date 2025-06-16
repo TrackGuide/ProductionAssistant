@@ -103,23 +103,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
 
 <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
-  <button
-    onClick={onGetStarted}
-    className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
-  >
-    {/* Logo with black outline */}
-    <span className="p-1 bg-orange-500 rounded-full border border-black">
-      <TrackGuideLogo className="h-6 w-6" />
-    </span>
-    <span>Start Creating</span>
-  </button>
-</div>
+        <button
+          onClick={onGetStarted}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
+        >
+          {/* Logo with thin black border */}
+          <span className="p-1 bg-orange-500 rounded-full border border-black">
+            <TrackGuideLogo className="h-6 w-6" />
+          </span>
+          <span>Start Creating</span>
+        </button>
+      </div>
 
-
-          </div>
-
-        </div>
-      </section>
+    </div>
+  </div>
+</section>
       
       {/* How It Works Section */}
       <section className="relative px-6 py-20">
