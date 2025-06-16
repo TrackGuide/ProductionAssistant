@@ -322,7 +322,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 {/* Navigating the AI Challenge Section (graphic left on desktop, below on mobile) */}
-<section className="relative px-6 py-20 bg-black/20">
+<section className="relative px-6 py-20 bg-black">
   {/* Mobile Layout */}
   <div className="block lg:hidden space-y-12">
     <div className="space-y-8">
@@ -349,6 +349,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
     </div>
   </div>
+
+  {/* Desktop Layout */}
+  <div className="hidden lg:grid max-w-7xl mx-auto grid-cols-2 gap-12 items-center pt-16">
+    {/* Left: Graphic */}
+    <div className="relative h-80">
+      <div className="absolute top-0 left-0 w-40 h-40">
+        <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
+        <div className="absolute top-4 left-4 w-32 h-32 bg-orange-500 transform rotate-45" />
+      </div>
+    </div>
+
+    {/* Right: Text */}
+    <div className="space-y-8">
+      <h2 className="text-5xl font-bold text-white leading-tight">
+        Navigating the <span className="text-orange-500 block">AI Challenge</span>
+      </h2>
+      <p className="text-xl text-gray-300 leading-relaxed">
+        Empowering the artist vs. replacing the craft
+      </p>
+      <div className="grid gap-6">
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">One-click generation’s lure</h3>
+          <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Training on old hits risks</h3>
+          <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Ethical & legal questions</h3>
+          <p className="text-gray-400">around authorship, royalties, and intellectual property multiply.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
   {/* Desktop Layout */}
   <div className="hidden lg:grid max-w-7xl mx-auto grid-cols-2 gap-12 items-center pt-16">
