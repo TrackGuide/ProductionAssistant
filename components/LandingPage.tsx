@@ -349,6 +349,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </div>
     </div>
+        </div> {/* 👈 closes block lg:hidden */}
+</section> {/* 👈 closes the AI Challenge section */}
+
 
   {/* Scalable Business Model Section (graphic top-right on desktop, stacked on mobile) */}
 <section className="relative px-6 py-20 bg-black/20">
