@@ -283,161 +283,125 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-  {/* Modern Era of Production Section */}
+{/* Modern Era of Production Section (text left, graphic right) */}
 <section className="relative px-6 py-20 bg-black/20">
-  <div className="max-w-7xl mx-auto">
-    <div className="grid lg:grid-cols-2 gap-12 items-center">
-      {/* Left: text content */}
-      <div className="space-y-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-          Too Many Tools:
-          <span className="block text-orange-500">Not Enough Direction</span>
-        </h2>
-        <p className="text-xl text-gray-300 leading-relaxed">
-          As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
-        </p>
-
-        <div className="grid gap-6">
-          <div className="border-l-4 border-orange-500 pl-6">
-            <p className="text-gray-300">
-              Without a clear structure, many producers struggle to turn inspiration into finished tracks.
-            </p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-6">
-            <p className="text-gray-300">
-              Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
-            </p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-6">
-            <p className="text-gray-300">
-              A constant stream of flashy tools distracts from understanding core production fundamentals.
-            </p>
-          </div>
+  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+    {/* Text (left) */}
+    <div className="space-y-8">
+      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        Too Many Tools:
+        <span className="block text-orange-500">Not Enough Direction</span>
+      </h2>
+      <p className="text-xl text-gray-300 leading-relaxed">
+        As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
+      </p>
+      <div className="grid gap-6">
+        <div className="border-l-4 border-orange-500 pl-6">
+          <p className="text-gray-300">Without a clear structure, many producers struggle to turn inspiration into finished tracks.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <p className="text-gray-300">Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <p className="text-gray-300">A constant stream of flashy tools distracts from understanding core production fundamentals.</p>
         </div>
       </div>
+    </div>
 
-      {/* Right: geometric accents */}
-      <div className="relative h-96">
-        <div className="absolute top-0 right-0 w-48 h-48">
-          <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-        </div>
-        <div className="absolute bottom-0 left-0 w-32 h-32">
-          <div className="w-full h-full border-2 border-orange-500" />
-          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
+    {/* Graphic (right) */}
+    <div className="relative h-96">
+      <div className="absolute inset-0 flex items-center justify-center">
+        {/* rotated squares stack */}
+        <div className="relative w-48 h-48">
+          <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
+          <div className="absolute inset-4 border-2 border-white transform -rotate-45"></div>
+          <div className="absolute inset-8 border-2 border-orange-500 transform rotate-45"></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-
-       {/* Navigating the AI Challenge Section */}
+{/* Navigating the AI Challenge Section (graphic left, text right) */}
 <section className="relative px-6 py-20 bg-black/30">
-  <div className="max-w-7xl mx-auto">
-    <div className="grid lg:grid-cols-2 gap-12 items-center">
-      {/* Left: geometric accents */}
-      <div className="relative h-96">
-        <div className="absolute top-0 right-0 w-48 h-48">
-          <div className="w-full h-full border-2 border-orange-500 transform rotate-45"></div>
-          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45"></div>
-        </div>
-        <div className="absolute bottom-0 left-0 w-32 h-32">
-          <div className="w-full h-full border-2 border-orange-500"></div>
-          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500"></div>
-        </div>
+  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+    {/* Geometric (left) */}
+    <div className="relative h-96">
+      {/* Angular “burst” shape */}
+      <svg viewBox="0 0 200 200" className="absolute top-0 left-0 w-full h-full opacity-20">
+        <polygon points="100,0 120,80 200,80 140,120 160,200 100,150 40,200 60,120 0,80 80,80"
+                 className="fill-orange-500" />
+      </svg>
+      {/* center circle */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full opacity-80"></div>
       </div>
+    </div>
 
-      {/* Right: text content */}
-      <div className="space-y-8">
-        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-          Navigating the
-          <span className="block text-orange-500">AI Challenge</span>
-        </h2>
-        <p className="text-xl text-gray-300 leading-relaxed">
-          Empowering the artist vs. replacing the craft
-        </p>
-        
-        <div className="grid gap-6">
-          <div className="border-l-4 border-orange-500 pl-6">
-            <h3 className="text-lg font-bold text-white mb-2">The allure of one-click track generation</h3>
-            <p className="text-gray-400">
-              threatens to bypass traditional songwriting and production craftsmanship.
-            </p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-6">
-            <h3 className="text-lg font-bold text-white mb-2">AI models trained on existing content risk</h3>
-            <p className="text-gray-400">
-              reinforcing trends rather than innovating new sonic directions.
-            </p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-6">
-            <h3 className="text-lg font-bold text-white mb-2">As AI-generated content increases, so do legal and</h3>
-            <p className="text-gray-400">
-              ethical questions around authorship, royalties, and intellectual property.
-            </p>
-          </div>
+    {/* Text (right) */}
+    <div className="space-y-8">
+      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        Navigating the
+        <span className="block text-orange-500">AI Challenge</span>
+      </h2>
+      <p className="text-xl text-gray-300 leading-relaxed">
+        Empowering the artist vs. replacing the craft
+      </p>
+      <div className="grid gap-6">
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">One-click generation’s lure</h3>
+          <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Training on old hits risks</h3>
+          <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Ethical & legal questions</h3>
+          <p className="text-gray-400">around authorship, royalties, and intellectual property multiply.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-      {/* Creator Economy Stats Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative h-96">
-              {/* 3D Isometric Box */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-64 h-64">
-                  {/* Isometric cube */}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-                    <div className="relative">
-                      {/* Front face */}
-                      <div className="w-32 h-32 bg-gray-700 border-2 border-orange-500"></div>
-                      {/* Top face */}
-                      <div className="absolute -top-8 left-8 w-32 h-16 bg-orange-500 border-2 border-orange-600 transform skew-x-12"></div>
-                      {/* Right face */}
-                      <div className="absolute top-0 -right-8 w-16 h-32 bg-orange-600 border-2 border-orange-700 transform skew-y-12"></div>
-                      {/* Circle inside */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-orange-500 rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Dotted pattern overlay */}
-              <div className="absolute top-0 left-0 w-full h-full opacity-30">
-                <div className="grid grid-cols-8 gap-4 h-full">
-                  {Array.from({ length: 32 }).map((_, i) => (
-                    <div key={i} className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
-                <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-                  1.5 billion creators,
-                  <span className="block text-white">global estimate</span>
-                </h2>
-              </div>
-              
-              <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-white">
-                  The explosive rise of content creators worldwide
-                </h3>
-                <p className="text-xl text-gray-300 leading-relaxed">
-                  The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success in this evolving landscape.
-                </p>
-              </div>
-            </div>
-          </div>
+{/* Creator Economy Stats Section (text left, graphic right) */}
+<section className="px-6 py-20">
+  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+    {/* Text (left) */}
+    <div className="space-y-8">
+      <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
+      <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
+        1.5 billion creators,
+        <span className="block text-white">global estimate</span>
+      </h2>
+      <h3 className="text-2xl font-bold text-white">The explosive rise of content creators worldwide</h3>
+      <p className="text-xl text-gray-300 leading-relaxed">
+        The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success.
+      </p>
+    </div>
+
+    {/* Graphic (right) */}
+    <div className="relative h-96">
+      {/* layered isometric blocks */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative w-48 h-48">
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-gray-700 border-2 border-orange-500"></div>
+          <div className="absolute -top-6 left-10 w-32 h-16 bg-orange-500 border-2 border-orange-600 transform skew-x-12"></div>
+          <div className="absolute top-0 -right-6 w-16 h-32 bg-orange-600 border-2 border-orange-700 transform skew-y-12"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-orange-500 rounded-full"></div>
         </div>
-      </section>
+      </div>
+      {/* dotted overlay */}
+      <div className="absolute inset-0 opacity-20 grid grid-cols-8 gap-4">
+        {Array.from({ length: 32 }).map((_, i) => (
+          <div key={i} className="w-2 h-2 bg-orange-500 rounded-full" />
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
 
       {/* Features Section */}
       <section className="px-6 py-20 bg-black/20">
