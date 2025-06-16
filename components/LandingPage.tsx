@@ -102,25 +102,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
-            <button
-              onClick={onGetStarted}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
-            >
-              <TrackGuideLogo className="h-6 w-6" />
-              <span>Start Creating</span>
-            </button>
-            <button 
-              onClick={() => {
-                const demoSection = document.getElementById('demo-section');
-                if (demoSection) {
-                  demoSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="border-2 border-orange-500 hover:bg-orange-500 text-orange-500 hover:text-white px-10 py-4 rounded-lg font-bold text-lg transition-all"
-            >
-              Watch Demo
-            </button>
+         <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
+  <button
+    onClick={onGetStarted}
+    className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
+  >
+    <TrackGuideLogo className="h-6 w-6 ring-1 ring-black rounded-full" />
+    <span>Start Creating</span>
+  </button>
+</div>
+
           </div>
 
         </div>
@@ -294,23 +285,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <span className="block text-orange-500">Not Enough Direction</span>
         </h2>
         <p className="text-xl text-gray-300 leading-relaxed">
-          As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain <strong>focus</strong> and build <strong>real skills</strong>.
+          As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
         </p>
 
         <div className="grid gap-6">
           <div className="border-l-4 border-orange-500 pl-6">
+            <h3 className="text-lg font-bold text-white mb-2">
+              Without a <strong>clear structure</strong>,
+            </h3>
             <p className="text-gray-300">
-              <strong>Without a clear structure</strong>, many producers struggle to turn inspiration into finished tracks.
+              many producers struggle to turn inspiration into finished tracks.
             </p>
           </div>
           <div className="border-l-4 border-orange-500 pl-6">
+            <h3 className="text-lg font-bold text-white mb-2">
+              Clickbait tutorials lack <strong>context, feedback, and depth</strong>,
+            </h3>
             <p className="text-gray-300">
-            <strong>  Clickbait tutorials lack context, feedback, and depth</strong>—offering tips without teaching transferable skills.
+              offering tips without teaching transferable skills.
             </p>
           </div>
           <div className="border-l-4 border-orange-500 pl-6">
+            <h3 className="text-lg font-bold text-white mb-2">
+              A constant stream of <strong>flashy tools</strong>,
+            </h3>
             <p className="text-gray-300">
-            <strong>  A constant stream of flashy tools</strong> distracts from understanding core production fundamentals.
+              distracts from understanding core production fundamentals.
             </p>
           </div>
         </div>
@@ -330,6 +330,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </div>
   </div>
 </section>
+
 
 {/* Navigating the AI Challenge Section (graphic left, text right) */}
 <section className="relative px-6 py-20 bg-black/30">
