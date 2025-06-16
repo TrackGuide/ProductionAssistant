@@ -953,7 +953,7 @@ const App: React.FC = () => {
         </div>
     
       
-  <nav className="mb-8 flex flex-col justify-center items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
+ <nav className="mb-8 flex flex-col justify-center items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
   <Button
     size="sm"
     className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
@@ -970,11 +970,7 @@ const App: React.FC = () => {
 
   <Button
     size="sm"
-    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
-      activeView === 'mixFeedback'
-        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
-        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
-    }`}
+    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
     onClick={() => setActiveView('mixFeedback')}
     variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
     leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
@@ -1002,6 +998,7 @@ const App: React.FC = () => {
     EQ Guide
   </Button>
 </nav>
+
 
 
 
