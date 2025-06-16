@@ -350,86 +350,115 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
     </div>
 
-    {/* Graphic */}
-  const BusinessModelSection = () => {
-  return (
-    <section className="px-6 py-20 bg-black/20">
-      <div className="max-w-7xl mx-auto">
+  {/* Scalable Business Model Section (graphic top-right on desktop, stacked on mobile) */}
+<section className="relative px-6 py-20 bg-black/20">
+  {/* Mobile Layout */}
+  <div className="block lg:hidden space-y-12">
+    {/* Header */}
+    <div className="space-y-8 text-center">
+      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        Scalable <span className="block text-orange-500">Business Model</span>
+      </h2>
+      <p className="text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
+        Serving creators of all kinds — from indie artists to institutions — with high-margin, modular tools.
+      </p>
+    </div>
 
-        {/* Header + Geometric Accent */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-16">
-          <div className="text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Scalable Business Model
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl md:max-w-xl">
-              Multiple revenue streams built to serve creators at every level.
-            </p>
-          </div>
-          <div className="mt-6 md:mt-0 md:ml-8 flex justify-center md:justify-end">
-            <div className="relative w-24 h-24">
-              <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
-              <div className="absolute top-2 left-2 w-20 h-20">
-                <div className="w-full h-full bg-orange-500 rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+    {/* Row 1: Who We Serve */}
+    <div className="grid gap-8">
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/10">
+        <h3 className="text-xl font-bold text-white mb-2">Producers & Indie Artists</h3>
+        <p className="text-gray-300">Flexible pricing tiers to empower individual workflows and creativity.</p>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/10">
+        <h3 className="text-xl font-bold text-white mb-2">Educational Institutions</h3>
+        <p className="text-gray-300">Licensing packages built for music schools, colleges, and training programs.</p>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/10">
+        <h3 className="text-xl font-bold text-white mb-2">Enterprise Clients</h3>
+        <p className="text-gray-300">Custom solutions for labels, production teams, and enterprise use cases.</p>
+      </div>
+    </div>
 
-        {/* Row 1: Who We Serve */}
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
-            <h3 className="text-2xl font-bold text-white">Producers & Indie Artists</h3>
-            <p className="text-gray-300 leading-relaxed">
-              Flexible pricing tiers to meet diverse production needs and empower creativity.
-            </p>
-          </div>
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
-            <h3 className="text-2xl font-bold text-white">Educational Institutions</h3>
-            <p className="text-gray-300 leading-relaxed">
-              School and campus licensing designed to enhance learning environments.
-            </p>
-          </div>
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
-            <h3 className="text-2xl font-bold text-white">Enterprise Clients</h3>
-            <p className="text-gray-300 leading-relaxed">
-              Custom solutions for record labels, studios, and production companies.
-            </p>
-          </div>
-        </div>
+    {/* Row 2: Revenue Streams */}
+    <div className="grid gap-8">
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/20">
+        <h3 className="text-xl font-bold text-white mb-2">SaaS Subscriptions</h3>
+        <p className="text-gray-300 mb-2">Premium features, AI workflows, and unlimited generations.</p>
+        <div className="text-orange-500 font-semibold text-base">85% Gross Margin</div>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/20">
+        <h3 className="text-xl font-bold text-white mb-2">Community Marketplace</h3>
+        <p className="text-gray-300 mb-2">Commissions from samples, templates, and sound packs by creators.</p>
+        <div className="text-orange-500 font-semibold text-base">30% Commission</div>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/20">
+        <h3 className="text-xl font-bold text-white mb-2">Enterprise Licensing</h3>
+        <p className="text-gray-300 mb-2">Annual contracts for studios, labels, and academic partners.</p>
+        <div className="text-orange-500 font-semibold text-base">$50K+ ARR</div>
+      </div>
+    </div>
+  </div>
 
-        {/* Row 2: Revenue Streams */}
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-            <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
-            <p className="text-gray-300 mb-6">
-              Premium access to advanced AI tools, unlimited generations, and personalized features.
-            </p>
-            <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
-          </div>
+  {/* Desktop Layout */}
+  <div className="hidden lg:grid max-w-7xl mx-auto gap-24">
+    {/* Header */}
+    <div className="flex justify-between items-start">
+      <div>
+        <h2 className="text-5xl font-bold text-white mb-4">
+          Scalable <span className="text-orange-500">Business Model</span>
+        </h2>
+        <p className="text-xl text-gray-300 max-w-2xl">
+          Serving creators of all kinds — from indie artists to institutions — with high-margin, modular tools.
+        </p>
+      </div>
 
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-            <h3 className="text-2xl font-bold text-white mb-4">Community Marketplace</h3>
-            <p className="text-gray-300 mb-6">
-              Earn commissions on curated presets, templates, and sample packs from our user base.
-            </p>
-            <div className="text-orange-500 font-bold text-lg">30% Commission</div>
-          </div>
-
-          <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-            <h3 className="text-2xl font-bold text-white mb-4">Enterprise Licensing</h3>
-            <p className="text-gray-300 mb-6">
-              High-value contracts with studios, schools, and industry partners.
-            </p>
-            <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
-          </div>
+      {/* Geometric accent */}
+      <div className="relative w-24 h-24">
+        <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
+        <div className="absolute top-2 left-2 w-20 h-20">
+          <div className="w-full h-full bg-orange-500 rounded-full"></div>
         </div>
       </div>
-    </section>
-  );
-};
+    </div>
 
-export default BusinessModelSection;
+    {/* Row 1: Who We Serve */}
+    <div className="grid grid-cols-3 gap-8">
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-2">
+        <h3 className="text-2xl font-bold text-white">Producers & Indie Artists</h3>
+        <p className="text-gray-300">Flexible pricing tiers to empower individual workflows and creativity.</p>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-2">
+        <h3 className="text-2xl font-bold text-white">Educational Institutions</h3>
+        <p className="text-gray-300">Licensing packages built for music schools, colleges, and training programs.</p>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-2">
+        <h3 className="text-2xl font-bold text-white">Enterprise Clients</h3>
+        <p className="text-gray-300">Custom solutions for labels, production teams, and enterprise use cases.</p>
+      </div>
+    </div>
+
+    {/* Row 2: Revenue Streams */}
+    <div className="grid grid-cols-3 gap-8">
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20 space-y-4">
+        <h3 className="text-2xl font-bold text-white">SaaS Subscriptions</h3>
+        <p className="text-gray-300">Premium features, AI workflows, and unlimited generations.</p>
+        <div className="text-orange-500 font-semibold text-lg">85% Gross Margin</div>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20 space-y-4">
+        <h3 className="text-2xl font-bold text-white">Community Marketplace</h3>
+        <p className="text-gray-300">Commissions from samples, templates, and sound packs by creators.</p>
+        <div className="text-orange-500 font-semibold text-lg">30% Commission</div>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20 space-y-4">
+        <h3 className="text-2xl font-bold text-white">Enterprise Licensing</h3>
+        <p className="text-gray-300">Annual contracts for studios, labels, and academic partners.</p>
+        <div className="text-orange-500 font-semibold text-lg">$50K+ ARR</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 
 
