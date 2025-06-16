@@ -198,72 +198,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Too Many Tools / Not Enough Direction */}
+     {/* Too Many Tools: Not Enough Direction */}
       <section className="relative px-6 py-20 bg-black/30">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Graphic on left */}
-          <div className="relative h-96">
-            <div className="absolute top-0 right-0 w-48 h-48">
-              <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-              <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-            </div>
-            <div className="absolute bottom-0 left-0 w-32 h-32">
-              <div className="w-full h-full border-2 border-orange-500" />
-              <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
-            </div>
+          {/* Geometry on left */}
+          <div className="relative h-96 order-first lg:order-first">
+            {/* ...geometric shapes... */}
           </div>
-          {/* Text on right */}
-          <div className="space-y-6 text-right">
+          {/* Text right */}
+          <div className="space-y-6 order-last lg:order-last text-left">
             <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">Too Many Tools:</h2>
             <h3 className="text-2xl font-semibold text-orange-500">Not Enough Direction</h3>
-            <p className="text-gray-300 max-w-lg mx-auto">
-              As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
-            </p>
+            <div className="grid gap-4 pl-4 border-l-4 border-orange-500">
+              <p className="text-gray-300">Producers struggle to maintain focus amidst an overwhelming array of plugins and apps.</p>
+              <p className="text-gray-300">Clickbait tutorials offer quick tips but lack depth and transferable skills.</p>
+              <p className="text-gray-300">Flashy tools distract from mastering core production fundamentals.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Navigating the AI Challenge */}
-      <section className="relative px-6 py-20 bg-black/30">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Graphic on left */}
-          <div className="relative h-96">
-            <div className="absolute top-0 right-0 w-48 h-48">
-              <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-              <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-            </div>
-            <div className="absolute bottom-0 left-0 w-32 h-32">
-              <div className="w-full h-full border-2 border-orange-500" />
-              <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
-            </div>
-          </div>
-          {/* Text on right */}
-          <div className="space-y-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-              Navigating the<br/>
-              <span className="block text-orange-500">AI Challenge</span>
-            </h2>
-            <p className="text-xl text-gray-300 leading-relaxed">Empowering the artist vs. replacing the craft</p>
-            <div className="grid gap-6">
-              <div className="border-l-4 border-orange-500 pl-6">
-                <p className="text-gray-300">
-                  The allure of one-click track generation threatens to bypass traditional songwriting and production craftsmanship.
-                </p>
-              </div>
-              <div className="border-l-4 border-orange-500 pl-6">
-                <p className="text-gray-300">
-                  AI models trained on existing content risk reinforcing trends rather than innovating new sonic directions.
-                </p>
-              </div>
-              <div className="border-l-4 border-orange-500 pl-6">
-                <p className="text-gray-300">
-                  As AI-generated content increases, so do legal and ethical questions around authorship, royalties, and intellectual property.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+     
 
       {/* Creator Economy Stats (reversed) */}
       <section className="px-6 py-20">
