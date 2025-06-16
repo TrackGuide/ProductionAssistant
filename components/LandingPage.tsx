@@ -498,69 +498,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 
-
-
-
-      {/* Features Section */}
-    <section className="px-6 py-20 bg-black/20">
-  <div className="max-w-7xl mx-auto">
-    
-    {/* Header Row: Title + Geometric Accent */}
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-16">
-      <div className="text-center md:text-left">
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-          Our Business Model Overview
-        </h2>
-        <p className="text-xl text-gray-300 max-w-3xl md:max-w-xl">
-          Flexible solutions designed to empower creators at every level of their journey.
-        </p>
-      </div>
-
-      {/* Geometric accent (now top right) */}
-      <div className="mt-6 md:mt-0 md:ml-8 flex justify-center md:justify-end">
-        <div className="relative w-24 h-24">
-          <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
-          <div className="absolute top-2 left-2 w-20 h-20">
-            <div className="w-full h-full bg-orange-500 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Content Grid */}
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-white">
-          Flexible pricing tiers for individual producers
-        </h3>
-        <p className="text-gray-300 leading-relaxed">
-          We offer customizable pricing plans tailored to meet various producer needs and budgets.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-white">
-          School licensing options for educational institutions
-        </h3>
-        <p className="text-gray-300 leading-relaxed">
-          Educational institutions can access special licensing for students and educators to enhance learning.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-white">
-          Exclusive features to enhance user experience
-        </h3>
-        <p className="text-gray-300 leading-relaxed">
-          Unique features are designed to optimize workflow and provide valuable support throughout the production process.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
   {/* Investment Levels Section */}
   <section className="px-6 py-20 bg-orange-500/10">
     <div className="max-w-5xl mx-auto">
