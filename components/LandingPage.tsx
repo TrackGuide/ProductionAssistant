@@ -305,53 +305,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => (
       </div>
     </section>
 
-    {/* Creator Economy Stats Section */}
-    <section className="px-6 py-20">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Graphics */}
-          <div className="relative h-96">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-64 h-64">
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-                  <div className="relative">
-                    <div className="w-32 h-32 bg-gray-700 border-2 border-orange-500"></div>
-                    <div className="absolute -top-8 left-8 w-32 h-16 bg-orange-500 border-2 border-orange-600 transform skew-x-12"></div>
-                    <div className="absolute top-0 -right-8 w-16 h-32 bg-orange-600 border-2 border-orange-700 transform skew-y-12"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-orange-500 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="absolute top-0 left-0 w-full h-full opacity-30">
-              <div className="grid grid-cols-8 gap-4 h-full">
-                {Array.from({ length: 32 }).map((_, i) => (
-                  <div key={i} className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-          {/* Stats */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
-              <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-                1.5 billion creators,
-                <span className="block text-white">global estimate</span>
-              </h2>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-white">
-                The explosive rise of content creators worldwide
-              </h3>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success in this evolving landscape.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+   {/* Creator Economy Stats Section */}
+ <section className="px-6 py-20">
+   <div className="max-w-7xl mx-auto">
+     <div className="grid lg:grid-cols-2 gap-12 items-center">
+-      <div className="relative h-96">
+-        {/* geometric illustration */}
+-      </div>
++      <div className="space-y-8">
++        {/* text content */}
++        <div className="space-y-4">
++          <p className="text-gray-400 text-lg">
++            Understanding the rapid growth of the creator economy landscape
++          </p>
++          <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
++            1.5 billion creators,
++            <span className="block text-white">global estimate</span>
++          </h2>
++        </div>
++
++        <div className="space-y-6">
++          <h3 className="text-2xl font-bold text-white">
++            The explosive rise of content creators worldwide
++          </h3>
++          <p className="text-xl text-gray-300 leading-relaxed">
++            The creator economy is flourishing, with
++            <span className="text-orange-500 font-bold">1.5 billion creators</span>
++            globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success in this evolving landscape.
++          </p>
++        </div>
++      </div>
++
++      <div className="relative h-96">
++        {/* geometric illustration */}
++        <div className="absolute inset-0 flex items-center justify-center">
++          <div className="relative w-64 h-64">
++            {/* 3D Isometric Box */}
++            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
++              {/* front, top, right faces + circle */}
++            </div>
++          </div>
++        </div>
++
++        {/* dotted overlay */}
++        <div className="absolute top-0 left-0 w-full h-full opacity-30">
++          <div className="grid grid-cols-8 gap-4 h-full">
++            {Array.from({ length: 32 }).map((_, i) => (
++              <div key={i} className="w-2 h-2 bg-orange-500 rounded-full"></div>
++            ))}
++          </div>
++        </div>
++      </div>
+     </div>
+   </div>
+ </section>
+
 
     {/* Business Model Overview Section */}
     <section className="px-6 py-20 bg-black/20">
