@@ -103,13 +103,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
-            <button
-              onClick={onGetStarted}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
-            >
-              <TrackGuideLogo className="h-6 w-6" />
-              <span>Start Creating</span>
-            </button>
+         <button
+  onClick={onGetStarted}
+  className="bg-black hover:bg-gray-800 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl">
+  <TrackGuideLogo className="h-6 w-6" />
+  <span>Start Creating</span>
+</button>
+
            
           </div>
 
