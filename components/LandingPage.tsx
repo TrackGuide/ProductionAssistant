@@ -498,51 +498,52 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 
-  {/* Investment Levels Section */}
-  <section className="px-6 py-20 bg-orange-500/10">
-    <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Investment Levels</h2>
-        <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-          We're raising capital to finalize our MVP, build out our go-to-market strategy, and scale our team.
+{/* Investment Levels Section */}
+<section className="px-6 py-20 bg-black">
+  <div className="max-w-5xl mx-auto">
+    <div className="text-center mb-12">
+      <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Investment Levels</h2>
+      <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+        We're raising capital to finalize our MVP, build out our go-to-market strategy, and scale our team.
+      </p>
+    </div>
+    <div className="grid md:grid-cols-4 gap-6">
+      <div className="bg-black/80 rounded-lg p-6 border border-orange-500/30 shadow-md">
+        <h3 className="text-xl font-bold text-white mb-2">Seed Loop</h3>
+        <p className="text-gray-300 text-sm mb-2">$10K–$25K</p>
+        <p className="text-gray-400 text-sm mb-2">
+          Product polish, UI/UX refinement, performance tuning.
         </p>
+        <p className="text-orange-400 text-sm">Return: SAFE note @ $5M cap + quarterly updates</p>
       </div>
-      <div className="grid md:grid-cols-4 gap-6">
-        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
-          <h3 className="text-xl font-bold text-white mb-2">Seed Loop</h3>
-          <p className="text-gray-300 text-sm mb-2">$10K–$25K</p>
-          <p className="text-gray-400 text-sm mb-2">
-            Product polish, UI/UX refinement, performance tuning.
-          </p>
-          <p className="text-orange-400 text-sm">Return: SAFE note @ $5M cap + quarterly updates</p>
-        </div>
-        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
-          <h3 className="text-xl font-bold text-white mb-2">Creator Tier</h3>
-          <p className="text-gray-300 text-sm mb-2">$25K–$50K</p>
-          <p className="text-gray-400 text-sm mb-2">
-            Monetization rollout, user acquisition, referral systems.
-          </p>
-          <p className="text-orange-400 text-sm">Return: SAFE + 1% revenue share pilot + feedback seat</p>
-        </div>
-        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
-          <h3 className="text-xl font-bold text-white mb-2">Full Stack</h3>
-          <p className="text-gray-300 text-sm mb-2">$50K–$75K</p>
-          <p className="text-gray-400 text-sm mb-2">
-            Strategic hires (PMM/dev), professional business consulting.
-          </p>
-          <p className="text-orange-400 text-sm">Return: SAFE + advisory board access + product roadmap input</p>
-        </div>
-        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
-          <h3 className="text-xl font-bold text-white mb-2">Vision Tier</h3>
-          <p className="text-gray-300 text-sm mb-2">$150K+</p>
-          <p className="text-gray-400 text-sm mb-2">
-            Full-scale GTM campaign, AI model tuning, global launch.
-          </p>
-          <p className="text-orange-400 text-sm">Return: Discounted SAFE cap, 2% revenue share pilot, strategic board seat</p>
-        </div>
+      <div className="bg-black/80 rounded-lg p-6 border border-orange-500/30 shadow-md">
+        <h3 className="text-xl font-bold text-white mb-2">Creator Tier</h3>
+        <p className="text-gray-300 text-sm mb-2">$25K–$50K</p>
+        <p className="text-gray-400 text-sm mb-2">
+          Monetization rollout, user acquisition, referral systems.
+        </p>
+        <p className="text-orange-400 text-sm">Return: SAFE + 1% revenue share pilot + feedback seat</p>
+      </div>
+      <div className="bg-black/80 rounded-lg p-6 border border-orange-500/30 shadow-md">
+        <h3 className="text-xl font-bold text-white mb-2">Full Stack</h3>
+        <p className="text-gray-300 text-sm mb-2">$50K–$75K</p>
+        <p className="text-gray-400 text-sm mb-2">
+          Strategic hires (PMM/dev), professional business consulting.
+        </p>
+        <p className="text-orange-400 text-sm">Return: SAFE + advisory board access + product roadmap input</p>
+      </div>
+      <div className="bg-black/80 rounded-lg p-6 border border-orange-500/30 shadow-md">
+        <h3 className="text-xl font-bold text-white mb-2">Vision Tier</h3>
+        <p className="text-gray-300 text-sm mb-2">$150K+</p>
+        <p className="text-gray-400 text-sm mb-2">
+          Full-scale GTM campaign, AI model tuning, global launch.
+        </p>
+        <p className="text-orange-400 text-sm">Return: Discounted SAFE cap, 2% revenue share pilot, strategic board seat</p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
+
 
   {/* Investor CTA Section */}
   <section className="px-6 py-20 bg-black/30">
