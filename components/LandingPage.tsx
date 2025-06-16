@@ -245,7 +245,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-  <section className="relative px-6 py-20 bg-black/30">
+ {/* Navigating the AI Challenge Section */}
+<section className="relative px-6 py-20 bg-black/30">
   <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
     {/* Graphic on the left at desktop */}
     <div className="relative h-96 order-first lg:order-last">
@@ -271,23 +272,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <div className="grid gap-6">
         <div className="border-l-4 border-orange-500 pl-6">
           <p className="text-gray-300">
-            Without a clear structure, many producers struggle to turn inspiration into finished tracks.
+            The allure of one-click track generation threatens to bypass traditional songwriting and production craftsmanship.
           </p>
         </div>
         <div className="border-l-4 border-orange-500 pl-6">
           <p className="text-gray-300">
-            Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
+            AI models trained on existing content risk reinforcing trends rather than innovating new sonic directions.
           </p>
         </div>
         <div className="border-l-4 border-orange-500 pl-6">
           <p className="text-gray-300">
-            A constant stream of flashy tools distracts from understanding core production fundamentals.
+            As AI-generated content increases, so do legal and ethical questions around authorship, royalties, and intellectual property.
           </p>
         </div>
       </div>
-    </div>
   </div>
 </section>
+
 
 
 
