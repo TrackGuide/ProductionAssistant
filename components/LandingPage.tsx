@@ -323,8 +323,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
 {/* Navigating the AI Challenge Section (graphic left on desktop, below on mobile) */}
 <section className="relative px-6 py-20 bg-black/30">
-  <div className="max-w-7xl mx-auto flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
-    {/* Text (right on desktop, above on mobile) */}
+  {/* Mobile Layout (Text above graphic) */}
+  <div className="block lg:hidden space-y-12">
+    {/* Text */}
     <div className="space-y-8">
       <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
         Navigating the
@@ -349,21 +350,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
     </div>
 
-    {/* Geometric (left on desktop, below on mobile) */}
+    {/* Graphic */}
     <div className="relative h-96 w-full">
-      {/* Angular “burst” shape */}
       <svg viewBox="0 0 200 200" className="absolute top-0 left-0 w-full h-full opacity-20">
         <polygon points="100,0 120,80 200,80 140,120 160,200 100,150 40,200 60,120 0,80 80,80"
                  className="fill-orange-500" />
       </svg>
-      {/* center circle */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full opacity-80"></div>
       </div>
     </div>
   </div>
-</section>
 
+  {/* Desktop Layout (Graphic left, text right) */}
+  <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-center">
+    {/* Graphic */}
+    <div className="relative h-96 w-full">
+      <svg viewBox="0 0 200 200" className="absolute top-0 left-0 w-full h-full opacity-20">
+        <polygon points="100,0 120,80 200,80 140,120 160,200 100,150 40,200 60,120 0,80 80,80"
+                 className="fill-orange-500" />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full opacity-80"></div>
+      </div>
+    </div>
+
+    {/* Text */}
+    <div className="space-y-8">
+      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+        Navigating the
+        <span className="block text-orange-500">AI Challenge</span>
+      </h2>
+      <p className="text-xl text-gray-300 leading-relaxed">
+        Empowering the artist vs. replacing the craft
+      </p>
+      <div className="grid gap-6">
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">One-click generation’s lure</h3>
+          <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Training on old hits risks</h3>
+          <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
+        </div>
+        <div className="border-l-4 border-orange-500 pl-6">
+          <h3 className="text-lg font-bold text-white mb-2">Ethical & legal questions</h3>
+          <p className="text-gray-400">around authorship, royalties, and intellectual property multiply.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+      
 {/* Creator Economy Stats Section (text left, graphic right) */}
 <section className="px-6 py-20">
   <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
