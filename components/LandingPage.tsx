@@ -260,18 +260,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
 
 
-      {/* Divider Section - Transition to Investor Content */}
-      <section className="relative px-6 py-16 bg-gradient-to-b from-black/20 to-black/40">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="w-32 h-1 bg-orange-500 mx-auto mb-8"></div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            The Investment Opportunity
-          </h2>
-          <p className="text-xl text-gray-300">
-            Transforming the $43B music production industry
-          </p>
-        </div>
-      </section>
+    {/* Divider Section - Transition to Investor Content */}
+<section className="px-6 py-16 bg-black/20">
+  <div className="max-w-7xl mx-auto text-center">
+    <div className="w-32 h-1 bg-orange-500 mx-auto mb-8"></div>
+    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      The Investment Opportunity
+    </h2>
+    <p className="text-xl text-gray-300">
+      Transforming the $43B music production industry
+    </p>
+  </div>
+</section>
 
 {/* Modern Era of Production Section */}
 <section className="relative px-6 py-20 bg-black/20">
