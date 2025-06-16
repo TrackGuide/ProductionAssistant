@@ -266,81 +266,51 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-     {/* Too Many Tools / Not Enough Direction Section */}
+  {/* Navigating the AI Challenge Section */}
+<section className="relative px-6 py-20 bg-black/30">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* Text on the left */}
+      <div className="space-y-8">
+        …content…
+      </div>
+      {/* Right-side accents */}
+      <div className="relative h-96">
+        <div className="absolute top-0 right-0 w-48 h-48">
+          <div className="w-full …" />        {/* self-closed */}
+          <div className="absolute top-4 …" /> {/* self-closed */}
+        </div>
+        <div className="absolute bottom-0 left-0 w-32 h-32">
+          <div className="w-full …" />        {/* self-closed */}
+          <div className="absolute top-2 …" /> {/* self-closed */}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{/* Too Many Tools / Not Enough Direction Section */}
 <section className="relative px-6 py-20 bg-black/30">
   <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
     {/* Graphic on the left on lg */}
     <div className="relative h-96 order-last lg:order-first">
       <div className="absolute top-0 right-0 w-48 h-48">
-        <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-        <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
+        <div className="w-full …" />        {/* self-closed */}
+        <div className="absolute top-4 …" /> {/* self-closed */}
       </div>
       <div className="absolute bottom-0 left-0 w-32 h-32">
-        <div className="w-full h-full border-2 border-orange-500" />
-        <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
+        <div className="w-full …" />        {/* self-closed */}
+        <div className="absolute top-2 …" /> {/* self-closed */}
       </div>
     </div>
 
     {/* Text on the right on lg */}
     <div className="space-y-6 order-first lg:order-last text-right">
-      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-        Too Many Tools:
-      </h2>
-      <h3 className="text-2xl font-semibold text-orange-500">
-        Not Enough Direction
-      </h3>
-      <p className="text-gray-300 max-w-lg mx-auto">
-        As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
-      </p>
+      …content…
     </div>
   </div>
 </section>
 
-
-      {/* Navigating the AI Challenge Section */}
-      <section className="relative px-6 py-20 bg-black/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Navigating the
-                <span className="block text-orange-500">AI Challenge</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Empowering the artist vs. replacing the craft
-              </p>
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Without a clear structure, many producers struggle to turn inspiration into finished tracks.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    A constant stream of flashy tools distracts from understanding core production fundamentals.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Right-side accents */}
-            <div className="relative h-96">
-              <div className="absolute top-0 right-0 w-48 h-48">
-                <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-                <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-              </div>
-              <div className="absolute bottom-0 left-0 w-32 h-32">
-                <div className="w-full h-full border-2 border-orange-500" />
-                <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Creator Economy Stats Section (reversed: text left, geometry right) */}
       <section className="px-6 py-20">
