@@ -218,99 +218,97 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
 {/* Navigating the AI Challenge Section */}
-      <section className="relative px-6 py-20 bg-black/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* LEFT: geometric shapes */}
-            <div className="relative h-96">
-              <div className="absolute top-0 left-0 w-48 h-48">
-                <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-                <div className="absolute top-4 left-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-              </div>
-              <div className="absolute bottom-0 right-0 w-32 h-32">
-                <div className="w-full h-full border-2 border-orange-500" />
-                <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500" />
-              </div>
-            </div>
+<section className="relative px-6 py-20 bg-black/30">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* LEFT: content */}
+      <div className="space-y-8">
+        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+          Navigating the
+          <span className="block text-orange-500">AI Challenge</span>
+        </h2>
+        <p className="text-xl text-gray-300 leading-relaxed">
+          Empowering the artist vs. replacing the craft
+        </p>
 
-            {/* RIGHT: content */}
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Navigating the
-                <span className="block text-orange-500">AI Challenge</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Empowering the artist vs. replacing the craft
-              </p>
-
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    One-click generation can threaten traditional songwriting and production craftsmanship.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    AI models trained on existing content risk reinforcing trends rather than pioneering new sonic directions.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Legal and ethical questions around authorship, royalties, and intellectual property only grow as AI scales.
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="grid gap-6">
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              One-click generation can threaten traditional songwriting and production craftsmanship.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              AI models trained on existing content risk reinforcing trends rather than pioneering new sonic directions.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Legal and ethical questions around authorship, royalties, and intellectual property only grow as AI scales.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* From Clutter to Clarity: Your Creative Compass (Additional Problem) */}
-      <section className="relative px-6 py-20 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* LEFT: content */}
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                From Clutter to Clarity:
-                <span className="block text-orange-500">Your Creative Compass</span>
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
-              </p>
+      {/* RIGHT: geometric accents */}
+      <div className="relative h-96">
+        <div className="absolute top-0 right-0 w-48 h-48">
+          <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
+          <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
+        </div>
+        <div className="absolute bottom-0 left-0 w-32 h-32">
+          <div className="w-full h-full border-2 border-orange-500" />
+          <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-              <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Without a clear roadmap, inspiration fizzles before it becomes a finished track.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    Flashy tutorials often skip fundamentals—leaving you with tricks, not transferable expertise.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    A barrage of tools distracts from mastering the core principles of great production.
-                  </p>
-                </div>
-              </div>
-            </div>
+{/* Too Many Tools / Not Enough Direction Section */}
+<section className="relative px-6 py-20 bg-black/20">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* LEFT: new geometric pattern */}
+      <div className="relative h-96">
+        <div className="absolute inset-0 grid grid-cols-8 gap-4 opacity-30">
+          {Array.from({ length: 32 }).map((_, i) => (
+            <div key={i} className="w-2 h-2 bg-orange-500 rounded-full" />
+          ))}
+        </div>
+        <div className="absolute top-10 left-10 w-24 h-24 border-2 border-orange-500 transform -rotate-12" />
+        <div className="absolute bottom-10 right-10 w-32 h-32 bg-orange-500 transform rotate-6 opacity-50" />
+      </div>
 
-            {/* RIGHT: new geometric pattern */}
-            <div className="relative h-96">
-              <div className="absolute inset-0 grid grid-cols-8 gap-4 opacity-30">
-                {Array.from({ length: 32 }).map((_, i) => (
-                  <div key={i} className="w-2 h-2 bg-orange-500 rounded-full" />
-                ))}
-              </div>
-              <div className="absolute top-10 left-10 w-24 h-24 border-2 border-orange-500 transform -rotate-12" />
-              <div className="absolute bottom-10 right-10 w-32 h-32 bg-orange-500 transform rotate-6 opacity-50" />
-            </div>
+      {/* RIGHT: content */}
+      <div className="space-y-8">
+        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+          Too Many Tools:
+          <span className="block text-orange-500">Not Enough Direction</span>
+        </h2>
+
+        <div className="grid gap-6">
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Without a clear roadmap, inspiration fizzles before it becomes a finished track.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              Flashy tutorials often skip fundamentals—leaving you with tricks, not transferable expertise.
+            </p>
+          </div>
+          <div className="border-l-4 border-orange-500 pl-6">
+            <p className="text-gray-300">
+              A barrage of tools distracts from mastering the core principles of great production.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 
 
