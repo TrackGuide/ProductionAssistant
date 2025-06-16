@@ -193,6 +193,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <p className="text-gray-300">Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track's context.</p>
             </div>
 
+            {/* Mix Feedback */}
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-white font-bold">🎚</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
+              <p className="text-gray-300">Upload tracks for AI-powered analysis and detailed mixing recommendations.</p>
+            </div>
+            
             {/* Mix Compare */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
@@ -209,15 +218,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Live Production Coach</h3>
               <p className="text-gray-300">Interactive chatbot providing real-time production advice and guidance.</p>
-            </div>
-
-            {/* Mix Feedback */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🎚</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
-              <p className="text-gray-300">Upload tracks for AI-powered analysis and detailed mixing recommendations.</p>
             </div>
 
             {/* EQ Cheat Sheet */}
