@@ -951,9 +951,15 @@ const App: React.FC = () => {
             <p className="text-gray-400 text-lg">Your Smartest Studio Assistant</p>
           </div>
         </div>
-    
+        <button
+          onClick={() => setActiveView('landing')}
+          className="mt-2 text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
+        >
+          ← Back to Landing
+        </button>
+      </header>
       
- <nav className="mb-8 flex flex-col justify-center items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
+  <nav className="mb-8 flex flex-col justify-center items-center md:flex-row md:justify-center gap-2 border-b border-orange-500/20 pb-3 relative z-10">
   <Button
     size="sm"
     className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
@@ -998,7 +1004,6 @@ const App: React.FC = () => {
     EQ Guide
   </Button>
 </nav>
-
 
 
 
