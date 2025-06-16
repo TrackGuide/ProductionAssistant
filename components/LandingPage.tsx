@@ -322,7 +322,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 {/* Navigating the AI Challenge Section (graphic left on desktop, below on mobile) */}
-<section className="relative px-6 pt-20 pb-8 bg-black/30">
+<section className="relative px-6 py-20 bg-black/20">
   {/* Mobile Layout (Text above graphic) */}
   <div className="block lg:hidden space-y-12">
     {/* Text */}
@@ -525,48 +525,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </section>
 
 
-
-
-
-      {/* Business Model Section */}
-  <section className="px-6 py-20">
-    <div className="max-w-7xl mx-auto">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Scalable Business Model
-        </h2>
-        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-          Multiple revenue streams with high margins and strong network effects
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-          <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
-          <p className="text-gray-300 mb-6">
-            Recurring revenue from premium features, advanced AI models, and unlimited generations.
-          </p>
-          <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
-        </div>
-
-        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-          <h3 className="text-2xl font-bold text-white mb-4">Marketplace</h3>
-          <p className="text-gray-300 mb-6">
-            Commission from sample packs, presets, and templates created by our community.
-          </p>
-          <div className="text-orange-500 font-bold text-lg">30% Commission</div>
-        </div>
-
-        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-          <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
-          <p className="text-gray-300 mb-6">
-            Custom solutions for record labels, music schools, and production companies.
-          </p>
-          <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   {/* Investment Levels Section */}
   <section className="px-6 py-20 bg-orange-500/10">
