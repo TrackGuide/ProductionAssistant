@@ -22,6 +22,72 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           backgroundSize: '30px 30px'
         }}></div>
       </div>
+
+      {/* Hero Section */}
+<section className="relative px-6 py-16">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* Left: Headline & Subtext */}
+      <div className="space-y-8">
+        <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
+          <span className="text-orange-500">AI Studio Assistant:</span>
+          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
+            A Complement to Creativity,
+          </span>
+          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
+            Not a Substitute.
+          </span>
+        </h1>
+        <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
+          Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>,{' '}
+          <span className="text-orange-500 font-semibold">speed</span>, and{' '}
+          <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
+        </p>
+      </div>
+
+      {/* Right: Graphic */}
+      <div className="relative h-96 lg:h-[500px]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-80 h-80 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full opacity-80"></div>
+        </div>
+        <div className="absolute top-0 right-0 w-32 h-32">
+          <div className="w-full h-full border-2 border-orange-500 transform rotate-12"></div>
+          <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12"></div>
+        </div>
+        <div className="absolute bottom-0 right-8 w-24 h-24">
+          <div className="w-full h-full border-2 border-orange-500"></div>
+          <div className="absolute top-2 left-2 w-20 h-20 bg-orange-500"></div>
+        </div>
+        <div className="absolute top-1/2 right-0 w-16 h-16 bg-orange-500 rounded-full transform translate-x-8"></div>
+      </div>
+    </div>
+
+    {/* Buttons */}
+    <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
+      <button
+        onClick={onGetStarted}
+        className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
+      >
+        {/* Thin black outline around the logo */}
+        <span className="p-1 bg-orange-500 rounded-full border border-black">
+          <TrackGuideLogo className="h-6 w-6" />
+        </span>
+        <span>Start Creating</span>
+      </button>
+
+      <button
+        onClick={() => {
+          const demoSection = document.getElementById('demo-section');
+          if (demoSection) demoSection.scrollIntoView({ behavior: 'smooth' });
+        }}
+        className="border-2 border-orange-500 hover:bg-orange-500 text-orange-500 hover:text-white px-10 py-4 rounded-lg font-bold text-lg transition-all"
+      >
+        Watch Demo
+      </button>
+    </div>
+  </div>
+</section>
+
       
       {/* Geometric Elements */}
       <div className="absolute top-20 right-10 w-64 h-64 opacity-20">
