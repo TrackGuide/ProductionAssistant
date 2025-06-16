@@ -351,93 +351,81 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </div>
 
     {/* Graphic */}
-    <div className="relative h-96 w-full">
-      <svg viewBox="0 0 200 200" className="absolute top-0 left-0 w-full h-full opacity-20">
-        <polygon points="100,0 120,80 200,80 140,120 160,200 100,150 40,200 60,120 0,80 80,80"
-                 className="fill-orange-500" />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full opacity-80"></div>
-      </div>
-    </div>
-  </div>
+   <section className="px-6 py-20 bg-black/20">
+  <div className="max-w-7xl mx-auto">
 
-  {/* Desktop Layout (Graphic left, text right) */}
-  <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-center">
-    {/* Graphic */}
-    <div className="relative h-96 w-full">
-      <svg viewBox="0 0 200 200" className="absolute top-0 left-0 w-full h-full opacity-20">
-        <polygon points="100,0 120,80 200,80 140,120 160,200 100,150 40,200 60,120 0,80 80,80"
-                 className="fill-orange-500" />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full opacity-80"></div>
+    {/* Header + Geometric Accent */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-16">
+      <div className="text-center md:text-left">
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          Scalable Business Model
+        </h2>
+        <p className="text-xl text-gray-300 max-w-3xl md:max-w-xl">
+          Multiple revenue streams built to serve creators at every level.
+        </p>
       </div>
-    </div>
-
-    {/* Text */}
-    <div className="space-y-8">
-      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-        Navigating the
-        <span className="block text-orange-500">AI Challenge</span>
-      </h2>
-      <p className="text-xl text-gray-300 leading-relaxed">
-        Empowering the artist vs. replacing the craft
-      </p>
-      <div className="grid gap-6">
-        <div className="border-l-4 border-orange-500 pl-6">
-          <h3 className="text-lg font-bold text-white mb-2">One-click generation’s lure</h3>
-          <p className="text-gray-400">threatens to bypass traditional songwriting and production craftsmanship.</p>
-        </div>
-        <div className="border-l-4 border-orange-500 pl-6">
-          <h3 className="text-lg font-bold text-white mb-2">Training on old hits risks</h3>
-          <p className="text-gray-400">reinforcing trends rather than innovating new sonic directions.</p>
-        </div>
-        <div className="border-l-4 border-orange-500 pl-6">
-          <h3 className="text-lg font-bold text-white mb-2">Ethical & legal questions</h3>
-          <p className="text-gray-400">around authorship, royalties, and intellectual property multiply.</p>
+      <div className="mt-6 md:mt-0 md:ml-8 flex justify-center md:justify-end">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
+          <div className="absolute top-2 left-2 w-20 h-20">
+            <div className="w-full h-full bg-orange-500 rounded-full"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-      
-{/* Creator Economy Stats Section (text left, graphic right) */}
-<section className="px-6 py-20">
-  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-    {/* Text (left) */}
-    <div className="space-y-8">
-      <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
-      <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-        1.5 billion creators,
-        <span className="block text-white">global estimate</span>
-      </h2>
-      <h3 className="text-2xl font-bold text-white">The explosive rise of content creators worldwide</h3>
-      <p className="text-xl text-gray-300 leading-relaxed">
-        The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success.
-      </p>
     </div>
 
-    {/* Graphic (right) */}
-    <div className="relative h-96">
-      {/* layered isometric blocks */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-48 h-48">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-gray-700 border-2 border-orange-500"></div>
-          <div className="absolute -top-6 left-10 w-32 h-16 bg-orange-500 border-2 border-orange-600 transform skew-x-12"></div>
-          <div className="absolute top-0 -right-6 w-16 h-32 bg-orange-600 border-2 border-orange-700 transform skew-y-12"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-orange-500 rounded-full"></div>
-        </div>
+    {/* Row 1: Who We Serve */}
+    <div className="grid md:grid-cols-3 gap-8 mb-20">
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
+        <h3 className="text-2xl font-bold text-white">Producers & Indie Artists</h3>
+        <p className="text-gray-300 leading-relaxed">
+          Flexible pricing tiers to meet diverse production needs and empower creativity.
+        </p>
       </div>
-      {/* dotted overlay */}
-      <div className="absolute inset-0 opacity-20 grid grid-cols-8 gap-4">
-        {Array.from({ length: 32 }).map((_, i) => (
-          <div key={i} className="w-2 h-2 bg-orange-500 rounded-full" />
-        ))}
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
+        <h3 className="text-2xl font-bold text-white">Educational Institutions</h3>
+        <p className="text-gray-300 leading-relaxed">
+          School and campus licensing designed to enhance learning environments.
+        </p>
+      </div>
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/10 space-y-4">
+        <h3 className="text-2xl font-bold text-white">Enterprise Clients</h3>
+        <p className="text-gray-300 leading-relaxed">
+          Custom solutions for record labels, studios, and production companies.
+        </p>
       </div>
     </div>
+
+    {/* Row 2: Revenue Streams */}
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+        <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
+        <p className="text-gray-300 mb-6">
+          Premium access to advanced AI tools, unlimited generations, and personalized features.
+        </p>
+        <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
+      </div>
+
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+        <h3 className="text-2xl font-bold text-white mb-4">Community Marketplace</h3>
+        <p className="text-gray-300 mb-6">
+          Earn commissions on curated presets, templates, and sample packs from our user base.
+        </p>
+        <div className="text-orange-500 font-bold text-lg">30% Commission</div>
+      </div>
+
+      <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+        <h3 className="text-2xl font-bold text-white mb-4">Enterprise Licensing</h3>
+        <p className="text-gray-300 mb-6">
+          High-value contracts with studios, schools, and industry partners.
+        </p>
+        <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
+      </div>
+    </div>
+    
   </div>
 </section>
+
 
 
       {/* Features Section */}
