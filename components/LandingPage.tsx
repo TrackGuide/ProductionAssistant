@@ -459,87 +459,126 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
 
       {/* Business Model Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Scalable Business Model
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Multiple revenue streams with high margins and strong network effects
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-              <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
-              <p className="text-gray-300 mb-6">
-                Recurring revenue from premium features, advanced AI models, and unlimited generations.
-              </p>
-              <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
-            </div>
-            
-            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-              <h3 className="text-2xl font-bold text-white mb-4">Marketplace</h3>
-              <p className="text-gray-300 mb-6">
-                Commission from sample packs, presets, and templates created by our community.
-              </p>
-              <div className="text-orange-500 font-bold text-lg">30% Commission</div>
-            </div>
-            
-            <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-              <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
-              <p className="text-gray-300 mb-6">
-                Custom solutions for record labels, music schools, and production companies.
-              </p>
-              <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
-            </div>
-          </div>
-        </div>
-      </section>
+  <section className="px-6 py-20">
+    <div className="max-w-7xl mx-auto">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          Scalable Business Model
+        </h2>
+        <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          Multiple revenue streams with high margins and strong network effects
+        </p>
+      </div>
 
-
-
-
-
-      {/* Investor CTA Section */}
-      <section className="px-6 py-20 bg-black/30">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Interested in Investing?
-          </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            TrackGuide is revolutionizing music production with AI-powered assistance. Join us in empowering the next generation of creators.
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+          <h3 className="text-2xl font-bold text-white mb-4">SaaS Subscriptions</h3>
+          <p className="text-gray-300 mb-6">
+            Recurring revenue from premium features, advanced AI models, and unlimited generations.
           </p>
-          <a
-            href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
-          >
-            <span>Contact for Investment Opportunities</span>
-          </a>
-          <p className="text-gray-500 mt-4">dustinspaceproductions@gmail.com</p>
+          <div className="text-orange-500 font-bold text-lg">85% Gross Margin</div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="px-6 py-12 border-t border-orange-500/20 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-orange-500 transform rotate-45 flex items-center justify-center">
-                <div className="w-3 h-3 bg-white transform -rotate-45"></div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-white">TrackGuide AI</div>
-                <div className="text-xs text-gray-400">Your Smartest Studio Assistant</div>
-              </div>
-            </div>
-            <div className="text-gray-400 text-center md:text-right">
-              <p>&copy; 2025 TrackGuide. Empowering music creators worldwide.</p>
-            </div>
+        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+          <h3 className="text-2xl font-bold text-white mb-4">Marketplace</h3>
+          <p className="text-gray-300 mb-6">
+            Commission from sample packs, presets, and templates created by our community.
+          </p>
+          <div className="text-orange-500 font-bold text-lg">30% Commission</div>
+        </div>
+
+        <div className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
+          <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
+          <p className="text-gray-300 mb-6">
+            Custom solutions for record labels, music schools, and production companies.
+          </p>
+          <div className="text-orange-500 font-bold text-lg">$50K+ ARR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Investment Levels Section */}
+  <section className="px-6 py-20 bg-orange-500/10">
+    <div className="max-w-5xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Investment Levels</h2>
+        <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+          We're raising capital to finalize our MVP, build out our go-to-market strategy, and scale our team.
+        </p>
+      </div>
+      <div className="grid md:grid-cols-4 gap-6">
+        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
+          <h3 className="text-xl font-bold text-white mb-2">Seed Loop</h3>
+          <p className="text-gray-300 text-sm mb-4">$10K–$25K</p>
+          <p className="text-gray-400 text-sm">
+            For UI/UX polishing, edge-case handling, performance optimization. Ideal for early believers.
+          </p>
+        </div>
+        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
+          <h3 className="text-xl font-bold text-white mb-2">Creator Tier</h3>
+          <p className="text-gray-300 text-sm mb-4">$25K–$50K</p>
+          <p className="text-gray-400 text-sm">
+            Funds core monetization features, sets up referral system, and begins targeted user acquisition.
+          </p>
+        </div>
+        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
+          <h3 className="text-xl font-bold text-white mb-2">Full Stack</h3>
+          <p className="text-gray-300 text-sm mb-4">$50K–$75K</p>
+          <p className="text-gray-400 text-sm">
+            Full-stack refinement, strategic hires (PMM, dev), and professional consulting for growth strategy.
+          </p>
+        </div>
+        <div className="bg-gray-800/30 rounded-lg p-6 border border-orange-500/30">
+          <h3 className="text-xl font-bold text-white mb-2">Vision Tier</h3>
+          <p className="text-gray-300 text-sm mb-4">$150K+</p>
+          <p className="text-gray-400 text-sm">
+            Full marketing and distribution blitz, advisory board expansion, AI fine-tuning at scale, and global launch.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Investor CTA Section */}
+  <section className="px-6 py-20 bg-black/30">
+    <div className="max-w-4xl mx-auto text-center">
+      <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+        Interested in Investing?
+      </h2>
+      <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+        TrackGuide is revolutionizing music production with AI-powered assistance. Join us in empowering the next generation of creators.
+      </p>
+      <a
+        href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
+        className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
+      >
+        <span>Contact for Investment Opportunities</span>
+      </a>
+      <p className="text-gray-500 mt-4">dustinspaceproductions@gmail.com</p>
+    </div>
+  </section>
+
+  {/* Footer */}
+  <footer className="px-6 py-12 border-t border-orange-500/20 bg-black/20">
+    <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between">
+        <div className="flex items-center space-x-3 mb-4 md:mb-0">
+          <div className="w-6 h-6 bg-orange-500 transform rotate-45 flex items-center justify-center">
+            <div className="w-3 h-3 bg-white transform -rotate-45"></div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-white">TrackGuide AI</div>
+            <div className="text-xs text-gray-400">Your Smartest Studio Assistant</div>
           </div>
         </div>
-      </footer>
+        <div className="text-gray-400 text-center md:text-right">
+          <p>&copy; 2025 TrackGuide. Empowering music creators worldwide.</p>
+        </div>
+      </div>
     </div>
-  );
-};
+  </footer>
+</div>
+
+); };
+
