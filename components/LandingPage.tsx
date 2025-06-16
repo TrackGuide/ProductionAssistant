@@ -35,7 +35,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         />
       </div>
 
-      {/* Geometric Elements Top Right */}
+      {/* Geometric Top Right */}
       <div className="absolute top-20 right-10 w-64 h-64 opacity-20">
         <div className="relative w-full h-full">
           <div className="absolute top-0 right-0 w-32 h-32 border-2 border-orange-500 transform rotate-12" />
@@ -44,7 +44,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </div>
 
-      {/* Geometric Elements Bottom Left */}
+      {/* Geometric Bottom Left */}
       <div className="absolute bottom-20 left-10 w-48 h-48 opacity-15">
         <div className="relative w-full h-full">
           <div className="absolute bottom-0 left-0 w-24 h-24 border-2 border-orange-500 transform -rotate-45" />
@@ -56,7 +56,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <nav className="relative z-10 px-6 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <TrackGuideLogo className="w-8 h-8" />
+            <div className="w-8 h-8 bg-orange-500 transform rotate-45 flex items-center justify-center">
+              <div className="w-4 h-4 bg-white transform -rotate-45"></div>
+            </div>
             <div>
               <div className="text-xl font-bold text-white">TrackGuide AI</div>
               <div className="text-xs text-gray-400">Your Smartest Studio Assistant</div>
@@ -75,79 +77,68 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <section className="relative px-6 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Headline */}
             <div className="space-y-8">
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
                 <span className="text-orange-500">AI Studio Assistant:</span>
-                <span className="block mt-2 text-white text-4xl md:text-5xl lg:text-6xl">
+                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
                   A Complement to Creativity,
                 </span>
-                <span className="block mt-2 text-white text-4xl md:text-5xl lg:text-6xl">
+                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
                   Not a Substitute.
                 </span>
               </h1>
               <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
-                Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>,{' '}
-                <span className="text-orange-500 font-semibold">speed</span>, and{' '}
-                <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
+                Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>, <span className="text-orange-500 font-semibold">speed</span>, and <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
               </p>
-              <div className="flex flex-col sm:flex-row gap-6 mt-6">
-                <button
-                  onClick={onGetStarted}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
-                >
-                  <TrackGuideLogo className="h-6 w-6" />
-                  <span>Start Creating</span>
-                </button>
-                {/* Secondary CTA (if desired) */}
-                <button
-                  onClick={() => window.open('/demo')}
-                  className="border border-white text-white px-10 py-4 rounded-lg font-bold text-lg transition-all hover:bg-white hover:text-black"
-                >
-                  Watch Demo
-                </button>
-              </div>
             </div>
-
-            {/* Right: Hero Graphic */}
             <div className="relative h-96 lg:h-[500px]">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-80 h-80 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full opacity-80"></div>
+                <div className="w-80 h-80 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full opacity-80" />
               </div>
               <div className="absolute top-0 right-0 w-32 h-32">
-                <div className="w-full h-full border-2 border-orange-500 transform rotate-12"></div>
-                <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12"></div>
+                <div className="w-full h-full border-2 border-orange-500 transform rotate-12" />
+                <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12" />
               </div>
               <div className="absolute bottom-0 right-8 w-24 h-24">
-                <div className="w-full h-full border-2 border-orange-500"></div>
-                <div className="absolute top-2 left-2 w-20 h-20 bg-orange-500"></div>
+                <div className="w-full h-full border-2 border-orange-500" />
+                <div className="absolute top-2 left-2 w-20 h-20 bg-orange-500" />
               </div>
-              <div className="absolute top-1/2 right-0 w-16 h-16 bg-orange-500 rounded-full transform translate-x-8"></div>
+              <div className="absolute top-1/2 right-0 w-16 h-16 bg-orange-500 rounded-full transform translate-x-8" />
             </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
+            <button
+              onClick={onGetStarted}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl"
+            >
+              <TrackGuideLogo className="h-6 w-6" />
+              <span>Start Creating</span>
+            </button>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works */}
       <section className="relative px-6 py-20">
         <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">How TrackGuide Works</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            From concept to creation in three simple steps
-          </p>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">From concept to creation in three simple steps</p>
         </div>
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-          {[ 
-            { num: 1, title: 'Describe Your Vision', body: 'Tell us your genre, vibe, and creative goals. Our AI understands your artistic intent.' },
-            { num: 2, title: 'Get Your Blueprint', body: 'Receive a detailed production guide with arrangement tips, sound design, and MIDI foundations.' },
-            { num: 3, title: 'Create & Refine', body: 'Use our tools to generate MIDI, get mix feedback, and bring your vision to life.' }
-          ].map(step => (
-            <div key={step.num} className="text-center space-y-6">
+          {['Describe Your Vision', 'Get Your Blueprint', 'Create & Refine'].map((title, i) => (
+            <div key={i} className="text-center space-y-6">
               <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-white">{step.num}</span>
+                <span className="text-2xl font-bold text-white">{i + 1}</span>
               </div>
-              <h3 className="text-2xl font-bold text-white">{step.title}</h3>
-              <p className="text-gray-300">{step.body}</p>
+              <h3 className="text-2xl font-bold text-white">{title}</h3>
+              <p className="text-gray-300">
+                {i === 0
+                  ? "Tell us your genre, vibe, and creative goals. Our AI understands your artistic intent."
+                  : i === 1
+                  ? "Receive a detailed production guide with arrangement tips, sound design, and MIDI foundations."
+                  : "Use our tools to generate MIDI, get mix feedback, and bring your vision to life."
+                }
+              </p>
             </div>
           ))}
         </div>
@@ -157,40 +148,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <section className="relative px-6 py-20 bg-black/10">
         <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Complete Production Toolkit</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Every tool you need to take your music from idea to finished track
-          </p>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">Every tool you need to take your music from idea to finished track</p>
         </div>
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
-            { icon: 'AI', title: 'TrackGuide AI', desc: 'Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.' },
-            { icon: '♪', title: 'Integrated MIDI Generator', desc: 'Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track’s context.' },
-            { icon: '⚖', title: 'Mix Compare', desc: 'Upload tracks for AI-powered analysis and compare different versions side-by-side.' },
-            { icon: '💬', title: 'Live Production Coach', desc: 'Interactive chatbot providing real-time production advice and guidance.' },
-            { icon: '🎚', title: 'Mix Feedback', desc: 'Upload tracks for AI-powered analysis and detailed mixing recommendations.' },
-            { icon: '📊', title: 'EQ Cheat Sheet', desc: 'Quick reference guide for EQ frequencies and their effects on different instruments and sounds.' }
-          ].map((f, i) => (
+            ['AI', 'TrackGuide AI', 'Generate comprehensive, custom how-to guides based on your genre, vibe, and reference artists.'],
+            ['♪', 'Integrated MIDI Generator', 'Create intelligent chord progressions, basslines, melodies, and drum patterns that match your track’s context.'],
+            ['⚖', 'Mix Compare', 'Upload tracks for AI-powered analysis and compare different versions side-by-side.'],
+            ['💬', 'Live Production Coach', 'Interactive chatbot providing real-time production advice and guidance.'],
+            ['🎚', 'Mix Feedback', 'Upload mixes for AI-driven analysis and detailed mixing recommendations.'],
+            ['📊', 'EQ Cheat Sheet', 'Quick reference guide for EQ frequencies and their effects on different instruments and sounds.']
+          ].map(([icon, heading, desc], i) => (
             <div key={i} className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">{f.icon}</span>
+                <span className="text-white font-bold">{icon}</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{f.title}</h3>
-              <p className="text-gray-300">{f.desc}</p>
+              <h3 className="text-xl font-bold text-white mb-3">{heading}</h3>
+              <p className="text-gray-300">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing */}
       <section className="relative px-6 py-20 bg-black/20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your Music Production?</h2>
-          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.
-          </p>
+          <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">From initial inspiration to final mix, TrackGuide provides intelligent assistance at every stage of your music production journey.</p>
           <div className="bg-gray-800/50 rounded-2xl p-8 max-w-md mx-auto border border-orange-500/20">
             <h3 className="text-2xl font-bold text-white mb-4">Free to Start</h3>
-            <p className="text-gray-300 mb-6">Get started with TrackGuide AI at no cost. Upgrade when you're ready for more.</p>
+            <p className="text-gray-300 mb-6">Get started with TrackGuide AI at no cost. Upgrade when you’re ready for more.</p>
             <button
               onClick={onGetStarted}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-xl"
@@ -202,7 +189,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Divider Section */}
+      {/* Divider: Investment Opportunity */}
       <section className="relative px-6 py-16 bg-gradient-to-b from-black/20 to-black/40">
         <div className="max-w-7xl mx-auto text-center">
           <div className="w-32 h-1 bg-orange-500 mx-auto mb-8"></div>
@@ -211,27 +198,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Modern Era of Production Section */}
-      <section className="relative px-6 py-20 bg-black/20">
+      {/* Too Many Tools / Not Enough Direction */}
+      <section className="relative px-6 py-20 bg-black/30">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-              Navigating the
-              <span className="block text-orange-500">Modern Era of Production</span>
-            </h2>
-            <p className="text-xl text-gray-300 leading-relaxed">Too many tools. Not enough direction.</p>
-            <div className="grid gap-6">
-              {[
-                'Without a clear structure, many producers struggle to turn inspiration into finished tracks.',
-                'Clickbait tutorials lack context, feedback, and depth—offering tips without teaching transferable skills.',
-                'A constant stream of flashy tools distracts from understanding core production fundamentals.'
-              ].map((text, idx) => (
-                <div key={idx} className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">{text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Graphic on left */}
           <div className="relative h-96">
             <div className="absolute top-0 right-0 w-48 h-48">
               <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
@@ -242,76 +212,75 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
             </div>
           </div>
+          {/* Text on right */}
+          <div className="space-y-6 text-right">
+            <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">Too Many Tools:</h2>
+            <h3 className="text-2xl font-semibold text-orange-500">Not Enough Direction</h3>
+            <p className="text-gray-300 max-w-lg mx-auto">
+              As the modern production landscape fragments into countless tools and tutorials, producers struggle to maintain focus and build real skills.
+            </p>
+          </div>
         </div>
       </section>
 
- {/* Navigating the AI Challenge Section */}
-<section className="relative px-6 py-20 bg-black/30">
-  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-    {/* Graphic on the left at desktop */}
-    <div className="relative h-96 order-first lg:order-last">
-      <div className="absolute top-0 right-0 w-48 h-48">
-        <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
-        <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
-      </div>
-      <div className="absolute bottom-0 left-0 w-32 h-32">
-        <div className="w-full h-full border-2 border-orange-500" />
-        <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
-      </div>
-    </div>
-
-    {/* Text on the right at desktop */}
-    <div className="space-y-8 order-last lg:order-first">
-      <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-        Navigating the
-        <span className="block text-orange-500">AI Challenge</span>
-      </h2>
-      <p className="text-xl text-gray-300 leading-relaxed">
-        Empowering the artist vs. replacing the craft
-      </p>
-      <div className="grid gap-6">
-        <div className="border-l-4 border-orange-500 pl-6">
-          <p className="text-gray-300">
-            The allure of one-click track generation threatens to bypass traditional songwriting and production craftsmanship.
-          </p>
-        </div>
-        <div className="border-l-4 border-orange-500 pl-6">
-          <p className="text-gray-300">
-            AI models trained on existing content risk reinforcing trends rather than innovating new sonic directions.
-          </p>
-        </div>
-        <div className="border-l-4 border-orange-500 pl-6">
-          <p className="text-gray-300">
-            As AI-generated content increases, so do legal and ethical questions around authorship, royalties, and intellectual property.
-          </p>
-        </div>
-      </div>
-  </div>
-</section>
-
-
-
-
-      {/* Creator Economy Stats Section */}
-      <section className="px-6 py-20">
+      {/* Navigating the AI Challenge */}
+      <section className="relative px-6 py-20 bg-black/30">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Text Left */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
-              <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-                1.5 billion creators,
-                <span className="block text-white">global estimate</span>
-              </h2>
+          {/* Graphic on left */}
+          <div className="relative h-96">
+            <div className="absolute top-0 right-0 w-48 h-48">
+              <div className="w-full h-full border-2 border-orange-500 transform rotate-45" />
+              <div className="absolute top-4 right-4 w-40 h-40 bg-orange-500 transform rotate-45" />
             </div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-white">The explosive rise of content creators worldwide</h3>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success in this evolving landscape.
-              </p>
+            <div className="absolute bottom-0 left-0 w-32 h-32">
+              <div className="w-full h-full border-2 border-orange-500" />
+              <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500" />
             </div>
           </div>
-          {/* Graphic Right */}
+          {/* Text on right */}
+          <div className="space-y-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+              Navigating the<br/>
+              <span className="block text-orange-500">AI Challenge</span>
+            </h2>
+            <p className="text-xl text-gray-300 leading-relaxed">Empowering the artist vs. replacing the craft</p>
+            <div className="grid gap-6">
+              <div className="border-l-4 border-orange-500 pl-6">
+                <p className="text-gray-300">
+                  The allure of one-click track generation threatens to bypass traditional songwriting and production craftsmanship.
+                </p>
+              </div>
+              <div className="border-l-4 border-orange-500 pl-6">
+                <p className="text-gray-300">
+                  AI models trained on existing content risk reinforcing trends rather than innovating new sonic directions.
+                </p>
+              </div>
+              <div className="border-l-4 border-orange-500 pl-6">
+                <p className="text-gray-300">
+                  As AI-generated content increases, so do legal and ethical questions around authorship, royalties, and intellectual property.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Creator Economy Stats (reversed) */}
+      <section className="px-6 py-20">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          {/* Text on left */}
+          <div className="space-y-8">
+            <p className="text-gray-400 text-lg">Understanding the rapid growth of the creator economy landscape</p>
+            <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
+              1.5 billion creators,<br/>
+              <span className="block text-white">global estimate</span>
+            </h2>
+            <h3 className="text-2xl font-bold text-white">The explosive rise of content creators worldwide</h3>
+            <p className="text-xl text-gray-300 leading-relaxed">
+              The creator economy is flourishing, with <span className="text-orange-500 font-bold">1.5 billion creators</span> globally. This shift highlights the need for innovative tools to support their growth and ensure sustainable success in this evolving landscape.
+            </p>
+          </div>
+          {/* Geometry on right */}
           <div className="relative h-96">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-64 h-64">
@@ -332,75 +301,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Business Model Overview Section */}
+      {/* Business Model Overview */}
       <section className="px-6 py-20 bg-black/20">
         <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Our Business Model Overview</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Flexible solutions designed to empower creators at every level of their journey.
-          </p>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">Flexible solutions designed to empower creators at every level of their journey.</p>
         </div>
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { title: 'Flexible pricing tiers for individual producers', desc: 'We offer customizable pricing plans tailored to meet various producer needs and budgets.' },
-            { title: 'School licensing options for educational institutions', desc: 'Educational institutions can access special licensing for students and educators to enhance learning.' },
-            { title: 'Exclusive features to enhance user experience', desc: 'Unique features are designed to optimize workflow and provide valuable support throughout the production process.' }
-          ].map((bm, i) => (
+            ['Flexible pricing tiers for individual producers', 'We offer customizable pricing plans tailored to meet various producer needs and budgets.'],
+            ['School licensing options for educational institutions', 'Educational institutions can access special licensing for students and educators to enhance learning.'],
+            ['Exclusive features to enhance user experience', 'Unique features are designed to optimize workflow and provide valuable support throughout the production process.']
+          ].map(([h, p], i) => (
             <div key={i} className="space-y-6">
-              <h3 className="text-2xl font-bold text-white">{bm.title}</h3>
-              <p className="text-gray-300 leading-relaxed">{bm.desc}</p>
+              <h3 className="text-2xl font-bold text-white">{h}</h3>
+              <p className="text-gray-300 leading-relaxed">{p}</p>
             </div>
           ))}
         </div>
-        {/* Accent Shape */}
         <div className="flex justify-end mt-12">
           <div className="relative w-32 h-32">
-            <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45"></div>
-            <div className="absolute top-2 left-2 w-28 h-28 bg-orange-500 rounded-full"></div>
+            <div className="absolute inset-0 border-2 border-orange-500 transform rotate-45" />
+            <div className="absolute top-2 left-2 w-28 h-28 rounded-full bg-orange-500" />
           </div>
         </div>
       </section>
 
-      {/* Scalable Business Model Section */}
-      <section className="px-6 py-20">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Scalable Business Model</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Multiple revenue streams with high margins and strong network effects
+      {/* Investor CTA */}
+      <section className="px-6 py-20 bg-black/30">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Interested in Investing?</h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            TrackGuide is revolutionizing music production with AI-powered assistance. Join us in empowering the next generation of creators.
           </p>
+          <a
+            href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
+          >
+            <span>Contact for Investment Opportunities</span>
+          </a>
+          <p className="text-gray-500 text-sm mt-4">dustinspaceproductions@gmail.com</p>
         </div>
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-          {[
-            { title: 'SaaS Subscriptions', metric: '85% Gross Margin', desc: 'Recurring revenue from premium features, advanced AI models, and unlimited generations.' },
-            { title: 'Marketplace', metric: '30% Commission', desc: 'Commission from sample packs, presets, and templates created by our community.' },
-            { title: 'Enterprise', metric: '$50K+ ARR', desc: 'Custom solutions for record labels, music schools, and production companies.' }
-          ].map((sm, i) => (
-            <div key={i} className="bg-gray-800/30 rounded-lg p-8 border border-orange-500/20">
-              <h3 className="text-2xl font-bold text-white mb-4">{sm.title}</h3>
-              <p className="text-gray-300 mb-6">{sm.desc}</p>
-              <div className="text-orange-500 font-bold text-lg">{sm.metric}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Dedicated Investor CTA Section */}
-      <section className="px-6 py-20 bg-black/30 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Interested in Partnering?</h2>
-        <p className="text-gray-300 mb-6">Let’s talk about bringing TrackGuide to every producer in the world.</p>
-        <a
-          href="mailto:dustinspaceproductions@gmail.com?subject=Investor+Inquiry"
-          className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-all"
-        >
-          Contact for Investment
-        </a>
       </section>
 
       {/* Footer */}
       <footer className="px-6 py-12 border-t border-orange-500/20 bg-black/20">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
-            <TrackGuideLogo className="w-6 h-6" />
+            <div className="w-6 h-6 bg-orange-500 transform rotate-45 flex items-center justify-center">
+              <div className="w-3 h-3 bg-white transform -rotate-45" />
+            </div>
             <div>
               <div className="text-lg font-bold text-white">TrackGuide AI</div>
               <div className="text-xs text-gray-400">Your Smartest Studio Assistant</div>
