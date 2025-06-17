@@ -29,6 +29,11 @@ const initialInputsState: UserInputs = {
   songTitle: '',
   genre: [],
   artistReference: '',
+  referenceTrackLink: '',
+  lyrics: '',
+  key: '',
+  chords: '',
+  generalNotes: '',
   vibe: [],
   daw: '',
   plugins: '',
@@ -432,6 +437,11 @@ const App: React.FC = () => {
         title: entryTitle,
         genre: inputs.genre,
         artistReference: inputs.artistReference,
+        referenceTrackLink: inputs.referenceTrackLink,
+        lyrics: inputs.lyrics,
+        key: inputs.key,
+        chords: inputs.chords,
+        generalNotes: inputs.generalNotes,
         vibe: inputs.vibe,
         daw: inputs.daw,
         plugins: inputs.plugins,
@@ -486,6 +496,11 @@ const App: React.FC = () => {
       songTitle: entry.title, 
       genre: Array.isArray(entry.genre) ? entry.genre : (entry.genre ? [String(entry.genre)] : []),
       artistReference: entry.artistReference,
+      referenceTrackLink: entry.referenceTrackLink || '',
+      lyrics: entry.lyrics || '',
+      key: entry.key || '',
+      chords: entry.chords || '',
+      generalNotes: entry.generalNotes || '',
       vibe: Array.isArray(entry.vibe) ? entry.vibe : (entry.vibe ? [String(entry.vibe)] : []),
       daw: entry.daw,
       plugins: entry.plugins,
@@ -1012,9 +1027,10 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-3 space-y-6">
             <Card title="Blueprint Your Sound" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+              <p className="text-sm text-gray-400 mb-4">Fill in as many fields as you'd like (minimum 1 genre required) to create your custom production guide.</p>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <Input label="Song Title / Project Name (Optional)" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
+                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
                 </div>
                 <div>
                   <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
@@ -1041,7 +1057,27 @@ const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <Input label="Artist/Song Reference(s) (Optional)" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk - Around the World" />
+                  <Input label="Artist/Song Reference(s)" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk - Around the World" />
+                </div>
+
+                <div>
+                  <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
+                </div>
+
+                <div>
+                  <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={3} />
+                </div>
+
+                <div>
+                  <Input label="Key" name="key" value={inputs.key || ''} onChange={handleInputChange} placeholder="e.g., C Major, F# Minor, Bb Major" />
+                </div>
+
+                <div>
+                  <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am-F-C-G, Dm7-G7-Cmaj7, I-vi-IV-V" />
+                </div>
+
+                <div>
+                  <Textarea label="General Notes for AI" name="generalNotes" value={inputs.generalNotes || ''} onChange={handleInputChange} placeholder="Any specific instructions, style notes, or creative direction for the AI to consider..." rows={3} />
                 </div>
                 
                 <div>
@@ -1091,10 +1127,10 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <Textarea label="Available Plugins (Optional)" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or type 'stock only'" />
+                  <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or type 'stock only'" />
                 </div>
                 <div>
-                  <Textarea label="Available Instruments (Optional)" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Guitar, Analog Synth, MPC, Vocals" />
+                  <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Guitar, Analog Synth, MPC, Vocals" />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<TrackGuideLogo className="w-5 h-5"/>}>
                   {isLoading ? (loadingMessage || 'Generating...') : 'Generate TrackGuide'}
@@ -1183,7 +1219,7 @@ const App: React.FC = () => {
                     );
                   })()}
                   {renderMarkdown(generatedGuidebook)}
-                  {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Receiving content..." />}
+                  {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
               </Card>
             )}
@@ -1271,7 +1307,7 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <Textarea 
-                    label="Notes for AI (Optional)" 
+                    label="Notes for AI" 
                     name="mixUserNotes" 
                     value={mixFeedbackInputs.userNotes} 
                     onChange={handleMixUserNotesChange} 
@@ -1376,9 +1412,9 @@ const App: React.FC = () => {
         <MixComparator
           isOpen={showMixComparator}
           onClose={() => setShowMixComparator(false)}
-          onAnalyze={(mixA, mixB) => {
+          onAnalyze={(mixA, mixB, options) => {
             // Handle mix analysis here
-            console.log('Analyzing mixes:', mixA, mixB);
+            console.log('Analyzing mixes:', mixA, mixB, 'Options:', options);
           }}
         />
       )}
