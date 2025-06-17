@@ -123,19 +123,19 @@ What would you like to work on today?`,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh]">
+    <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
       <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
-        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600">
-          <div className="flex items-center">
-            <SparklesIcon className="w-5 h-5 text-white mr-2" />
-            <h2 className="text-lg font-bold text-white">Production Coach</h2>
+        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 sticky top-0 z-10">
+          <div className="flex items-center min-w-0 flex-1">
+            <SparklesIcon className="w-5 h-5 text-white mr-2 flex-shrink-0" />
+            <h2 className="text-lg font-bold text-white truncate">Production Coach</h2>
           </div>
-          <div className="flex gap-1">
-            <Button onClick={clearConversation} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
+          <div className="flex gap-1 flex-shrink-0 ml-2">
+            <Button onClick={clearConversation} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10 hidden sm:inline-flex">
               Clear
             </Button>
-            <Button onClick={onClose} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10">
-              ✕
+            <Button onClick={onClose} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10 flex-shrink-0">
+              <CloseIcon className="w-4 h-4" />
             </Button>
           </div>
         </div>
