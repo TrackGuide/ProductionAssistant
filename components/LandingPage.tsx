@@ -56,7 +56,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             onClick={onGetStarted}
             className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
           >
-            Launch App
+            Get Started
           </button>
         </div>
       </nav>
@@ -105,12 +105,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="flex flex-col sm:flex-row gap-6 mt-12 lg:justify-start">
          <button
   onClick={onGetStarted}
-  className="bg-black hover:bg-gray-800 text-white px-10 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-xl">
-  <TrackGuideLogo className="h-6 w-6" />
-  <span>Start Creating</span>
+  className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-orange-400">
+  <TrackGuideLogo className="h-8 w-8" />
+  <span>Start Creating Now</span>
 </button>
-
-           
           </div>
 
         </div>
