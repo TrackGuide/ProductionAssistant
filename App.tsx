@@ -1031,9 +1031,9 @@ const App: React.FC = () => {
 
 
       {activeView === 'trackGuide' && (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-7 gap-6">
           <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-            <p className="text-sm text-gray-400 mb-4">Shape your guide with as much or as little detail as you like.</p>
+            <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
@@ -1179,7 +1179,7 @@ const App: React.FC = () => {
               </form>
             </Card>
 
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-5 space-y-6">
             {/* Main Error */}
             {error && !isLoading && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
