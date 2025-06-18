@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
-import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback } from './services/geminiService.ts';
+import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback, generateMixComparison } from './services/geminiService.ts';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
@@ -20,7 +20,7 @@ import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx'
 import { LibraryModal } from './components/LibraryModal.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
-import MixComparator from './components/MixComparator.tsx';
+
 import { LandingPage } from './components/LandingPage.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
@@ -209,7 +209,7 @@ const App: React.FC = () => {
   // New tool modals state
   const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
   const [showEQCheatSheet, setShowEQCheatSheet] = useState<boolean>(false);
-  const [showMixComparator, setShowMixComparator] = useState<boolean>(false);
+
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -217,6 +217,22 @@ const App: React.FC = () => {
   const [isGeneratingMixFeedback, setIsGeneratingMixFeedback] = useState<boolean>(false);
   const [mixFeedbackError, setMixFeedbackError] = useState<string | null>(null);
   const [mixFeedbackTab, setMixFeedbackTab] = useState<'single' | 'compare'>('single');
+
+  // Mix Comparison State
+  const [mixCompareInputs, setMixCompareInputs] = useState<{
+    mixA: File | null;
+    mixB: File | null;
+    userNotes: string;
+    includeMixBFeedback?: boolean;
+  }>({
+    mixA: null,
+    mixB: null,
+    userNotes: '',
+    includeMixBFeedback: false
+  });
+  const [mixCompareResult, setMixCompareResult] = useState<string | null>(null);
+  const [isGeneratingMixComparison, setIsGeneratingMixComparison] = useState<boolean>(false);
+  const [mixCompareError, setMixCompareError] = useState<string | null>(null);
   const audioFileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -598,6 +614,39 @@ const App: React.FC = () => {
     return text.replace(/\n\s*\n/g, '\n\n').trim();
   };
 
+  // Create clean HTML with black text on white/transparent background
+  const createCleanHtmlFromText = (text: string): string => {
+    const lines = text.split('\n');
+    let html = '<div style="color: #000000; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; background: transparent;">';
+    
+    for (const line of lines) {
+      if (line.trim() === '') {
+        html += '<br>';
+      } else if (line.startsWith('## ')) {
+        html += `<h2 style="color: #000000; font-size: 1.25rem; font-weight: bold; margin: 1rem 0 0.5rem 0;">${line.replace('## ', '')}</h2>`;
+      } else if (line.startsWith('### ')) {
+        html += `<h3 style="color: #000000; font-size: 1.1rem; font-weight: bold; margin: 0.75rem 0 0.25rem 0;">${line.replace('### ', '')}</h3>`;
+      } else if (line.startsWith('#### ')) {
+        html += `<h4 style="color: #000000; font-size: 1rem; font-weight: bold; margin: 0.5rem 0 0.25rem 0;">${line.replace('#### ', '')}</h4>`;
+      } else if (line.match(/^\d+\./)) {
+        html += `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">${line}</p>`;
+      } else if (line.startsWith('• ') || line.startsWith('- ')) {
+        html += `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">${line}</p>`;
+      } else if (line.includes(': ')) {
+        // Handle key-value pairs with bold keys
+        const colonIndex = line.indexOf(': ');
+        const key = line.substring(0, colonIndex);
+        const value = line.substring(colonIndex + 2);
+        html += `<p style="margin: 0.25rem 0; color: #000000;"><strong style="color: #000000;">${key}:</strong> ${value}</p>`;
+      } else {
+        html += `<p style="margin: 0.5rem 0; color: #000000;">${line}</p>`;
+      }
+    }
+    
+    html += '</div>';
+    return html;
+  };
+
   const handleCopyFormattedContent = async (elementId: string) => {
     const contentDisplayElement = document.getElementById(elementId);
     if (!contentDisplayElement) {
@@ -606,12 +655,14 @@ const App: React.FC = () => {
       return;
     }
 
-    const htmlContent = contentDisplayElement.innerHTML;
     const plainTextContent = getFormattedTextFromHtmlElement(contentDisplayElement.cloneNode(true) as HTMLElement);
+    
+    // Create clean HTML with black text on white/transparent background
+    const cleanHtmlContent = createCleanHtmlFromText(plainTextContent);
 
     try {
       if (navigator.clipboard && navigator.clipboard.write) {
-        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+        const htmlBlob = new Blob([cleanHtmlContent], { type: 'text/html' });
         const textBlob = new Blob([plainTextContent], { type: 'text/plain' });
         
         // @ts-ignore
@@ -901,6 +952,65 @@ const App: React.FC = () => {
     if(audioFileInputRef.current) audioFileInputRef.current.value = "";
   };
 
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix to get just the base64 data
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Mix Comparison Handlers
+  const handleCompareMixes = async () => {
+    if (!mixCompareInputs.mixA || !mixCompareInputs.mixB) {
+      setMixCompareError("Please upload both Mix A and Mix B files.");
+      return;
+    }
+    setIsGeneratingMixComparison(true);
+    setMixCompareResult(null);
+    setMixCompareError(null);
+    try {
+      // Convert files to base64 for the AI service
+      const mixABase64 = await fileToBase64(mixCompareInputs.mixA);
+      const mixBBase64 = await fileToBase64(mixCompareInputs.mixB);
+
+      // Call the dedicated mix comparison service
+      const comparisonInput = {
+        mixAFile: mixABase64,
+        mixBFile: mixBBase64,
+        mixAName: mixCompareInputs.mixA.name,
+        mixBName: mixCompareInputs.mixB.name,
+        includeMixBFeedback: mixCompareInputs.includeMixBFeedback,
+        userNotes: mixCompareInputs.userNotes
+      };
+
+      const feedback = await generateMixComparison(comparisonInput);
+      setMixCompareResult(feedback);
+    } catch (err: any) {
+      setMixCompareError(err.message || "An unknown error occurred while comparing mixes.");
+    } finally {
+      setIsGeneratingMixComparison(false);
+    }
+  };
+
+  const resetMixCompareForm = () => {
+    setMixCompareInputs({
+      mixA: null,
+      mixB: null,
+      userNotes: '',
+      includeMixBFeedback: false
+    });
+    setMixCompareResult(null);
+    setMixCompareError(null);
+  };
+
   // Determine TrackGuide Card Title
   let trackGuideCardTitle;
   const userProvidedSongTitle = inputs.songTitle?.trim();
@@ -1034,7 +1144,7 @@ const App: React.FC = () => {
 
 
       {activeView === 'trackGuide' && (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-7 gap-6">
+        <div className="max-w-full mx-auto grid grid-cols-1 lg:grid-cols-7 gap-6 px-4">
           <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
             <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -1043,14 +1153,14 @@ const App: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk, David Bowie, Skrillex" />
+                  <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk" />
                 </div>
 
                 <div>
                   <Input label="Song Reference" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
                     <div className="flex items-center gap-2">
@@ -1215,7 +1325,7 @@ const App: React.FC = () => {
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                   </div>
                 )}
-                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-18rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {activeGuidebookDetails && !isLoading && (
                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
                         <strong className="text-orange-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
@@ -1302,8 +1412,8 @@ const App: React.FC = () => {
       )}
 
       {activeView === 'mixFeedback' && (
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
-          <div className="md:col-span-4 space-y-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="md:col-span-3 space-y-6">
             {/* Tab Navigation */}
             <div className="flex bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 rounded-lg overflow-hidden">
               <button
@@ -1324,7 +1434,7 @@ const App: React.FC = () => {
                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
                 }`}
               >
-                🎵 Mix Compare
+                ⚖️ Mix Compare
               </button>
             </div>
 
@@ -1395,43 +1505,158 @@ const App: React.FC = () => {
             )}
 
             {mixFeedbackTab === 'compare' && (
-              <Card title="Compare Two Mixes" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400 mb-4">Upload two versions of your mix to compare them side-by-side and get detailed analysis of the differences.</p>
-                  <Button
-                    onClick={() => setShowMixComparator(true)}
-                    variant="primary"
-                    className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
-                    leftIcon={<UploadIcon className="w-5 h-5"/>}
+              <div className="space-y-5">
+                <Card title="Mix A (Original)" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+                  <div
+                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${mixCompareError && !mixCompareInputs.mixA ? 'border-red-500' : 'border-gray-600'} border-dashed rounded-md cursor-pointer hover:border-orange-500 transition-colors`}
+                    onClick={() => document.getElementById('mixA-upload')?.click()}
                   >
-                    🎵 Open Mix Comparison
-                  </Button>
-                  <div className="bg-gray-700/30 rounded-lg p-3">
-                    <h4 className="text-sm font-medium text-gray-300 mb-2">Perfect for comparing:</h4>
-                    <ul className="text-xs text-gray-400 space-y-1">
-                      <li>• Different mix versions</li>
-                      <li>• Before/after processing</li>
-                      <li>• Reference tracks vs your mix</li>
-                      <li>• Mastered vs unmastered</li>
-                    </ul>
+                    <div className="space-y-1 text-center">
+                      <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-400">
+                        <label htmlFor="mixA-upload" className="relative cursor-pointer rounded-md font-medium text-orange-400 hover:text-orange-300">
+                          <span>Upload Mix A</span>
+                          <input
+                            id="mixA-upload"
+                            name="mixA-upload"
+                            type="file"
+                            className="sr-only"
+                            accept="audio/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > MAX_AUDIO_FILE_SIZE_BYTES) {
+                                setMixCompareError(`File is too large. Max ${MAX_AUDIO_FILE_SIZE_MB}MB.`); return;
+                              }
+                              if (!file.type.startsWith('audio/')) {
+                                setMixCompareError('Invalid file type. Please upload audio.'); return;
+                              }
+                              setMixCompareInputs(prev => ({ ...prev, mixA: file }));
+                              setMixCompareError(null);
+                            }}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">MP3, WAV, FLAC up to {MAX_AUDIO_FILE_SIZE_MB}MB</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            )}
-          </div>
-          <div className="md:col-span-8 space-y-6">
-            {isGeneratingMixFeedback && (
-              <div className="flex justify-center items-center h-full min-h-[300px]">
-                <Spinner size="lg" color="text-orange-500" text="AI is analyzing your mix... this may take a moment."/>
+                  {mixCompareInputs.mixA && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixA.name} ({(mixCompareInputs.mixA.size / 1024 / 1024).toFixed(2)} MB)</p>}
+                </Card>
+
+                <Card title="Mix B (Revised)" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+                  <div
+                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${mixCompareError && !mixCompareInputs.mixB ? 'border-red-500' : 'border-gray-600'} border-dashed rounded-md cursor-pointer hover:border-orange-500 transition-colors`}
+                    onClick={() => document.getElementById('mixB-upload')?.click()}
+                  >
+                    <div className="space-y-1 text-center">
+                      <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-400">
+                        <label htmlFor="mixB-upload" className="relative cursor-pointer rounded-md font-medium text-orange-400 hover:text-orange-300">
+                          <span>Upload Mix B</span>
+                          <input
+                            id="mixB-upload"
+                            name="mixB-upload"
+                            type="file"
+                            className="sr-only"
+                            accept="audio/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > MAX_AUDIO_FILE_SIZE_BYTES) {
+                                setMixCompareError(`File is too large. Max ${MAX_AUDIO_FILE_SIZE_MB}MB.`); return;
+                              }
+                              if (!file.type.startsWith('audio/')) {
+                                setMixCompareError('Invalid file type. Please upload audio.'); return;
+                              }
+                              setMixCompareInputs(prev => ({ ...prev, mixB: file }));
+                              setMixCompareError(null);
+                            }}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">MP3, WAV, FLAC up to {MAX_AUDIO_FILE_SIZE_MB}MB</p>
+                    </div>
+                  </div>
+                  {mixCompareInputs.mixB && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixB.name} ({(mixCompareInputs.mixB.size / 1024 / 1024).toFixed(2)} MB)</p>}
+                </Card>
+
+                <Card title="Notes for AI" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+                  <Textarea
+                    placeholder="Describe what you want the AI to focus on when comparing these mixes. For example: 'Focus on the vocal clarity and low-end balance' or 'Compare the stereo width and overall loudness'..."
+                    value={mixCompareInputs.userNotes}
+                    onChange={(e) => setMixCompareInputs(prev => ({ ...prev, userNotes: e.target.value }))}
+                    rows={3}
+                    className="w-full"
+                  />
+                </Card>
+
+                <Card title="Analysis Options" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mixCompareInputs.includeMixBFeedback || false}
+                        onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
+                        className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-300">Include full analysis for Mix B</span>
+                    </label>
+                  </div>
+                </Card>
+
+                <Button
+                  onClick={handleCompareMixes}
+                  disabled={isGeneratingMixComparison || !mixCompareInputs.mixA || !mixCompareInputs.mixB}
+                  variant="primary"
+                  className="w-full px-4 py-3 text-base font-semibold"
+                  leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
+                >
+                  {isGeneratingMixComparison ? 'Comparing Mixes...' : 'Compare Mixes'}
+                </Button>
+
+                <Button 
+                  type="button" 
+                  onClick={resetMixCompareForm} 
+                  variant="outline" 
+                  className="w-full !border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white"
+                >
+                  Reset
+                </Button>
+
+                {mixCompareError && !isGeneratingMixComparison && (
+                  <Card className="border-red-500 bg-red-900/40 shadow-xl">
+                    <p className="text-red-300 font-semibold text-lg">Mix Comparison Error:</p>
+                    <p className="text-red-300">{mixCompareError}</p>
+                  </Card>
+                )}
               </div>
             )}
-            {mixFeedbackError && !isGeneratingMixFeedback && (
+          </div>
+          <div className="md:col-span-9 space-y-6">
+            {(isGeneratingMixFeedback || isGeneratingMixComparison) && (
+              <div className="flex justify-center items-center h-full min-h-[300px]">
+                <Spinner size="lg" color="text-orange-500" text={
+                  mixFeedbackTab === 'single' 
+                    ? "AI is analyzing your mix... this may take a moment."
+                    : "AI is comparing your mixes... this may take a moment."
+                }/>
+              </div>
+            )}
+            {mixFeedbackError && !isGeneratingMixFeedback && mixFeedbackTab === 'single' && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
                 <p className="text-red-300 font-semibold text-lg">Mix Feedback Error:</p>
                 <p className="text-red-300">{mixFeedbackError}</p>
               </Card>
             )}
-            {mixFeedbackResult && !isGeneratingMixFeedback && (
+            {mixCompareError && !isGeneratingMixComparison && mixFeedbackTab === 'compare' && (
+              <Card className="border-red-500 bg-red-900/40 shadow-xl">
+                <p className="text-red-300 font-semibold text-lg">Mix Comparison Error:</p>
+                <p className="text-red-300">{mixCompareError}</p>
+              </Card>
+            )}
+            {mixFeedbackResult && !isGeneratingMixFeedback && mixFeedbackTab === 'single' && (
               <Card 
                 title="AI Mix Feedback Report" 
                 className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
@@ -1441,16 +1666,38 @@ const App: React.FC = () => {
                   <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
-                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-18rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {renderMarkdown(mixFeedbackResult, true)}
                 </div>
               </Card>
             )}
-            {!isGeneratingMixFeedback && !mixFeedbackResult && !mixFeedbackError && (
+            {mixCompareResult && !isGeneratingMixComparison && mixFeedbackTab === 'compare' && (
+              <Card 
+                title="AI Mix Comparison Report" 
+                className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
+                titleClassName="border-b border-gray-700 text-xl !text-orange-300"
+              >
+                 <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
+                  <Button onClick={() => handleCopyFormattedContent('mix-comparison-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Comparison</Button>
+                  {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
+                </div>
+                <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                  {renderMarkdown(mixCompareResult, true)}
+                </div>
+              </Card>
+            )}
+            {!isGeneratingMixFeedback && !isGeneratingMixComparison && !mixFeedbackResult && !mixCompareResult && !mixFeedbackError && !mixCompareError && (
               <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
-                  <AdjustmentsHorizontalIcon className="w-20 h-20 text-orange-500 mb-6 opacity-80"/>
+                  <div className="flex justify-center mb-6">
+                    <TrackGuideLogo className="w-20 h-20 opacity-80"/>
+                  </div>
                   <h3 className="text-2xl font-semibold text-gray-200 mb-2">Refine Your Sound.</h3>
-                  <p className="text-gray-400 max-w-md">Upload your mix, add some notes, and get detailed feedback from our AI mixing engineer.</p>
+                  <p className="text-gray-400 max-w-md">
+                    {mixFeedbackTab === 'single' 
+                      ? 'Upload your mix, add some notes, and get detailed feedback from our AI mixing engineer.'
+                      : 'Upload two mix versions to compare them side-by-side and get detailed analysis of the differences.'
+                    }
+                  </p>
               </Card>
             )}
           </div>
@@ -1484,16 +1731,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {showMixComparator && (
-        <MixComparator
-          isOpen={showMixComparator}
-          onClose={() => setShowMixComparator(false)}
-          onAnalyze={(mixA, mixB, options) => {
-            // Handle mix analysis here
-            console.log('Analyzing mixes:', mixA, mixB, 'Options:', options);
-          }}
-        />
-      )}
+
 
        <footer className="text-center mt-16 py-8 border-t border-gray-700/60">
         <p className="text-sm text-gray-500">{APP_TITLE} - AI Production Assistant</p>

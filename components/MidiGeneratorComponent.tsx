@@ -433,6 +433,19 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       }
     } else if ((type === "Bassline" || type === "Melody") && Array.isArray(patternData)) {
       previewText = patternData.map((n: MidiNote) => n.pitch || `N${n.midi}`).join(', ');
+    } else if (type === "Drums" && Array.isArray(patternData)) {
+      // Handle drums as array - extract unique drum names from MIDI notes
+      const uniqueDrumMidi = [...new Set(patternData.map((n: MidiNote) => n.midi))];
+      const drumNames = uniqueDrumMidi.map(midi => {
+        // Map common drum MIDI numbers to names
+        const drumMidiMap: { [key: number]: string } = {
+          36: 'Kick', 38: 'Snare', 42: 'Hi-Hat Closed', 46: 'Hi-Hat Open',
+          49: 'Crash', 51: 'Ride', 45: 'Low Tom', 47: 'Mid Tom', 50: 'High Tom',
+          39: 'Clap', 54: 'Tambourine', 56: 'Cowbell', 37: 'Rimshot'
+        };
+        return drumMidiMap[midi] || `Drum ${midi}`;
+      });
+      previewText = drumNames.join(', ');
     } else if (type === "Drums" && typeof patternData === 'object' && Object.keys(patternData).length > 0) {
       const drumNames = Object.keys(patternData).map(key => 
         DRUM_NAMES[key.toLowerCase()] || key.charAt(0).toUpperCase() + key.slice(1)
