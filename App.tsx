@@ -1036,7 +1036,7 @@ const App: React.FC = () => {
             <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
+                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="Leave blank for AI magic ✨" />
                 </div>
                 
                 <div>
@@ -1155,19 +1155,19 @@ const App: React.FC = () => {
                       {/* Chords and Lyrics Row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am - F - C - G, DMaj7 - Em9" />
+                          <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am - F - C - G" />
                         </div>
                         <div>
                           <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={2} />
                         </div>
                       </div>
+
+                      {/* General Notes for AI */}
+                      <div>
+                        <Textarea label="General Notes for AI" name="generalNotes" value={inputs.generalNotes || ''} onChange={handleInputChange} placeholder="Any specific instructions, style notes, or creative direction for the AI to consider..." rows={3} />
+                      </div>
                     </div>
                   )}
-                </div>
-
-                {/* General Notes - Always Last */}
-                <div>
-                  <Textarea label="General Notes for AI" name="generalNotes" value={inputs.generalNotes || ''} onChange={handleInputChange} placeholder="Any specific instructions, style notes, or creative direction for the AI to consider..." rows={3} />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<TrackGuideLogo className="w-5 h-5"/>}>
                   {isLoading ? (loadingMessage || 'Generating...') : 'Generate TrackGuide'}
