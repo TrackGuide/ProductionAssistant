@@ -723,7 +723,7 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 
-export const generateRemixGuide = async (audioUrl: string, targetGenre: string, genreInfo: any): Promise<any> => {
+export const generateRemixGuide = async (audioFile: File, targetGenre: string, genreInfo: any): Promise<any> => {
   if (!apiKey) {
     const errorMessage = "API Key not configured. Cannot connect to Gemini API for remix guide generation.";
     console.error(errorMessage);
@@ -731,26 +731,52 @@ export const generateRemixGuide = async (audioUrl: string, targetGenre: string, 
   }
 
   try {
-    const prompt = generateRemixPrompt(audioUrl, targetGenre, genreInfo);
+    const audioFilePart = await fileToGenerativePart(audioFile);
+    const prompt = generateRemixPrompt(audioFile.name, targetGenre, genreInfo);
 
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
-      contents: [
-        { text: prompt },
-        { inlineData: { data: audioUrl, mimeType: "audio/mpeg" } }
-      ],
-      config: {
-        responseMimeType: "application/json",
+      contents: {
+        parts: [
+          { text: prompt },
+          audioFilePart
+        ]
       }
     });
 
-    if (response.response && response.response.json) {
-      const json = response.response.json();
-      console.log("✅ RemixGuide JSON:", json);
-      return json;
+    if (response.response && response.response.text) {
+      const text = response.response.text();
+
+      // Try to parse JSON response
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[0]);
+          return result;
+        } else {
+          // Fallback: create structured response from text
+          return {
+            guide: text,
+            targetTempo: genreInfo?.tempoRange?.[0] || 128,
+            targetKey: "C minor",
+            sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+            midiPatterns: {}
+          };
+        }
+      } catch (parseError) {
+        console.error("Error parsing JSON response:", parseError);
+        // Return fallback structure
+        return {
+          guide: text,
+          targetTempo: genreInfo?.tempoRange?.[0] || 128,
+          targetKey: "C minor",
+          sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+          midiPatterns: {}
+        };
+      }
     } else {
-      console.error("❌ Received non-JSON response from Gemini API for remix guide. Response:", response);
-      throw new Error("Expected JSON but received unexpected response format from Gemini API for remix guide.");
+      console.error("Received non-text response from Gemini API for remix guide. Response:", response);
+      throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
 
   } catch (error: any) {
