@@ -3,20 +3,12 @@ nohup: ignoring input
 > trackguide@0.0.0 dev
 > vite --host 0.0.0.0 --port 12000
 
+Port 12000 is in use, trying another one...
+Port 12001 is in use, trying another one...
+Port 12002 is in use, trying another one...
+Port 12003 is in use, trying another one...
 
-  VITE v6.3.5  ready in 139 ms
+  VITE v6.3.5  ready in 152 ms
 
-  ➜  Local:   http://localhost:12000/
-  ➜  Network: http://10.2.6.9:12000/
-9:09:37 PM [vite] (client) page reload components/MidiGeneratorComponent.tsx
-9:09:52 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:12:58 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:14:08 PM [vite] (client) page reload App.tsx
-9:14:18 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:15:53 PM [vite] (client) page reload services/geminiService.ts
-9:16:17 PM [vite] (client) page reload App.tsx
-9:16:57 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:25:27 PM [vite] (client) page reload services/geminiService.ts
-9:26:10 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:26:28 PM [vite] (client) page reload components/RemixGuideAI.tsx
-9:26:36 PM [vite] (client) page reload components/RemixGuideAI.tsx
+  ➜  Local:   http://localhost:12004/
+  ➜  Network: http://10.2.6.9:12004/

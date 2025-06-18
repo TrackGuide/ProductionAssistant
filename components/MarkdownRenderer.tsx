@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from './Button.tsx';
 import { DownloadIcon, CopyIcon } from './icons.tsx';
 import { copyToClipboard } from '../utils/copyUtils.ts';
@@ -182,7 +183,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       )}
       
       <div className="prose prose-invert max-w-none">
-        <ReactMarkdown components={customComponents}>
+        <ReactMarkdown 
+          components={customComponents}
+          remarkPlugins={[remarkGfm]}
+        >
           {content}
         </ReactMarkdown>
       </div>
