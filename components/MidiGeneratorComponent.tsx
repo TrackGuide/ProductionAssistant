@@ -32,12 +32,18 @@ const DRUM_NAMES: { [key: string]: string } = {
 };
 
 interface MidiGeneratorProps {
-  currentGuidebookEntry: GuidebookEntry;
-  mainAppInputs: UserInputs; 
-  onUpdateGuidebookEntryMidi: (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => void;
-  parsedGuidebookBpm: number | null; 
-  parsedGuidebookKey: string | null;
-  parsedGuidebookChordProg: string | null;
+  currentGuidebookEntry?: GuidebookEntry;
+  mainAppInputs?: UserInputs; 
+  onUpdateGuidebookEntryMidi?: (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => void;
+  parsedGuidebookBpm?: number | null; 
+  parsedGuidebookKey?: string | null;
+  parsedGuidebookChordProg?: string | null;
+  // Remix mode props
+  initialPatterns?: { [section: string]: { [instrument: string]: string } };
+  sections?: string[];
+  targetTempo?: number;
+  targetKey?: string;
+  isRemixMode?: boolean;
 }
 
 const extractRichMidiContext = (guidebookContent: string): string => {
@@ -67,10 +73,30 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     onUpdateGuidebookEntryMidi,
     parsedGuidebookBpm,
     parsedGuidebookKey,
-    parsedGuidebookChordProg
+    parsedGuidebookChordProg,
+    // Remix mode props
+    initialPatterns,
+    sections,
+    targetTempo,
+    targetKey,
+    isRemixMode = false
 }) => {
   const [settings, setSettings] = useState<MidiSettings>(() => {
-    if (currentGuidebookEntry.midiSettings) {
+    // Remix mode initialization
+    if (isRemixMode) {
+      return {
+        ...MIDI_DEFAULT_SETTINGS,
+        key: targetKey || MIDI_DEFAULT_SETTINGS.key,
+        tempo: targetTempo || MIDI_DEFAULT_SETTINGS.tempo,
+        genre: 'Electronic', // Default for remix mode
+        songSection: sections?.[0] || MIDI_DEFAULT_SETTINGS.songSection,
+        guidebookContext: `Remix mode for ${targetKey || 'C minor'} at ${targetTempo || 128} BPM`,
+        targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'],
+        bars: 8
+      };
+    }
+
+    if (currentGuidebookEntry?.midiSettings) {
         return {
             ...currentGuidebookEntry.midiSettings, 
             bars: BAR_OPTIONS.includes(currentGuidebookEntry.midiSettings.bars) ? currentGuidebookEntry.midiSettings.bars : MIDI_DEFAULT_SETTINGS.bars,
@@ -81,8 +107,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             guidebookContext: currentGuidebookEntry.midiSettings.guidebookContext || extractRichMidiContext(currentGuidebookEntry.content)
         };
     }
-    const initialGenre = currentGuidebookEntry.genre?.[0] || mainAppInputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
-    const richContextForMidi = extractRichMidiContext(currentGuidebookEntry.content);
+    const initialGenre = currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
+    const richContextForMidi = extractRichMidiContext(currentGuidebookEntry?.content || '');
     
     const tempoRange = MIDI_TEMPO_RANGES[initialGenre] || MIDI_TEMPO_RANGES.Default;
     const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
@@ -110,7 +136,24 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       bars: initialBars,
     };
   });
-  const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(currentGuidebookEntry.generatedMidiPatterns || null);
+  const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(() => {
+    if (isRemixMode && initialPatterns) {
+      // Convert remix patterns to GeneratedMidiPatterns format
+      const convertedPatterns: GeneratedMidiPatterns = {};
+      Object.entries(initialPatterns).forEach(([section, instruments]) => {
+        Object.entries(instruments).forEach(([instrument, pattern]) => {
+          const key = `${section}_${instrument}` as KeyOfGeneratedMidiPatterns;
+          // For now, skip conversion as pattern structure needs to be properly defined
+          // TODO: Implement proper pattern conversion from remix format
+          if (typeof pattern !== 'string') {
+            convertedPatterns[key] = pattern as any;
+          }
+        });
+      });
+      return convertedPatterns;
+    }
+    return currentGuidebookEntry?.generatedMidiPatterns || null;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +170,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
   useEffect(() => {
     let initialBarsVal;
-    if (currentGuidebookEntry.midiSettings) {
+    if (currentGuidebookEntry?.midiSettings) {
         initialBarsVal = currentGuidebookEntry.midiSettings.bars || MIDI_DEFAULT_SETTINGS.bars;
         setSettings({
             ...currentGuidebookEntry.midiSettings, 
@@ -139,8 +182,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             guidebookContext: currentGuidebookEntry.midiSettings.guidebookContext || extractRichMidiContext(currentGuidebookEntry.content)
         });
     } else {
-        const primaryGenre = currentGuidebookEntry.genre?.[0] || mainAppInputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
-        const richContextForMidi = extractRichMidiContext(currentGuidebookEntry.content);
+        const primaryGenre = currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
+        const richContextForMidi = extractRichMidiContext(currentGuidebookEntry?.content || '');
         
         const tempoRange = MIDI_TEMPO_RANGES[primaryGenre] || MIDI_TEMPO_RANGES.Default;
         const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
@@ -167,7 +210,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             bars: initialBarsVal,
         });
     }
-    setPatterns(currentGuidebookEntry.generatedMidiPatterns || null);
+    setPatterns(currentGuidebookEntry?.generatedMidiPatterns || null);
     setError(null);
     if (isPlayingRef.current) {
         stopPlayback();
@@ -175,7 +218,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
   }, [
     currentGuidebookEntry, 
-    mainAppInputs.genre, 
+    mainAppInputs?.genre, 
     parsedGuidebookBpm, 
     parsedGuidebookKey, 
     parsedGuidebookChordProg
@@ -198,7 +241,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             newSettings.tempo = Math.round((newTempoRange[0] + newTempoRange[1]) / 2);
         }
       }
-      if (currentGuidebookEntry.content) {
+      if (currentGuidebookEntry?.content) {
           newSettings.guidebookContext = extractRichMidiContext(currentGuidebookEntry.content);
       }
       return newSettings;
@@ -225,8 +268,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
     await initializeAudio(); 
     
-    const primaryGenre = currentGuidebookEntry.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry.content);
+    const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
     
     const settingsForGeneration = {
         ...settings, 
@@ -257,7 +300,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           patternsData.drums = lowercasedDrums;
       }
       setPatterns(patternsData);
-      onUpdateGuidebookEntryMidi(settingsForGeneration, patternsData); 
+      onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData); 
     } catch (err: any) {
       console.error("MIDI Generation Error:", err);
       const specificMessage = err.message.toLowerCase().includes("json")
@@ -351,8 +394,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
     await initializeAudio();
 
-    const primaryGenre = currentGuidebookEntry.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry.content);
+    const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
     // Preserve original settings for single track regeneration
     const preservedSettings = {
@@ -394,7 +437,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       }
       
       setPatterns(updatedPatterns);
-      onUpdateGuidebookEntryMidi(settings, updatedPatterns);
+      onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
       setLoadingMessage('');
     } catch (err) {
       console.error('Error regenerating single track:', err);
@@ -598,8 +641,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('genre', e.target.value)} 
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
-                <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
-                    Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs.genre[0] || "Default"})
+                <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
+                    Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || "Default"})
                 </option>
                 {GENRE_SUGGESTIONS.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
@@ -623,7 +666,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('songSection', e.target.value)} 
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
-                {MIDI_SONG_SECTIONS.map(section => <option key={section} value={section}>{section}</option>)}
+                {(isRemixMode && sections ? sections : MIDI_SONG_SECTIONS).map(section => <option key={section} value={section}>{section}</option>)}
               </select>
             </div>
           </div>

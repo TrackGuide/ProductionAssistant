@@ -22,6 +22,7 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
+import { RemixGuideAI } from './components/RemixGuideAI.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
 
@@ -1111,12 +1112,30 @@ const App: React.FC = () => {
 
   <Button
     size="sm"
-    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'mixFeedback'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
     onClick={() => setActiveView('mixFeedback')}
     variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
     leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
   >
     Mix Feedback AI
+  </Button>
+
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'remixGuide'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('remixGuide')}
+    variant={activeView === 'remixGuide' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎛️</span>}
+  >
+    RemixGuide AI
   </Button>
 
   <Button
@@ -1147,7 +1166,7 @@ const App: React.FC = () => {
         <div className="max-w-full mx-auto grid grid-cols-1 lg:grid-cols-7 gap-6 px-4">
           <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
             <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
                   <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI will suggest one if left blank" />
                 </div>
@@ -1160,7 +1179,7 @@ const App: React.FC = () => {
                   <Input label="Song Reference" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
                     <div className="flex items-center gap-2">
@@ -1250,8 +1269,8 @@ const App: React.FC = () => {
                     className="mb-4 w-8 h-8 p-0 flex items-center justify-center"
                     title={showAdvancedInput ? 'Hide Advanced Input' : 'Show Advanced Input'}
                   >
-                    <span className={`text-lg transition-transform ${showAdvancedInput ? 'rotate-180' : ''}`}>
-                      ▼
+                    <span className={`text-lg transition-transform ${showAdvancedInput ? 'rotate-45' : ''}`}>
+                      +
                     </span>
                   </Button>
 
@@ -1327,7 +1346,7 @@ const App: React.FC = () => {
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                   </div>
                 )}
-                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {activeGuidebookDetails && !isLoading && (
                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
                         <strong className="text-orange-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
@@ -1669,7 +1688,7 @@ const App: React.FC = () => {
                   <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
-                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {renderMarkdown(mixFeedbackResult, true)}
                 </div>
               </Card>
@@ -1684,7 +1703,7 @@ const App: React.FC = () => {
                   <Button onClick={() => handleCopyFormattedContent('mix-comparison-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Comparison</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
-                <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {renderMarkdown(mixCompareResult, true)}
                 </div>
               </Card>
@@ -1704,6 +1723,12 @@ const App: React.FC = () => {
               </Card>
             )}
           </div>
+        </div>
+      )}
+
+      {activeView === 'remixGuide' && (
+        <div className="max-w-7xl mx-auto">
+          <RemixGuideAI />
         </div>
       )}
 

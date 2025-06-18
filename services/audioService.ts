@@ -301,3 +301,21 @@ export const initializeAudio = async () => {
       // Optionally, inform the user they might need to interact with the page for audio to work.
     }
 };
+
+// Upload audio file and return base64 data URL
+export const uploadAudio = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result && typeof reader.result === 'string') {
+        // Extract base64 data from data URL
+        const base64Data = reader.result.split(',')[1];
+        resolve(base64Data);
+      } else {
+        reject(new Error('Failed to read file'));
+      }
+    };
+    reader.onerror = () => reject(new Error('File reading failed'));
+    reader.readAsDataURL(file);
+  });
+};
