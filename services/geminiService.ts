@@ -836,5 +836,3 @@ export async function generateRemixGuide(
     throw new Error("Invalid JSON in Gemini response");
   }
 }
-
-}
