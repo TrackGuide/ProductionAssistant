@@ -66,37 +66,34 @@ export const RemixGuideAI: React.FC = () => {
     event.preventDefault();
   };
 
-  const generateRemix = async () => {
-    if (!audioFile || !selectedGenre) {
-      setError('Please upload an audio file and select a target genre');
-      return;
-    }
+ const generateRemix = async () => {
+  if (!audioFile || !selectedGenre) {
+    setError('Please upload an audio file and select a target genre');
+    return;
+  }
 
-    setIsGenerating(true);
-    setError('');
+  setIsGenerating(true);
+  setError('');
 
-    try {
-      // 1) Convert audio to base64 + mimeType
-      const audioData = await uploadAudio(audioFile);
-      console.log('[RemixGuideAI] audioData:', audioData);
+  try {
+    // 1) Convert to base64
+    const base64 = await uploadAudio(audioFile);
+    // 2) Build the audioData object
+    const audioData = { base64, mimeType: audioFile.type };
 
-      // 2) Build prompt for debugging
-      const genreInfo = getGenreInfo(selectedGenre);
-      const prompt = generateRemixPrompt(selectedGenre, genreInfo);
-      console.log('[RemixGuideAI] prompt:', prompt);
+    const genreInfo = getGenreInfo(selectedGenre);
 
-      // 3) Call service
-      const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
-      console.log('[RemixGuideAI] result:', result);
+    // 3) Pass audioData (not raw string)
+    const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
+    setRemixGuide(result);
+  } catch (err) {
+    console.error('Error generating remix guide:', err);
+    setError('Failed to generate remix guide. Please try again.');
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
-      setRemixGuide(result);
-    } catch (err: any) {
-      console.error('[RemixGuideAI] error generating remix guide:', err);
-      setError(err.message || 'Failed to generate remix guide. Check console for details.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
