@@ -726,7 +726,7 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
-/** Build the text-only prompt for the remix */
+/** Build the text‐only prompt for the remix */
 export function generateRemixPrompt(targetGenre: string, genreInfo: any): string {
   const tempoRange = genreInfo
     ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
@@ -778,12 +778,12 @@ export async function generateRemixGuide(
   console.log("[geminiService] Remix Prompt:", textPart.text);
   console.log("[geminiService] Audio size (chars):", audioData.base64.length);
 
-  const response: GenerateContentResponse = await ai.models.generateContent({
-    model:      GEMINI_MODEL_NAME,
-    contents:  [textPart, audioPart],
+  const response = await ai.models.generateContent({
+    model:     GEMINI_MODEL_NAME,
+    contents: [textPart, audioPart],
   });
 
-  // ─── Extract the returned text ───────────────────────────────
+  // — Extract the returned string —
   let text: string;
   if (response.response && typeof response.response.text === "function") {
     text = await response.response.text();
@@ -798,18 +798,18 @@ export async function generateRemixGuide(
 
   console.log("[geminiService] Raw remix response:", text);
 
-  // ─── Pull out the JSON blob ───────────────────────────────────
+  // — Pull out the JSON blob —
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     return JSON.parse(jsonMatch[0]);
   }
 
-  // ─── Fallback if not valid JSON ─────────────────────────────
+  // — Fallback if AI didn’t return valid JSON —
   return {
     guide:       text,
     targetTempo: genreInfo?.tempoRange?.[0] || 128,
     targetKey:   "C minor",
-    sections:    genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
-    midiPatterns:{},
+    sections:    genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+    midiPatterns: {},
   };
 }
