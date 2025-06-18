@@ -1,5 +1,4 @@
 import React from 'react';
-import { SparklesIcon, MusicNoteIcon, BookOpenIcon, AdjustmentsHorizontalIcon, PlayIcon, ChartBarIcon, UserGroupIcon, LightBulbIcon } from './icons.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-6 h-6" }: { className?: string }) => (

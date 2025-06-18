@@ -7,6 +7,7 @@ export interface GuidebookEntry {
   referenceTrackLink?: string;
   lyrics?: string;
   key?: string;
+  scale?: string;
   chords?: string;
   generalNotes?: string;
   vibe: string[];
@@ -26,6 +27,7 @@ export interface UserInputs {
   referenceTrackLink?: string; // New: Reference track via link (YouTube, Spotify, etc.)
   lyrics?: string; // New: Optional lyrics input
   key?: string; // New: Optional key input
+  scale?: string; // New: Optional scale/mode input
   chords?: string; // New: Optional chords input
   generalNotes?: string; // New: General notes for AI to consider
   vibe: string[];

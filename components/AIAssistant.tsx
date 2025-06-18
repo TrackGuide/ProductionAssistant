@@ -123,8 +123,25 @@ What would you like to work on today?`,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
-      <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
+    <>
+      <style>{`
+        .ai-chat-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+        .ai-chat-scroll::-webkit-scrollbar-track {
+          background: #1F2937;
+          border-radius: 4px;
+        }
+        .ai-chat-scroll::-webkit-scrollbar-thumb {
+          background: #4B5563;
+          border-radius: 4px;
+        }
+        .ai-chat-scroll::-webkit-scrollbar-thumb:hover {
+          background: #6B7280;
+        }
+      `}</style>
+      <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
+        <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
         <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 sticky top-0 z-10">
           <div className="flex items-center min-w-0 flex-1">
             <SparklesIcon className="w-5 h-5 text-white mr-2 flex-shrink-0" />
@@ -140,7 +157,10 @@ What would you like to work on today?`,
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 ai-chat-scroll" style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#4B5563 #1F2937'
+        }}>
           {messages.map((message) => (
             <div
               key={message.id}
@@ -197,7 +217,8 @@ What would you like to work on today?`,
             Press Enter to send • Shift+Enter for new line
           </div>
         </div>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </>
   );
 };

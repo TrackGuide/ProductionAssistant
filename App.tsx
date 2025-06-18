@@ -7,7 +7,7 @@ import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
-import { SparklesIcon, SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon, CloseIcon } from './components/icons.tsx';
+import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon, CloseIcon } from './components/icons.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -32,6 +32,7 @@ const initialInputsState: UserInputs = {
   referenceTrackLink: '',
   lyrics: '',
   key: '',
+  scale: '',
   chords: '',
   generalNotes: '',
   vibe: [],
@@ -203,6 +204,7 @@ const App: React.FC = () => {
   const [activeGuidebookDetails, setActiveGuidebookDetails] = useState<GuidebookEntry | null>(null);
   const [showLibraryModal, setShowLibraryModal] = useState<boolean>(false);
   const [copyStatus, setCopyStatus] = useState<string>('');
+  const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
   // New tool modals state
   const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
@@ -229,6 +231,7 @@ const App: React.FC = () => {
           ...entry,
           genre: Array.isArray(entry.genre) ? entry.genre : (entry.genre ? [entry.genre] : []),
           vibe: Array.isArray(entry.vibe) ? entry.vibe : (entry.vibe ? [entry.vibe] : []),
+          scale: entry.scale || '',
           midiSettings: entry.midiSettings || undefined,
           generatedMidiPatterns: entry.generatedMidiPatterns || undefined,
         }));
@@ -1024,113 +1027,150 @@ const App: React.FC = () => {
 
 
       {activeView === 'trackGuide' && (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-3 space-y-6">
-            <Card title="Blueprint Your Sound" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-              <p className="text-sm text-gray-400 mb-4">Fill in as many fields as you'd like (minimum 1 genre required) to create your custom production guide.</p>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
-                </div>
-                <div>
-                  <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      ref={genreInputRef}
-                      id="genre-input"
-                      name="currentGenreText" 
-                      value={currentGenreText} 
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => handleMultiSelectKeyDown(e, 'genre')}
-                      placeholder="Type custom genre..." 
-                      list="genre-suggestions" 
-                      className="flex-grow"
-                    />
-                    <Button type="button" onClick={() => handleAddMultiSelectItem('genre')} size="sm" variant="secondary" aria-label="Add Genre" className="px-3">
-                      <PlusIcon className="w-4 h-4" />
-                    </Button>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Card title="Blueprint Your Sound" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+            <p className="text-sm text-gray-400 mb-4">All fields optional - just add what you know to create your custom production guide.</p>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
                   </div>
-                  <datalist id="genre-suggestions">
-                      {GENRE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-                  </datalist>
-                  <SelectedPills selections={inputs.genre} onRemove={(val) => handleMultiSelectToggle('genre', val)} />
+                  <div>
+                    <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk" />
+                  </div>
                 </div>
 
-                <div>
-                  <Input label="Artist/Song Reference(s)" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk - Around the World" />
+                {/* Genre and Vibe Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        ref={genreInputRef}
+                        id="genre-input"
+                        name="currentGenreText" 
+                        value={currentGenreText} 
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => handleMultiSelectKeyDown(e, 'genre')}
+                        placeholder="Type custom genre..." 
+                        list="genre-suggestions" 
+                        className="flex-grow"
+                      />
+                      <Button type="button" onClick={() => handleAddMultiSelectItem('genre')} size="sm" variant="secondary" aria-label="Add Genre" className="px-3">
+                        <PlusIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <datalist id="genre-suggestions">
+                        {GENRE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                    </datalist>
+                    <SelectedPills selections={inputs.genre} onRemove={(val) => handleMultiSelectToggle('genre', val)} />
+                  </div>
+
+                  <div>
+                    <label htmlFor="vibe-input" className="block text-sm font-medium text-gray-300 mb-1.5">Vibe(s) / Mood(s)</label>
+                    <div className="flex items-center gap-2">
+                        <Input 
+                        ref={vibeInputRef}
+                        id="vibe-input"
+                        name="currentVibeText" 
+                        value={currentVibeText} 
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => handleMultiSelectKeyDown(e, 'vibe')}
+                        placeholder="Type custom vibe..." 
+                        list="vibe-suggestions" 
+                        className="flex-grow"
+                        />
+                        <Button type="button" onClick={() => handleAddMultiSelectItem('vibe')} size="sm" variant="secondary" aria-label="Add Vibe" className="px-3">
+                            <PlusIcon className="w-4 h-4" />
+                        </Button>
+                    </div>
+                    <datalist id="vibe-suggestions">
+                        {VIBE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                    </datalist>
+                    <SelectedPills selections={inputs.vibe} onRemove={(val) => handleMultiSelectToggle('vibe', val)} />
+                  </div>
                 </div>
 
-                <div>
-                  <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
+                {/* DAW and Reference Track Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input label="Preferred DAW" name="daw" value={inputs.daw} onChange={handleInputChange} placeholder="Type or select DAW..." list="daw-suggestions" />
+                    <datalist id="daw-suggestions">
+                        {DAW_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                    </datalist>
+                    <div className="flex flex-wrap gap-2 mt-2 mb-1">
+                        {DAW_SUGGESTIONS.slice(0,5).map(suggestion => (
+                            <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => handleDAWSuggestionClick(suggestion)}
+                            className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ease-in-out shadow-sm hover:shadow-md ${
+                                inputs.daw === suggestion 
+                                ? 'bg-orange-600 text-white ring-2 ring-orange-400 ring-offset-2 ring-offset-gray-800' 
+                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-gray-100'
+                            }`}
+                            >
+                            {suggestion}
+                            </button>
+                        ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
+                  </div>
                 </div>
 
-                <div>
-                  <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={3} />
+                {/* Equipment Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or 'stock only'" rows={2} />
+                  </div>
+                  <div>
+                    <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Fender Stratocaster, Moog Subsequent 37, Roland TR-808, Vocals" rows={2} />
+                  </div>
                 </div>
 
-                <div>
-                  <Input label="Key" name="key" value={inputs.key || ''} onChange={handleInputChange} placeholder="e.g., C Major, F# Minor, Bb Major" />
+                {/* Advanced Input Toggle */}
+                <div className="border-t border-gray-600 pt-4">
+                  <Button 
+                    type="button" 
+                    onClick={() => setShowAdvancedInput(!showAdvancedInput)}
+                    variant="outline" 
+                    className="mb-4"
+                    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+                  >
+                    {showAdvancedInput ? 'Hide' : 'Show'} Advanced Input
+                  </Button>
+
+                  {showAdvancedInput && (
+                    <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
+                      {/* Key and Scale Row */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Input label="Key" name="key" value={inputs.key || ''} onChange={handleInputChange} placeholder="e.g., C Major" />
+                        </div>
+                        <div>
+                          <Input label="Scale/Mode" name="scale" value={inputs.scale || ''} onChange={handleInputChange} placeholder="e.g., Dorian, Mixolydian" />
+                        </div>
+                      </div>
+
+                      {/* Chords and Lyrics Row */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., I-V-vi-IV" />
+                        </div>
+                        <div>
+                          <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={2} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am-F-C-G, Dm7-G7-Cmaj7, I-vi-IV-V" />
-                </div>
-
+                {/* General Notes - Always Last */}
                 <div>
                   <Textarea label="General Notes for AI" name="generalNotes" value={inputs.generalNotes || ''} onChange={handleInputChange} placeholder="Any specific instructions, style notes, or creative direction for the AI to consider..." rows={3} />
-                </div>
-                
-                <div>
-                  <label htmlFor="vibe-input" className="block text-sm font-medium text-gray-300 mb-1.5">Vibe(s) / Mood(s)</label>
-                  <div className="flex items-center gap-2">
-                      <Input 
-                      ref={vibeInputRef}
-                      id="vibe-input"
-                      name="currentVibeText" 
-                      value={currentVibeText} 
-                      onChange={handleInputChange}
-                      onKeyDown={(e) => handleMultiSelectKeyDown(e, 'vibe')}
-                      placeholder="Type custom vibe..." 
-                      list="vibe-suggestions" 
-                      className="flex-grow"
-                      />
-                      <Button type="button" onClick={() => handleAddMultiSelectItem('vibe')} size="sm" variant="secondary" aria-label="Add Vibe" className="px-3">
-                          <PlusIcon className="w-4 h-4" />
-                      </Button>
-                  </div>
-                  <datalist id="vibe-suggestions">
-                      {VIBE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-                  </datalist>
-                  <SelectedPills selections={inputs.vibe} onRemove={(val) => handleMultiSelectToggle('vibe', val)} />
-                </div>
-
-                <div>
-                  <Input label="Preferred DAW" name="daw" value={inputs.daw} onChange={handleInputChange} placeholder="Type or select DAW..." list="daw-suggestions" />
-                  <datalist id="daw-suggestions">
-                      {DAW_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-                  </datalist>
-                  <div className="flex flex-wrap gap-2 mt-2 mb-1">
-                      {DAW_SUGGESTIONS.slice(0,5).map(suggestion => (
-                          <button
-                          key={suggestion}
-                          type="button"
-                          onClick={() => handleDAWSuggestionClick(suggestion)}
-                          className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ease-in-out shadow-sm hover:shadow-md ${
-                              inputs.daw === suggestion 
-                              ? 'bg-orange-600 text-white ring-2 ring-orange-400 ring-offset-2 ring-offset-gray-800' 
-                              : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-gray-100'
-                          }`}
-                          >
-                          {suggestion}
-                          </button>
-                      ))}
-                  </div>
-                </div>
-                <div>
-                  <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or type 'stock only'" />
-                </div>
-                <div>
-                  <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Guitar, Analog Synth, MPC, Vocals" />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full text-base py-2.5" leftIcon={<TrackGuideLogo className="w-5 h-5"/>}>
                   {isLoading ? (loadingMessage || 'Generating...') : 'Generate TrackGuide'}
@@ -1141,9 +1181,8 @@ const App: React.FC = () => {
                 </div>
               </form>
             </Card>
-          </div>
 
-          <div className="lg:col-span-9 space-y-6">
+          <div className="space-y-6">
             {/* Main Error */}
             {error && !isLoading && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
