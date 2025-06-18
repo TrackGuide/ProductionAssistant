@@ -1158,7 +1158,7 @@ const App: React.FC = () => {
                       {/* Chords and Lyrics Row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., I-V-vi-IV" />
+                          <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am - F - C - G, DMaj7 - Em9" />
                         </div>
                         <div>
                           <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={2} />
