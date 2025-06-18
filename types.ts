@@ -4,6 +4,11 @@ export interface GuidebookEntry {
   title: string;
   genre: string[];
   artistReference: string;
+  referenceTrackLink?: string;
+  lyrics?: string;
+  key?: string;
+  chords?: string;
+  generalNotes?: string;
   vibe: string[];
   daw: string;
   plugins: string;
@@ -18,6 +23,11 @@ export interface UserInputs {
   songTitle?: string; // Added songTitle
   genre: string[];
   artistReference: string;
+  referenceTrackLink?: string; // New: Reference track via link (YouTube, Spotify, etc.)
+  lyrics?: string; // New: Optional lyrics input
+  key?: string; // New: Optional key input
+  chords?: string; // New: Optional chords input
+  generalNotes?: string; // New: General notes for AI to consider
   vibe: string[];
   daw: string;
   plugins: string;
@@ -64,6 +74,7 @@ export type KeyOfGeneratedMidiPatterns = Exclude<keyof GeneratedMidiPatterns, 'e
 
 export interface MidiSettings {
   key: string;
+  scale?: string; // New: Scale/mode selection (relevant to the key)
   tempo: number;
   timeSignature: [number, number];
   chordProgression: string;
