@@ -44,6 +44,7 @@ interface MidiGeneratorProps {
   targetTempo?: number;
   targetKey?: string;
   isRemixMode?: boolean;
+  preGeneratedPatterns?: GeneratedMidiPatterns;
 }
 
 const extractRichMidiContext = (guidebookContent: string): string => {
@@ -79,7 +80,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     sections,
     targetTempo,
     targetKey,
-    isRemixMode = false
+    isRemixMode = false,
+    preGeneratedPatterns
 }) => {
   const [settings, setSettings] = useState<MidiSettings>(() => {
     // Remix mode initialization
@@ -137,6 +139,11 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     };
   });
   const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(() => {
+    // Use preGeneratedPatterns if available (from automatic MIDI generation)
+    if (preGeneratedPatterns) {
+      return preGeneratedPatterns;
+    }
+    
     if (isRemixMode && initialPatterns) {
       // Convert remix patterns to GeneratedMidiPatterns format
       const convertedPatterns: GeneratedMidiPatterns = {};

@@ -231,39 +231,19 @@ const generateMidiPrompt = (settings: MidiSettings): string => {
   const instrumentsToGenerate = targetInstruments.join(', ');
   const scaleInfo = scale ? ` (${scale} mode)` : '';
 
-  return `Generate MIDI patterns in JSON format for ${genre} music with INCREASED COMPLEXITY and VARIETY.
+  return `Generate ${genre} MIDI patterns for ${bars} bars in ${key}${scaleInfo}, ${tempo}BPM, ${timeSignature[0]}/${timeSignature[1]}.
+Chords: ${chordProgression} | Section: ${songSection || "General"}
+${guidebookContext ? `Style: ${guidebookContext.substring(0, 200)}` : ''}
 
-Context: Key=${key}${scaleInfo}, Tempo=${tempo}BPM, Time=${timeSignature[0]}/${timeSignature[1]}, Chords=${chordProgression}, Bars=${bars}, Section=${songSection || "General"}
-Instruments: ${instrumentsToGenerate}
-${guidebookContext ? `Style: ${guidebookContext.substring(0, 300)}...` : ''}
+JSON format with keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
 
-IMPORTANT REQUIREMENTS:
-1. VELOCITY VARIETY: Use wide velocity ranges (40-127) with musical dynamics
-2. RHYTHMIC COMPLEXITY: Include syncopation, off-beat notes, and varied note lengths
-3. TIMING VARIETY: Use subtle timing variations (0.01-0.05 beat offsets for groove)
-4. DRUM COMPLEXITY: Always include AT LEAST 5 drum elements per pattern
+Requirements:
+- "chords": [{"time": 0, "name": "Cmaj7", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 70-95}]
+- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 75-110}] (MIDI 12-59)
+- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 60-100}]
+- "drums": Include kick, snare, hihat_closed, hihat_open + 1 more (ride/crash/clap)
 
-Return JSON with keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
-
-Format Requirements:
-- "chords": [{"time": 0, "name": "Cmaj7", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 65-95}]
-- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 70-110}] (MIDI 12-59 only)
-- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 50-100}] (include grace notes, runs)
-- "drums": Must include minimum 5 elements from: kick, snare, hihat_closed, hihat_open, ride, crash, clap, tom_low, tom_mid, tom_high, shaker, tambourine
-
-DRUM REQUIREMENTS:
-- Always generate patterns appropriate for ${genre}
-- Include at least: kick, snare, hihat_closed, hihat_open, and one additional element (ride/crash/clap/etc.)
-- Use velocity range 60-127 for drums
-- Create realistic drum patterns with proper spacing and fills
-
-MUSICAL COMPLEXITY:
-- Add passing tones, chord extensions, and scale-appropriate embellishments
-- Use rhythmic displacement and syncopation where appropriate for ${genre}
-- Include dynamic contrast within patterns
-- Make patterns suitable for ${songSection || "general"} section energy level
-
-Generate musically rich, production-ready patterns.`;
+Generate ${genre}-appropriate patterns with velocity variation (40-127) and rhythmic interest.`;
 };
 
 export const generateMidiPatternSuggestions = async (settings: MidiSettings): Promise<AsyncIterable<GenerateContentResponse>> => {
@@ -783,16 +763,61 @@ export function generateRemixPrompt(
     ? genreInfo.sections.join(", ")
     : "Intro, Build-Up, Drop, Breakdown, Outro";
 
-  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+  return `You are an expert music producer and remix specialist. The user has uploaded an original track and wants to remix it into ${targetGenre} style.
 
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+CRITICAL ANALYSIS REQUIREMENTS:
+1. **Deep Track Analysis**: Carefully analyze the uploaded audio to identify:
+   - Original tempo, key signature, and time signature
+   - Harmonic progression and chord structure
+   - Melodic motifs, hooks, and memorable phrases
+   - Rhythmic patterns and groove characteristics
+   - Vocal elements, instrumental solos, or distinctive sounds
+   - Song structure and arrangement elements
+   - Emotional tone and energy levels throughout
 
-Generate a comprehensive remix guide for transforming this track into ${targetGenre} style.
+2. **Smart Remix Strategy**: Your remix guide must intelligently explain:
+   - Which SPECIFIC elements from the original track work well in ${targetGenre}
+   - How to preserve the essence/soul of the original while transforming the genre
+   - Which original melodic phrases can be adapted to ${targetGenre} rhythms
+   - How original harmonic progressions can be recontextualized
+   - Which original elements should be kept, modified, or completely reimagined
+   - How to bridge the gap between the original genre and ${targetGenre}
+
+3. **Genre-Specific Transformation**: Provide detailed guidance on:
+   - Tempo adjustments and time-stretching techniques
+   - Key changes or modal shifts that enhance the ${targetGenre} feel
+   - Rhythmic pattern adaptations specific to ${targetGenre}
+   - Sound design and production techniques typical of ${targetGenre}
+   - Arrangement modifications that respect both the original and target genre
 
 Your response must be a valid JSON object with exactly these keys:
 
 {
-  "guide": "A detailed markdown-formatted remix guide with sections for: Overall Approach, Arrangement Ideas, Sound Design Tips, and Production Notes",
+  "guide": "A comprehensive markdown-formatted remix guide that MUST include these sections:
+
+## 🎵 Original Track Analysis
+- **Detected Elements**: [List key musical elements found in the original]
+- **Original Genre Characteristics**: [Identify the source genre and its traits]
+- **Harmonic Foundation**: [Chord progressions, key, and harmonic movement]
+- **Melodic Content**: [Main melodies, hooks, and memorable phrases]
+- **Rhythmic DNA**: [Original groove, tempo, and rhythmic patterns]
+
+## 🎛️ ${targetGenre} Transformation Strategy  
+- **Elements to Preserve**: [Specific original elements that work well in ${targetGenre}]
+- **Elements to Transform**: [What needs to change and how]
+- **Genre Bridge**: [How to connect original style with ${targetGenre}]
+- **Tempo & Key Adjustments**: [Specific changes needed]
+
+## 🔧 Production Techniques
+- **Sound Design**: [${targetGenre}-specific sound design approaches]
+- **Arrangement Modifications**: [How to restructure for ${targetGenre}]
+- **Processing Chain**: [Effects and processing typical of ${targetGenre}]
+- **Mix Considerations**: [${targetGenre}-specific mixing approaches]
+
+## 🎹 Implementation Guide
+- **Step-by-Step Process**: [Practical remix workflow]
+- **Original Element Integration**: [How to weave original elements into new arrangement]
+- **Creative Opportunities**: [Unique ways to blend both genres]",
   "targetTempo": 125,
   "targetKey": "A minor",
   "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],

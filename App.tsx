@@ -209,8 +209,8 @@ const App: React.FC = () => {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
-  // New tool modals state
-  const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
+  // Production Coach chat state
+  const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
 
   // Mix Feedback State
@@ -1153,15 +1153,7 @@ const App: React.FC = () => {
     EQ Guide
   </Button>
 
-  <Button
-    size="sm"
-    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-    onClick={() => setShowAIAssistant(true)}
-    variant="secondary"
-    leftIcon={<span className="w-4 h-4 text-center">💬</span>}
-  >
-    Production Coach
-  </Button>
+
 </nav>
 
 
@@ -1747,15 +1739,15 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Production Tools Modals */}
-      {showAIAssistant && (
-        <AIAssistant
-          isOpen={showAIAssistant}
-          onClose={() => setShowAIAssistant(false)}
-          currentGuidebook={activeGuidebookDetails || undefined}
-          userInputs={inputs}
-        />
-      )}
+      {/* Production Coach - Always Available */}
+      <AIAssistant
+        isOpen={true}
+        onClose={() => {}} // Not used in collapsed mode
+        currentGuidebook={activeGuidebookDetails || undefined}
+        userInputs={inputs}
+        isCollapsed={isProductionCoachCollapsed}
+        onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
+      />
 
 
 

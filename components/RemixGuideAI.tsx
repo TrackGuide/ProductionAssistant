@@ -5,8 +5,9 @@ import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
-import { generateRemixGuide } from '../services/geminiService';
+import { generateRemixGuide, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
+import { MidiSettings, GeneratedMidiPatterns } from '../types';
 
 interface RemixGuideData {
   guide: string;
@@ -21,6 +22,7 @@ interface RemixGuideData {
   targetTempo: number;
   targetKey: string;
   sections: string[];
+  generatedMidiPatterns?: GeneratedMidiPatterns;
 }
 
 export const RemixGuideAI: React.FC = () => {
@@ -28,6 +30,7 @@ export const RemixGuideAI: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isGeneratingMidi, setIsGeneratingMidi] = useState<boolean>(false);
   const [remixGuide, setRemixGuide] = useState<RemixGuideData | null>(null);
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +88,46 @@ export const RemixGuideAI: React.FC = () => {
     // Call the generateRemixGuide function
     const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
     setRemixGuide(result);
+
+    // Automatically generate MIDI patterns after the guide is created
+    setIsGeneratingMidi(true);
+    try {
+      const midiSettings: MidiSettings = {
+        key: result.targetKey,
+        tempo: result.targetTempo,
+        timeSignature: [4, 4] as [number, number],
+        chordProgression: 'i-VI-III-VII', // Default for remix
+        genre: selectedGenre,
+        bars: 8,
+        targetInstruments: ['bassline', 'drums', 'melody', 'pads'],
+        guidebookContext: `${selectedGenre} remix guide context`,
+        songSection: result.sections[0] || 'Intro'
+      };
+
+      let accumulatedMidiJson = "";
+      const midiStream = await generateMidiPatternSuggestions(midiSettings);
+      for await (const chunk of midiStream) {
+        accumulatedMidiJson += chunk.text;
+      }
+
+      // Parse the MIDI JSON
+      let jsonStr = accumulatedMidiJson.trim();
+      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+      const match = jsonStr.match(fenceRegex);
+      if (match && match[2]) {
+        jsonStr = match[2].trim();
+      }
+
+      const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+      
+      // Update the remix guide with generated MIDI patterns
+      setRemixGuide(prev => prev ? { ...prev, generatedMidiPatterns } : null);
+    } catch (midiErr) {
+      console.error('Error generating MIDI patterns for remix:', midiErr);
+      // Don't fail the whole process if MIDI generation fails
+    } finally {
+      setIsGeneratingMidi(false);
+    }
   } catch (err) {
     console.error('Error generating remix guide:', err);
     setError(err instanceof Error ? err.message : 'Failed to generate remix guide. Please try again.');
@@ -210,12 +253,16 @@ export const RemixGuideAI: React.FC = () => {
       <div className="flex gap-4">
         <Button
           onClick={generateRemix}
-          disabled={!audioFile || !selectedGenre || isGenerating}
+          disabled={!audioFile || !selectedGenre || isGenerating || isGeneratingMidi}
           className="flex-1"
         >
           {isGenerating ? (
             <>
               <Spinner size="sm" /> Analyzing & Generating Remix Guide...
+            </>
+          ) : isGeneratingMidi ? (
+            <>
+              <Spinner size="sm" /> Generating MIDI Patterns...
             </>
           ) : (
             '🎛️ Generate Remix Guide'
@@ -251,11 +298,12 @@ export const RemixGuideAI: React.FC = () => {
             </h3>
             <MidiGeneratorComponent
               key={`remix-${selectedGenre}-${Date.now()}`}
-              initialPatterns={remixGuide.midiPatterns}
+              initialPatterns={remixGuide.generatedMidiPatterns || remixGuide.midiPatterns}
               sections={remixGuide.sections}
               targetTempo={remixGuide.targetTempo}
               targetKey={remixGuide.targetKey}
               isRemixMode={true}
+              preGeneratedPatterns={remixGuide.generatedMidiPatterns}
             />
           </Card>
         </div>

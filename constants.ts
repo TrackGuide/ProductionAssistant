@@ -1,4 +1,4 @@
-export const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-04-17";
+export const GEMINI_MODEL_NAME = "gemini-2.0-flash-exp";
 export const APP_TITLE = "TrackGuide";
 export const LOCAL_STORAGE_KEY = "songGuidebookLibrary";
 export const LAST_USED_DAW_KEY = "trackGuideLastUsedDAW";
