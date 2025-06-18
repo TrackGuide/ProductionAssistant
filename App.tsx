@@ -347,6 +347,9 @@ const App: React.FC = () => {
     setCopyStatus('');
     stopPlayback();
 
+    // Auto-scroll to top when generation starts
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     if (inputs.daw) localStorage.setItem(LAST_USED_DAW_KEY, inputs.daw);
     if (inputs.plugins) localStorage.setItem(LAST_USED_PLUGINS_KEY, inputs.plugins);
 
