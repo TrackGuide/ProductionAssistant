@@ -9,7 +9,27 @@ import { Button } from './Button.tsx';
 import { Spinner } from './Spinner.tsx';
 import { Input } from './Input.tsx';
 import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
-import { MIDI_SCALES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants.ts';
+import { MIDI_SCALES, MIDI_MODES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants.ts';
+
+// Drum name mapping for display
+const DRUM_NAMES: { [key: string]: string } = {
+  'kick': 'Kick',
+  'snare': 'Snare', 
+  'hihat': 'Hi-Hat',
+  'hihat_open': 'Hi-Hat Open',
+  'hihat_closed': 'Hi-Hat Closed',
+  'crash': 'Crash',
+  'ride': 'Ride',
+  'tom': 'Tom',
+  'tom_high': 'High Tom',
+  'tom_mid': 'Mid Tom', 
+  'tom_low': 'Low Tom',
+  'clap': 'Clap',
+  'shaker': 'Shaker',
+  'tambourine': 'Tambourine',
+  'cowbell': 'Cowbell',
+  'rim': 'Rimshot'
+};
 
 interface MidiGeneratorProps {
   currentGuidebookEntry: GuidebookEntry;
@@ -26,6 +46,17 @@ const extractRichMidiContext = (guidebookContent: string): string => {
     const endIndex = summaryEndIndex > 0 ? summaryEndIndex : 
                      (guidebookContent.indexOf('## 2. Structural Blueprint') > 0 ? guidebookContent.indexOf('## 2. Structural Blueprint') : 1500);
     return guidebookContent.substring(0, Math.min(endIndex, guidebookContent.length));
+};
+
+const getKeyCenterFromScale = (keyScale: string): string => {
+    // Extract the key center from strings like "C Major", "A Minor", etc.
+    const match = keyScale.match(/^([A-G][#b]?)/);
+    return match ? match[1] : 'C';
+};
+
+const getAvailableModesForKey = (keyScale: string): string[] => {
+    const keyCenter = getKeyCenterFromScale(keyScale);
+    return MIDI_MODES[keyCenter] || MIDI_MODES['C'];
 };
 
 const BAR_OPTIONS = [1, 2, 4, 8, 16, 32];
@@ -403,7 +434,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     } else if ((type === "Bassline" || type === "Melody") && Array.isArray(patternData)) {
       previewText = patternData.map((n: MidiNote) => n.pitch || `N${n.midi}`).join(', ');
     } else if (type === "Drums" && typeof patternData === 'object' && Object.keys(patternData).length > 0) {
-      previewText = Object.keys(patternData).join(', ');
+      const drumNames = Object.keys(patternData).map(key => 
+        DRUM_NAMES[key.toLowerCase()] || key.charAt(0).toUpperCase() + key.slice(1)
+      );
+      previewText = drumNames.join(', ');
     } else if (typeof patternData === 'object' && Object.keys(patternData).length === 0) {
         return <p className="text-xs text-gray-500">Empty drum pattern.</p>;
     }
@@ -498,7 +532,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
       {showSettingsInputs && (
         <div className="mb-6 border-t border-gray-700 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
             <div>
               <label htmlFor="midi-key" className="block text-sm font-medium text-gray-300 mb-1">
                 Key <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
@@ -510,6 +544,20 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
                 {MIDI_SCALES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="midi-scale" className="block text-sm font-medium text-gray-300 mb-1">
+                Scale/Mode <span className="text-xs text-gray-400">(Optional)</span>
+              </label>
+              <select 
+                id="midi-scale" 
+                value={settings.scale || ''} 
+                onChange={(e) => handleSettingChange('scale', e.target.value)} 
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                <option value="">Default (from key)</option>
+                {getAvailableModesForKey(settings.key).map(mode => <option key={mode} value={mode}>{mode}</option>)}
               </select>
             </div>
             <div>
