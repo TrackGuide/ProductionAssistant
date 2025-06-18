@@ -1736,6 +1736,12 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {activeView === 'eqGuide' && (
+        <div className="max-w-7xl mx-auto">
+          <EQCheatSheet isOpen={true} onClose={() => setActiveView('trackGuide')} />
+        </div>
+      )}
+
       {showLibraryModal && (
         <LibraryModal
           library={library}

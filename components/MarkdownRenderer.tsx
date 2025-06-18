@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from './Button.tsx';
 import { DownloadIcon, CopyIcon } from './icons.tsx';
+import { copyToClipboard } from '../utils/copyUtils.ts';
 
 interface MarkdownRendererProps {
   content: string;
@@ -17,6 +18,18 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   onCopy,
   className = ''
 }) => {
+  const [copyStatus, setCopyStatus] = useState<string>('');
+
+  const handleCopy = async () => {
+    if (onCopy) {
+      onCopy();
+      return;
+    }
+
+    const result = await copyToClipboard(content);
+    setCopyStatus(result.message);
+    setTimeout(() => setCopyStatus(''), 3000);
+  };
   const customComponents = {
     h1: ({ children }: any) => (
       <h1 className="text-3xl font-bold text-purple-300 mb-6 border-b border-gray-600 pb-3">
@@ -139,28 +152,32 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
   return (
     <div className={`markdown-content ${className}`}>
-      {(onExportPDF || onCopy) && (
-        <div className="flex justify-end gap-2 mb-4 pb-4 border-b border-gray-700">
-          {onCopy && (
-            <Button
-              onClick={onCopy}
-              variant="outline"
-              size="sm"
-              leftIcon={<CopyIcon className="w-4 h-4" />}
-            >
-              Copy Content
-            </Button>
-          )}
-          {onExportPDF && (
-            <Button
-              onClick={onExportPDF}
-              variant="secondary"
-              size="sm"
-              leftIcon={<DownloadIcon className="w-4 h-4" />}
-            >
-              Export PDF
-            </Button>
-          )}
+      <div className="flex justify-end gap-2 mb-4 pb-4 border-b border-gray-700">
+        <Button
+          onClick={handleCopy}
+          variant="outline"
+          size="sm"
+          leftIcon={<CopyIcon className="w-4 h-4" />}
+        >
+          Copy Content
+        </Button>
+        {onExportPDF && (
+          <Button
+            onClick={onExportPDF}
+            variant="secondary"
+            size="sm"
+            leftIcon={<DownloadIcon className="w-4 h-4" />}
+          >
+            Export PDF
+          </Button>
+        )}
+      </div>
+      
+      {copyStatus && (
+        <div className={`text-sm mb-4 p-2 rounded ${
+          copyStatus.includes("Failed") ? "text-red-400 bg-red-900/20" : "text-green-400 bg-green-900/20"
+        }`}>
+          {copyStatus}
         </div>
       )}
       
