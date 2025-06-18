@@ -216,6 +216,7 @@ const App: React.FC = () => {
   const [mixFeedbackResult, setMixFeedbackResult] = useState<string | null>(null);
   const [isGeneratingMixFeedback, setIsGeneratingMixFeedback] = useState<boolean>(false);
   const [mixFeedbackError, setMixFeedbackError] = useState<string | null>(null);
+  const [mixFeedbackTab, setMixFeedbackTab] = useState<'single' | 'compare'>('single');
   const audioFileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -1032,7 +1033,7 @@ const App: React.FC = () => {
       {activeView === 'trackGuide' && (
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
           <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-            <p className="text-sm text-gray-400 mb-4">All fields optional - just add what you know to create your custom production guide.</p>
+            <p className="text-sm text-gray-400 mb-4">Shape your guide with as much or as little detail as you like.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
@@ -1300,7 +1301,32 @@ const App: React.FC = () => {
       {activeView === 'mixFeedback' && (
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 space-y-6">
-            <Card title="Upload Your Mix" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+            {/* Tab Navigation */}
+            <div className="flex bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setMixFeedbackTab('single')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-all ${
+                  mixFeedbackTab === 'single'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                }`}
+              >
+                📊 Mix Analysis
+              </button>
+              <button
+                onClick={() => setMixFeedbackTab('compare')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-all ${
+                  mixFeedbackTab === 'compare'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                }`}
+              >
+                🎵 Mix Compare
+              </button>
+            </div>
+
+            {mixFeedbackTab === 'single' && (
+              <Card title="Upload Your Mix" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
               <form onSubmit={handleGetMixFeedback} className="space-y-5">
                 <div>
                   <label htmlFor="mix-audio-file" className="block text-sm font-medium text-gray-300 mb-1">Audio File (.mp3, .wav, etc.)</label>
@@ -1363,20 +1389,32 @@ const App: React.FC = () => {
                 </Button>
               </form>
             </Card>
-            
-            <Card title="Mix Tools" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-              <div className="space-y-3">
-                <Button
-                  onClick={() => setShowMixComparator(true)}
-                  variant="primary"
-                  className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
-                  leftIcon={<UploadIcon className="w-5 h-5"/>}
-                >
-                  🎵 Compare Your Mix
-                </Button>
-                <p className="text-xs text-gray-400 text-center">Upload two versions to compare side-by-side</p>
-              </div>
-            </Card>
+            )}
+
+            {mixFeedbackTab === 'compare' && (
+              <Card title="Compare Two Mixes" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-400 mb-4">Upload two versions of your mix to compare them side-by-side and get detailed analysis of the differences.</p>
+                  <Button
+                    onClick={() => setShowMixComparator(true)}
+                    variant="primary"
+                    className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
+                    leftIcon={<UploadIcon className="w-5 h-5"/>}
+                  >
+                    🎵 Open Mix Comparator
+                  </Button>
+                  <div className="bg-gray-700/30 rounded-lg p-3">
+                    <h4 className="text-sm font-medium text-gray-300 mb-2">Perfect for comparing:</h4>
+                    <ul className="text-xs text-gray-400 space-y-1">
+                      <li>• Different mix versions</li>
+                      <li>• Before/after processing</li>
+                      <li>• Reference tracks vs your mix</li>
+                      <li>• Mastered vs unmastered</li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
           <div className="md:col-span-8 space-y-6">
             {isGeneratingMixFeedback && (
