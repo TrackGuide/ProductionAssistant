@@ -1,15 +1,9 @@
-// services/geminiService.ts
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import {
-  UserInputs,
-  MidiSettings,
-  MixFeedbackInputs
-} from "../types.ts";
-import { GEMINI_MODEL_NAME } from "../constants.ts";
+import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
+import { GEMINI_MODEL_NAME } from '../constants.ts';
 
-// ─── INIT ────────────────────────────────────────────────────────────
-const apiKey = process.env.API_KEY!;
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+const apiKey = process.env.API_KEY;
 if (!apiKey) {
   console.error(
     "API_KEY is not set. Please ensure the API_KEY environment variable is configured."
@@ -262,13 +256,18 @@ Provide helpful, concise advice...`;
 
 // ─── 6) NEW REMIX GUIDЕ ─────────────────────────────────────────────
 
-/** Build the text prompt for Remix Guide */
+// ─── REMIX GUIDE PROMPT ─────────────────────────────────────────────────────────
 export const generateRemixPrompt = (
   targetGenre: string,
-  genreInfo: { tempoRange: [number, number]; sections: string[] }
+  genreInfo: any
 ): string => {
-  const tempoRange = `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`;
-  const sections = genreInfo.sections.join(", ");
+  const tempoRange = genreInfo
+    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
+    : "120-130 BPM";
+  const sections = genreInfo
+    ? genreInfo.sections.join(", ")
+    : "Intro, Build-Up, Drop, Breakdown, Outro";
+
   return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
 
 Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
@@ -286,14 +285,14 @@ Then, generate MIDI patterns for each section:
 - Melody / Harmony
 - Pads or textures
 
-Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+Return **only** the JSON object with these keys: \\`guide\\`, \\`targetTempo\\`, \\`targetKey\\`, \\`sections\\`, and \\`midiPatterns\\`. `;
 };
 
-/** Send audio + prompt to Gemini and parse out the JSON guide */
+// ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
-  genreInfo: { tempoRange: [number, number]; sections: string[] }
+  genreInfo: any
 ): Promise<{
   guide: string;
   targetTempo: number;
@@ -315,38 +314,49 @@ export const generateRemixGuide = async (
     },
   };
 
+  console.log("[geminiService] Remix Prompt:", textPart.text);
+  console.log("[geminiService] Audio size (chars):", audioData.base64.length);
+
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [textPart, audioPart],
     });
 
-    let text: string;
-    if (typeof (response as any).text === "function") {
-      text = await (response as any).text();
-    } else if (typeof response.text === "string") {
-      text = response.text;
+    // Extract returned text
+    let raw: string;
+    if (typeof (response as any).text === 'function') {
+      raw = await (response as any).text();
+    } else if (typeof response.text === 'string') {
+      raw = response.text;
     } else if (Array.isArray((response as any).candidates)) {
-      text = (response as any).candidates[0]?.content || "";
+      raw = (response as any).candidates[0]?.content || '';
     } else {
-      text = "";
+      console.error('[geminiService] Unexpected response shape:', response);
+      raw = '';
     }
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    console.log('[geminiService] Raw remix response:', raw);
 
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+
+    // Fallback
     return {
-      guide: text,
-      targetTempo: genreInfo.tempoRange[0],
-      targetKey: "C minor",
-      sections: genreInfo.sections,
+      guide: raw,
+      targetTempo: genreInfo?.tempoRange?.[0] || 128,
+      targetKey: 'C minor',
+      sections: genreInfo?.sections || ['Intro','Build-Up','Drop','Breakdown','Outro'],
       midiPatterns: {},
     };
   } catch (err: any) {
+    console.error('[geminiService] Error in generateRemixGuide:', err);
     throw new Error(
-      err.message.includes("quota")
-        ? "API quota exceeded."
-        : err.message || "Failed to generate remix guide."
+      err.message.includes('quota')
+        ? 'API quota exceeded.'
+        : err.message || 'Failed to generate remix guide.'
     );
   }
 };
