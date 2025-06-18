@@ -91,7 +91,7 @@ export const RemixGuideAI: React.FC = () => {
       const genreInfo = getGenreInfo(selectedGenre);
       
       // Generate remix guide
-      const result = await generateRemixGuide(audioUrl, selectedGenre, genreInfo);
+      const result = await generateRemixGuide(audioFile, selectedGenre, genreInfo);
       setRemixGuide(result);
     } catch (err) {
       console.error('Error generating remix guide:', err);
