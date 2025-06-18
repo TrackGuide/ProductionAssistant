@@ -325,6 +325,8 @@ Then, generate MIDI patterns for each section:
 Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
 };
 
+
+
 /** Send audio + prompt to Gemini and parse out the JSON guide */
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
