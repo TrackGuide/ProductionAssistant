@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon, CopyIcon } from './icons.tsx';
+import { generateMixComparison } from '../services/geminiService.ts';
 
 interface MixComparatorProps {
   isOpen: boolean;
@@ -27,45 +29,45 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   };
 
   const handleAnalyze = async () => {
-    if (!mixA && !mixB) return;
+    if (!mixA) return;
     
     setIsAnalyzing(true);
     try {
-      await onAnalyze(mixA, mixB, {
+      // Convert files to base64 for the AI service
+      const mixABase64 = await fileToBase64(mixA);
+      const mixBBase64 = mixB ? await fileToBase64(mixB) : undefined;
+      
+      // Call the AI service
+      const analysisContent = await generateMixComparison({
+        mixAFile: mixABase64,
+        mixBFile: mixBBase64,
+        mixAName: mixA.name,
+        mixBName: mixB?.name,
         requestMixAAnalysis,
         requestMixBAnalysis
       });
-      // Demo analysis result
-      setAnalysis(`
-## Mix Comparison Analysis
 
-### Overall Assessment
-${mixA && mixB ? 'Comparing two mix versions:' : 'Single mix analysis:'}
-
-### Key Differences Found:
-- **Frequency Balance**: Mix B shows improved low-end clarity with better sub-bass definition
-- **Stereo Width**: Mix A has wider stereo image but Mix B has better center focus
-- **Dynamic Range**: Mix B maintains better dynamics with less compression artifacts
-- **Vocal Presence**: Mix B brings vocals forward by 2-3dB in the 2-5kHz range
-
-### Recommendations:
-1. **Low End**: Use Mix B's approach - high-pass filter at 30Hz, gentle boost at 60-80Hz
-2. **Midrange**: Combine Mix A's width with Mix B's clarity using mid-side processing
-3. **High End**: Mix B's air frequencies (12kHz+) are more balanced
-4. **Compression**: Reduce overall compression by 10-15% for better dynamics
-
-### Technical Metrics:
-- **LUFS**: Mix A: -14.2, Mix B: -13.8 (Mix B preferred)
-- **Peak**: Mix A: -0.1dB, Mix B: -0.3dB (Mix B safer)
-- **Stereo Correlation**: Mix A: 0.85, Mix B: 0.92 (Mix B more coherent)
-
-### Next Steps:
-Apply Mix B's frequency balance with Mix A's creative elements for optimal result.
-      `);
+      setAnalysis(analysisContent);
     } catch (error) {
+      console.error('Error analyzing mixes:', error);
       setAnalysis('Error analyzing mixes. Please try again.');
     }
     setIsAnalyzing(false);
+  };
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix to get just the base64 data
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
   };
 
   const reset = () => {
@@ -81,34 +83,51 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
     if (!analysis) return;
     
     try {
-      // Create styled HTML content with no background color
+      // Create styled HTML content with black text on white/transparent background
       const styledHtml = `
-        <div style="color: #d1d5db; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6;">
+        <div style="color: #000000; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; background: transparent;">
           ${analysis.split('\n').map(line => {
             if (line.startsWith('## ')) {
-              return `<h2 style="color: #f3f4f6; font-size: 1.25rem; font-weight: bold; margin: 1rem 0 0.5rem 0;">${line.replace('## ', '')}</h2>`;
+              return `<h2 style="color: #000000; font-size: 1.25rem; font-weight: bold; margin: 1rem 0 0.5rem 0;">${line.replace('## ', '')}</h2>`;
             } else if (line.startsWith('### ')) {
-              return `<h3 style="color: #e5e7eb; font-size: 1.1rem; font-weight: bold; margin: 0.75rem 0 0.25rem 0;">${line.replace('### ', '')}</h3>`;
+              return `<h3 style="color: #000000; font-size: 1.1rem; font-weight: bold; margin: 0.75rem 0 0.25rem 0;">${line.replace('### ', '')}</h3>`;
             } else if (line.startsWith('- **')) {
               const match = line.match(/- \*\*(.*?)\*\*:\s*(.*)/);
               if (match) {
-                return `<p style="margin: 0.25rem 0;"><strong style="color: #f9fafb;">${match[1]}:</strong> ${match[2]}</p>`;
+                return `<p style="margin: 0.25rem 0; color: #000000;"><strong style="color: #000000;">${match[1]}:</strong> ${match[2]}</p>`;
               }
             } else if (line.startsWith('- ')) {
-              return `<p style="margin: 0.25rem 0; padding-left: 1rem;">• ${line.replace('- ', '')}</p>`;
+              return `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">• ${line.replace('- ', '')}</p>`;
             } else if (line.match(/^\d+\./)) {
-              return `<p style="margin: 0.25rem 0; padding-left: 1rem;">${line}</p>`;
+              return `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">${line}</p>`;
             } else if (line.trim()) {
-              return `<p style="margin: 0.5rem 0;">${line}</p>`;
+              return `<p style="margin: 0.5rem 0; color: #000000;">${line}</p>`;
             }
             return '<br>';
           }).join('')}
         </div>
       `;
 
+      // Create clean plain text version without markdown formatting
+      const cleanText = analysis.split('\n').map(line => {
+        if (line.startsWith('## ')) {
+          return line.replace('## ', '');
+        } else if (line.startsWith('### ')) {
+          return line.replace('### ', '');
+        } else if (line.startsWith('- **')) {
+          const match = line.match(/- \*\*(.*?)\*\*:\s*(.*)/);
+          if (match) {
+            return `${match[1]}: ${match[2]}`;
+          }
+        } else if (line.startsWith('- ')) {
+          return `• ${line.replace('- ', '')}`;
+        }
+        return line;
+      }).join('\n');
+
       if (navigator.clipboard && navigator.clipboard.write) {
         const htmlBlob = new Blob([styledHtml], { type: 'text/html' });
-        const textBlob = new Blob([analysis], { type: 'text/plain' });
+        const textBlob = new Blob([cleanText], { type: 'text/plain' });
         
         // @ts-ignore
         const clipboardItem = new ClipboardItem({
@@ -118,7 +137,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
         await navigator.clipboard.write([clipboardItem]);
         setCopyStatus("Analysis Copied (Rich Format)!");
       } else {
-        await navigator.clipboard.writeText(analysis);
+        await navigator.clipboard.writeText(cleanText);
         setCopyStatus("Analysis Copied (Plain Text)!");
       }
     } catch (err) {
@@ -134,7 +153,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            🎚️ Mix Comparator
+            🎚️ Mix Comparison
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <CloseIcon className="w-6 h-6" />
@@ -186,7 +205,7 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
 
           {/* Mix B Upload */}
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold text-white mb-4">Mix B (Revised) - Optional</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Mix B (Revised)</h3>
             {mixB ? (
               <div className="text-green-400">
                 <PlayIcon className="w-6 h-6 mx-auto mb-2" />
@@ -230,10 +249,10 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
         <div className="flex gap-4 mb-6">
           <button
             onClick={handleAnalyze}
-            disabled={!mixA || isAnalyzing}
+            disabled={!mixA || !mixB || isAnalyzing}
             className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
-            {isAnalyzing ? 'Analyzing...' : 'Analyze Mix(es)'}
+            {isAnalyzing ? 'Comparing...' : 'Compare Mixes'}
           </button>
           <button
             onClick={reset}
@@ -263,7 +282,54 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
                 )}
               </div>
             </div>
-            <div className="text-gray-300 whitespace-pre-line">{analysis}</div>
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown
+                components={{
+                  h1: ({ children }) => (
+                    <h1 className="text-2xl font-bold text-white mb-4 border-b border-gray-600 pb-2">
+                      {children}
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="text-xl font-semibold text-white mt-6 mb-3 border-l-4 border-blue-500 pl-3">
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-lg font-semibold text-white mt-4 mb-2">
+                      {children}
+                    </h3>
+                  ),
+                  p: ({ children }) => (
+                    <p className="text-gray-300 mb-3 leading-relaxed">
+                      {children}
+                    </p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-inside text-gray-300 mb-3 space-y-1 ml-4">
+                      {children}
+                    </ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal list-inside text-gray-300 mb-3 space-y-1 ml-4">
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="text-gray-300 mb-1">
+                      {children}
+                    </li>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-blue-300">
+                      {children}
+                    </strong>
+                  ),
+                }}
+              >
+                {analysis}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
       </div>

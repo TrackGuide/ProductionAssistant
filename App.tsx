@@ -1404,7 +1404,7 @@ const App: React.FC = () => {
                     className="w-full px-4 py-3 text-base font-semibold rounded-md transition-all duration-150 ease-in-out bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
                     leftIcon={<UploadIcon className="w-5 h-5"/>}
                   >
-                    🎵 Open Mix Comparator
+                    🎵 Open Mix Comparison
                   </Button>
                   <div className="bg-gray-700/30 rounded-lg p-3">
                     <h4 className="text-sm font-medium text-gray-300 mb-2">Perfect for comparing:</h4>

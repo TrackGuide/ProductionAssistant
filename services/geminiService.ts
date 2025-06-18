@@ -473,3 +473,236 @@ Provide helpful, concise advice related to music production, mixing, sound desig
     return Promise.reject(new Error(specificMessage));
   }
 };
+
+interface MixComparisonInputs {
+  mixAFile?: string; // base64 audio data
+  mixBFile?: string; // base64 audio data
+  mixAName: string;
+  mixBName?: string;
+  requestMixAAnalysis?: boolean;
+  requestMixBAnalysis?: boolean;
+}
+
+const generateMixComparisonPrompt = (inputs: MixComparisonInputs): string => {
+  const hasBothMixes = inputs.mixAFile && inputs.mixBFile;
+  
+  if (hasBothMixes) {
+    return `You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison: "${inputs.mixAName}" (Mix A) and "${inputs.mixBName}" (Mix B).
+
+Analyze both audio files thoroughly and provide a comprehensive comparison. Structure your response using Markdown with clear headings.
+
+## Mix Comparison Analysis
+
+### Overall Assessment
+Compare the two mixes and identify which version is stronger overall and why.
+
+### Key Differences Found
+Analyze and compare these specific aspects between the two mixes:
+- **Frequency Balance**: Compare low-end, midrange, and high-frequency content
+- **Stereo Width**: Compare stereo imaging and spatial characteristics
+- **Dynamic Range**: Compare compression, punch, and dynamics
+- **Vocal/Lead Presence**: Compare how lead elements sit in the mix
+- **Clarity and Separation**: Compare how well instruments are defined
+- **Tonal Character**: Compare overall sonic character and color
+
+### Technical Metrics Comparison
+Provide estimated technical measurements for both mixes:
+- **LUFS** (loudness)
+- **Peak levels**
+- **Stereo correlation**
+- **Dynamic range**
+
+### Recommendations
+Provide specific, actionable advice on:
+1. Which elements from each mix should be combined
+2. Technical improvements needed
+3. Processing suggestions
+4. Next steps for optimization
+
+${inputs.requestMixAAnalysis ? `
+
+## Full Mix A Analysis (${inputs.mixAName})
+
+### Detailed Frequency Analysis
+Analyze each frequency band in detail:
+- **Sub Bass (20-60Hz)**
+- **Bass (60-250Hz)**
+- **Low Mids (250-500Hz)**
+- **Mids (500Hz-2kHz)**
+- **High Mids (2-5kHz)**
+- **Highs (5-12kHz)**
+- **Air (12kHz+)**
+
+### Stereo Field Analysis
+- **Width and imaging**
+- **Center focus**
+- **Panning decisions**
+- **Phase correlation**
+
+### Dynamic Analysis
+- **Peak and RMS levels**
+- **Dynamic range**
+- **Transient response**
+- **Compression characteristics**
+
+### Instrument-Specific Analysis
+Analyze how individual elements sit in the mix and suggest improvements.` : ''}
+
+${inputs.requestMixBAnalysis ? `
+
+## Full Mix B Analysis (${inputs.mixBName})
+
+### Detailed Frequency Analysis
+Analyze each frequency band in detail:
+- **Sub Bass (20-60Hz)**
+- **Bass (60-250Hz)**
+- **Low Mids (250-500Hz)**
+- **Mids (500Hz-2kHz)**
+- **High Mids (2-5kHz)**
+- **Highs (5-12kHz)**
+- **Air (12kHz+)**
+
+### Stereo Field Analysis
+- **Width and imaging**
+- **Center focus**
+- **Panning decisions**
+- **Phase correlation**
+
+### Dynamic Analysis
+- **Peak and RMS levels**
+- **Dynamic range**
+- **Transient response**
+- **Compression characteristics**
+
+### Instrument-Specific Analysis
+Analyze how individual elements sit in the mix and suggest improvements.` : ''}
+
+Keep your analysis professional, detailed, and actionable. Focus on technical aspects and mixing decisions rather than musical composition.`;
+  } else {
+    // Single mix analysis
+    return `You are an expert audio mixing and mastering engineer AI. The user has uploaded a single audio file: "${inputs.mixAName}".
+
+Analyze the audio file thoroughly and provide comprehensive feedback. Structure your response using Markdown with clear headings.
+
+## Mix Comparison Analysis
+
+### Overall Assessment
+Single mix analysis for: ${inputs.mixAName}
+
+Provide an overall evaluation of the mix quality, balance, and technical execution.
+
+### Mix Evaluation
+Analyze these key aspects:
+- **Overall Balance**: Frequency distribution and tonal balance
+- **Stereo Image**: Width, imaging, and spatial characteristics
+- **Dynamic Range**: Compression, punch, and dynamics
+- **Tonal Balance**: Character, warmth, brightness
+- **Clarity**: Separation and definition of elements
+
+### Technical Metrics
+Provide estimated technical measurements:
+- **LUFS** (loudness)
+- **Peak levels**
+- **Stereo correlation**
+- **Dynamic range**
+
+### Recommendations
+Provide specific, actionable advice for improvement:
+1. **Technical improvements**
+2. **Processing suggestions**
+3. **Frequency adjustments**
+4. **Dynamic enhancements**
+
+${inputs.requestMixAAnalysis ? `
+
+## Full Single Mix Analysis (${inputs.mixAName})
+
+### Detailed Frequency Analysis
+Analyze each frequency band in detail:
+- **Sub Bass (20-60Hz)**
+- **Bass (60-250Hz)**
+- **Low Mids (250-500Hz)**
+- **Mids (500Hz-2kHz)**
+- **High Mids (2-5kHz)**
+- **Highs (5-12kHz)**
+- **Air (12kHz+)**
+
+### Stereo Field Analysis
+- **Width and imaging**
+- **Center focus**
+- **Panning decisions**
+- **Phase correlation**
+
+### Dynamic Analysis
+- **Peak and RMS levels**
+- **Dynamic range**
+- **Transient response**
+- **Compression characteristics**
+
+### Instrument-Specific Analysis
+Analyze how individual elements sit in the mix and provide specific recommendations for each element.
+
+### Recommendations
+Provide detailed, actionable recommendations for:
+1. **Peak Management**
+2. **Frequency Balance**
+3. **Dynamic Enhancement**
+4. **Stereo Processing**
+5. **Overall Polish**` : ''}
+
+Keep your analysis professional, detailed, and actionable. Focus on technical mixing aspects rather than musical composition.`;
+  }
+};
+
+export const generateMixComparison = async (inputs: MixComparisonInputs): Promise<string> => {
+  if (!apiKey) {
+    const errorMessage = "API Key not configured. Cannot connect to Gemini API for mix comparison.";
+    console.error(errorMessage);
+    return Promise.reject(new Error(errorMessage));
+  }
+  
+  if (!inputs.mixAFile) {
+    return Promise.reject(new Error("No audio file provided for mix comparison."));
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+    
+    const textPart = { text: generateMixComparisonPrompt(inputs) };
+    const parts = [textPart];
+    
+    // Add audio files
+    parts.push({ inlineData: { data: inputs.mixAFile, mimeType: "audio/mpeg" } });
+    if (inputs.mixBFile) {
+      parts.push({ inlineData: { data: inputs.mixBFile, mimeType: "audio/mpeg" } });
+    }
+    
+    const response = await model.generateContent(parts);
+    
+    if (response.response && response.response.text) {
+        const text = response.response.text();
+        return text;
+    } else {
+        console.error("Received non-text response or no text from Gemini API for mix comparison. Response:", response);
+        throw new Error("Received an unexpected response format from Gemini API for mix comparison.");
+    }
+    
+  } catch (error: any) {
+    console.error("Error generating mix comparison:", error);
+    let specificMessage = "An unknown error occurred while generating mix comparison.";
+    
+    if (error.message) {
+        if (error.message.includes("API_KEY")) {
+            specificMessage = "API Key issue. Please check your Gemini API configuration.";
+        } else if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
+            specificMessage = "The response for mix comparison was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
+        } else if (error.message.includes("quota") || error.message.includes("limit")) {
+            specificMessage = "API quota exceeded. Please try again later.";
+        } else {
+            specificMessage = `Failed to generate mix comparison: ${error.message}`;
+        }
+    }
+    
+    return Promise.reject(new Error(specificMessage));
+  }
+};
