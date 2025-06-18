@@ -1040,7 +1040,7 @@ const App: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk, Deadmau5, Porter Robinson" />
+                  <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk, David Bowie, Skrillex" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -29,8 +29,51 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   currentGuidebook,
   userInputs
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize with welcome message when first opened
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: `Hi! I'm your AI music production assistant. I can help you:
+
+• Refine your TrackGuide with specific questions
+• Suggest improvements to your current project
+• Answer production techniques questions
+• Help adjust your genre, vibe, or arrangement ideas
+• Provide detailed explanations about any aspect of your track
+
+What would you like to work on today?`,
+        timestamp: new Date()
+      }]);
+    }
+  }, [isOpen, messages.length]);
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
+
+  const clearConversation = () => {
+    setMessages([{
       id: '1',
       role: 'assistant',
       content: `Hi! I'm your AI music production assistant. I can help you:
@@ -43,26 +86,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
 What would you like to work on today?`,
       timestamp: new Date()
-    }
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }]);
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -116,66 +141,63 @@ What would you like to work on today?`,
     }
   };
 
-  const clearConversation = () => {
-    setMessages([messages[0]]); // Keep the initial greeting
-  };
+
 
   if (!isOpen) return null;
 
   return (
-    <>
-      <style>{`
-        .ai-chat-scroll::-webkit-scrollbar {
-          width: 8px;
-        }
-        .ai-chat-scroll::-webkit-scrollbar-track {
-          background: #1F2937;
-          border-radius: 4px;
-        }
-        .ai-chat-scroll::-webkit-scrollbar-thumb {
-          background: #4B5563;
-          border-radius: 4px;
-        }
-        .ai-chat-scroll::-webkit-scrollbar-thumb:hover {
-          background: #6B7280;
-        }
-      `}</style>
-      <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
-        <Card className="h-full bg-gray-800 shadow-2xl border border-gray-700 flex flex-col rounded-lg overflow-hidden">
-        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 sticky top-0 z-10">
+    <div className="fixed bottom-4 right-4 z-[9999] w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
+      <div className="h-full bg-gray-800 shadow-2xl border border-gray-700 rounded-lg flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 flex-shrink-0">
           <div className="flex items-center min-w-0 flex-1">
             <SparklesIcon className="w-5 h-5 text-white mr-2 flex-shrink-0" />
             <h2 className="text-lg font-bold text-white truncate">Production Coach</h2>
           </div>
           <div className="flex gap-1 flex-shrink-0 ml-2">
-            <Button onClick={clearConversation} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10 hidden sm:inline-flex">
+            <Button 
+              onClick={clearConversation} 
+              variant="outline" 
+              size="sm" 
+              className="text-white border-white/30 hover:bg-white/10 hidden sm:inline-flex"
+            >
               Clear
             </Button>
-            <Button onClick={onClose} variant="outline" size="sm" className="text-white border-white/30 hover:bg-white/10 flex-shrink-0">
+            <Button 
+              onClick={onClose} 
+              variant="outline" 
+              size="sm" 
+              className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
+            >
               <CloseIcon className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 ai-chat-scroll min-h-0" style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#4B5563 #1F2937'
-        }}>
+        {/* Messages Container */}
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-900/50"
+          style={{
+            scrollBehavior: 'smooth',
+            overflowAnchor: 'auto'
+          }}
+        >
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] p-2 rounded-lg text-sm ${
+                className={`max-w-[85%] p-3 rounded-lg text-sm shadow-lg ${
                   message.role === 'user'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-100'
+                    ? 'bg-purple-600 text-white rounded-br-sm'
+                    : 'bg-gray-700 text-gray-100 rounded-bl-sm'
                 }`}
               >
-                <div className="whitespace-pre-wrap break-words">{message.content}</div>
-                <div className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString()}
+                <div className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</div>
+                <div className="text-xs opacity-70 mt-2">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             </div>
@@ -183,7 +205,7 @@ What would you like to work on today?`,
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-gray-700 text-gray-100 p-2 rounded-lg text-sm">
+              <div className="bg-gray-700 text-gray-100 p-3 rounded-lg text-sm shadow-lg rounded-bl-sm">
                 <Spinner text="AI is thinking..." />
               </div>
             </div>
@@ -192,8 +214,9 @@ What would you like to work on today?`,
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-2 border-t border-gray-700 bg-gray-800/50 flex-shrink-0">
-          <div className="flex gap-2">
+        {/* Input Area */}
+        <div className="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">
+          <div className="flex gap-2 mb-2">
             <Input
               ref={inputRef}
               type="text"
@@ -201,7 +224,7 @@ What would you like to work on today?`,
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 text-sm"
+              className="flex-1 text-sm bg-gray-700 border-gray-600 text-white placeholder-gray-400"
               disabled={isLoading}
             />
             <Button
@@ -209,16 +232,16 @@ What would you like to work on today?`,
               disabled={!inputMessage.trim() || isLoading}
               variant="primary"
               size="sm"
+              className="px-4"
             >
-              Send
+              {isLoading ? '...' : 'Send'}
             </Button>
           </div>
-          <div className="mt-1 text-xs text-gray-400">
-            Press Enter to send
+          <div className="text-xs text-gray-400 text-center">
+            Press Enter to send • Clear resets conversation
           </div>
         </div>
-        </Card>
       </div>
-    </>
+    </div>
   );
 };
