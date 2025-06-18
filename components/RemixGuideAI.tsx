@@ -76,19 +76,18 @@ export const RemixGuideAI: React.FC = () => {
   setError('');
 
   try {
-    // 1) Convert to base64
-    const base64 = await uploadAudio(audioFile);
-    // 2) Build the audioData object
-    const audioData = { base64, mimeType: audioFile.type };
+    // Convert to base64 for the API call
+    const base64Data = await uploadAudio(audioFile);
+    const audioData = { base64: base64Data.base64, mimeType: base64Data.mimeType };
 
     const genreInfo = getGenreInfo(selectedGenre);
 
-    // 3) Pass audioData (not raw string)
+    // Call the generateRemixGuide function
     const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
     setRemixGuide(result);
   } catch (err) {
     console.error('Error generating remix guide:', err);
-    setError('Failed to generate remix guide. Please try again.');
+    setError(err instanceof Error ? err.message : 'Failed to generate remix guide. Please try again.');
   } finally {
     setIsGenerating(false);
   }

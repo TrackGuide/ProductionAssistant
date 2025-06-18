@@ -742,20 +742,35 @@ export function generateRemixPrompt(
 
 Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
 
-Now, generate a Remix Guide that includes:
-1. Suggested overall remix approach
-2. Arrangement ideas
-3. Sound design tips
-4. Suggested structure (sections: ${sections})
-5. Target tempo & key for the remix (typical range: ${tempoRange})
+Generate a comprehensive remix guide for transforming this track into ${targetGenre} style.
 
-Then, generate MIDI patterns for each section:
-- Bassline
-- Drums
-- Melody / Harmony
-- Pads or textures
+Your response must be a valid JSON object with exactly these keys:
 
-Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+{
+  "guide": "A detailed markdown-formatted remix guide with sections for: Overall Approach, Arrangement Ideas, Sound Design Tips, and Production Notes",
+  "targetTempo": 125,
+  "targetKey": "A minor",
+  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+  "midiPatterns": {
+    "Intro": {
+      "bassline": "Simple MIDI pattern description",
+      "drums": "Drum pattern description", 
+      "melody": "Melody pattern description",
+      "pads": "Pad/texture pattern description"
+    },
+    "Build-Up": {
+      "bassline": "Build-up bass pattern",
+      "drums": "Build-up drum pattern",
+      "melody": "Build-up melody pattern", 
+      "pads": "Build-up pad pattern"
+    }
+  }
+}
+
+Target tempo range: ${tempoRange}
+Suggested sections: ${sections}
+
+IMPORTANT: Return ONLY the JSON object, no other text or markdown formatting.`;
 }
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
@@ -770,69 +785,127 @@ export async function generateRemixGuide(
   sections: string[];
   midiPatterns: Record<string, Record<string, string>>;
 }> {
-  const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
-  const audioPart = {
-    inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
-  };
-
-  console.log("[geminiService] Remix Prompt:", textPart.text);
-  console.log("[geminiService] Audio size (chars):", audioData.base64.length);
-
-  // 🔑 Single, uniquely named call
-  const geminiResponse = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: [textPart, audioPart],
-  });
-
-  console.log(
-    "[geminiService] Full raw response:",
-    JSON.stringify(geminiResponse, null, 2)
-  );
-
-  // — extract the text from whatever shape Gemini gives us —
-  let text: string;
-  if (geminiResponse.choices?.[0]?.message?.content) {
-    text = geminiResponse.choices[0].message.content;
-  } else if (geminiResponse.candidates?.[0]?.content) {
-    text = geminiResponse.candidates[0].content;
-  } else if (typeof (geminiResponse as any).text === "string") {
-    text = (geminiResponse as any).text;
-  } else if (
-    geminiResponse.response &&
-    typeof geminiResponse.response.text === "function"
-  ) {
-    text = await geminiResponse.response.text();
-  } else {
-    console.error("[geminiService] Unexpected format:", geminiResponse);
-    throw new Error("Unexpected response format from Gemini API");
-  }
-
-  console.log("[geminiService] Raw remix response:", text);
-
-  // — strip markdown fences, grab the JSON and parse it —
-  text = text.replace(/```(?:json)?\s*/g, "").replace(/```$/, "").trim();
-  const match = text.match(/({[\s\S]*?})/);
-  if (!match) {
-    console.warn("[geminiService] No JSON found, returning raw guide:");
-    return {
-      guide: text,
-      targetTempo: genreInfo?.tempoRange?.[0] || 128,
-      targetKey: "C minor",
-      sections: genreInfo?.sections || [
-        "Intro",
-        "Build-Up",
-        "Drop",
-        "Breakdown",
-        "Outro",
-      ],
-      midiPatterns: {},
-    };
+  if (!apiKey) {
+    const errorMessage = "API Key not configured. Cannot connect to Gemini API for remix guide.";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   try {
-    return JSON.parse(match[1]);
-  } catch (err) {
-    console.error("[geminiService] JSON.parse failed:", err, match[1]);
-    throw new Error("Invalid JSON in Gemini response");
+    const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
+    const audioPart = {
+      inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
+    };
+
+    console.log("[geminiService] Remix Prompt:", textPart.text);
+    console.log("[geminiService] Audio size (chars):", audioData.base64.length);
+
+    const contents = [audioPart, textPart];
+
+    // Use the same API call pattern as the working Mix Feedback function
+    const geminiResponse = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: { parts: contents },
+    });
+
+    console.log(
+      "[geminiService] Full raw response:",
+      JSON.stringify(geminiResponse, null, 2)
+    );
+
+    // Use the same response extraction as Mix Feedback
+    const text = geminiResponse.text;
+    if (typeof text !== 'string') {
+      console.error("Received non-text response or no text from Gemini API for remix guide. Response:", geminiResponse);
+      throw new Error("Received an unexpected response format from Gemini API for remix guide.");
+    }
+
+    console.log("[geminiService] Raw remix response:", text);
+
+    // Try to parse the response as JSON
+    let parsedResponse;
+    try {
+      // First, try to parse the entire response as JSON
+      parsedResponse = JSON.parse(text);
+    } catch (err) {
+      // If that fails, try to extract JSON from markdown code blocks
+      const cleanedText = text.replace(/```(?:json)?\s*/g, "").replace(/```$/, "").trim();
+      try {
+        parsedResponse = JSON.parse(cleanedText);
+      } catch (err2) {
+        // If that fails, try to find JSON object in the text
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) {
+          try {
+            parsedResponse = JSON.parse(match[0]);
+          } catch (err3) {
+            console.error("[geminiService] All JSON parsing attempts failed:", { err, err2, err3 });
+            console.error("[geminiService] Original text:", text);
+            console.error("[geminiService] Cleaned text:", cleanedText);
+            console.error("[geminiService] Matched text:", match[0]);
+            
+            // Return a fallback response with the raw text as guide
+            return {
+              guide: text,
+              targetTempo: genreInfo?.tempoRange?.[0] || 128,
+              targetKey: "C minor",
+              sections: genreInfo?.sections || [
+                "Intro",
+                "Build-Up", 
+                "Drop",
+                "Breakdown",
+                "Outro",
+              ],
+              midiPatterns: {},
+            };
+          }
+        } else {
+          console.error("[geminiService] No JSON object found in response:", text);
+          throw new Error("No valid JSON found in Gemini response");
+        }
+      }
+    }
+
+    // Validate the parsed response has required fields
+    if (!parsedResponse || typeof parsedResponse !== 'object') {
+      throw new Error("Parsed response is not a valid object");
+    }
+
+    // Ensure required fields exist with defaults
+    const result = {
+      guide: parsedResponse.guide || text,
+      targetTempo: parsedResponse.targetTempo || genreInfo?.tempoRange?.[0] || 128,
+      targetKey: parsedResponse.targetKey || "C minor",
+      sections: parsedResponse.sections || genreInfo?.sections || [
+        "Intro",
+        "Build-Up",
+        "Drop", 
+        "Breakdown",
+        "Outro",
+      ],
+      midiPatterns: parsedResponse.midiPatterns || {},
+    };
+
+    console.log("[geminiService] Successfully parsed remix guide:", result);
+    return result;
+
+  } catch (error) {
+    console.error("Error generating remix guide:", error);
+    let specificMessage = "An unknown error occurred while generating remix guide.";
+    if (error instanceof Error) {
+      specificMessage = error.message;
+      if (error.message.includes("API key not valid") || (error.message.includes("permission") && error.message.includes("API key"))) {
+        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key and its configuration.";
+      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+      } else if (error.message.includes("Candidate was blocked")) {
+        specificMessage = "The response for remix guide was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
+      } else if (error.message.includes("audio")) {
+        specificMessage = `There was an issue processing the audio file with the AI. Ensure it's a common format and not too large. (${error.message})`;
+      } else {
+        specificMessage = `Failed to generate remix guide: ${error.message}`;
+      }
+    }
+    throw new Error(specificMessage);
   }
 }
