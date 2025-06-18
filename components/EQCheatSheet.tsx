@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
-import { AdjustmentsHorizontalIcon } from './icons.tsx';
+import { AdjustmentsHorizontalIcon, CopyIcon } from './icons.tsx';
+import { copyToClipboard } from '../utils/copyUtils.ts';
 
 interface EQBand {
   frequency: string;
@@ -14,39 +15,46 @@ interface EQBand {
 
 const EQ_DATA: EQBand[] = [
   // Sub Bass (20-60 Hz)
-  { frequency: '20-30 Hz', description: 'Sub-bass rumble, often felt more than heard', instruments: ['Kick drum', 'Sub bass', '808s'], action: 'cut', category: 'sub' },
-  { frequency: '30-60 Hz', description: 'Deep bass foundation, power and weight', instruments: ['Kick drum', 'Bass guitar', 'Sub bass'], action: 'boost', category: 'sub' },
+  { frequency: '20-30 Hz', description: 'Sub-bass rumble, often felt more than heard. Can cause speaker damage if excessive.', instruments: ['Kick drum', 'Sub bass', '808s', 'Synthesizer bass'], action: 'cut', category: 'sub' },
+  { frequency: '30-40 Hz', description: 'Deep bass foundation, adds power and weight. Essential for electronic music.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', '808s'], action: 'boost', category: 'sub' },
+  { frequency: '40-60 Hz', description: 'Bass fundamentals, warmth and body. Key frequency for bass instruments.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', 'Synthesizer bass', 'Tuba'], action: 'boost', category: 'sub' },
   
   // Bass (60-250 Hz)
-  { frequency: '60-100 Hz', description: 'Bass fundamentals, warmth and body', instruments: ['Bass guitar', 'Kick drum', 'Male vocals'], action: 'boost', category: 'bass' },
-  { frequency: '100-200 Hz', description: 'Bass clarity, can get muddy if excessive', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals'], action: 'cut', category: 'bass' },
-  { frequency: '200-250 Hz', description: 'Muddiness zone, often needs cutting', instruments: ['Most instruments'], action: 'cut', category: 'bass' },
+  { frequency: '60-80 Hz', description: 'Bass guitar fundamentals, kick drum thump. Critical for rhythm section.', instruments: ['Bass guitar', 'Kick drum', 'Male vocals', 'Cello', 'Synthesizer bass'], action: 'boost', category: 'bass' },
+  { frequency: '80-120 Hz', description: 'Bass clarity and definition. Too much causes muddiness.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Drums'], action: 'boost', category: 'bass' },
+  { frequency: '120-200 Hz', description: 'Warmth zone, can get muddy if excessive. Often needs gentle cutting.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Strings', 'Brass'], action: 'cut', category: 'bass' },
+  { frequency: '200-250 Hz', description: 'Muddiness zone, often problematic. Cut to clean up mix.', instruments: ['Most instruments', 'Vocals', 'Guitar', 'Piano'], action: 'cut', category: 'bass' },
   
   // Low Mids (250-500 Hz)
-  { frequency: '250-400 Hz', description: 'Cardboard/boxy sound, often problematic', instruments: ['Vocals', 'Snare', 'Guitar'], action: 'cut', category: 'low-mid' },
-  { frequency: '400-500 Hz', description: 'Honky/nasal frequencies', instruments: ['Vocals', 'Horns', 'Guitar'], action: 'cut', category: 'low-mid' },
+  { frequency: '250-350 Hz', description: 'Cardboard/boxy sound, often problematic. Cut to reduce boxiness.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Strings'], action: 'cut', category: 'low-mid' },
+  { frequency: '350-450 Hz', description: 'Honky/nasal frequencies. Can make vocals sound unnatural.', instruments: ['Vocals', 'Horns', 'Guitar', 'Saxophone', 'Trumpet'], action: 'cut', category: 'low-mid' },
+  { frequency: '450-500 Hz', description: 'Lower midrange clarity. Boost for warmth, cut for clarity.', instruments: ['Vocals', 'Guitar', 'Piano', 'Strings', 'Woodwinds'], action: 'cut', category: 'low-mid' },
   
   // Mids (500-2000 Hz)
-  { frequency: '500-800 Hz', description: 'Vocal clarity and instrument definition', instruments: ['Vocals', 'Snare', 'Guitar'], action: 'boost', category: 'mid' },
-  { frequency: '800-1200 Hz', description: 'Vocal presence, can sound harsh', instruments: ['Vocals', 'Snare', 'Hi-hats'], action: 'boost', category: 'mid' },
-  { frequency: '1-2 kHz', description: 'Attack and punch, vocal intelligibility', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano'], action: 'boost', category: 'mid' },
+  { frequency: '500-800 Hz', description: 'Vocal clarity and instrument definition. Key for presence.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Violin'], action: 'boost', category: 'mid' },
+  { frequency: '800-1200 Hz', description: 'Vocal presence, can sound harsh if overdone. Critical for intelligibility.', instruments: ['Vocals', 'Snare', 'Hi-hats', 'Guitar', 'Brass'], action: 'boost', category: 'mid' },
+  { frequency: '1-1.5 kHz', description: 'Attack and punch, vocal intelligibility. Boost for clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Drums'], action: 'boost', category: 'mid' },
+  { frequency: '1.5-2 kHz', description: 'Presence and definition. Can become fatiguing if excessive.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Cymbals'], action: 'boost', category: 'mid' },
   
   // High Mids (2-6 kHz)
-  { frequency: '2-3 kHz', description: 'Vocal presence, can be fatiguing', instruments: ['Vocals', 'Snare', 'Cymbals'], action: 'boost', category: 'high-mid' },
-  { frequency: '3-5 kHz', description: 'Clarity and definition, harshness zone', instruments: ['Vocals', 'Snare', 'Guitar', 'Cymbals'], action: 'cut', category: 'high-mid' },
-  { frequency: '5-6 kHz', description: 'Sibilance in vocals, cymbal harshness', instruments: ['Vocals', 'Cymbals', 'Hi-hats'], action: 'cut', category: 'high-mid' },
+  { frequency: '2-2.5 kHz', description: 'Vocal presence, can be fatiguing. Boost for clarity, cut for smoothness.', instruments: ['Vocals', 'Snare', 'Cymbals', 'Guitar', 'Violin'], action: 'boost', category: 'high-mid' },
+  { frequency: '2.5-4 kHz', description: 'Clarity and definition, harshness zone. Often needs careful handling.', instruments: ['Vocals', 'Snare', 'Guitar', 'Cymbals', 'Piano'], action: 'cut', category: 'high-mid' },
+  { frequency: '4-5 kHz', description: 'Vocal intelligibility, can sound harsh. Critical for speech clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Cymbals', 'Brass'], action: 'boost', category: 'high-mid' },
+  { frequency: '5-6 kHz', description: 'Sibilance in vocals, cymbal harshness. Often needs de-essing.', instruments: ['Vocals', 'Cymbals', 'Hi-hats', 'Acoustic guitar'], action: 'cut', category: 'high-mid' },
   
   // Presence (6-12 kHz)
-  { frequency: '6-8 kHz', description: 'Vocal sibilance, cymbal brightness', instruments: ['Vocals', 'Cymbals', 'Acoustic guitar'], action: 'cut', category: 'presence' },
-  { frequency: '8-12 kHz', description: 'Brightness and clarity, can be harsh', instruments: ['Cymbals', 'Hi-hats', 'Vocals'], action: 'boost', category: 'presence' },
+  { frequency: '6-8 kHz', description: 'Vocal sibilance, cymbal brightness. Cut to reduce harshness.', instruments: ['Vocals', 'Cymbals', 'Acoustic guitar', 'Hi-hats'], action: 'cut', category: 'presence' },
+  { frequency: '8-10 kHz', description: 'Brightness and clarity, can be harsh. Boost for sparkle.', instruments: ['Cymbals', 'Hi-hats', 'Vocals', 'Acoustic guitar', 'Strings'], action: 'boost', category: 'presence' },
+  { frequency: '10-12 kHz', description: 'High-frequency clarity and definition. Adds presence and life.', instruments: ['Cymbals', 'Hi-hats', 'Vocals', 'Strings', 'Flute'], action: 'boost', category: 'presence' },
   
   // Air (12+ kHz)
-  { frequency: '12-16 kHz', description: 'Air and sparkle, openness', instruments: ['Cymbals', 'Vocals', 'Strings'], action: 'boost', category: 'air' },
-  { frequency: '16+ kHz', description: 'Ultra-high frequencies, air and space', instruments: ['Cymbals', 'Room mics'], action: 'boost', category: 'air' },
+  { frequency: '12-16 kHz', description: 'Air and sparkle, openness. Adds dimension and space.', instruments: ['Cymbals', 'Vocals', 'Strings', 'Acoustic guitar', 'Room mics'], action: 'boost', category: 'air' },
+  { frequency: '16-20 kHz', description: 'Ultra-high frequencies, air and space. Subtle but important for realism.', instruments: ['Cymbals', 'Room mics', 'Strings', 'Vocals'], action: 'boost', category: 'air' },
+  { frequency: '20+ kHz', description: 'Extreme high frequencies, mostly harmonics. Can add subtle air.', instruments: ['Cymbals', 'Room mics', 'High-quality recordings'], action: 'boost', category: 'air' },
 ];
 
 const INSTRUMENTS = [
-  'All', 'Vocals', 'Kick drum', 'Snare', 'Bass guitar', 'Guitar', 'Piano', 'Cymbals', 'Hi-hats', 'Sub bass', '808s', 'Horns', 'Strings', 'Room mics'
+  'All', 'Vocals', 'Male vocals', 'Kick drum', 'Snare', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Piano', 'Cymbals', 'Hi-hats', 'Sub bass', '808s', 'Synthesizer bass', 'Horns', 'Strings', 'Room mics', 'Drums', 'Violin', 'Cello', 'Tuba', 'Saxophone', 'Trumpet', 'Brass', 'Woodwinds', 'Flute', 'High-quality recordings'
 ];
 
 const FREQUENCY_ZONES = [
@@ -69,6 +77,7 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
   const [selectedInstrument, setSelectedInstrument] = useState('All');
   const [selectedZone, setSelectedZone] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [copyStatus, setCopyStatus] = useState<string>('');
 
   if (!isOpen) return null;
 
@@ -101,6 +110,27 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
     }
   };
 
+  const handleCopyEQGuide = async () => {
+    const eqGuideText = `# EQ Frequency Guide
+
+## Filtered Results: ${selectedInstrument !== 'All' ? selectedInstrument : 'All Instruments'} - ${FREQUENCY_ZONES.find(z => z.id === selectedZone)?.label || 'All Frequencies'}
+
+${filteredData.map(band => `
+### ${band.frequency}
+**Action**: ${band.action.toUpperCase()} ${getActionIcon(band.action)}
+**Description**: ${band.description}
+**Instruments**: ${band.instruments.join(', ')}
+**Category**: ${band.category.toUpperCase()}
+`).join('\n')}
+
+---
+*Generated by TrackGuide AI - EQ Frequency Reference*`;
+
+    const result = await copyToClipboard(eqGuideText);
+    setCopyStatus(result.message);
+    setTimeout(() => setCopyStatus(''), 3000);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
@@ -110,10 +140,24 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
               <AdjustmentsHorizontalIcon className="w-6 h-6 mr-2" />
               EQ Cheat Sheet
             </h2>
-            <Button onClick={onClose} variant="outline" size="sm">
-              ✕ Close
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button onClick={handleCopyEQGuide} variant="outline" size="sm">
+                <CopyIcon className="w-4 h-4 mr-2" />
+                Copy Guide
+              </Button>
+              <Button onClick={onClose} variant="outline" size="sm">
+                ✕ Close
+              </Button>
+            </div>
           </div>
+          
+          {copyStatus && (
+            <div className={`text-sm mb-4 p-2 rounded ${
+              copyStatus.includes("Failed") ? "text-red-400 bg-red-900/20" : "text-green-400 bg-green-900/20"
+            }`}>
+              {copyStatus}
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

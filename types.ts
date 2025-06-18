@@ -93,4 +93,4 @@ export interface MixFeedbackInputs {
   userNotes: string;
 }
 
-export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide';
+export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide' | 'eqGuide';

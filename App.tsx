@@ -23,6 +23,7 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
+import { EQCheatSheet } from './components/EQCheatSheet.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
 
@@ -1135,6 +1136,20 @@ const App: React.FC = () => {
     leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
   >
     Mix Feedback AI
+  </Button>
+
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'eqGuide'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('eqGuide')}
+    variant={activeView === 'eqGuide' ? 'primary' : 'secondary'}
+    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+  >
+    EQ Guide
   </Button>
 
   <Button
