@@ -1,13 +1,17 @@
 
+// services/geminiService.ts
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME } from '../constants.ts';
 
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 const apiKey = process.env.API_KEY;
 if (!apiKey) {
-  console.error("API_KEY is not set. Please ensure the API_KEY environment variable is configured. App may not function correctly.");
+  console.error(
+    "API_KEY is not set. Please ensure the API_KEY environment variable is configured."
+  );
 }
-const ai = new GoogleGenAI({ apiKey: apiKey });
+const ai = new GoogleGenAI({ apiKey });
 
 
 const generatePrompt = (inputs: UserInputs): string => {
@@ -723,50 +727,6 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 // Remix Guide Prompt (no more URL)
-// Remix Guide Prompt (no more URL)
-export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
-
-  const tempoRange = genreInfo ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : '120-130 BPM';
-  const sections = genreInfo ? genreInfo.sections.join(', ') : 'Intro, Build-Up, Drop, Breakdown, Outro';
-
-  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
-
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
-
-Now, generate a Remix Guide that includes:
-
-1. Suggested overall remix approach
-2. Arrangement ideas
-3. Sound design tips
-4. Suggested structure (sections: ${sections})
-5. Target tempo & key for the remix (typical range: ${tempoRange})
-
-Then, generate MIDI patterns for each section:
-- Bassline
-- Drums
-- Melody / Harmony
-- Pads or textures
-
-Return as JSON:
-{
-  "guide": "...",
-  "targetTempo": ...,
-  "targetKey": "...",
-  "sections": [...],
-  "midiPatterns": {
-    "Intro": { "bassline": "...", "drums": "...", ... },
-    ...
-  }
-}
-
-Only return the JSON object.`;
-};
-
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GEMINI_MODEL_NAME } from "../constants";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-
 export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
   const tempoRange = genreInfo
     ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
@@ -780,7 +740,6 @@ export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string
 Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
 
 Now, generate a Remix Guide that includes:
-
 1. Suggested overall remix approach
 2. Arrangement ideas
 3. Sound design tips
@@ -793,22 +752,53 @@ Then, generate MIDI patterns for each section:
 - Melody / Harmony
 - Pads or textures
 
-Return **only** the JSON object with these keys:
-`guide`, `targetTempo`, `targetKey`, `sections`, and `midiPatterns`.`;
+Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
 };
 
+
+
+// ── Only ONE call to Gemini ──
+export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
+  const tempoRange = genreInfo
+    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
+    : "120-130 BPM";
+  const sections = genreInfo
+    ? genreInfo.sections.join(", ")
+    : "Intro, Build-Up, Drop, Breakdown, Outro";
+
+  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+
+Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+
+Now, generate a Remix Guide that includes:
+1. Suggested overall remix approach
+2. Arrangement ideas
+3. Sound design tips
+4. Suggested structure (sections: ${sections})
+5. Target tempo & key for the remix (typical range: ${tempoRange})
+
+Then, generate MIDI patterns for each section:
+- Bassline
+- Drums
+- Melody / Harmony
+- Pads or textures
+
+Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+};
+
+
+// ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
   genreInfo: any
 ): Promise<any> => {
-  if (!process.env.GEMINI_API_KEY) {
-    const msg = "API Key not configured. Cannot connect to Gemini API.";
-    console.error(msg);
-    throw new Error(msg);
+  if (!apiKey) {
+    throw new Error(
+      "API Key not configured. Cannot connect to Gemini API for remix guide."
+    );
   }
 
-  // Build the two parts
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
   const audioPart = {
     inlineData: {
@@ -817,40 +807,38 @@ export const generateRemixGuide = async (
     },
   };
 
-  console.log("[geminiService] Prompt:", textPart.text);
-  console.log("[geminiService] Audio:", audioData.mimeType, audioData.base64.length, "chars");
+  console.log("[geminiService] Remix Prompt:", textPart.text);
+  console.log("[geminiService] Audio size:", audioData.base64.length);
 
   try {
-    // Fire off the request
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [textPart, audioPart],
     });
 
-    // **Correctly** pull the text out
+    // extract string
     const text = typeof response.text === "string"
       ? response.text
-      : response.text?.toString?.() || "";
+      : response.text?.toString() || "";
 
-    console.log("[geminiService] Raw response text:", text);
+    console.log("[geminiService] Raw remix response:", text);
 
-    // Attempt to parse JSON from it
+    // parse JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
 
-    // If no JSON, return a shaped fallback
+    // fallback if not valid JSON
     return {
       guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
       targetKey: "C minor",
-      sections: genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
-      midiPatterns: {}
+      sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+      midiPatterns: {},
     };
   } catch (err: any) {
     console.error("[geminiService] Error in generateRemixGuide:", err);
-    // bubble up a cleaner message
     throw new Error(
       err.message.includes("quota")
         ? "API quota exceeded."
