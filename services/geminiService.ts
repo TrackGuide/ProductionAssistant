@@ -731,12 +731,9 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
   }
 
   try {
-    const prompt = generateRemixPrompt('uploaded audio', targetGenre, genreInfo);
-    
-    // Convert audio file to inlineData part
+    const prompt = generateRemixPrompt(targetGenre, genreInfo);
     const audioPart = await fileToGenerativePart(audioFile);
 
-    // Call Gemini API
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [
@@ -745,18 +742,15 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
       ],
     });
 
-    // Parse response
     if (response.response && response.response.text) {
       const text = response.response.text();
 
-      // Try parsing JSON inside response
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const result = JSON.parse(jsonMatch[0]);
           return result;
         } else {
-          // fallback: plain guide
           return {
             guide: text,
             targetTempo: genreInfo?.tempoRange?.[0] || 128,
@@ -766,7 +760,7 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
           };
         }
       } catch (parseError) {
-        console.error("Error parsing remix guide JSON:", parseError);
+        console.error("Error parsing JSON response:", parseError);
         return {
           guide: text,
           targetTempo: genreInfo?.tempoRange?.[0] || 128,
@@ -776,7 +770,7 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
         };
       }
     } else {
-      console.error("Received non-text response from Gemini API for remix guide:", response);
+      console.error("Received non-text response from Gemini API for remix guide. Response:", response);
       throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
 
