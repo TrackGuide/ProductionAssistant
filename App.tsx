@@ -1036,7 +1036,7 @@ const App: React.FC = () => {
             <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="Leave blank for AI magic ✨" />
+                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI will suggest one if left blank" />
                 </div>
                 
                 <div>
