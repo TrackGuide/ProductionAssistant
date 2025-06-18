@@ -157,7 +157,7 @@ What would you like to work on today?`,
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 ai-chat-scroll" style={{
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 ai-chat-scroll min-h-0" style={{
           scrollbarWidth: 'thin',
           scrollbarColor: '#4B5563 #1F2937'
         }}>
@@ -192,7 +192,7 @@ What would you like to work on today?`,
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-3 border-t border-gray-700 bg-gray-800/50">
+        <div className="p-2 border-t border-gray-700 bg-gray-800/50 flex-shrink-0">
           <div className="flex gap-2">
             <Input
               ref={inputRef}
@@ -213,8 +213,8 @@ What would you like to work on today?`,
               Send
             </Button>
           </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Press Enter to send • Shift+Enter for new line
+          <div className="mt-1 text-xs text-gray-400">
+            Press Enter to send
           </div>
         </div>
         </Card>

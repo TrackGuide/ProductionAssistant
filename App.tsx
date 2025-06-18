@@ -938,7 +938,10 @@ const App: React.FC = () => {
 
   // Show landing page if activeView is 'landing'
   if (activeView === 'landing') {
-    return <LandingPage onGetStarted={() => setActiveView('trackGuide')} />;
+    return <LandingPage onGetStarted={() => {
+      setActiveView('trackGuide');
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+    }} />;
   }
 
   return (
@@ -1027,21 +1030,18 @@ const App: React.FC = () => {
 
 
       {activeView === 'trackGuide' && (
-        <div className="max-w-7xl mx-auto space-y-6">
-          <Card title="Blueprint Your Sound" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
             <p className="text-sm text-gray-400 mb-4">All fields optional - just add what you know to create your custom production guide.</p>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
-                  </div>
-                  <div>
-                    <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk" />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Input label="Song Title / Project Name" name="songTitle" value={inputs.songTitle || ''} onChange={handleInputChange} placeholder="AI suggests a title if blank" />
+                </div>
+                
+                <div>
+                  <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk, Deadmau5, Porter Robinson" />
                 </div>
 
-                {/* Genre and Vibe Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
@@ -1092,9 +1092,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* DAW and Reference Track Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                <div>
                     <Input label="Preferred DAW" name="daw" value={inputs.daw} onChange={handleInputChange} placeholder="Type or select DAW..." list="daw-suggestions" />
                     <datalist id="daw-suggestions">
                         {DAW_SUGGESTIONS.map(s => <option key={s} value={s} />)}
@@ -1115,20 +1113,18 @@ const App: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                  </div>
-                  <div>
-                    <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
-                  </div>
+                </div>
+                
+                <div>
+                  <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
                 </div>
 
-                {/* Equipment Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or 'stock only'" rows={2} />
-                  </div>
-                  <div>
-                    <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Fender Stratocaster, Moog Subsequent 37, Roland TR-808, Vocals" rows={2} />
-                  </div>
+                <div>
+                  <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or 'stock only'" rows={2} />
+                </div>
+                
+                <div>
+                  <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Electric Guitar, Moog Subsequent 37, Roland TR-808, Vocals" rows={2} />
                 </div>
 
                 {/* Advanced Input Toggle */}
@@ -1182,7 +1178,7 @@ const App: React.FC = () => {
               </form>
             </Card>
 
-          <div className="space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             {/* Main Error */}
             {error && !isLoading && (
               <Card className="border-red-500 bg-red-900/40 shadow-xl">
