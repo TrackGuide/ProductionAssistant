@@ -1043,6 +1043,10 @@ const App: React.FC = () => {
                   <Input label="Artist References" name="artistReference" value={inputs.artistReference} onChange={handleInputChange} placeholder="e.g., Daft Punk, David Bowie, Skrillex" />
                 </div>
 
+                <div>
+                  <Input label="Song Reference" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
@@ -1116,10 +1120,6 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 
-                <div>
-                  <Input label="Reference Track Link" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
-                </div>
-
                 <div>
                   <Textarea label="Available Plugins" name="plugins" value={inputs.plugins} onChange={handleInputChange} placeholder="e.g., Serum, Valhalla Reverbs, Arturia V Collection, or 'stock only'" rows={2} />
                 </div>
