@@ -727,36 +727,6 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 
-// ── Only ONE call to Gemini ──
-export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
-  const tempoRange = genreInfo
-    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
-    : "120-130 BPM";
-  const sections = genreInfo
-    ? genreInfo.sections.join(", ")
-    : "Intro, Build-Up, Drop, Breakdown, Outro";
-
-  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
-
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
-
-Now, generate a Remix Guide that includes:
-1. Suggested overall remix approach
-2. Arrangement ideas
-3. Sound design tips
-4. Suggested structure (sections: ${sections})
-5. Target tempo & key for the remix (typical range: ${tempoRange})
-
-Then, generate MIDI patterns for each section:
-- Bassline
-- Drums
-- Melody / Harmony
-- Pads or textures
-
-Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
-};
-
-
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
@@ -781,6 +751,7 @@ export const generateRemixGuide = async (
   console.log("[geminiService] Audio size:", audioData.base64.length);
 
   try {
+    // Fire off the request
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [textPart, audioPart],
@@ -789,15 +760,16 @@ export const generateRemixGuide = async (
     // ─── NEW: Properly extract the returned text ─────────────────────────────
     let text: string;
     if (response.response && typeof response.response.text === "function") {
-      // response.response.text() returns the generated string
+      // stream-style: call .text() to get the string
       text = await response.response.text();
     } else if (typeof response.text === "string") {
-      // fallback if your version of the SDK still populates response.text
+      // fallback for older SDK versions
       text = response.text;
     } else {
       console.error("[geminiService] Unexpected response shape:", response);
       throw new Error("Unexpected response format from Gemini API");
     }
+
     console.log("[geminiService] Raw remix response:", text);
 
     // parse JSON out of whatever they gave us
@@ -811,7 +783,13 @@ export const generateRemixGuide = async (
       guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
       targetKey: "C minor",
-      sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+      sections: genreInfo?.sections || [
+        "Intro",
+        "Build-Up",
+        "Drop",
+        "Breakdown",
+        "Outro",
+      ],
       midiPatterns: {},
     };
   } catch (err: any) {
