@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
-import { generateRemixGuide, generateRemixPrompt } from '../services/geminiService';
+import { generateRemixGuide } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
 
 interface RemixGuideData {
