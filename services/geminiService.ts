@@ -680,84 +680,48 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: parts,
+      config: {
+        responseMimeType: 'text/plain',  // forces plain text so we can parse
+      },
     });
-    
-    if (response.response && response.response.text) {
-        const text = response.response.text();
+
+    // ✅ FIXED response parsing:
+    if (response && response.candidates && response.candidates.length > 0) {
+      const text = response.candidates[0]?.content?.parts?.[0]?.text;
+      
+      if (text && typeof text === 'string') {
+        console.log("✅ Mix Comparison Result:", text);
         return text;
+      } else {
+        console.error("❌ No valid text content in candidates[0]:", response);
+        throw new Error("Received empty or invalid text from Gemini API for mix comparison.");
+      }
+
     } else {
-        console.error("Received non-text response or no text from Gemini API for mix comparison. Response:", response);
-        throw new Error("Received an unexpected response format from Gemini API for mix comparison.");
+      console.error("❌ No candidates returned from Gemini API for mix comparison:", response);
+      throw new Error("Received an unexpected response format from Gemini API for mix comparison.");
     }
-    
+
   } catch (error: any) {
     console.error("Error generating mix comparison:", error);
     let specificMessage = "An unknown error occurred while generating mix comparison.";
     
     if (error.message) {
-        if (error.message.includes("API_KEY")) {
-            specificMessage = "API Key issue. Please check your Gemini API configuration.";
-        } else if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
-            specificMessage = "The response for mix comparison was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
-        } else if (error.message.includes("quota") || error.message.includes("limit")) {
-            specificMessage = "API quota exceeded. Please try again later.";
-        } else {
-            specificMessage = `Failed to generate mix comparison: ${error.message}`;
-        }
+      if (error.message.includes("API_KEY")) {
+        specificMessage = "API Key issue. Please check your Gemini API configuration.";
+      } else if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
+        specificMessage = "The response for mix comparison was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
+      } else if (error.message.includes("quota") || error.message.includes("limit")) {
+        specificMessage = "API quota exceeded. Please try again later.";
+      } else {
+        specificMessage = `Failed to generate mix comparison: ${error.message}`;
+      }
     }
     
     return Promise.reject(new Error(specificMessage));
   }
 };
 
-// Remix Guide Generation
-const generateRemixPrompt = (originalTrackUrl: string, targetGenre: string, genreInfo: any): string => {
-  const tempoRange = genreInfo ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : '120-130 BPM';
-  const sections = genreInfo ? genreInfo.sections.join(', ') : 'Intro, Build-Up, Drop, Breakdown, Outro';
-
-  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
-
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
-
-Now, generate a Remix Guide that includes:
-
-1. Suggested overall remix approach (how to transform this track into a ${targetGenre} remix).
-2. Arrangement ideas — which elements to emphasize, which to strip, which to modify.
-3. Sound design tips — drums, bass, synths, vocals.
-4. Suggested structure (using sections like: ${sections}).
-5. Target tempo & key for the remix (auto-adjust as needed, typical range: ${tempoRange}).
-
-Then, generate MIDI patterns for each section of the suggested remix structure:
-- Bassline
-- Drum pattern  
-- Melody / Harmony
-- Pads or textures (if suitable)
-
-You must return ONLY a valid JSON object, with NO additional text, Markdown, or explanation.  
-The response must be exactly this JSON structure and nothing else:
-{
-  "guide": "# ${targetGenre} Remix Guide\\n\\n## Analysis of Original Track\\n\\n[Your analysis here]\\n\\n## Remix Approach\\n\\n[Your approach here]\\n\\n## Arrangement Ideas\\n\\n[Your arrangement ideas]\\n\\n## Sound Design Tips\\n\\n[Your sound design tips]\\n\\n## Suggested Structure\\n\\n[Your structure suggestions]",
-  "targetTempo": 128,
-  "targetKey": "C minor",
-  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-  "midiPatterns": {
-    "Intro": {
-      "bassline": "C2:q C2:q G1:q G1:q",
-      "drums": "C1:q r:q C1:q r:q",
-      "melody": "C4:h G4:h",
-      "pads": "C3:w"
-    },
-    "Build-Up": {
-      "bassline": "C2:e C2:e G1:e G1:e C2:e C2:e G1:e G1:e",
-      "drums": "C1:e r:e C1:e r:e C1:e r:e C1:e r:e",
-      "melody": "C4:q G4:q E4:q G4:q",
-      "pads": "C3:h G3:h"
-    }
-  }
-}
-
-Make sure the guide is comprehensive and the MIDI patterns are appropriate for ${targetGenre}. Use proper note notation (e.g., "C4:q" for quarter note C4, "r:q" for quarter rest).`;
-};
 
 export const generateRemixGuide = async (audioUrl: string, targetGenre: string, genreInfo: any): Promise<any> => {
   if (!apiKey) {
