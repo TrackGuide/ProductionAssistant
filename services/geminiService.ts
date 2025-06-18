@@ -725,6 +725,8 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 
+// ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
+// ─── REMIX PROMPT BUILDER ─────────────────────────────────────────────────────────
 export function generateRemixPrompt(
   targetGenre: string,
   genreInfo: any
@@ -768,7 +770,6 @@ export async function generateRemixGuide(
   sections: string[];
   midiPatterns: Record<string, Record<string, string>>;
 }> {
-  // now this is in scope!
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
   const audioPart = {
     inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
@@ -777,54 +778,42 @@ export async function generateRemixGuide(
   console.log("[geminiService] Remix Prompt:", textPart.text);
   console.log("[geminiService] Audio size (chars):", audioData.base64.length);
 
-  const response = await ai.models.generateContent({
+  // 🔑 Single, uniquely named call
+  const geminiResponse = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
     contents: [textPart, audioPart],
   });
 
-  console.log("[geminiService] Remix Prompt:", textPart.text);
-  console.log("[geminiService] Audio size (chars):", audioData.base64.length);
-
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: [textPart, audioPart],
-  });
-
-  // 1) Log the raw response shape for debugging
   console.log(
     "[geminiService] Full raw response:",
-    JSON.stringify(response, null, 2)
+    JSON.stringify(geminiResponse, null, 2)
   );
 
-  // 2) Pull out the text from whatever shape it comes in
+  // — extract the text from whatever shape Gemini gives us —
   let text: string;
-  if (response.choices?.[0]?.message?.content) {
-    text = response.choices[0].message.content;
-  } else if (response.candidates?.[0]?.content) {
-    text = response.candidates[0].content;
-  } else if (typeof (response as any).text === "string") {
-    text = (response as any).text;
+  if (geminiResponse.choices?.[0]?.message?.content) {
+    text = geminiResponse.choices[0].message.content;
+  } else if (geminiResponse.candidates?.[0]?.content) {
+    text = geminiResponse.candidates[0].content;
+  } else if (typeof (geminiResponse as any).text === "string") {
+    text = (geminiResponse as any).text;
   } else if (
-    response.response &&
-    typeof response.response.text === "function"
+    geminiResponse.response &&
+    typeof geminiResponse.response.text === "function"
   ) {
-    text = await response.response.text();
+    text = await geminiResponse.response.text();
   } else {
-    throw new Error(
-      "[geminiService] Unexpected response format – see raw above"
-    );
+    console.error("[geminiService] Unexpected format:", geminiResponse);
+    throw new Error("Unexpected response format from Gemini API");
   }
 
   console.log("[geminiService] Raw remix response:", text);
 
-  // 3) Strip out any ```json fences or stray backticks
+  // — strip markdown fences, grab the JSON and parse it —
   text = text.replace(/```(?:json)?\s*/g, "").replace(/```$/, "").trim();
-
-  // 4) Non-greedy match for the JSON object
-  const jsonMatch = text.match(/({[\s\S]*?})/);
-  if (!jsonMatch) {
-    console.error("[geminiService] No JSON found in response:", text);
-    // fallback you already had
+  const match = text.match(/({[\s\S]*?})/);
+  if (!match) {
+    console.warn("[geminiService] No JSON found, returning raw guide:");
     return {
       guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
@@ -840,16 +829,12 @@ export async function generateRemixGuide(
     };
   }
 
-  // 5) Safely parse
   try {
-    return JSON.parse(jsonMatch[1]);
+    return JSON.parse(match[1]);
   } catch (err) {
-    console.error(
-      "[geminiService] JSON.parse failed:",
-      err,
-      "\nExtracted JSON was:\n",
-      jsonMatch[1]
-    );
+    console.error("[geminiService] JSON.parse failed:", err, match[1]);
     throw new Error("Invalid JSON in Gemini response");
   }
+}
+
 }
