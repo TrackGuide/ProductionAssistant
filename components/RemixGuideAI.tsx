@@ -6,7 +6,6 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
 import { generateRemixGuide } from '../services/geminiService';
-import { uploadAudio } from '../services/audioService';
 
 interface RemixGuideData {
   guide: string;
@@ -84,13 +83,8 @@ export const RemixGuideAI: React.FC = () => {
     setError('');
 
     try {
-      // Upload audio file
-      const audioUrl = await uploadAudio(audioFile);
-      
-      // Get genre info
       const genreInfo = getGenreInfo(selectedGenre);
-      
-      // Generate remix guide
+
       const result = await generateRemixGuide(audioFile, selectedGenre, genreInfo);
       setRemixGuide(result);
     } catch (err) {
