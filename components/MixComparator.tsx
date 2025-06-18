@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon } from './icons.tsx';
+import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon, CopyIcon } from './icons.tsx';
 
 interface MixComparatorProps {
   isOpen: boolean;
   onClose: () => void;
-  onAnalyze: (mixA: File | null, mixB: File | null) => void;
+  onAnalyze: (mixA: File | null, mixB: File | null, options?: {
+    requestMixAAnalysis?: boolean;
+    requestMixBAnalysis?: boolean;
+  }) => void;
 }
 
 export default function MixComparator({ isOpen, onClose, onAnalyze }: MixComparatorProps) {
@@ -12,6 +15,9 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   const [mixB, setMixB] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
+  const [copyStatus, setCopyStatus] = useState<string>('');
+  const [requestMixAAnalysis, setRequestMixAAnalysis] = useState(false);
+  const [requestMixBAnalysis, setRequestMixBAnalysis] = useState(false);
 
   if (!isOpen) return null;
 
@@ -25,7 +31,10 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
     
     setIsAnalyzing(true);
     try {
-      await onAnalyze(mixA, mixB);
+      await onAnalyze(mixA, mixB, {
+        requestMixAAnalysis,
+        requestMixBAnalysis
+      });
       // Demo analysis result
       setAnalysis(`
 ## Mix Comparison Analysis
@@ -63,6 +72,61 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
     setMixA(null);
     setMixB(null);
     setAnalysis('');
+    setCopyStatus('');
+    setRequestMixAAnalysis(false);
+    setRequestMixBAnalysis(false);
+  };
+
+  const handleCopyAnalysis = async () => {
+    if (!analysis) return;
+    
+    try {
+      // Create styled HTML content with no background color
+      const styledHtml = `
+        <div style="color: #d1d5db; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6;">
+          ${analysis.split('\n').map(line => {
+            if (line.startsWith('## ')) {
+              return `<h2 style="color: #f3f4f6; font-size: 1.25rem; font-weight: bold; margin: 1rem 0 0.5rem 0;">${line.replace('## ', '')}</h2>`;
+            } else if (line.startsWith('### ')) {
+              return `<h3 style="color: #e5e7eb; font-size: 1.1rem; font-weight: bold; margin: 0.75rem 0 0.25rem 0;">${line.replace('### ', '')}</h3>`;
+            } else if (line.startsWith('- **')) {
+              const match = line.match(/- \*\*(.*?)\*\*:\s*(.*)/);
+              if (match) {
+                return `<p style="margin: 0.25rem 0;"><strong style="color: #f9fafb;">${match[1]}:</strong> ${match[2]}</p>`;
+              }
+            } else if (line.startsWith('- ')) {
+              return `<p style="margin: 0.25rem 0; padding-left: 1rem;">• ${line.replace('- ', '')}</p>`;
+            } else if (line.match(/^\d+\./)) {
+              return `<p style="margin: 0.25rem 0; padding-left: 1rem;">${line}</p>`;
+            } else if (line.trim()) {
+              return `<p style="margin: 0.5rem 0;">${line}</p>`;
+            }
+            return '<br>';
+          }).join('')}
+        </div>
+      `;
+
+      if (navigator.clipboard && navigator.clipboard.write) {
+        const htmlBlob = new Blob([styledHtml], { type: 'text/html' });
+        const textBlob = new Blob([analysis], { type: 'text/plain' });
+        
+        // @ts-ignore
+        const clipboardItem = new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': textBlob,
+        });
+        await navigator.clipboard.write([clipboardItem]);
+        setCopyStatus("Analysis Copied (Rich Format)!");
+      } else {
+        await navigator.clipboard.writeText(analysis);
+        setCopyStatus("Analysis Copied (Plain Text)!");
+      }
+    } catch (err) {
+      console.error("Failed to copy analysis:", err);
+      setCopyStatus("Failed to copy. Please try manually.");
+    } finally {
+      setTimeout(() => setCopyStatus(''), 3000);
+    }
   };
 
   return (
@@ -105,6 +169,19 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
                 />
               </label>
             )}
+            {mixA && (
+              <div className="mt-4 pt-4 border-t border-gray-600">
+                <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requestMixAAnalysis}
+                    onChange={(e) => setRequestMixAAnalysis(e.target.checked)}
+                    className="rounded border-gray-500 text-blue-600 focus:ring-blue-500"
+                  />
+                  Request full mix analysis for Mix A
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Mix B Upload */}
@@ -134,6 +211,19 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
                 />
               </label>
             )}
+            {mixB && (
+              <div className="mt-4 pt-4 border-t border-gray-600">
+                <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requestMixBAnalysis}
+                    onChange={(e) => setRequestMixBAnalysis(e.target.checked)}
+                    className="rounded border-gray-500 text-blue-600 focus:ring-blue-500"
+                  />
+                  Request full mix analysis for Mix B
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
@@ -156,7 +246,23 @@ Apply Mix B's frequency balance with Mix A's creative elements for optimal resul
 
         {analysis && (
           <div className="bg-gray-900 rounded-lg p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Analysis Results</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Analysis Results</h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCopyAnalysis}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <CopyIcon className="w-4 h-4" />
+                  Copy Analysis
+                </button>
+                {copyStatus && (
+                  <span className={`text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>
+                    {copyStatus}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="text-gray-300 whitespace-pre-line">{analysis}</div>
           </div>
         )}
