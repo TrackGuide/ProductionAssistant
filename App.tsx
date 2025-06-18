@@ -23,7 +23,6 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { PatchGuide } from './components/PatchGuide.tsx';
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
@@ -1140,19 +1139,7 @@ const App: React.FC = () => {
     Mix Feedback AI
   </Button>
 
-  <Button
-    size="sm"
-    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
-      activeView === 'patchGuide'
-        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
-        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
-    }`}
-    onClick={() => setActiveView('patchGuide')}
-    variant={activeView === 'patchGuide' ? 'primary' : 'secondary'}
-    leftIcon={<span className="w-4 h-4 text-center">🎛️</span>}
-  >
-    PatchGuide AI
-  </Button>
+
 
   <Button
     size="sm"
@@ -1738,11 +1725,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {activeView === 'patchGuide' && (
-        <div className="max-w-7xl mx-auto">
-          <PatchGuide />
-        </div>
-      )}
+
 
       {activeView === 'eqGuide' && (
         <div className="max-w-7xl mx-auto">

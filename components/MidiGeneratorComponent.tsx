@@ -94,7 +94,9 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         songSection: sections?.[0] || MIDI_DEFAULT_SETTINGS.songSection,
         guidebookContext: `Remix mode for ${targetKey || 'C minor'} at ${targetTempo || 128} BPM`,
         targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'],
-        bars: 8
+        bars: 8,
+        chordProgression: 'i-VI-III-VII', // Better default for remixes
+        timeSignature: [4, 4] as [number, number] // Standard for most remixes
       };
     }
 
@@ -275,14 +277,26 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
     await initializeAudio(); 
     
-    const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+    let settingsForGeneration;
     
-    const settingsForGeneration = {
+    if (isRemixMode) {
+      // For remix mode, use remix-specific context
+      settingsForGeneration = {
+        ...settings,
+        guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+        genre: settings.genre
+      };
+    } else {
+      // For TrackGuide mode, use guidebook context
+      const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+      const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+      
+      settingsForGeneration = {
         ...settings, 
         guidebookContext: richContextForRegeneration, 
         genre: primaryGenre 
-    };
+      };
+    }
 
     let accumulatedMidiJson = "";
     try {
@@ -401,17 +415,30 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
     await initializeAudio();
 
-    const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+    let preservedSettings;
+    
+    if (isRemixMode) {
+      // For remix mode, use remix-specific context
+      preservedSettings = {
+        ...settings,
+        guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+        genre: settings.genre,
+        // Keep only the specific track type for regeneration
+        targetInstruments: [trackType]
+      };
+    } else {
+      // For TrackGuide mode, use guidebook context
+      const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+      const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
-    // Preserve original settings for single track regeneration
-    const preservedSettings = {
+      preservedSettings = {
         ...settings,
         guidebookContext: richContextForRegeneration,
         genre: primaryGenre,
         // Keep only the specific track type for regeneration
         targetInstruments: [trackType]
-    };
+      };
+    }
 
     let accumulatedMidiJson = "";
     try {
@@ -578,7 +605,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
             <div>
               <label htmlFor="midi-key" className="block text-sm font-medium text-gray-300 mb-1">
-                Key <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
+                Key {isRemixMode ? 
+                  <span className="text-xs text-gray-400">(Remix Target: {targetKey || "N/A"})</span> : 
+                  <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
+                }
               </label>
               <select 
                 id="midi-key" 
@@ -605,7 +635,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
-                Tempo (BPM) <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
+                Tempo (BPM) {isRemixMode ? 
+                  <span className="text-xs text-gray-400">Remix Target: {targetTempo || "N/A"}</span> : 
+                  <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
+                }
               </label>
               <Input 
                 type="number" 
@@ -616,20 +649,25 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
               />
               <p className="text-xs text-gray-400 mt-1">{getTempoRangeText(settings.genre)}</p>
             </div>
-            <div>
-              <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">Time Signature</label>
-              <select 
-                id="midi-timesig" 
-                value={settings.timeSignature.join('/')} 
-                onChange={(e) => handleSettingChange('timeSignature', e.target.value.split('/').map(Number) as [number,number])} 
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
-              >
-                {MIDI_TIME_SIGNATURES.map(ts => <option key={ts.join('/')} value={ts.join('/')}>{ts.join('/')}</option>)}
-              </select>
-            </div>
+            {!isRemixMode && (
+              <div>
+                <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">Time Signature</label>
+                <select 
+                  id="midi-timesig" 
+                  value={settings.timeSignature.join('/')} 
+                  onChange={(e) => handleSettingChange('timeSignature', e.target.value.split('/').map(Number) as [number,number])} 
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                >
+                  {MIDI_TIME_SIGNATURES.map(ts => <option key={ts.join('/')} value={ts.join('/')}>{ts.join('/')}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label htmlFor="midi-chords" className="block text-sm font-medium text-gray-300 mb-1">
-                Chord Progression <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookChordProg || "N/A"})</span>
+                Chord Progression {isRemixMode ? 
+                  <span className="text-xs text-gray-400">(Based on original + remix style)</span> : 
+                  <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookChordProg || "N/A"})</span>
+                }
               </label>
               <select 
                 id="midi-chords" 
@@ -640,20 +678,22 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 {getChordProgressionsForGenre(settings.genre).map(cp => <option key={cp} value={cp}>{cp}</option>)}
               </select>
             </div>
-            <div>
-              <label htmlFor="midi-genre" className="block text-sm font-medium text-gray-300 mb-1">MIDI Genre Context</label>
-              <select 
-                id="midi-genre" 
-                value={settings.genre} 
-                onChange={(e) => handleSettingChange('genre', e.target.value)} 
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
-              >
-                <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
-                    Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || "Default"})
-                </option>
-                {GENRE_SUGGESTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
+            {!isRemixMode && (
+              <div>
+                <label htmlFor="midi-genre" className="block text-sm font-medium text-gray-300 mb-1">MIDI Genre Context</label>
+                <select 
+                  id="midi-genre" 
+                  value={settings.genre} 
+                  onChange={(e) => handleSettingChange('genre', e.target.value)} 
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                >
+                  <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
+                      Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || "Default"})
+                  </option>
+                  {GENRE_SUGGESTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label htmlFor="midi-bars" className="block text-sm font-medium text-gray-300 mb-1">Loop Length (Bars)</label>
               <select 
