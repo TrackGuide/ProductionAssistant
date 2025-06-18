@@ -289,6 +289,43 @@ Return **only** the JSON object with these keys: \\`guide\\`, \\`targetTempo\\`,
 };
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
+// services/geminiService.ts
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GEMINI_MODEL_NAME } from "../constants";
+
+const apiKey = process.env.API_KEY!;
+const ai = new GoogleGenAI({ apiKey });
+
+/** Build the text prompt for Gemini */
+export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
+  const tempoRange = genreInfo
+    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
+    : "120-130 BPM";
+  const sections = genreInfo
+    ? genreInfo.sections.join(", ")
+    : "Intro, Build-Up, Drop, Breakdown, Outro";
+
+  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+
+Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+
+Now, generate a Remix Guide that includes:
+1. Suggested overall remix approach
+2. Arrangement ideas
+3. Sound design tips
+4. Suggested structure (sections: ${sections})
+5. Target tempo & key for the remix (typical range: ${tempoRange})
+
+Then, generate MIDI patterns for each section:
+- Bassline
+- Drums
+- Melody / Harmony
+- Pads or textures
+
+Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+};
+
+/** Send audio + prompt to Gemini and parse out the JSON guide */
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
@@ -301,9 +338,7 @@ export const generateRemixGuide = async (
   midiPatterns: Record<string, Record<string, string>>;
 }> => {
   if (!apiKey) {
-    throw new Error(
-      "API Key not configured. Cannot connect to Gemini API for remix guide."
-    );
+    throw new Error("API Key not configured. Cannot connect to Gemini API for remix guide.");
   }
 
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
@@ -323,40 +358,41 @@ export const generateRemixGuide = async (
       contents: [textPart, audioPart],
     });
 
-    // Extract returned text
-    let raw: string;
-    if (typeof (response as any).text === 'function') {
-      raw = await (response as any).text();
-    } else if (typeof response.text === 'string') {
-      raw = response.text;
+    // Extract the generated string
+    let text: string;
+    if (typeof (response as any).text === "function") {
+      text = await (response as any).text();
+    } else if (typeof response.text === "string") {
+      text = response.text;
     } else if (Array.isArray((response as any).candidates)) {
-      raw = (response as any).candidates[0]?.content || '';
+      text = (response as any).candidates[0]?.content || "";
     } else {
-      console.error('[geminiService] Unexpected response shape:', response);
-      raw = '';
+      console.error("[geminiService] Unexpected response shape:", response);
+      text = "";
     }
 
-    console.log('[geminiService] Raw remix response:', raw);
+    console.log("[geminiService] Raw remix response:", text);
 
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    // Pull out the JSON blob
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
 
-    // Fallback
+    // Fallback if no valid JSON
     return {
-      guide: raw,
+      guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
-      targetKey: 'C minor',
-      sections: genreInfo?.sections || ['Intro','Build-Up','Drop','Breakdown','Outro'],
+      targetKey: "C minor",
+      sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
       midiPatterns: {},
     };
   } catch (err: any) {
-    console.error('[geminiService] Error in generateRemixGuide:', err);
+    console.error("[geminiService] Error in generateRemixGuide:", err);
     throw new Error(
-      err.message.includes('quota')
-        ? 'API quota exceeded.'
-        : err.message || 'Failed to generate remix guide.'
+      err.message.includes("quota")
+        ? "API quota exceeded."
+        : err.message || "Failed to generate remix guide."
     );
   }
 };
