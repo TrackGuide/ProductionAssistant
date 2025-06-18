@@ -721,20 +721,6 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
     return Promise.reject(new Error(specificMessage));
   }
 };
-// Helper for file conversion
-const fileToGenerativePart = async (file: File): Promise<{ inlineData: { mimeType: string; data: string } }> => {
-  const base64EncodedDataPromise = new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: {
-      mimeType: file.type,
-      data: await base64EncodedDataPromise,
-    },
-  };
-};
 
 // Remix Guide Prompt (no more URL)
 const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
