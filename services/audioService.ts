@@ -302,15 +302,16 @@ export const initializeAudio = async () => {
     }
 };
 
-// Upload audio file and return base64 data URL
-export const uploadAudio = async (file: File): Promise<string> => {
+export const uploadAudio = async (file: File): Promise<{ base64: string; mimeType: string }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result && typeof reader.result === 'string') {
-        // Extract base64 data from data URL
-        const base64Data = reader.result.split(',')[1];
-        resolve(base64Data);
+        const parts = reader.result.split(',');
+        const base64Data = parts[1];
+        const mimeTypeMatch = parts[0].match(/data:(.*);base64/);
+        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : file.type || 'audio/mpeg';
+        resolve({ base64: base64Data, mimeType });
       } else {
         reject(new Error('Failed to read file'));
       }
