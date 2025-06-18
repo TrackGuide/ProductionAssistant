@@ -18,7 +18,8 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [copyStatus, setCopyStatus] = useState<string>('');
-  // Removed individual analysis options - now focuses on Mix B by default
+  const [requestMixAAnalysis, setRequestMixAAnalysis] = useState(false);
+  const [requestMixBAnalysis, setRequestMixBAnalysis] = useState(false);
 
   if (!isOpen) return null;
 
@@ -28,21 +29,22 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   };
 
   const handleAnalyze = async () => {
-    if (!mixB) return;
+    if (!mixA) return;
     
     setIsAnalyzing(true);
     try {
       // Convert files to base64 for the AI service
-      const mixABase64 = mixA ? await fileToBase64(mixA) : undefined;
-      const mixBBase64 = await fileToBase64(mixB);
+      const mixABase64 = await fileToBase64(mixA);
+      const mixBBase64 = mixB ? await fileToBase64(mixB) : undefined;
       
-      // Call the AI service - now focuses on Mix B analysis
+      // Call the AI service
       const analysisContent = await generateMixComparison({
         mixAFile: mixABase64,
         mixBFile: mixBBase64,
-        mixAName: mixA?.name,
-        mixBName: mixB.name,
-        includeMixBFeedback: true // Always include focused Mix B feedback
+        mixAName: mixA.name,
+        mixBName: mixB?.name,
+        requestMixAAnalysis,
+        requestMixBAnalysis
       });
 
       setAnalysis(analysisContent);
@@ -73,6 +75,8 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
     setMixB(null);
     setAnalysis('');
     setCopyStatus('');
+    setRequestMixAAnalysis(false);
+    setRequestMixBAnalysis(false);
   };
 
   const handleCopyAnalysis = async () => {
@@ -147,7 +151,7 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             ⚖️ Mix Comparison
           </h2>
@@ -155,18 +159,11 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
             <CloseIcon className="w-6 h-6" />
           </button>
         </div>
-        
-        <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-          <p className="text-blue-200 text-sm">
-            <strong>Mix B Focus:</strong> Upload your current working track as Mix B to get focused feedback and recommendations. 
-            Mix A can serve as reference context for comparison.
-          </p>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Mix A Upload */}
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold text-white mb-4">Mix A (Optional Reference)</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Mix A (Original)</h3>
             {mixA ? (
               <div className="text-green-400">
                 <PlayIcon className="w-6 h-6 mx-auto mb-2" />
@@ -191,12 +188,24 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
                 />
               </label>
             )}
-
+            {mixA && (
+              <div className="mt-4 pt-4 border-t border-gray-600">
+                <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requestMixAAnalysis}
+                    onChange={(e) => setRequestMixAAnalysis(e.target.checked)}
+                    className="rounded border-gray-500 text-blue-600 focus:ring-blue-500"
+                  />
+                  Request full mix analysis for Mix A
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Mix B Upload */}
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold text-white mb-4">Mix B (Current Working Track)</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Mix B (Revised)</h3>
             {mixB ? (
               <div className="text-green-400">
                 <PlayIcon className="w-6 h-6 mx-auto mb-2" />
@@ -221,17 +230,29 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
                 />
               </label>
             )}
-
+            {mixB && (
+              <div className="mt-4 pt-4 border-t border-gray-600">
+                <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={requestMixBAnalysis}
+                    onChange={(e) => setRequestMixBAnalysis(e.target.checked)}
+                    className="rounded border-gray-500 text-blue-600 focus:ring-blue-500"
+                  />
+                  Request full mix analysis for Mix B
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex gap-4 mb-6">
           <button
             onClick={handleAnalyze}
-            disabled={!mixB || isAnalyzing}
+            disabled={!mixA || !mixB || isAnalyzing}
             className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
-            {isAnalyzing ? 'Analyzing...' : (mixA ? 'Analyze Mix B vs Reference' : 'Analyze Mix B')}
+            {isAnalyzing ? 'Comparing...' : 'Compare Mixes'}
           </button>
           <button
             onClick={reset}
