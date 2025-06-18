@@ -733,7 +733,8 @@ Then, generate MIDI patterns for each section of the suggested remix structure:
 - Melody / Harmony
 - Pads or textures (if suitable)
 
-IMPORTANT: Return your response as a JSON object with this exact structure:
+You must return ONLY a valid JSON object, with NO additional text, Markdown, or explanation.  
+The response must be exactly this JSON structure and nothing else:
 {
   "guide": "# ${targetGenre} Remix Guide\\n\\n## Analysis of Original Track\\n\\n[Your analysis here]\\n\\n## Remix Approach\\n\\n[Your approach here]\\n\\n## Arrangement Ideas\\n\\n[Your arrangement ideas]\\n\\n## Sound Design Tips\\n\\n[Your sound design tips]\\n\\n## Suggested Structure\\n\\n[Your structure suggestions]",
   "targetTempo": 128,
