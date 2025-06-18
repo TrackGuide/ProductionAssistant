@@ -201,15 +201,22 @@ const generateMidiPrompt = (settings: MidiSettings): string => {
 Chords: ${chordProgression} | Section: ${songSection || "General"}
 ${guidebookContext ? `Style: ${guidebookContext.substring(0, 200)}` : ''}
 
-JSON format with keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
+Return ONLY a valid JSON object with these exact keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
+
+Example structure:
+{
+  "chords": [{"time": 0, "name": "Cmaj7", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 80}],
+  "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 90}],
+  "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 75}],
+  "drums": {"kick": [{"time": 0, "velocity": 100}], "snare": [{"time": 1, "velocity": 95}], "hihat_closed": [{"time": 0.5, "velocity": 70}]}
+}
 
 Requirements:
-- "chords": [{"time": 0, "name": "Cmaj7", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 70-95}]
-- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 75-110}] (MIDI 12-59)
-- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 60-100}]
-- "drums": Include kick, snare, hihat_closed, hihat_open + 1 more (ride/crash/clap)
-
-Generate ${genre}-appropriate patterns with velocity variation (40-127) and rhythmic interest.`;
+- Use time values from 0 to ${bars * 4} (quarter note beats)
+- MIDI values: bass (12-59), melody/chords (60-127)
+- Velocity range: 40-127
+- Generate ${genre}-appropriate rhythmic patterns
+- NO extra text, comments, or markdown - ONLY the JSON object`;
 };
 
 export const generateMidiPatternSuggestions = async (settings: MidiSettings): Promise<AsyncIterable<GenerateContentResponse>> => {

@@ -11,14 +11,6 @@ import { MidiSettings, GeneratedMidiPatterns } from '../types';
 
 interface RemixGuideData {
   guide: string;
-  midiPatterns: {
-    [section: string]: {
-      bassline?: string;
-      drums?: string;
-      melody?: string;
-      pads?: string;
-    };
-  };
   targetTempo: number;
   targetKey: string;
   sections: string[];
@@ -134,7 +126,7 @@ export const RemixGuideAI: React.FC = () => {
         chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
         genre: 'Electronic', // Default for remix mode, not genre-specific
         bars: 8,
-        targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'], // Capitalized for consistency
+        targetInstruments: ['bassline', 'drums', 'melody', 'pads'], // Lowercase for MIDI system
         guidebookContext: `RemixGuide AI patterns for ${result.targetKey} at ${result.targetTempo} BPM`,
         songSection: result.sections[0] || 'Intro'
       };
@@ -335,7 +327,7 @@ export const RemixGuideAI: React.FC = () => {
             </h3>
             <MidiGeneratorComponent
               key={`remix-${selectedGenre}-${Date.now()}`}
-              initialPatterns={remixGuide.generatedMidiPatterns || remixGuide.midiPatterns}
+              initialPatterns={remixGuide.generatedMidiPatterns}
               sections={remixGuide.sections}
               targetTempo={remixGuide.targetTempo}
               targetKey={remixGuide.targetKey}
