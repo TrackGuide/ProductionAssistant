@@ -725,37 +725,6 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 
-// ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
-/** Build the text‐only prompt for the remix */
-export function generateRemixPrompt(targetGenre: string, genreInfo: any): string {
-  const tempoRange = genreInfo
-    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
-    : "120-130 BPM";
-  const sections = genreInfo
-    ? genreInfo.sections.join(", ")
-    : "Intro, Build-Up, Drop, Breakdown, Outro";
-
-  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
-
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
-
-Now, generate a Remix Guide that includes:
-1. Suggested overall remix approach
-2. Arrangement ideas
-3. Sound design tips
-4. Suggested structure (sections: ${sections})
-5. Target tempo & key for the remix (typical range: ${tempoRange})
-
-Then, generate MIDI patterns for each section:
-- Bassline
-- Drums
-- Melody / Harmony
-- Pads or textures
-
-Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
-}
-
-/** Send audio + prompt to Gemini and parse out the JSON guide */
 export async function generateRemixGuide(
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
@@ -769,47 +738,77 @@ export async function generateRemixGuide(
 }> {
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
   const audioPart = {
-    inlineData: {
-      data: audioData.base64,
-      mimeType: audioData.mimeType,
-    },
+    inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
   };
 
   console.log("[geminiService] Remix Prompt:", textPart.text);
   console.log("[geminiService] Audio size (chars):", audioData.base64.length);
 
   const response = await ai.models.generateContent({
-    model:     GEMINI_MODEL_NAME,
+    model: GEMINI_MODEL_NAME,
     contents: [textPart, audioPart],
   });
 
-  // — Extract the returned string —
+  // 1) Log the raw response shape for debugging
+  console.log(
+    "[geminiService] Full raw response:",
+    JSON.stringify(response, null, 2)
+  );
+
+  // 2) Pull out the text from whatever shape it comes in
   let text: string;
-  if (response.response && typeof response.response.text === "function") {
+  if (response.choices?.[0]?.message?.content) {
+    text = response.choices[0].message.content;
+  } else if (response.candidates?.[0]?.content) {
+    text = response.candidates[0].content;
+  } else if (typeof (response as any).text === "string") {
+    text = (response as any).text;
+  } else if (
+    response.response &&
+    typeof response.response.text === "function"
+  ) {
     text = await response.response.text();
-  } else if (typeof response.text === "string") {
-    text = response.text;
-  } else if (Array.isArray((response as any).candidates)) {
-    text = (response as any).candidates[0]?.content || "";
   } else {
-    console.error("[geminiService] Unexpected response shape:", response);
-    throw new Error("Unexpected response format from Gemini API");
+    throw new Error(
+      "[geminiService] Unexpected response format – see raw above"
+    );
   }
 
   console.log("[geminiService] Raw remix response:", text);
 
-  // — Pull out the JSON blob —
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
+  // 3) Strip out any ```json fences or stray backticks
+  text = text.replace(/```(?:json)?\s*/g, "").replace(/```$/, "").trim();
+
+  // 4) Non-greedy match for the JSON object
+  const jsonMatch = text.match(/({[\s\S]*?})/);
+  if (!jsonMatch) {
+    console.error("[geminiService] No JSON found in response:", text);
+    // fallback you already had
+    return {
+      guide: text,
+      targetTempo: genreInfo?.tempoRange?.[0] || 128,
+      targetKey: "C minor",
+      sections: genreInfo?.sections || [
+        "Intro",
+        "Build-Up",
+        "Drop",
+        "Breakdown",
+        "Outro",
+      ],
+      midiPatterns: {},
+    };
   }
 
-  // — Fallback if AI didn’t return valid JSON —
-  return {
-    guide:       text,
-    targetTempo: genreInfo?.tempoRange?.[0] || 128,
-    targetKey:   "C minor",
-    sections:    genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-    midiPatterns: {},
-  };
+  // 5) Safely parse
+  try {
+    return JSON.parse(jsonMatch[1]);
+  } catch (err) {
+    console.error(
+      "[geminiService] JSON.parse failed:",
+      err,
+      "\nExtracted JSON was:\n",
+      jsonMatch[1]
+    );
+    throw new Error("Invalid JSON in Gemini response");
+  }
 }
