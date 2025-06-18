@@ -6,6 +6,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
 import { generateRemixGuide } from '../services/geminiService';
+import { uploadAudio } from '../services/audioService';
 
 interface RemixGuideData {
   guide: string;
@@ -39,7 +40,7 @@ export const RemixGuideAI: React.FC = () => {
     if (file) {
       const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
       if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.wav') || file.name.toLowerCase().endsWith('.mp3')) {
-        if (file.size <= 100 * 1024 * 1024) { // 100MB limit
+        if (file.size <= 100 * 1024 * 1024) {
           setAudioFile(file);
           setError('');
         } else {
@@ -83,9 +84,14 @@ export const RemixGuideAI: React.FC = () => {
     setError('');
 
     try {
+      // Convert audio file to base64 string first
+      const audioBase64 = await uploadAudio(audioFile);
+
       const genreInfo = getGenreInfo(selectedGenre);
 
-      const result = await generateRemixGuide(audioFile, selectedGenre, genreInfo);
+      // Now generate remix guide using the base64 string
+      const result = await generateRemixGuide(audioBase64, selectedGenre, genreInfo);
+
       setRemixGuide(result);
     } catch (err) {
       console.error('Error generating remix guide:', err);
@@ -97,7 +103,7 @@ export const RemixGuideAI: React.FC = () => {
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    setSelectedGenre(''); // Reset genre when category changes
+    setSelectedGenre('');
   };
 
   const resetForm = () => {
@@ -113,9 +119,7 @@ export const RemixGuideAI: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Audio Upload */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Upload Original Track</h3>
           <div
@@ -144,11 +148,9 @@ export const RemixGuideAI: React.FC = () => {
           </div>
         </Card>
 
-        {/* Genre Selection */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Target Remix Genre</h3>
           <div className="space-y-4">
-            {/* Category Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 1. Select Category
@@ -167,7 +169,6 @@ export const RemixGuideAI: React.FC = () => {
               </select>
             </div>
 
-            {/* Genre Selection */}
             {selectedCategory && (
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -187,7 +188,7 @@ export const RemixGuideAI: React.FC = () => {
                 </select>
               </div>
             )}
-            
+
             {selectedGenre && (
               <div className="text-sm text-gray-400 bg-gray-800 p-3 rounded-lg">
                 {(() => {
@@ -200,14 +201,12 @@ export const RemixGuideAI: React.FC = () => {
         </Card>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
           {error}
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex gap-4">
         <Button
           onClick={generateRemix}
@@ -228,10 +227,8 @@ export const RemixGuideAI: React.FC = () => {
         </Button>
       </div>
 
-      {/* Results Section */}
       {remixGuide && (
         <div className="space-y-6">
-          {/* Remix Guide */}
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-white">
@@ -246,7 +243,6 @@ export const RemixGuideAI: React.FC = () => {
             </div>
           </Card>
 
-          {/* MIDI Patterns */}
           <Card className="p-6">
             <h3 className="text-xl font-bold text-white mb-6">🎹 MIDI Remix Patterns</h3>
             <MidiGeneratorComponent
@@ -261,7 +257,6 @@ export const RemixGuideAI: React.FC = () => {
         </div>
       )}
 
-      {/* Info Section */}
       {!remixGuide && (
         <Card className="p-6 bg-gray-800/30">
           <div className="text-center space-y-4">
