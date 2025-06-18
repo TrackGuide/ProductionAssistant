@@ -721,8 +721,60 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
     return Promise.reject(new Error(specificMessage));
   }
 };
+// Helper for file conversion
+const fileToGenerativePart = async (file: File): Promise<{ inlineData: { mimeType: string; data: string } }> => {
+  const base64EncodedDataPromise = new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+  return {
+    inlineData: {
+      mimeType: file.type,
+      data: await base64EncodedDataPromise,
+    },
+  };
+};
 
+// Remix Guide Prompt (no more URL)
+const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
+  const tempoRange = genreInfo ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : '120-130 BPM';
+  const sections = genreInfo ? genreInfo.sections.join(', ') : 'Intro, Build-Up, Drop, Breakdown, Outro';
 
+  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+
+Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+
+Now, generate a Remix Guide that includes:
+
+1. Suggested overall remix approach
+2. Arrangement ideas
+3. Sound design tips
+4. Suggested structure (sections: ${sections})
+5. Target tempo & key for the remix (typical range: ${tempoRange})
+
+Then, generate MIDI patterns for each section:
+- Bassline
+- Drums
+- Melody / Harmony
+- Pads or textures
+
+Return as JSON:
+{
+  "guide": "...",
+  "targetTempo": ...,
+  "targetKey": "...",
+  "sections": [...],
+  "midiPatterns": {
+    "Intro": { "bassline": "...", "drums": "...", ... },
+    ...
+  }
+}
+
+Only return the JSON object.`;
+};
+
+// FINAL generateRemixGuide
 export const generateRemixGuide = async (audioFile: File, targetGenre: string, genreInfo: any): Promise<any> => {
   if (!apiKey) {
     const errorMessage = "API Key not configured. Cannot connect to Gemini API for remix guide generation.";
@@ -731,84 +783,12 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
   }
 
   try {
-    // First: convert audioFile to inlineData (base64)
-    const fileToGenerativePart = async (file: File): Promise<{ inlineData: { mimeType: string; data: string } }> => {
-      const base64EncodedDataPromise = new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (reader.result) {
-            resolve((reader.result as string).split(',')[1]);
-          } else {
-            reject(new Error("Failed to read audio file."));
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-
-      return {
-        inlineData: {
-          mimeType: file.type,
-          data: await base64EncodedDataPromise,
-        },
-      };
-    };
-
     const audioPart = await fileToGenerativePart(audioFile);
+    const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
 
-    // Build the remix prompt
-    const tempoRange = genreInfo ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : '120-130 BPM';
-    const sections = genreInfo ? genreInfo.sections.join(', ') : 'Intro, Build-Up, Drop, Breakdown, Outro';
-
-    const prompt = `
-You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
-
-Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
-
-Now, generate a Remix Guide that includes:
-
-1. Suggested overall remix approach (how to transform this track into a ${targetGenre} remix).
-2. Arrangement ideas — which elements to emphasize, which to strip, which to modify.
-3. Sound design tips — drums, bass, synths, vocals.
-4. Suggested structure (using sections like: ${sections}).
-5. Target tempo & key for the remix (auto-adjust as needed, typical range: ${tempoRange}).
-
-Then, generate MIDI patterns for each section of the suggested remix structure:
-- Bassline
-- Drum pattern  
-- Melody / Harmony
-- Pads or textures (if suitable)
-
-IMPORTANT: Return your response as a JSON object with this exact structure:
-{
-  "guide": "# ${targetGenre} Remix Guide\\n\\n## Analysis of Original Track\\n\\n[Your analysis here]\\n\\n## Remix Approach\\n\\n[Your approach here]\\n\\n## Arrangement Ideas\\n\\n[Your arrangement ideas]\\n\\n## Sound Design Tips\\n\\n[Your sound design tips]\\n\\n## Suggested Structure\\n\\n[Your structure suggestions]",
-  "targetTempo": 128,
-  "targetKey": "C minor",
-  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-  "midiPatterns": {
-    "Intro": {
-      "bassline": "C2:q C2:q G1:q G1:q",
-      "drums": "C1:q r:q C1:q r:q",
-      "melody": "C4:h G4:h",
-      "pads": "C3:w"
-    },
-    "Build-Up": {
-      "bassline": "C2:e C2:e G1:e G1:e C2:e C2:e G1:e G1:e",
-      "drums": "C1:e r:e C1:e r:e C1:e r:e C1:e r:e",
-      "melody": "C4:q G4:q E4:q G4:q",
-      "pads": "C3:h G3:h"
-    }
-  }
-}
-
-Make sure the guide is comprehensive and the MIDI patterns are appropriate for ${targetGenre}. Use proper note notation (e.g., "C4:q" for quarter note C4, "r:q" for quarter rest).`;
-
-    // Send to Gemini
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
-      contents: [
-        audioPart,
-        { text: prompt },
-      ],
+      contents: [textPart, audioPart],
     });
 
     if (response.response && response.response.text) {
@@ -826,17 +806,17 @@ Make sure the guide is comprehensive and the MIDI patterns are appropriate for $
             targetTempo: genreInfo?.tempoRange?.[0] || 128,
             targetKey: "C minor",
             sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-            midiPatterns: {},
+            midiPatterns: {}
           };
         }
       } catch (parseError) {
-        console.error("Error parsing remix guide JSON:", parseError);
+        console.error("Error parsing JSON response:", parseError);
         return {
           guide: text,
           targetTempo: genreInfo?.tempoRange?.[0] || 128,
           targetKey: "C minor",
           sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-          midiPatterns: {},
+          midiPatterns: {}
         };
       }
     } else {
@@ -846,19 +826,17 @@ Make sure the guide is comprehensive and the MIDI patterns are appropriate for $
   } catch (error: any) {
     console.error("Error generating remix guide:", error);
     let specificMessage = "An unknown error occurred while generating remix guide.";
-
     if (error.message) {
       if (error.message.includes("API_KEY")) {
         specificMessage = "API Key issue. Please check your Gemini API configuration.";
-      } else if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
-        specificMessage = "The response for remix guide was blocked by the AI. This might be due to content policies or other restrictions.";
-      } else if (error.message.includes("quota") || error.message.includes("limit")) {
+      } else if (error.message.includes("blocked")) {
+        specificMessage = "The response for remix guide was blocked by the AI.";
+      } else if (error.message.includes("quota")) {
         specificMessage = "API quota exceeded. Please try again later.";
       } else {
         specificMessage = `Failed to generate remix guide: ${error.message}`;
       }
     }
-
     return Promise.reject(new Error(specificMessage));
   }
 };
