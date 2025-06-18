@@ -1142,7 +1142,7 @@ const App: React.FC = () => {
     className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
     onClick={() => setShowAIAssistant(true)}
     variant="secondary"
-    leftIcon={<span className="w-4 h-4 text-center">🗪</span>}
+    leftIcon={<span className="w-4 h-4 text-center">💬</span>}
   >
     Production Coach
   </Button>
@@ -1600,7 +1600,7 @@ const App: React.FC = () => {
                         onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
                         className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
                       />
-                      <span className="text-sm text-gray-300">Include Full Mix Feedback</span>
+                      <span className="text-sm text-gray-300">Include Individual Analysis</span>
                     </label>
                   </div>
                 </Card>
