@@ -728,11 +728,18 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
+/** Send audio + prompt to Gemini and parse out the JSON guide */
 export const generateRemixGuide = async (
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
   genreInfo: any
-): Promise<any> => {
+): Promise<{
+  guide: string;
+  targetTempo: number;
+  targetKey: string;
+  sections: string[];
+  midiPatterns: Record<string, Record<string, string>>;
+}> => {
   if (!apiKey) {
     throw new Error(
       "API Key not configured. Cannot connect to Gemini API for remix guide."
@@ -748,23 +755,22 @@ export const generateRemixGuide = async (
   };
 
   console.log("[geminiService] Remix Prompt:", textPart.text);
-  console.log("[geminiService] Audio size:", audioData.base64.length);
+  console.log("[geminiService] Audio size (chars):", audioData.base64.length);
 
   try {
-    // Fire off the request
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [textPart, audioPart],
     });
 
-    // ─── NEW: Properly extract the returned text ─────────────────────────────
+    // ─── Extract the returned text robustly ────────────────────────────
     let text: string;
     if (response.response && typeof response.response.text === "function") {
-      // stream-style: call .text() to get the string
       text = await response.response.text();
     } else if (typeof response.text === "string") {
-      // fallback for older SDK versions
       text = response.text;
+    } else if (Array.isArray((response as any).candidates)) {
+      text = (response as any).candidates[0]?.content || "";
     } else {
       console.error("[geminiService] Unexpected response shape:", response);
       throw new Error("Unexpected response format from Gemini API");
@@ -772,24 +778,18 @@ export const generateRemixGuide = async (
 
     console.log("[geminiService] Raw remix response:", text);
 
-    // parse JSON out of whatever they gave us
+    // ─── Parse out the JSON blob ───────────────────────────────────
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
 
-    // ─── fallback if no JSON found ────────────────────────────────────────
+    // ─── Fallback if no JSON found ────────────────────────────────
     return {
       guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
       targetKey: "C minor",
-      sections: genreInfo?.sections || [
-        "Intro",
-        "Build-Up",
-        "Drop",
-        "Breakdown",
-        "Outro",
-      ],
+      sections: genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
       midiPatterns: {},
     };
   } catch (err: any) {
