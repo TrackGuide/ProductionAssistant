@@ -761,7 +761,7 @@ Only return the JSON object.`;
 };
 
 // FINAL generateRemixGuide
-export const generateRemixGuide = async (audioFile: File, targetGenre: string, genreInfo: any): Promise<any> => {
+export const generateRemixGuide = async (audioData: { base64: string; mimeType: string }, targetGenre: string, genreInfo: any): Promise<any> => {
   if (!apiKey) {
     const errorMessage = "API Key not configured. Cannot connect to Gemini API for remix guide generation.";
     console.error(errorMessage);
@@ -769,7 +769,13 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
   }
 
   try {
-    const audioPart = await fileToGenerativePart(audioFile);
+    const audioPart = {
+      inlineData: {
+        data: audioData.base64,
+        mimeType: audioData.mimeType
+      }
+    };
+
     const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
 
     const response = await ai.models.generateContent({
@@ -826,3 +832,4 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
     return Promise.reject(new Error(specificMessage));
   }
 };
+
