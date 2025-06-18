@@ -58,6 +58,11 @@ The user wants to create a song with the following characteristics:
 - Project Title (User Provided): ${songTitleText || "Not specified"}
 - Genre(s): ${genreText}
 - Artist/Song Reference(s): ${artistRefText}
+- Reference Track Link: ${inputs.referenceTrackLink || "Not provided"}
+- Lyrics: ${inputs.lyrics || "Not provided"}
+- Key: ${inputs.key || "Not specified"}
+- Chords: ${inputs.chords || "Not specified"}
+- General Notes for AI: ${inputs.generalNotes || "None"}
 - Vibe/Mood(s): ${vibeText}
 - Preferred DAW: ${inputs.daw || "Not specified, suggest generally or for Ableton Live/Logic Pro"}
 - Available Plugins: ${pluginsText}
@@ -69,6 +74,11 @@ The user wants to create a song with the following characteristics:
 - **MARKDOWN:** Use Markdown for formatting (e.g., #, ##, ### for headings, bullet points for lists).
 - **CONCISENESS (Sections 1, 2, 5):** Keep these sections brief and to the point.
 - **EMOJIS (Section 3):** Use a relevant emoji before each instrument name heading (e.g., ### 🥁 Drums & Percussion).
+- **NEW FIELD CONSIDERATIONS:**
+  - If Reference Track Link is provided, analyze and reference the style/production techniques from that track
+  - If Lyrics are provided, consider their structure, themes, and emotional content when suggesting arrangement and instrumentation
+  - If Key/Chords are specified, prioritize those in your harmonic suggestions and ensure compatibility
+  - If General Notes are provided, incorporate those specific instructions throughout all sections
 
 **SECTION 3: INSTRUMENT & SOUND DESIGN GUIDE - "QUICK REFERENCE" FORMATTING:**
 For EACH instrument/category in Section 3:
@@ -215,25 +225,43 @@ export const generateGuidebookContent = async (inputs: UserInputs): Promise<Asyn
 
 
 const generateMidiPrompt = (settings: MidiSettings): string => {
-  const { key, tempo, timeSignature, chordProgression, genre, bars, targetInstruments, guidebookContext, songSection } = settings;
+  const { key, scale, tempo, timeSignature, chordProgression, genre, bars, targetInstruments, guidebookContext, songSection } = settings;
   const instrumentsToGenerate = targetInstruments.join(', ');
+  const scaleInfo = scale ? ` (${scale} mode)` : '';
 
-  // Simplified prompt for faster generation
-  return `Generate MIDI patterns in JSON format for ${genre} music.
+  return `Generate MIDI patterns in JSON format for ${genre} music with INCREASED COMPLEXITY and VARIETY.
 
-Context: Key=${key}, Tempo=${tempo}BPM, Time=${timeSignature[0]}/${timeSignature[1]}, Chords=${chordProgression}, Bars=${bars}, Section=${songSection || "General"}
+Context: Key=${key}${scaleInfo}, Tempo=${tempo}BPM, Time=${timeSignature[0]}/${timeSignature[1]}, Chords=${chordProgression}, Bars=${bars}, Section=${songSection || "General"}
 Instruments: ${instrumentsToGenerate}
-${guidebookContext ? `Style: ${guidebookContext.substring(0, 200)}...` : ''}
+${guidebookContext ? `Style: ${guidebookContext.substring(0, 300)}...` : ''}
+
+IMPORTANT REQUIREMENTS:
+1. VELOCITY VARIETY: Use wide velocity ranges (40-127) with musical dynamics
+2. RHYTHMIC COMPLEXITY: Include syncopation, off-beat notes, and varied note lengths
+3. TIMING VARIETY: Use subtle timing variations (0.01-0.05 beat offsets for groove)
+4. DRUM COMPLEXITY: Always include AT LEAST 5 drum elements per pattern
 
 Return JSON with keys: ${targetInstruments.map(inst => `"${inst}"`).join(', ')}
 
-Format:
-- "chords": [{"time": 0, "name": "C", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 80}]
-- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 90}] (MIDI 12-59 only)
-- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 85}]
-- "drums": {"kick": [{"time": 0, "duration": 0.1, "velocity": 100}], "snare": [{"time": 1, "duration": 0.1, "velocity": 90}]}
+Format Requirements:
+- "chords": [{"time": 0, "name": "Cmaj7", "duration": 1, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 65-95}]
+- "bassline": [{"time": 0, "pitch": "C2", "midi": 36, "duration": 0.5, "velocity": 70-110}] (MIDI 12-59 only)
+- "melody": [{"time": 0, "pitch": "C5", "midi": 72, "duration": 0.25, "velocity": 50-100}] (include grace notes, runs)
+- "drums": Must include minimum 5 elements from: kick, snare, hihat_closed, hihat_open, ride, crash, clap, tom_low, tom_mid, tom_high, shaker, tambourine
 
-Make patterns musically appropriate for ${songSection || "general"} section in ${genre} style.`;
+DRUM REQUIREMENTS:
+- Always generate patterns appropriate for ${genre}
+- Include at least: kick, snare, hihat_closed, hihat_open, and one additional element (ride/crash/clap/etc.)
+- Use velocity range 60-127 for drums
+- Create realistic drum patterns with proper spacing and fills
+
+MUSICAL COMPLEXITY:
+- Add passing tones, chord extensions, and scale-appropriate embellishments
+- Use rhythmic displacement and syncopation where appropriate for ${genre}
+- Include dynamic contrast within patterns
+- Make patterns suitable for ${songSection || "general"} section energy level
+
+Generate musically rich, production-ready patterns.`;
 };
 
 export const generateMidiPatternSuggestions = async (settings: MidiSettings): Promise<AsyncIterable<GenerateContentResponse>> => {
