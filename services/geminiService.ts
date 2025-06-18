@@ -761,21 +761,30 @@ Only return the JSON object.`;
 };
 
 // FINAL generateRemixGuide
-export const generateRemixGuide = async (audioData: { base64: string; mimeType: string }, targetGenre: string, genreInfo: any): Promise<any> => {
+// Make sure you also export generateRemixPrompt so we can log it here
+
+export const generateRemixGuide = async (
+  audioData: { base64: string; mimeType: string },
+  targetGenre: string,
+  genreInfo: any
+): Promise<any> => {
   if (!apiKey) {
-    const errorMessage = "API Key not configured. Cannot connect to Gemini API for remix guide generation.";
-    console.error(errorMessage);
-    return Promise.reject(new Error(errorMessage));
+    const msg = "API Key not configured. Cannot connect to Gemini API.";
+    console.error(msg);
+    return Promise.reject(new Error(msg));
   }
 
   try {
+    // Log for debugging:
+    console.log('[geminiService] Remix Prompt:', generateRemixPrompt(targetGenre, genreInfo));
+    console.log('[geminiService] Audio Part:', audioData.mimeType, 'length:', audioData.base64.length);
+
     const audioPart = {
       inlineData: {
         data: audioData.base64,
-        mimeType: audioData.mimeType
-      }
+        mimeType: audioData.mimeType,
+      },
     };
-
     const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
 
     const response = await ai.models.generateContent({
@@ -785,51 +794,28 @@ export const generateRemixGuide = async (audioData: { base64: string; mimeType: 
 
     if (response.response && response.response.text) {
       const text = response.response.text();
-
-      // Try to parse JSON
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const result = JSON.parse(jsonMatch[0]);
-          return result;
-        } else {
-          return {
-            guide: text,
-            targetTempo: genreInfo?.tempoRange?.[0] || 128,
-            targetKey: "C minor",
-            sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-            midiPatterns: {}
-          };
-        }
-      } catch (parseError) {
-        console.error("Error parsing JSON response:", parseError);
-        return {
-          guide: text,
-          targetTempo: genreInfo?.tempoRange?.[0] || 128,
-          targetKey: "C minor",
-          sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-          midiPatterns: {}
-        };
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } catch (parseErr) {
+        console.error('JSON parse error in Remix Guide:', parseErr);
       }
+      // fallback object
+      return {
+        guide: text,
+        targetTempo: genreInfo?.tempoRange?.[0] || 128,
+        targetKey: "C minor",
+        sections: genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
+        midiPatterns: {}
+      };
     } else {
-      console.error("Received non-text response from Gemini API for remix guide. Response:", response);
-      throw new Error("Received an unexpected response format from Gemini API for remix guide.");
+      throw new Error("Unexpected response format from Gemini.");
     }
-  } catch (error: any) {
-    console.error("Error generating remix guide:", error);
-    let specificMessage = "An unknown error occurred while generating remix guide.";
-    if (error.message) {
-      if (error.message.includes("API_KEY")) {
-        specificMessage = "API Key issue. Please check your Gemini API configuration.";
-      } else if (error.message.includes("blocked")) {
-        specificMessage = "The response for remix guide was blocked by the AI.";
-      } else if (error.message.includes("quota")) {
-        specificMessage = "API quota exceeded. Please try again later.";
-      } else {
-        specificMessage = `Failed to generate remix guide: ${error.message}`;
-      }
-    }
-    return Promise.reject(new Error(specificMessage));
+  } catch (err: any) {
+    console.error('[geminiService] Error generating remix guide:', err);
+    const msg = err.message.includes('quota')
+      ? "API quota exceeded."
+      : err.message;
+    return Promise.reject(new Error(msg));
   }
 };
-
