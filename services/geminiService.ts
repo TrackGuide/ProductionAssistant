@@ -55,64 +55,30 @@ const generatePrompt = (inputs: UserInputs): string => {
 
 
   return `
-You are TrackGuideAI, an expert music production assistant. Generate a comprehensive TrackGuide based on the following user inputs.
-The user wants to create a song with the following characteristics:
-- Project Title (User Provided): ${songTitleText || "Not specified"}
-- Genre(s): ${genreText}
-- Artist/Song Reference(s): ${artistRefText}
-- Reference Track Link: ${inputs.referenceTrackLink || "Not provided"}
-- Lyrics: ${inputs.lyrics || "Not provided"}
-- Key: ${inputs.key || "Not specified"}
-- Chords: ${inputs.chords || "Not specified"}
-- General Notes for AI: ${inputs.generalNotes || "None"}
-- Vibe/Mood(s): ${vibeText}
-- Preferred DAW: ${inputs.daw || "Not specified, suggest generally or for Ableton Live/Logic Pro"}
-- Available Plugins: ${pluginsText}
-- Available Instruments: ${instrumentsText}
+You are TrackGuideAI, an expert music production assistant. Create a focused TrackGuide for:
+- Title: ${songTitleText || "Generate creative title"}
+- Genre: ${genreText}
+- Reference: ${artistRefText}
+- Vibe: ${vibeText}
+- DAW: ${inputs.daw || "General"}
+- Plugins: ${pluginsText}
+- Instruments: ${instrumentsText}
+${inputs.key ? `- Key: ${inputs.key}` : ''}
+${inputs.chords ? `- Chords: ${inputs.chords}` : ''}
+${inputs.generalNotes ? `- Notes: ${inputs.generalNotes}` : ''}
 
-**IMPORTANT INSTRUCTIONS FOR AI (OVERALL):**
-- **STYLE:** Follow a "Quick Reference / Cheat Sheet Style" for Section 3 (Instrument & Sound Design) and Section 4 (Harmony, Melody & Rhythmic Core). Be extremely concise and actionable.
-- **TERMINOLOGY:** Use professional music production terminology.
-- **MARKDOWN:** Use Markdown for formatting (e.g., #, ##, ### for headings, bullet points for lists).
-- **CONCISENESS (Sections 1, 2, 5):** Keep these sections brief and to the point.
-- **EMOJIS (Section 3):** Use a relevant emoji before each instrument name heading (e.g., ### 🥁 Drums & Percussion).
-- **NEW FIELD CONSIDERATIONS:**
-  - If Reference Track Link is provided, analyze and reference the style/production techniques from that track
-  - If Lyrics are provided, consider their structure, themes, and emotional content when suggesting arrangement and instrumentation
-  - If Key/Chords are specified, prioritize those in your harmonic suggestions and ensure compatibility
-  - If General Notes are provided, incorporate those specific instructions throughout all sections
+**STYLE GUIDE:**
+- Use concise, actionable language with professional terminology
+- Format with Markdown (headings, bullets)
+- Add emojis to instrument sections (e.g., ### 🥁 Drums)
+- Prioritize user-specified key/chords/notes
+- Reference provided tracks/artists when applicable
 
-**SECTION 3: INSTRUMENT & SOUND DESIGN GUIDE - "QUICK REFERENCE" FORMATTING:**
-For EACH instrument/category in Section 3:
-1.  **Heading:** Start with "### Emoji Instrument Name" (e.g., "### 🥁 Drums & Percussion").
-2.  **Style:** "**Style:** Brief description (e.g., "Hip-hop influenced, punchy transients")."
-3.  **Tips Sub-Heading:** Use ONE of these bolded labels:
-    *   "**Programming Tips:**" (for drums, synths, etc.)
-    *   "**Arrangement Tips:**" (for guitars, orchestral sections, etc.)
-    *   "**Flow Tips:**" (for vocals)
-    *   "**Role:**" (for DJ/Samples)
-    *   "**Purpose:**" (for Synths/Keys if more about function than programming)
-    *   Follow with 2-3 ultra-concise bullet points.
-4.  **Processing Sub-Heading:** Use ONE of these bolded labels:
-    *   "**EQ & Processing Summary:**" (if covering multiple effect types)
-    *   "**Processing:**" (if focusing on 1-2 main effects or amp sims)
-    *   "**Patch Ideas:**" (for Synths/Keys, can include VI suggestions here)
-    *   Follow with 2-4 ultra-concise bullet points. EACH bullet should summarize ONE key processing step or patch idea.
-    *   **Parameter Examples:** Integrate highly condensed parameter examples (e.g., "EQ: Thump at 60–80Hz, carve mud at 300–500Hz, add attack at 3–5kHz.").
-    *   **Plugin/VI Suggestions:** Integrate these directly and concisely within the processing/patch bullets.
-        *   If 'Available Plugins' indicates 'Stock plugins of [DAW NAME]' or is empty, **EXCLUSIVELY recommend stock plugins for the specified DAW.**
-        *   If specific plugins ARE listed by the user, prioritize those.
-        *   Example for plugin: "Saturation: ${getPluginSuggestion('Ableton Saturator', 'saturator plugin', 'Saturation')} (Soft Clip), on snare or full kit."
-        *   Example for VI in Patch Ideas: "Pads: ${getPluginSuggestion('Arturia Prophet V', 'analog-style synth VI', 'Synth')}, long attack/release."
-    *   **NO "Virtual Instrument Suggestions" as a separate sub-heading.** Integrate these into "Patch Ideas" or "Processing" (e.g., for Amp Sims).
-    *   **DO NOT list every possible effect.** Focus on the 2-4 MOST impactful for the instrument in the given context.
-
-**SECTION 4: HARMONY, MELODY & RHYTHMIC CORE - "QUICK REFERENCE" FORMATTING:**
-- Structure with the following main bullet points, each followed by 1-3 concise sub-bullet points:
-    - **Chord Progressions:** (with examples, e.g., "i – bVI – bVII (e.g., Cm – Ab – Bb)")
-    - **Melodic Notes:** (or characteristics/scales, e.g., "Minor Pentatonic or Phrygian")
-    - **Rhythmic Focus:** (key rhythmic interactions, e.g., "Tight sync between kick, bass, and palm-muted guitar")
-- NO "Harmonic Textures" sub-section. Keep this section very lean.
+**FORMATTING:**
+- Section 3: Each instrument gets ### Emoji Name, **Style**, **Tips** (2-3 bullets), **Processing** (2-4 bullets with specific parameters)
+- Section 4: **Chord Progressions**, **Melodic Notes**, **Rhythmic Focus** (keep lean)
+- Use specific plugin suggestions from user's available plugins
+- Focus on most impactful processing, not exhaustive lists
 
 Please structure the TrackGuide with the following sections:
 
@@ -763,61 +729,61 @@ export function generateRemixPrompt(
     ? genreInfo.sections.join(", ")
     : "Intro, Build-Up, Drop, Breakdown, Outro";
 
-  return `You are an expert music producer and remix specialist. The user has uploaded an original track and wants to remix it into ${targetGenre} style.
+  return `You are an expert music producer and remix specialist. Analyze the uploaded track and create a smart ${targetGenre} remix guide.
 
-CRITICAL ANALYSIS REQUIREMENTS:
-1. **Deep Track Analysis**: Carefully analyze the uploaded audio to identify:
-   - Original tempo, key signature, and time signature
-   - Harmonic progression and chord structure
-   - Melodic motifs, hooks, and memorable phrases
-   - Rhythmic patterns and groove characteristics
-   - Vocal elements, instrumental solos, or distinctive sounds
-   - Song structure and arrangement elements
-   - Emotional tone and energy levels throughout
+ENHANCED ANALYSIS REQUIREMENTS:
+1. **Original Track DNA**: Identify and preserve:
+   - Key melodic hooks and vocal phrases that define the track's identity
+   - Signature chord progressions and harmonic movements
+   - Distinctive rhythmic elements and groove patterns
+   - Emotional peaks and dynamic moments
+   - Unique timbres, textures, and sonic characteristics
+   - Original tempo, key, and structural elements
 
-2. **Smart Remix Strategy**: Your remix guide must intelligently explain:
-   - Which SPECIFIC elements from the original track work well in ${targetGenre}
-   - How to preserve the essence/soul of the original while transforming the genre
-   - Which original melodic phrases can be adapted to ${targetGenre} rhythms
-   - How original harmonic progressions can be recontextualized
-   - Which original elements should be kept, modified, or completely reimagined
-   - How to bridge the gap between the original genre and ${targetGenre}
+2. **Smart Element Integration**: Specify exactly:
+   - Which original melodies will translate perfectly to ${targetGenre} (with examples)
+   - How to adapt original chord progressions to ${targetGenre} harmonic language
+   - Which vocal phrases/hooks to emphasize in the ${targetGenre} context
+   - How to preserve the original's emotional impact while changing genre
+   - Specific original elements that will become the foundation of your remix
+   - Creative ways to reference the original throughout the ${targetGenre} arrangement
 
-3. **Genre-Specific Transformation**: Provide detailed guidance on:
-   - Tempo adjustments and time-stretching techniques
-   - Key changes or modal shifts that enhance the ${targetGenre} feel
-   - Rhythmic pattern adaptations specific to ${targetGenre}
-   - Sound design and production techniques typical of ${targetGenre}
-   - Arrangement modifications that respect both the original and target genre
+3. **Genre-Specific Transformation**: Detail how to:
+   - Adapt original tempo/rhythm to ${targetGenre} standards (${tempoRange})
+   - Transform original harmonic content using ${targetGenre} techniques
+   - Integrate original melodic content with ${targetGenre} sound design
+   - Restructure original arrangement for ${targetGenre} energy flow
 
 Your response must be a valid JSON object with exactly these keys:
 
 {
   "guide": "A comprehensive markdown-formatted remix guide that MUST include these sections:
 
-## 🎵 Original Track Analysis
-- **Detected Elements**: [List key musical elements found in the original]
-- **Original Genre Characteristics**: [Identify the source genre and its traits]
-- **Harmonic Foundation**: [Chord progressions, key, and harmonic movement]
-- **Melodic Content**: [Main melodies, hooks, and memorable phrases]
-- **Rhythmic DNA**: [Original groove, tempo, and rhythmic patterns]
+## 🎵 Original Track DNA Analysis
+- **Core Identity Elements**: [The essential melodic/harmonic/rhythmic elements that make this track recognizable]
+- **Signature Hooks**: [Specific vocal phrases, melodic lines, or instrumental riffs to preserve]
+- **Harmonic Blueprint**: [Original chord progressions and how they'll translate to ${targetGenre}]
+- **Rhythmic Foundation**: [Original groove patterns and how to adapt them]
+- **Emotional Moments**: [Key dynamic/emotional peaks to maintain in the remix]
 
-## 🎛️ ${targetGenre} Transformation Strategy  
-- **Elements to Preserve**: [Specific original elements that work well in ${targetGenre}]
-- **Elements to Transform**: [What needs to change and how]
-- **Genre Bridge**: [How to connect original style with ${targetGenre}]
-- **Tempo & Key Adjustments**: [Specific changes needed]
+## 🎛️ Smart ${targetGenre} Integration Strategy  
+- **Perfect Fits**: [Original elements that naturally work in ${targetGenre} - be specific with examples]
+- **Creative Adaptations**: [How to transform original melodies/harmonies for ${targetGenre} context]
+- **Original-to-${targetGenre} Bridges**: [Specific techniques to connect both genres seamlessly]
+- **Preservation Strategy**: [How to keep the original's soul while changing the genre]
+- **Reference Points**: [Where and how to callback to original throughout the remix]
 
-## 🔧 Production Techniques
-- **Sound Design**: [${targetGenre}-specific sound design approaches]
-- **Arrangement Modifications**: [How to restructure for ${targetGenre}]
-- **Processing Chain**: [Effects and processing typical of ${targetGenre}]
-- **Mix Considerations**: [${targetGenre}-specific mixing approaches]
+## 🔧 ${targetGenre} Production Techniques
+- **Sound Design**: [${targetGenre}-specific synthesis and processing for original elements]
+- **Arrangement Flow**: [How to restructure original content for ${targetGenre} energy patterns]
+- **Original Element Processing**: [Specific effects/processing for original vocals/instruments]
+- **Genre-Specific Mix**: [${targetGenre} mixing approaches that enhance original elements]
 
-## 🎹 Implementation Guide
-- **Step-by-Step Process**: [Practical remix workflow]
-- **Original Element Integration**: [How to weave original elements into new arrangement]
-- **Creative Opportunities**: [Unique ways to blend both genres]",
+## 🎹 Remix Implementation Roadmap
+- **Foundation Building**: [Start with original elements, build ${targetGenre} framework around them]
+- **Original Integration Points**: [Specific moments to feature original content prominently]
+- **Creative Fusion Ideas**: [Unique ways to blend original character with ${targetGenre} aesthetics]
+- **Final Polish**: [How to ensure both original identity and ${targetGenre} authenticity]",
   "targetTempo": 125,
   "targetKey": "A minor",
   "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
@@ -844,6 +810,74 @@ IMPORTANT: Return ONLY the JSON object, no other text or markdown formatting.`;
 }
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
+export async function generateContent(prompt: string): Promise<string> {
+  if (!apiKey) {
+    // Demo mode - provide sample response for PatchGuide testing
+    return JSON.stringify({
+      "steps": [
+        {
+          "plugin": "Serum",
+          "parameters": {
+            "oscillator": "saw",
+            "filterCutoff": 0.6,
+            "filterResonance": 0.4,
+            "attack": 0.05,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 0.8
+          },
+          "description": "Start with a classic saw wave for analog character. Set filter cutoff to 60% for warmth while maintaining punch.",
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 0.8
+          }
+        }
+      ],
+      "notes": "For extra warmth, try adding subtle saturation or tube modeling."
+    });
+  }
+
+  // Also provide demo response if API key exists but we want to test
+  if (prompt.toLowerCase().includes('warm analog bass')) {
+    return JSON.stringify({
+      "steps": [
+        {
+          "plugin": "Serum",
+          "parameters": {
+            "oscillator": "saw",
+            "filterCutoff": 0.6,
+            "filterResonance": 0.4,
+            "attack": 0.05,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 0.8
+          },
+          "description": "Start with a classic saw wave for analog character. Set filter cutoff to 60% for warmth while maintaining punch.",
+          "envelope": {
+            "attack": 0.05,
+            "decay": 0.3,
+            "sustain": 0.7,
+            "release": 0.8
+          }
+        }
+      ],
+      "notes": "For extra warmth, try adding subtle saturation or tube modeling."
+    });
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("[geminiService] Error generating content:", error);
+    throw new Error("Failed to generate content from Gemini API");
+  }
+}
+
 export async function generateRemixGuide(
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
