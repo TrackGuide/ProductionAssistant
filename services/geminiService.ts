@@ -723,7 +723,9 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 // Remix Guide Prompt (no more URL)
-const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
+// Remix Guide Prompt (no more URL)
+export const generateRemixPrompt = (targetGenre: string, genreInfo: any): string => {
+
   const tempoRange = genreInfo ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : '120-130 BPM';
   const sections = genreInfo ? genreInfo.sections.join(', ') : 'Intro, Build-Up, Drop, Breakdown, Outro';
 
