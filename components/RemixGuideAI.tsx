@@ -17,35 +17,30 @@ interface RemixGuideData {
   generatedMidiPatterns?: GeneratedMidiPatterns;
 }
 
-
-
 const extractOriginalChordProgression = (guideContent: string): string | null => {
   if (!guideContent) return null;
-  
-  // Look for the "Original Track DNA Analysis" section
+
   const dnaSectionRegex = /##\s*🎵\s*Original Track DNA Analysis/i;
   const match = guideContent.match(dnaSectionRegex);
   if (!match || typeof match.index === 'undefined') return null;
 
   const startIndex = match.index;
   const nextSectionMatch = guideContent.substring(startIndex + match[0].length).match(/^##\s+/m);
-  const endIndex = nextSectionMatch && typeof nextSectionMatch.index !== 'undefined' 
-                   ? startIndex + match[0].length + nextSectionMatch.index 
-                   : guideContent.length;
-  
+  const endIndex = nextSectionMatch && typeof nextSectionMatch.index !== 'undefined'
+    ? startIndex + match[0].length + nextSectionMatch.index
+    : guideContent.length;
+
   const dnaContent = guideContent.substring(startIndex, endIndex).trim();
-  
-  // Look for harmonic blueprint with chord progressions
+
   const harmonicMatch = dnaContent.match(/\*\*Harmonic Blueprint\*\*:\s*([^\n]+)/i);
   if (harmonicMatch && harmonicMatch[1]) {
     const harmonicText = harmonicMatch[1];
-    // Try to extract chord progression patterns like "I-V-vi-IV" or "Am-F-C-G"
     const chordProgMatch = harmonicText.match(/([IVXLCDMivxlcdm\d\s,-]+(?:\s*-\s*[IVXLCDMivxlcdm\d\s,-]+)*)/);
     if (chordProgMatch && chordProgMatch[1]) {
       return chordProgMatch[1].trim();
     }
   }
-  
+
   return null;
 };
 
@@ -93,76 +88,66 @@ export const RemixGuideAI: React.FC = () => {
     event.preventDefault();
   };
 
- const generateRemix = async () => {
-  if (!audioFile || !selectedGenre) {
-    setError('Please upload an audio file and select a target genre');
-    return;
-  }
-
-  setIsGenerating(true);
-  setError('');
-
-  try {
-    // Convert to base64 for the API call
-    const base64Data = await uploadAudio(audioFile);
-    const audioData = { base64: base64Data.base64, mimeType: base64Data.mimeType };
-
-    const genreInfo = getGenreInfo(selectedGenre);
-
-    // Call the generateRemixGuide function
-    const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
-    setRemixGuide(result);
-
-    // Automatically generate MIDI patterns after the guide is created
-    setIsGeneratingMidi(true);
-    try {
-      // Extract original chord progression from the guide
-      const originalChordProgression = extractOriginalChordProgression(result.guide);
-      
-      const midiSettings: MidiSettings = {
-        key: result.targetKey,
-        tempo: result.targetTempo,
-        timeSignature: [4, 4] as [number, number],
-        chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
-        genre: 'Electronic', // Default for remix mode, not genre-specific
-        bars: 8,
-        targetInstruments: ['bassline', 'drums', 'melody', 'pads'], // Lowercase for MIDI system
-        guidebookContext: `RemixGuide AI patterns for ${result.targetKey} at ${result.targetTempo} BPM`,
-        songSection: result.sections[0] || 'Intro'
-      };
-
-      let accumulatedMidiJson = "";
-      const midiStream = await generateMidiPatternSuggestions(midiSettings);
-      for await (const chunk of midiStream) {
-        accumulatedMidiJson += chunk.text;
-      }
-
-      // Parse the MIDI JSON
-      let jsonStr = accumulatedMidiJson.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-      const match = jsonStr.match(fenceRegex);
-      if (match && match[2]) {
-        jsonStr = match[2].trim();
-      }
-
-      const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
-      
-      // Update the remix guide with generated MIDI patterns
-      setRemixGuide(prev => prev ? { ...prev, generatedMidiPatterns } : null);
-    } catch (midiErr) {
-      console.error('Error generating MIDI patterns for remix:', midiErr);
-      // Don't fail the whole process if MIDI generation fails
-    } finally {
-      setIsGeneratingMidi(false);
+  const generateRemix = async () => {
+    if (!audioFile || !selectedGenre) {
+      setError('Please upload an audio file and select a target genre');
+      return;
     }
-  } catch (err) {
-    console.error('Error generating remix guide:', err);
-    setError(err instanceof Error ? err.message : 'Failed to generate remix guide. Please try again.');
-  } finally {
-    setIsGenerating(false);
-  }
-};
 
+    setIsGenerating(true);
+    setError('');
+
+    try {
+      const base64Data = await uploadAudio(audioFile);
+      const audioData = { base64: base64Data.base64, mimeType: base64Data.mimeType };
+
+      const genreInfo = getGenreInfo(selectedGenre);
+
+      const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
+      setRemixGuide(result);
+
+      setIsGeneratingMidi(true);
+      try {
+        const originalChordProgression = extractOriginalChordProgression(result.guide);
+
+        const midiSettings: MidiSettings = {
+          key: result.targetKey,
+          tempo: result.targetTempo,
+          timeSignature: [4, 4],
+          chordProgression: originalChordProgression || 'i-VI-III-VII',
+          genre: 'Electronic',
+          bars: 8,
+          targetInstruments: ['bassline', 'drums', 'melody', 'pads'],
+          guidebookContext: `RemixGuide AI patterns for ${result.targetKey} at ${result.targetTempo} BPM`,
+          songSection: result.sections[0] || 'Intro'
+        };
+
+        const midiResult = await generateMidiPatternSuggestions(midiSettings);
+
+        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+          jsonStr = match[2].trim();
+        }
+
+        const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+
+        setRemixGuide(prev => prev ? { ...prev, generatedMidiPatterns } : null);
+
+      } catch (midiErr) {
+        console.error('Error generating MIDI patterns for remix:', midiErr);
+      } finally {
+        setIsGeneratingMidi(false);
+      }
+
+    } catch (err) {
+      console.error('Error generating remix guide:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate remix guide. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -182,9 +167,7 @@ export const RemixGuideAI: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Audio Upload */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Upload Original Track</h3>
           <div
@@ -213,7 +196,6 @@ export const RemixGuideAI: React.FC = () => {
           </div>
         </Card>
 
-        {/* Genre Selection */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Target Remix Genre</h3>
           <div className="space-y-4">
@@ -259,9 +241,7 @@ export const RemixGuideAI: React.FC = () => {
               <div className="text-sm text-gray-400 bg-gray-800 p-3 rounded-lg">
                 {(() => {
                   const info = getGenreInfo(selectedGenre);
-                  return info
-                    ? `🎵 Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM`
-                    : '';
+                  return info ? `🎵 Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM` : '';
                 })()}
               </div>
             )}
@@ -269,14 +249,12 @@ export const RemixGuideAI: React.FC = () => {
         </Card>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
           {error}
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex gap-4">
         <Button
           onClick={generateRemix}
@@ -300,10 +278,8 @@ export const RemixGuideAI: React.FC = () => {
         </Button>
       </div>
 
-      {/* Results Section */}
       {remixGuide && (
         <div className="space-y-6">
-          {/* Remix Guide */}
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-white">
@@ -318,15 +294,12 @@ export const RemixGuideAI: React.FC = () => {
             </div>
           </Card>
 
-
-
-          {/* MIDI Patterns */}
           <Card className="p-6">
             <h3 className="text-xl font-bold text-white mb-6">
               🎹 MIDI Remix Patterns
             </h3>
             <MidiGeneratorComponent
-              key={`remix-${selectedGenre}-${Date.now()}`}
+              key={`remix-${selectedGenre}`}  // FIXED KEY
               initialPatterns={remixGuide.generatedMidiPatterns}
               sections={remixGuide.sections}
               targetTempo={remixGuide.targetTempo}
@@ -340,7 +313,6 @@ export const RemixGuideAI: React.FC = () => {
         </div>
       )}
 
-      {/* Info Section */}
       {!remixGuide && (
         <Card className="p-6 bg-gray-800/30">
           <div className="text-center space-y-4">
