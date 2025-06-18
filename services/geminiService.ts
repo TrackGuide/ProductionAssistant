@@ -489,39 +489,46 @@ interface MixComparisonInputs {
 
 const generateMixComparisonPrompt = (inputs: MixComparisonInputs): string => {
   const hasBothMixes = inputs.mixAFile && inputs.mixBFile;
+  const hasMixBOnly = inputs.mixBFile && !inputs.mixAFile;
   
   if (hasBothMixes) {
-    return `You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison: "${inputs.mixAName}" (Mix A) and "${inputs.mixBName}" (Mix B).
+    return `You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison: "${inputs.mixAName}" (Mix A - Reference) and "${inputs.mixBName}" (Mix B - Current Working Track).
 
-Analyze both audio files thoroughly and provide a comprehensive comparison. Structure your response using Markdown with clear headings.
+**IMPORTANT**: Mix B is the current working track that needs focused feedback and recommendations. Mix A is provided as reference context.
 
-## Mix Comparison Analysis
+Analyze both audio files with primary focus on improving Mix B. Structure your response using Markdown with clear headings.
 
-### Overall Assessment
-Compare the two mixes and identify which version is stronger overall and why.
+## Mix B Analysis & Recommendations
 
-### Key Differences Found
-Analyze and compare these specific aspects between the two mixes:
-- **Frequency Balance**: Compare low-end, midrange, and high-frequency content
-- **Stereo Width**: Compare stereo imaging and spatial characteristics
-- **Dynamic Range**: Compare compression, punch, and dynamics
-- **Vocal/Lead Presence**: Compare how lead elements sit in the mix
-- **Clarity and Separation**: Compare how well instruments are defined
-- **Tonal Character**: Compare overall sonic character and color
+### Current Mix Assessment (${inputs.mixBName})
+Provide a comprehensive evaluation of Mix B as the current working track:
+- **Overall Balance**: How well balanced is the current mix?
+- **Strengths**: What's working well in Mix B?
+- **Areas for Improvement**: What needs attention in Mix B?
 
-### Technical Metrics Comparison
-Provide estimated technical measurements for both mixes:
+### Mix B Detailed Feedback
+Focus specifically on Mix B with actionable recommendations:
+- **Frequency Balance**: Analyze and suggest EQ adjustments for Mix B
+- **Stereo Width**: Evaluate and recommend stereo imaging improvements
+- **Dynamic Range**: Assess compression and dynamics in Mix B
+- **Vocal/Lead Presence**: How to improve lead elements in Mix B
+- **Clarity and Separation**: Specific suggestions for better instrument definition
+- **Tonal Character**: Recommendations for sonic character improvements
+
+### Technical Metrics (Mix B Focus)
+Provide estimated technical measurements for Mix B:
 - **LUFS** (loudness)
-- **Peak levels**
+- **Peak levels** 
 - **Stereo correlation**
 - **Dynamic range**
 
-### Recommendations
-Provide specific, actionable advice on:
-1. Which elements from each mix should be combined
-2. Technical improvements needed
-3. Processing suggestions
-4. Next steps for optimization
+### Focused Recommendations for Mix B
+Provide specific, actionable advice prioritized for Mix B:
+1. **Immediate improvements** needed in Mix B
+2. **Technical processing** suggestions for Mix B
+3. **Frequency adjustments** specific to Mix B
+4. **Elements from Mix A** that could enhance Mix B (if applicable)
+5. **Next steps** for finalizing Mix B
 
 ${inputs.requestMixAAnalysis ? `
 
@@ -582,13 +589,51 @@ Analyze each frequency band in detail:
 Analyze how individual elements sit in the mix and suggest improvements.` : ''}
 
 Keep your analysis professional, detailed, and actionable. Focus on technical aspects and mixing decisions rather than musical composition.${inputs.userNotes ? `\n\n**User Notes**: ${inputs.userNotes}` : ''}`;
+  } else if (hasMixBOnly) {
+    // Mix B only analysis (focused feedback)
+    return `You are an expert audio mixing and mastering engineer AI. The user has uploaded their current working track: "${inputs.mixBName}" (Mix B).
+
+Analyze the audio file thoroughly and provide comprehensive feedback focused on improving this mix. Structure your response using Markdown with clear headings.
+
+## Mix B Analysis & Recommendations
+
+### Current Mix Assessment (${inputs.mixBName})
+Provide a comprehensive evaluation of this working track:
+- **Overall Balance**: How well balanced is the current mix?
+- **Strengths**: What's working well in this mix?
+- **Areas for Improvement**: What needs attention?
+
+### Detailed Mix Feedback
+Focus specifically on actionable recommendations:
+- **Frequency Balance**: Analyze and suggest EQ adjustments
+- **Stereo Width**: Evaluate and recommend stereo imaging improvements
+- **Dynamic Range**: Assess compression and dynamics
+- **Vocal/Lead Presence**: How to improve lead elements
+- **Clarity and Separation**: Specific suggestions for better instrument definition
+- **Tonal Character**: Recommendations for sonic character improvements
+
+### Technical Metrics
+Provide estimated technical measurements:
+- **LUFS** (loudness)
+- **Peak levels** 
+- **Stereo correlation**
+- **Dynamic range**
+
+### Focused Recommendations
+Provide specific, actionable advice prioritized for this mix:
+1. **Immediate improvements** needed
+2. **Technical processing** suggestions
+3. **Frequency adjustments** specific recommendations
+4. **Next steps** for finalizing the mix
+
+Keep your analysis professional, detailed, and actionable. Focus on technical aspects and mixing decisions rather than musical composition.${inputs.userNotes ? `\n\n**User Notes**: ${inputs.userNotes}` : ''}`;
   } else {
-    // Single mix analysis
+    // Single mix analysis (Mix A only - legacy support)
     return `You are an expert audio mixing and mastering engineer AI. The user has uploaded a single audio file: "${inputs.mixAName}".
 
 Analyze the audio file thoroughly and provide comprehensive feedback. Structure your response using Markdown with clear headings.
 
-## Mix Comparison Analysis
+## Mix Analysis
 
 ### Overall Assessment
 Single mix analysis for: ${inputs.mixAName}

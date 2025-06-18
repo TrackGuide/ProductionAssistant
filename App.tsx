@@ -24,6 +24,7 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
 import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
 
@@ -1344,7 +1345,7 @@ const App: React.FC = () => {
                 {activeGuidebookDetails && !isLoading && ( // Show buttons only when not loading and details are available
                   <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
                     <Button onClick={handleSaveToLibrary} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
-                    <Button onClick={() => handleCopyFormattedContent('guidebook-content-display')} variant="outline" leftIcon={<CopyIcon />}>Copy TrackGuide</Button>
+
                     <div className="flex-grow"></div>
                     <Button onClick={resetFormForNewGuidebook} variant="outline" size="sm" className="!border-gray-500 !text-gray-400 hover:!bg-gray-600 hover:!text-white" leftIcon={<CloseIcon />}>Close</Button>
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
@@ -1392,7 +1393,7 @@ const App: React.FC = () => {
                       </div>
                     );
                   })()}
-                  {renderMarkdown(generatedGuidebook)}
+                  <MarkdownRenderer content={generatedGuidebook} />
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
               </Card>
@@ -1688,12 +1689,9 @@ const App: React.FC = () => {
                 className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
                 titleClassName="border-b border-gray-700 text-xl !text-orange-300"
               >
-                 <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
-                  <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
-                  {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
-                </div>
+
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
-                  {renderMarkdown(mixFeedbackResult, true)}
+                  <MarkdownRenderer content={mixFeedbackResult} />
                 </div>
               </Card>
             )}
@@ -1703,12 +1701,9 @@ const App: React.FC = () => {
                 className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
                 titleClassName="border-b border-gray-700 text-xl !text-orange-300"
               >
-                 <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
-                  <Button onClick={() => handleCopyFormattedContent('mix-comparison-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Comparison</Button>
-                  {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
-                </div>
+
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
-                  {renderMarkdown(mixCompareResult, true)}
+                  <MarkdownRenderer content={mixCompareResult} />
                 </div>
               </Card>
             )}
