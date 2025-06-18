@@ -786,20 +786,27 @@ export const generateRemixGuide = async (
       contents: [textPart, audioPart],
     });
 
-    // extract string
-    const text = typeof response.text === "string"
-      ? response.text
-      : response.text?.toString() || "";
-
+    // ─── NEW: Properly extract the returned text ─────────────────────────────
+    let text: string;
+    if (response.response && typeof response.response.text === "function") {
+      // response.response.text() returns the generated string
+      text = await response.response.text();
+    } else if (typeof response.text === "string") {
+      // fallback if your version of the SDK still populates response.text
+      text = response.text;
+    } else {
+      console.error("[geminiService] Unexpected response shape:", response);
+      throw new Error("Unexpected response format from Gemini API");
+    }
     console.log("[geminiService] Raw remix response:", text);
 
-    // parse JSON
+    // parse JSON out of whatever they gave us
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
 
-    // fallback if not valid JSON
+    // ─── fallback if no JSON found ────────────────────────────────────────
     return {
       guide: text,
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
