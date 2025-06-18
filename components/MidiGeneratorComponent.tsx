@@ -45,6 +45,8 @@ interface MidiGeneratorProps {
   targetKey?: string;
   isRemixMode?: boolean;
   preGeneratedPatterns?: GeneratedMidiPatterns;
+  originalChordProgression?: string | null; // Original song's chord progression for remix mode
+  remixGuideContent?: string; // Full remix guide content for extracting progressions
 }
 
 const extractRichMidiContext = (guidebookContent: string): string => {
@@ -68,6 +70,18 @@ const getAvailableModesForKey = (keyScale: string): string[] => {
 
 const BAR_OPTIONS = [1, 2, 4, 8, 16, 32];
 
+// Function to get chord progressions for remix mode
+const getRemixChordProgressions = (originalProgression: string | null, genre: string): string[] => {
+  const baseProgressions = getChordProgressionsForGenre(genre);
+  
+  if (originalProgression) {
+    // Put original progression first, then add genre-specific alternatives
+    return [originalProgression, ...baseProgressions.filter(prog => prog !== originalProgression)];
+  }
+  
+  return baseProgressions;
+};
+
 export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({ 
     currentGuidebookEntry, 
     mainAppInputs, 
@@ -81,7 +95,9 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     targetTempo,
     targetKey,
     isRemixMode = false,
-    preGeneratedPatterns
+    preGeneratedPatterns,
+    originalChordProgression,
+    remixGuideContent
 }) => {
   const [settings, setSettings] = useState<MidiSettings>(() => {
     // Remix mode initialization
@@ -95,7 +111,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         guidebookContext: `Remix mode for ${targetKey || 'C minor'} at ${targetTempo || 128} BPM`,
         targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'],
         bars: 8,
-        chordProgression: 'i-VI-III-VII', // Better default for remixes
+        chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
         timeSignature: [4, 4] as [number, number] // Standard for most remixes
       };
     }
@@ -675,7 +691,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('chordProgression', e.target.value)} 
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
-                {getChordProgressionsForGenre(settings.genre).map(cp => <option key={cp} value={cp}>{cp}</option>)}
+                {(isRemixMode ? 
+                  getRemixChordProgressions(originalChordProgression, settings.genre) : 
+                  getChordProgressionsForGenre(settings.genre)
+                ).map(cp => <option key={cp} value={cp}>{cp}</option>)}
               </select>
             </div>
             {!isRemixMode && (

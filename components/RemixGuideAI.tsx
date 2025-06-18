@@ -63,6 +63,36 @@ const extractArrangementIdeas = (guideContent: string): ArrangementIdea[] => {
   return ideas;
 };
 
+const extractOriginalChordProgression = (guideContent: string): string | null => {
+  if (!guideContent) return null;
+  
+  // Look for the "Original Track DNA Analysis" section
+  const dnaSectionRegex = /##\s*🎵\s*Original Track DNA Analysis/i;
+  const match = guideContent.match(dnaSectionRegex);
+  if (!match || typeof match.index === 'undefined') return null;
+
+  const startIndex = match.index;
+  const nextSectionMatch = guideContent.substring(startIndex + match[0].length).match(/^##\s+/m);
+  const endIndex = nextSectionMatch && typeof nextSectionMatch.index !== 'undefined' 
+                   ? startIndex + match[0].length + nextSectionMatch.index 
+                   : guideContent.length;
+  
+  const dnaContent = guideContent.substring(startIndex, endIndex).trim();
+  
+  // Look for harmonic blueprint with chord progressions
+  const harmonicMatch = dnaContent.match(/\*\*Harmonic Blueprint\*\*:\s*([^\n]+)/i);
+  if (harmonicMatch && harmonicMatch[1]) {
+    const harmonicText = harmonicMatch[1];
+    // Try to extract chord progression patterns like "I-V-vi-IV" or "Am-F-C-G"
+    const chordProgMatch = harmonicText.match(/([IVXLCDMivxlcdm\d\s,-]+(?:\s*-\s*[IVXLCDMivxlcdm\d\s,-]+)*)/);
+    if (chordProgMatch && chordProgMatch[1]) {
+      return chordProgMatch[1].trim();
+    }
+  }
+  
+  return null;
+};
+
 export const RemixGuideAI: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -130,11 +160,14 @@ export const RemixGuideAI: React.FC = () => {
     // Automatically generate MIDI patterns after the guide is created
     setIsGeneratingMidi(true);
     try {
+      // Extract original chord progression from the guide
+      const originalChordProgression = extractOriginalChordProgression(result.guide);
+      
       const midiSettings: MidiSettings = {
         key: result.targetKey,
         tempo: result.targetTempo,
         timeSignature: [4, 4] as [number, number],
-        chordProgression: 'i-VI-III-VII', // Default for remix
+        chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
         genre: selectedGenre,
         bars: 8,
         targetInstruments: ['bassline', 'drums', 'melody', 'pads'],
@@ -372,6 +405,8 @@ export const RemixGuideAI: React.FC = () => {
               targetKey={remixGuide.targetKey}
               isRemixMode={true}
               preGeneratedPatterns={remixGuide.generatedMidiPatterns}
+              originalChordProgression={extractOriginalChordProgression(remixGuide.guide)}
+              remixGuideContent={remixGuide.guide}
             />
           </Card>
         </div>
