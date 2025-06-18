@@ -4,7 +4,7 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
 import { GEMINI_MODEL_NAME } from '../constants.ts';
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── INIT ───────────────────────────────────────────────────────────────────
 const apiKey = process.env.API_KEY;
 if (!apiKey) {
   console.error(
