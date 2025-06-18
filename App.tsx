@@ -158,31 +158,7 @@ const extractEssentialMidiContext = (guidebookContent: string): string => {
   return essentialContext.trim() || "General musical context not fully parsed. Focus on genre and vibe.";
 };
 
-const extractStructuralBlueprint = (guidebookContent: string): { section: string; duration: string; description: string }[] => {
-  if (!guidebookContent) return [];
-  
-  const structuralSectionRegex = /^##\s*2\.\s*Structural Blueprint/im;
-  const structuralContent = extractSectionContent(guidebookContent, structuralSectionRegex);
-  
-  if (!structuralContent) return [];
-  
-  const sections: { section: string; duration: string; description: string }[] = [];
-  const lines = structuralContent.split('\n');
-  
-  for (const line of lines) {
-    // Look for patterns like "**Intro (0:00-0:15):** Description"
-    const match = line.match(/\*\*([^(]+)\s*\(([^)]+)\):\*\*\s*(.*)/);
-    if (match) {
-      sections.push({
-        section: match[1].trim(),
-        duration: match[2].trim(),
-        description: match[3].trim()
-      });
-    }
-  }
-  
-  return sections;
-};
+
 
 const parseSuggestedTitleFromMarkdownStream = (markdownText: string): string | null => {
   const match = markdownText.match(/^\s*-\s*\*\*Suggested Title:\*\*\s*(.*)/im);
@@ -1359,34 +1335,7 @@ const App: React.FC = () => {
                         {activeGuidebookDetails.generatedMidiPatterns && <p className="mt-1 text-green-400"><MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.</p>}
                     </div>
                   )}
-                  {activeGuidebookDetails && !isLoading && (() => {
-                    const structuralBlueprint = extractStructuralBlueprint(activeGuidebookDetails.content);
-                    return structuralBlueprint.length > 0 && (
-                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break">
-                        <strong className="text-orange-300 block mb-3 text-base">Structural Blueprint:</strong>
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse border border-gray-600 bg-gray-800 text-xs">
-                            <thead className="bg-orange-800/30">
-                              <tr className="border-b border-gray-500">
-                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Section</th>
-                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Duration</th>
-                                <th className="p-2 font-semibold text-orange-200 text-left border border-gray-500">Description</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {structuralBlueprint.map((item, index) => (
-                                <tr key={index} className="border-b border-gray-600 hover:bg-gray-700/50 transition-colors duration-150">
-                                  <td className="p-2 text-gray-300 border border-gray-600 font-medium">{item.section}</td>
-                                  <td className="p-2 text-gray-300 border border-gray-600">{item.duration}</td>
-                                  <td className="p-2 text-gray-300 border border-gray-600">{item.description}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })()}
+
                   <MarkdownRenderer content={generatedGuidebook} />
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>

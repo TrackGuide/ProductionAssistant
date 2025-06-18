@@ -780,10 +780,14 @@ Your response must be a valid JSON object with exactly these keys:
 - **Genre-Specific Mix**: [${targetGenre} mixing approaches that enhance original elements]
 
 ## 🎹 Remix Implementation Roadmap
-- **Foundation Building**: [Start with original elements, build ${targetGenre} framework around them]
-- **Original Integration Points**: [Specific moments to feature original content prominently]
-- **Creative Fusion Ideas**: [Unique ways to blend original character with ${targetGenre} aesthetics]
-- **Final Polish**: [How to ensure both original identity and ${targetGenre} authenticity]",
+Provide a **concise Markdown table** for the remix implementation phases:
+
+| Phase | Implementation Strategy | Key Focus |
+|-------|------------------------|-----------|
+| Foundation Building | Start with original elements, build ${targetGenre} framework around them | Core Structure |
+| Original Integration Points | Specific moments to feature original content prominently | Identity Preservation |
+| Creative Fusion Ideas | Unique ways to blend original character with ${targetGenre} aesthetics | Genre Blending |
+| Final Polish | How to ensure both original identity and ${targetGenre} authenticity | Quality Assurance |",
   "targetTempo": 125,
   "targetKey": "A minor",
   "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],

@@ -25,43 +25,7 @@ interface RemixGuideData {
   generatedMidiPatterns?: GeneratedMidiPatterns;
 }
 
-interface ArrangementIdea {
-  phase: string;
-  description: string;
-}
 
-const extractArrangementIdeas = (guideContent: string): ArrangementIdea[] => {
-  if (!guideContent) return [];
-  
-  // Look for the "Remix Implementation Roadmap" section
-  const roadmapSectionRegex = /##\s*🎹\s*Remix Implementation Roadmap/i;
-  const match = guideContent.match(roadmapSectionRegex);
-  if (!match || typeof match.index === 'undefined') return [];
-
-  const startIndex = match.index;
-  const nextSectionMatch = guideContent.substring(startIndex + match[0].length).match(/^##\s+/m);
-  const endIndex = nextSectionMatch && typeof nextSectionMatch.index !== 'undefined' 
-                   ? startIndex + match[0].length + nextSectionMatch.index 
-                   : guideContent.length;
-  
-  const roadmapContent = guideContent.substring(startIndex, endIndex).trim();
-  
-  const ideas: ArrangementIdea[] = [];
-  const lines = roadmapContent.split('\n');
-  
-  for (const line of lines) {
-    // Look for patterns like "- **Foundation Building**: [Description]"
-    const ideaMatch = line.match(/^\s*-\s*\*\*([^:]+):\*\*\s*\[([^\]]+)\]/);
-    if (ideaMatch) {
-      ideas.push({
-        phase: ideaMatch[1].trim(),
-        description: ideaMatch[2].trim()
-      });
-    }
-  }
-  
-  return ideas;
-};
 
 const extractOriginalChordProgression = (guideContent: string): string | null => {
   if (!guideContent) return null;
@@ -362,35 +326,7 @@ export const RemixGuideAI: React.FC = () => {
             </div>
           </Card>
 
-          {/* Arrangement Ideas Table */}
-          {(() => {
-            const arrangementIdeas = extractArrangementIdeas(remixGuide.guide);
-            return arrangementIdeas.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-xl font-bold text-white mb-4">
-                  🎵 Arrangement Ideas
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-600 bg-gray-800 text-sm">
-                    <thead className="bg-orange-800/30">
-                      <tr className="border-b border-gray-500">
-                        <th className="p-3 font-semibold text-orange-200 text-left border border-gray-500">Phase</th>
-                        <th className="p-3 font-semibold text-orange-200 text-left border border-gray-500">Implementation Strategy</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {arrangementIdeas.map((idea, index) => (
-                        <tr key={index} className="border-b border-gray-600 hover:bg-gray-700/50 transition-colors duration-150">
-                          <td className="p-3 text-gray-300 border border-gray-600 font-medium">{idea.phase}</td>
-                          <td className="p-3 text-gray-300 border border-gray-600">{idea.description}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            );
-          })()}
+
 
           {/* MIDI Patterns */}
           <Card className="p-6">
