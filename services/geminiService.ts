@@ -1,15 +1,13 @@
 
 // services/geminiService.ts
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types.ts';
-import { GEMINI_MODEL_NAME } from '../constants.ts';
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-const apiKey = process.env.API_KEY;
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GEMINI_MODEL_NAME } from "../constants.ts";
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+const apiKey = process.env.API_KEY!;
 if (!apiKey) {
-  console.error(
-    "API_KEY is not set. Please ensure the API_KEY environment variable is configured."
-  );
+  throw new Error("API_KEY is not set. Cannot connect to Gemini API.");
 }
 const ai = new GoogleGenAI({ apiKey });
 
@@ -728,8 +726,37 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 
 
 // ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
+/** Build the text-only prompt for the remix */
+export function generateRemixPrompt(targetGenre: string, genreInfo: any): string {
+  const tempoRange = genreInfo
+    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
+    : "120-130 BPM";
+  const sections = genreInfo
+    ? genreInfo.sections.join(", ")
+    : "Intro, Build-Up, Drop, Breakdown, Outro";
+
+  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+
+Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+
+Now, generate a Remix Guide that includes:
+1. Suggested overall remix approach
+2. Arrangement ideas
+3. Sound design tips
+4. Suggested structure (sections: ${sections})
+5. Target tempo & key for the remix (typical range: ${tempoRange})
+
+Then, generate MIDI patterns for each section:
+- Bassline
+- Drums
+- Melody / Harmony
+- Pads or textures
+
+Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+}
+
 /** Send audio + prompt to Gemini and parse out the JSON guide */
-export const generateRemixGuide = async (
+export async function generateRemixGuide(
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
   genreInfo: any
@@ -739,13 +766,7 @@ export const generateRemixGuide = async (
   targetKey: string;
   sections: string[];
   midiPatterns: Record<string, Record<string, string>>;
-}> => {
-  if (!apiKey) {
-    throw new Error(
-      "API Key not configured. Cannot connect to Gemini API for remix guide."
-    );
-  }
-
+}> {
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
   const audioPart = {
     inlineData: {
@@ -757,47 +778,38 @@ export const generateRemixGuide = async (
   console.log("[geminiService] Remix Prompt:", textPart.text);
   console.log("[geminiService] Audio size (chars):", audioData.base64.length);
 
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: [textPart, audioPart],
-    });
+  const response: GenerateContentResponse = await ai.models.generateContent({
+    model:      GEMINI_MODEL_NAME,
+    contents:  [textPart, audioPart],
+  });
 
-    // ─── Extract the returned text robustly ────────────────────────────
-    let text: string;
-    if (response.response && typeof response.response.text === "function") {
-      text = await response.response.text();
-    } else if (typeof response.text === "string") {
-      text = response.text;
-    } else if (Array.isArray((response as any).candidates)) {
-      text = (response as any).candidates[0]?.content || "";
-    } else {
-      console.error("[geminiService] Unexpected response shape:", response);
-      throw new Error("Unexpected response format from Gemini API");
-    }
-
-    console.log("[geminiService] Raw remix response:", text);
-
-    // ─── Parse out the JSON blob ───────────────────────────────────
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    // ─── Fallback if no JSON found ────────────────────────────────
-    return {
-      guide: text,
-      targetTempo: genreInfo?.tempoRange?.[0] || 128,
-      targetKey: "C minor",
-      sections: genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
-      midiPatterns: {},
-    };
-  } catch (err: any) {
-    console.error("[geminiService] Error in generateRemixGuide:", err);
-    throw new Error(
-      err.message.includes("quota")
-        ? "API quota exceeded."
-        : err.message || "Failed to generate remix guide."
-    );
+  // ─── Extract the returned text ───────────────────────────────
+  let text: string;
+  if (response.response && typeof response.response.text === "function") {
+    text = await response.response.text();
+  } else if (typeof response.text === "string") {
+    text = response.text;
+  } else if (Array.isArray((response as any).candidates)) {
+    text = (response as any).candidates[0]?.content || "";
+  } else {
+    console.error("[geminiService] Unexpected response shape:", response);
+    throw new Error("Unexpected response format from Gemini API");
   }
-};
+
+  console.log("[geminiService] Raw remix response:", text);
+
+  // ─── Pull out the JSON blob ───────────────────────────────────
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[0]);
+  }
+
+  // ─── Fallback if not valid JSON ─────────────────────────────
+  return {
+    guide:       text,
+    targetTempo: genreInfo?.tempoRange?.[0] || 128,
+    targetKey:   "C minor",
+    sections:    genreInfo?.sections || ["Intro","Build-Up","Drop","Breakdown","Outro"],
+    midiPatterns:{},
+  };
+}
