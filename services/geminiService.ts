@@ -725,6 +725,38 @@ export const generateMixComparison = async (inputs: MixComparisonInputs): Promis
 };
 
 
+export function generateRemixPrompt(
+  targetGenre: string,
+  genreInfo: any
+): string {
+  const tempoRange = genreInfo
+    ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM`
+    : "120-130 BPM";
+  const sections = genreInfo
+    ? genreInfo.sections.join(", ")
+    : "Intro, Build-Up, Drop, Breakdown, Outro";
+
+  return `You are a professional music producer assistant. The user has uploaded a track and selected the remix genre: ${targetGenre}.
+
+Analyze the uploaded track: identify its tempo, key, harmonic progression, melodic motifs, and rhythmic feel.
+
+Now, generate a Remix Guide that includes:
+1. Suggested overall remix approach
+2. Arrangement ideas
+3. Sound design tips
+4. Suggested structure (sections: ${sections})
+5. Target tempo & key for the remix (typical range: ${tempoRange})
+
+Then, generate MIDI patterns for each section:
+- Bassline
+- Drums
+- Melody / Harmony
+- Pads or textures
+
+Return **only** the JSON object with these keys: \`guide\`, \`targetTempo\`, \`targetKey\`, \`sections\`, and \`midiPatterns\`.`;
+}
+
+// ─── REMIX GUIDE CALL ─────────────────────────────────────────────────────────
 export async function generateRemixGuide(
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
@@ -736,10 +768,19 @@ export async function generateRemixGuide(
   sections: string[];
   midiPatterns: Record<string, Record<string, string>>;
 }> {
+  // now this is in scope!
   const textPart = { text: generateRemixPrompt(targetGenre, genreInfo) };
   const audioPart = {
     inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
   };
+
+  console.log("[geminiService] Remix Prompt:", textPart.text);
+  console.log("[geminiService] Audio size (chars):", audioData.base64.length);
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: [textPart, audioPart],
+  });
 
   console.log("[geminiService] Remix Prompt:", textPart.text);
   console.log("[geminiService] Audio size (chars):", audioData.base64.length);
