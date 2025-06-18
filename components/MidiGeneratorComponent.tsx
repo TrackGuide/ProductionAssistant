@@ -692,7 +692,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
                 {(isRemixMode ? 
-                  getRemixChordProgressions(originalChordProgression, settings.genre) : 
+                  getRemixChordProgressions(originalChordProgression || null, settings.genre) : 
                   getChordProgressionsForGenre(settings.genre)
                 ).map(cp => <option key={cp} value={cp}>{cp}</option>)}
               </select>
@@ -787,7 +787,9 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         </div>
       )}
        {!patterns && !isLoading && !error && (
-        <p className="text-gray-400 text-sm mt-4 text-center">No MIDI patterns generated yet for this TrackGuide. Click "Adjust MIDI Settings" to configure and generate.</p>
+        <p className="text-gray-400 text-sm mt-4 text-center">
+          No MIDI patterns generated yet for this {isRemixMode ? 'RemixGuide' : 'TrackGuide'}. Click "Adjust MIDI Settings" to configure and generate.
+        </p>
       )}
     </Card>
   );

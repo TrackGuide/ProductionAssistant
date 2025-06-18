@@ -168,10 +168,10 @@ export const RemixGuideAI: React.FC = () => {
         tempo: result.targetTempo,
         timeSignature: [4, 4] as [number, number],
         chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
-        genre: selectedGenre,
+        genre: 'Electronic', // Default for remix mode, not genre-specific
         bars: 8,
-        targetInstruments: ['bassline', 'drums', 'melody', 'pads'],
-        guidebookContext: `${selectedGenre} remix guide context`,
+        targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'], // Capitalized for consistency
+        guidebookContext: `RemixGuide AI patterns for ${result.targetKey} at ${result.targetTempo} BPM`,
         songSection: result.sections[0] || 'Intro'
       };
 
