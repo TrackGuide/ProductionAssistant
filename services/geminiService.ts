@@ -731,26 +731,42 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
   }
 
   try {
-    const audioFilePart = await fileToGenerativePart(audioFile); // Convert File to inlineData
-    const prompt = generateRemixPrompt("[Uploaded Track]", targetGenre, genreInfo);
+    const prompt = generateRemixPrompt('uploaded audio', targetGenre, genreInfo);
+    
+    // Convert audio file to inlineData part
+    const audioPart = await fileToGenerativePart(audioFile);
 
+    // Call Gemini API
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: [
-        audioFilePart,
+        audioPart,
         { text: prompt }
       ],
     });
 
-    if (response.text) {
-      const text = response.text;
+    // Parse response
+    if (response.response && response.response.text) {
+      const text = response.response.text();
 
-      // Try to parse JSON response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0]);
-        return result;
-      } else {
+      // Try parsing JSON inside response
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[0]);
+          return result;
+        } else {
+          // fallback: plain guide
+          return {
+            guide: text,
+            targetTempo: genreInfo?.tempoRange?.[0] || 128,
+            targetKey: "C minor",
+            sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+            midiPatterns: {}
+          };
+        }
+      } catch (parseError) {
+        console.error("Error parsing remix guide JSON:", parseError);
         return {
           guide: text,
           targetTempo: genreInfo?.tempoRange?.[0] || 128,
@@ -760,7 +776,7 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
         };
       }
     } else {
-      console.error("Received non-text response from Gemini API for remix guide. Response:", response);
+      console.error("Received non-text response from Gemini API for remix guide:", response);
       throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
 
@@ -775,8 +791,6 @@ export const generateRemixGuide = async (audioFile: File, targetGenre: string, g
         specificMessage = "The response for remix guide was blocked by the AI. This might be due to content policies or other restrictions. Please try again or adjust your input if possible.";
       } else if (error.message.includes("quota") || error.message.includes("limit")) {
         specificMessage = "API quota exceeded. Please try again later.";
-      } else if (error.message.includes("audio") || error.message.includes("file")) {
-        specificMessage = `There was an issue processing the audio file with the AI. Make sure it's a common format and under size limit. (${error.message})`;
       } else {
         specificMessage = `Failed to generate remix guide: ${error.message}`;
       }
