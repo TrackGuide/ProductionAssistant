@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
-import { getAllGenres, getGenreInfo } from '../constants/remixGenres';
+import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
 import { generateRemixGuide } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
 
@@ -25,24 +25,26 @@ interface RemixGuideData {
 
 export const RemixGuideAI: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [remixGuide, setRemixGuide] = useState<RemixGuideData | null>(null);
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const genres = getAllGenres();
+  const genresByCategory = getGenresByCategory();
+  const categories = Object.keys(genresByCategory);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
       if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.wav') || file.name.toLowerCase().endsWith('.mp3')) {
-        if (file.size <= 50 * 1024 * 1024) { // 50MB limit
+        if (file.size <= 100 * 1024 * 1024) { // 100MB limit
           setAudioFile(file);
           setError('');
         } else {
-          setError('File size must be under 50MB');
+          setError('File size must be under 100MB');
         }
       } else {
         setError('Please upload a WAV or MP3 file');
@@ -56,11 +58,11 @@ export const RemixGuideAI: React.FC = () => {
     if (file) {
       const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
       if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.wav') || file.name.toLowerCase().endsWith('.mp3')) {
-        if (file.size <= 50 * 1024 * 1024) {
+        if (file.size <= 100 * 1024 * 1024) {
           setAudioFile(file);
           setError('');
         } else {
-          setError('File size must be under 50MB');
+          setError('File size must be under 100MB');
         }
       } else {
         setError('Please upload a WAV or MP3 file');
@@ -99,8 +101,14 @@ export const RemixGuideAI: React.FC = () => {
     }
   };
 
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedGenre(''); // Reset genre when category changes
+  };
+
   const resetForm = () => {
     setAudioFile(null);
+    setSelectedCategory('');
     setSelectedGenre('');
     setRemixGuide(null);
     setError('');
@@ -137,7 +145,7 @@ export const RemixGuideAI: React.FC = () => {
               <p className="text-gray-400 text-sm">or drag and drop</p>
             </div>
             <p className="text-gray-500 text-xs mt-2">
-              MP3, WAV up to <span className="text-orange-400">50</span>MB
+              MP3, WAV up to <span className="text-orange-400">100</span>MB
             </p>
           </div>
         </Card>
@@ -146,24 +154,51 @@ export const RemixGuideAI: React.FC = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Target Remix Genre</h3>
           <div className="space-y-4">
-            <select
-              value={selectedGenre}
-              onChange={(e) => setSelectedGenre(e.target.value)}
-              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Select target genre...</option>
-              {genres.map((genre) => (
-                <option key={genre} value={genre}>
-                  {genre}
-                </option>
-              ))}
-            </select>
+            {/* Category Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                1. Select Category
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">Choose a category...</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Genre Selection */}
+            {selectedCategory && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  2. Select Genre
+                </label>
+                <select
+                  value={selectedGenre}
+                  onChange={(e) => setSelectedGenre(e.target.value)}
+                  className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Choose a genre...</option>
+                  {genresByCategory[selectedCategory].map((genre) => (
+                    <option key={genre} value={genre}>
+                      {genre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             
             {selectedGenre && (
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-gray-400 bg-gray-800 p-3 rounded-lg">
                 {(() => {
                   const info = getGenreInfo(selectedGenre);
-                  return info ? `Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM` : '';
+                  return info ? `🎵 Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM` : '';
                 })()}
               </div>
             )}

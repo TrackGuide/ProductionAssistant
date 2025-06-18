@@ -7,7 +7,7 @@ import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
-import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, PencilSquareIcon, CloseIcon } from './components/icons.tsx';
+import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -47,7 +47,7 @@ const initialMixFeedbackInputsState: MixFeedbackInputs = {
   userNotes: '',
 };
 
-const MAX_AUDIO_FILE_SIZE_MB = 50;
+const MAX_AUDIO_FILE_SIZE_MB = 100;
 const MAX_AUDIO_FILE_SIZE_BYTES = MAX_AUDIO_FILE_SIZE_MB * 1024 * 1024;
 
 
@@ -1104,7 +1104,7 @@ const App: React.FC = () => {
     }`}
     onClick={() => setActiveView('trackGuide')}
     variant={activeView === 'trackGuide' ? 'primary' : 'secondary'}
-    leftIcon={<PencilSquareIcon className="w-4 h-4" />}
+    leftIcon={<TrackGuideLogo className="w-4 h-4" />}
   >
     TrackGuide AI
   </Button>
@@ -1142,7 +1142,7 @@ const App: React.FC = () => {
     className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
     onClick={() => setShowAIAssistant(true)}
     variant="secondary"
-    leftIcon={<TrackGuideLogo className="w-4 h-4" />}
+    leftIcon={<span className="w-4 h-4 text-center">🗪</span>}
   >
     Production Coach
   </Button>
