@@ -481,6 +481,8 @@ interface MixComparisonInputs {
   mixBName?: string;
   requestMixAAnalysis?: boolean;
   requestMixBAnalysis?: boolean;
+  includeMixBFeedback?: boolean;
+  userNotes?: string;
 }
 
 const generateMixComparisonPrompt = (inputs: MixComparisonInputs): string => {
@@ -577,7 +579,7 @@ Analyze each frequency band in detail:
 ### Instrument-Specific Analysis
 Analyze how individual elements sit in the mix and suggest improvements.` : ''}
 
-Keep your analysis professional, detailed, and actionable. Focus on technical aspects and mixing decisions rather than musical composition.`;
+Keep your analysis professional, detailed, and actionable. Focus on technical aspects and mixing decisions rather than musical composition.${inputs.userNotes ? `\n\n**User Notes**: ${inputs.userNotes}` : ''}`;
   } else {
     // Single mix analysis
     return `You are an expert audio mixing and mastering engineer AI. The user has uploaded a single audio file: "${inputs.mixAName}".
@@ -650,7 +652,7 @@ Provide detailed, actionable recommendations for:
 4. **Stereo Processing**
 5. **Overall Polish**` : ''}
 
-Keep your analysis professional, detailed, and actionable. Focus on technical mixing aspects rather than musical composition.`;
+Keep your analysis professional, detailed, and actionable. Focus on technical mixing aspects rather than musical composition.${inputs.userNotes ? `\n\n**User Notes**: ${inputs.userNotes}` : ''}`;
   }
 };
 

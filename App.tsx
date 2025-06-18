@@ -19,7 +19,7 @@ import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_
 import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './components/LibraryModal.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
-import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
@@ -209,7 +209,6 @@ const App: React.FC = () => {
   
   // New tool modals state
   const [showAIAssistant, setShowAIAssistant] = useState<boolean>(false);
-  const [showEQCheatSheet, setShowEQCheatSheet] = useState<boolean>(false);
 
 
   // Mix Feedback State
@@ -1062,17 +1061,17 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-gray-100 p-4 md:p-6 lg:p-8 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0" style={{
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, #FF5722 1px, transparent 0)`,
           backgroundSize: '40px 40px'
         }}></div>
       </div>
       
       {/* Geometric Elements */}
-      <div className="absolute top-10 right-10 w-32 h-32 opacity-10">
-        <div className="w-full h-full border-2 border-orange-500 transform rotate-12"></div>
-        <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12"></div>
+      <div className="absolute top-10 right-10 w-32 h-32 opacity-10 pointer-events-none">
+        <div className="w-full h-full border-2 border-orange-500 transform rotate-12 pointer-events-none"></div>
+        <div className="absolute top-2 right-2 w-28 h-28 bg-orange-500 transform rotate-12 pointer-events-none"></div>
       </div>
       
       <header className="text-center mb-6 relative z-10">
@@ -1113,20 +1112,6 @@ const App: React.FC = () => {
   <Button
     size="sm"
     className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
-      activeView === 'mixFeedback'
-        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
-        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
-    }`}
-    onClick={() => setActiveView('mixFeedback')}
-    variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-    leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
-  >
-    Mix Feedback AI
-  </Button>
-
-  <Button
-    size="sm"
-    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
       activeView === 'remixGuide'
         ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
         : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
@@ -1140,22 +1125,26 @@ const App: React.FC = () => {
 
   <Button
     size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'mixFeedback'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('mixFeedback')}
+    variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
+  >
+    Mix Feedback AI
+  </Button>
+
+  <Button
+    size="sm"
     className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
     onClick={() => setShowAIAssistant(true)}
     variant="secondary"
     leftIcon={<TrackGuideLogo className="w-4 h-4" />}
   >
     Production Coach
-  </Button>
-
-  <Button
-    size="sm"
-    className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
-    onClick={() => setShowEQCheatSheet(true)}
-    variant="secondary"
-    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
-  >
-    EQ Guide
   </Button>
 </nav>
 
@@ -1611,7 +1600,7 @@ const App: React.FC = () => {
                         onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
                         className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
                       />
-                      <span className="text-sm text-gray-300">Include general mix feedback</span>
+                      <span className="text-sm text-gray-300">Include Full Mix Feedback</span>
                     </label>
                   </div>
                 </Card>
@@ -1752,12 +1741,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {showEQCheatSheet && (
-        <EQCheatSheet
-          isOpen={showEQCheatSheet}
-          onClose={() => setShowEQCheatSheet(false)}
-        />
-      )}
+
 
 
 
