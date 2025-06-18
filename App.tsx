@@ -1114,7 +1114,7 @@ const App: React.FC = () => {
     className="w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600"
     onClick={() => setActiveView('mixFeedback')}
     variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+    leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
   >
     Mix Feedback AI
   </Button>
@@ -1160,7 +1160,7 @@ const App: React.FC = () => {
                   <Input label="Song Reference" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={handleInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
                     <div className="flex items-center gap-2">
@@ -1186,7 +1186,7 @@ const App: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="vibe-input" className="block text-sm font-medium text-gray-300 mb-1.5">Vibe(s) / Mood(s)</label>
+                    <label htmlFor="vibe-input" className="block text-sm font-medium text-gray-300 mb-1.5">Vibe / Mood</label>
                     <div className="flex items-center gap-2">
                         <Input 
                         ref={vibeInputRef}
@@ -1247,10 +1247,12 @@ const App: React.FC = () => {
                     type="button" 
                     onClick={() => setShowAdvancedInput(!showAdvancedInput)}
                     variant="outline" 
-                    className="mb-4"
-                    leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
+                    className="mb-4 w-8 h-8 p-0 flex items-center justify-center"
+                    title={showAdvancedInput ? 'Hide Advanced Input' : 'Show Advanced Input'}
                   >
-                    {showAdvancedInput ? 'Hide' : 'Show'} Advanced Input
+                    <span className={`text-lg transition-transform ${showAdvancedInput ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
                   </Button>
 
                   {showAdvancedInput && (
@@ -1325,7 +1327,7 @@ const App: React.FC = () => {
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                   </div>
                 )}
-                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {activeGuidebookDetails && !isLoading && (
                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
                         <strong className="text-orange-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
@@ -1397,7 +1399,7 @@ const App: React.FC = () => {
 
             {/* Initial Placeholder or if no content and not loading/error */}
             {!isLoading && !generatedGuidebook && !error && !activeGuidebookDetails && ( 
-              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
+              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[500px]">
                   <div className="flex justify-center mb-6">
                     <TrackGuideLogo className="w-20 h-20 opacity-80 text-orange-500"/>
                   </div>
@@ -1424,7 +1426,7 @@ const App: React.FC = () => {
                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
                 }`}
               >
-                📊 Mix Analysis
+                🎚️ Mix Analysis
               </button>
               <button
                 onClick={() => setMixFeedbackTab('compare')}
@@ -1580,6 +1582,19 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   {mixCompareInputs.mixB && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixB.name} ({(mixCompareInputs.mixB.size / 1024 / 1024).toFixed(2)} MB)</p>}
+                  
+                  {/* Include general mix feedback checkbox */}
+                  <div className="mt-4 pt-4 border-t border-gray-600">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mixCompareInputs.includeMixBFeedback || false}
+                        onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
+                        className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-300">Include general mix feedback</span>
+                    </label>
+                  </div>
                 </Card>
 
                 <Card title="Notes for AI" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
@@ -1592,26 +1607,14 @@ const App: React.FC = () => {
                   />
                 </Card>
 
-                <Card title="Analysis Options" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
-                  <div className="space-y-3">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={mixCompareInputs.includeMixBFeedback || false}
-                        onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
-                        className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-300">Include full analysis for Mix B</span>
-                    </label>
-                  </div>
-                </Card>
+
 
                 <Button
                   onClick={handleCompareMixes}
                   disabled={isGeneratingMixComparison || !mixCompareInputs.mixA || !mixCompareInputs.mixB}
                   variant="primary"
                   className="w-full px-4 py-3 text-base font-semibold"
-                  leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5"/>}
+                  leftIcon={<span className="w-5 h-5 text-center">⚖️</span>}
                 >
                   {isGeneratingMixComparison ? 'Comparing Mixes...' : 'Compare Mixes'}
                 </Button>
@@ -1636,7 +1639,7 @@ const App: React.FC = () => {
           </div>
           <div className="md:col-span-9 space-y-6">
             {(isGeneratingMixFeedback || isGeneratingMixComparison) && (
-              <div className="flex justify-center items-center h-full min-h-[300px]">
+              <div className="flex justify-center items-center h-full min-h-[500px]">
                 <Spinner size="lg" color="text-orange-500" text={
                   mixFeedbackTab === 'single' 
                     ? "AI is analyzing your mix... this may take a moment."
@@ -1666,7 +1669,7 @@ const App: React.FC = () => {
                   <Button onClick={() => handleCopyFormattedContent('mix-feedback-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Feedback</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
-                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {renderMarkdown(mixFeedbackResult, true)}
                 </div>
               </Card>
@@ -1681,13 +1684,13 @@ const App: React.FC = () => {
                   <Button onClick={() => handleCopyFormattedContent('mix-comparison-display')} variant="outline" className="!border-orange-500 !text-orange-400 hover:!bg-orange-500 hover:!text-white" leftIcon={<CopyIcon />}>Copy Comparison</Button>
                   {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                 </div>
-                <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-8rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {renderMarkdown(mixCompareResult, true)}
                 </div>
               </Card>
             )}
             {!isGeneratingMixFeedback && !isGeneratingMixComparison && !mixFeedbackResult && !mixCompareResult && !mixFeedbackError && !mixCompareError && (
-              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[300px]">
+              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[500px]">
                   <div className="flex justify-center mb-6">
                     <TrackGuideLogo className="w-20 h-20 opacity-80"/>
                   </div>

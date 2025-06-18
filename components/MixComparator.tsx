@@ -153,7 +153,7 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            🎚️ Mix Comparison
+            ⚖️ Mix Comparison
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <CloseIcon className="w-6 h-6" />
