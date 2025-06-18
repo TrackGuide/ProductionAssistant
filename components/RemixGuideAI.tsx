@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
-import { generateRemixGuide } from '../services/geminiService';
+import { generateRemixGuide, generateRemixPrompt } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
 
 interface RemixGuideData {
@@ -27,7 +27,7 @@ export const RemixGuideAI: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [remixGuide, setRemixGuide] = useState<RemixGuideData | null>(null);
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,36 +37,28 @@ export const RemixGuideAI: React.FC = () => {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
-      if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.wav') || file.name.toLowerCase().endsWith('.mp3')) {
-        if (file.size <= 100 * 1024 * 1024) {
-          setAudioFile(file);
-          setError('');
-        } else {
-          setError('File size must be under 100MB');
-        }
-      } else {
-        setError('Please upload a WAV or MP3 file');
-      }
+    if (!file) return;
+    const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
+    const isValidType = validTypes.includes(file.type)
+      || file.name.toLowerCase().endsWith('.wav')
+      || file.name.toLowerCase().endsWith('.mp3');
+    if (!isValidType) {
+      setError('Please upload a WAV or MP3 file');
+      return;
     }
+    if (file.size > 100 * 1024 * 1024) {
+      setError('File size must be under 100MB');
+      return;
+    }
+    setAudioFile(file);
+    setError('');
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file) {
-      const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3'];
-      if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.wav') || file.name.toLowerCase().endsWith('.mp3')) {
-        if (file.size <= 100 * 1024 * 1024) {
-          setAudioFile(file);
-          setError('');
-        } else {
-          setError('File size must be under 100MB');
-        }
-      } else {
-        setError('Please upload a WAV or MP3 file');
-      }
+      handleFileUpload({ target: { files: [file] } } as any);
     }
   };
 
@@ -84,18 +76,23 @@ export const RemixGuideAI: React.FC = () => {
     setError('');
 
     try {
-      // Convert audio file to base64 string first
-      const audioBase64 = await uploadAudio(audioFile);
+      // 1) Convert audio to base64 + mimeType
+      const audioData = await uploadAudio(audioFile);
+      console.log('[RemixGuideAI] audioData:', audioData);
 
+      // 2) Build prompt for debugging
       const genreInfo = getGenreInfo(selectedGenre);
+      const prompt = generateRemixPrompt(selectedGenre, genreInfo);
+      console.log('[RemixGuideAI] prompt:', prompt);
 
-      // Now generate remix guide using the base64 string
-      const result = await generateRemixGuide(audioBase64, selectedGenre, genreInfo);
+      // 3) Call service
+      const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
+      console.log('[RemixGuideAI] result:', result);
 
       setRemixGuide(result);
-    } catch (err) {
-      console.error('Error generating remix guide:', err);
-      setError('Failed to generate remix guide. Please try again.');
+    } catch (err: any) {
+      console.error('[RemixGuideAI] error generating remix guide:', err);
+      setError(err.message || 'Failed to generate remix guide. Check console for details.');
     } finally {
       setIsGenerating(false);
     }
@@ -119,7 +116,9 @@ export const RemixGuideAI: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Audio Upload */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Upload Original Track</h3>
           <div
@@ -148,6 +147,7 @@ export const RemixGuideAI: React.FC = () => {
           </div>
         </Card>
 
+        {/* Genre Selection */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 text-white">Target Remix Genre</h3>
           <div className="space-y-4">
@@ -193,7 +193,9 @@ export const RemixGuideAI: React.FC = () => {
               <div className="text-sm text-gray-400 bg-gray-800 p-3 rounded-lg">
                 {(() => {
                   const info = getGenreInfo(selectedGenre);
-                  return info ? `🎵 Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM` : '';
+                  return info
+                    ? `🎵 Tempo: ${info.tempoRange[0]}-${info.tempoRange[1]} BPM`
+                    : '';
                 })()}
               </div>
             )}
@@ -201,12 +203,14 @@ export const RemixGuideAI: React.FC = () => {
         </Card>
       </div>
 
+      {/* Error Display */}
       {error && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
           {error}
         </div>
       )}
 
+      {/* Action Buttons */}
       <div className="flex gap-4">
         <Button
           onClick={generateRemix}
@@ -215,8 +219,7 @@ export const RemixGuideAI: React.FC = () => {
         >
           {isGenerating ? (
             <>
-              <Spinner size="sm" />
-              Analyzing & Generating Remix Guide...
+              <Spinner size="sm" /> Analyzing & Generating Remix Guide...
             </>
           ) : (
             '🎛️ Generate Remix Guide'
@@ -227,8 +230,10 @@ export const RemixGuideAI: React.FC = () => {
         </Button>
       </div>
 
+      {/* Results Section */}
       {remixGuide && (
         <div className="space-y-6">
+          {/* Remix Guide */}
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-white">
@@ -243,8 +248,11 @@ export const RemixGuideAI: React.FC = () => {
             </div>
           </Card>
 
+          {/* MIDI Patterns */}
           <Card className="p-6">
-            <h3 className="text-xl font-bold text-white mb-6">🎹 MIDI Remix Patterns</h3>
+            <h3 className="text-xl font-bold text-white mb-6">
+              🎹 MIDI Remix Patterns
+            </h3>
             <MidiGeneratorComponent
               key={`remix-${selectedGenre}-${Date.now()}`}
               initialPatterns={remixGuide.midiPatterns}
@@ -257,14 +265,16 @@ export const RemixGuideAI: React.FC = () => {
         </div>
       )}
 
+      {/* Info Section */}
       {!remixGuide && (
         <Card className="p-6 bg-gray-800/30">
           <div className="text-center space-y-4">
             <div className="text-6xl">🎛️</div>
             <h3 className="text-xl font-bold text-white">Transform Your Track</h3>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Upload your original track and select a target genre. Our AI will analyze the harmonic progression, 
-              melodies, and rhythmic elements, then generate a comprehensive remix guide with genre-appropriate 
+              Upload your original track and select a target genre. Our AI will
+              analyze the harmonic progression, melodies, and rhythmic elements,
+              then generate a comprehensive remix guide with genre-appropriate
               MIDI patterns for basslines, drums, melodies, and textures.
             </p>
           </div>
