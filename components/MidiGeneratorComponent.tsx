@@ -365,55 +365,7 @@ const handlePlayAll = async () => {
 
   const handleDownloadAll = () => {
     if (!patterns) return;
-    const filenameBase = (currentGuidebookEntry?.title || 'TrackGuideMIDI').replace(/[^a-z0-9_.-]/gi, '_');
-    const midiData = generateMidiFile(patterns, settings, filenameBase);
-    if (midiData) {
-      downloadMidi(midiData, `${filenameBase}_all_tracks.mid`);
-    } else {
-      alert("No MIDI data to download or error in generation.");
-    }
-  };
-
-  const handleDownloadSingleTrack = (trackType: KeyOfGeneratedMidiPatterns) => {
-    if (!patterns || !patterns[trackType]) {
-        alert(`No ${trackType} data available in current patterns.`);
-        return;
-    }
-    
-    const singleTrackPattern: Partial<GeneratedMidiPatterns> = { [trackType]: patterns[trackType] }; 
-    const filenameBase = (currentGuidebookEntry?.title || 'TrackGuideMIDI').replace(/[^a-z0-9_.-]/gi, '_');
-    const midiData = generateMidiFile(singleTrackPattern as GeneratedMidiPatterns, settings, `${filenameBase}_${trackType}`);
-    
-    if (midiData) {
-      downloadMidi(midiData, `${filenameBase}_${trackType}.mid`);
-    } else {
-      alert(`No ${trackType} data to download or error in generation.`);
-    }
-  };
-
-  
-const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
-    if (!patterns) return;
-
-    setIsLoading(true);
-    setLoadingMessage(`Regenerating ${trackType}...`);
-    setError(null);
-    if (isPlayingRef.current) {
-        stopPlayback();
-        setIsPlaying(false);
-    }
-    await initializeAudio();
-
-    let preservedSettings;
-
-    if (isRemixMode) {
-        preservedSettings = {
-            ...settings,
-            guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
-            genre: settings.genre,
-            targetInstruments: [trackType]
-        };
-    } else {
+        } else {
         const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
         const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
