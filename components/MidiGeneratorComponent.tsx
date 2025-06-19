@@ -710,4 +710,4 @@ const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns
 </p>
       )}
     </Card>
-  );
+  ); 
