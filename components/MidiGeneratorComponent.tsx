@@ -44,9 +44,6 @@ interface MidiGeneratorProps {
   targetTempo?: number;
   targetKey?: string;
   isRemixMode?: boolean;
-  preGeneratedPatterns?: GeneratedMidiPatterns;
-  originalChordProgression?: string | null; // Original song's chord progression for remix mode
-  remixGuideContent?: string; // Full remix guide content for extracting progressions
 }
 
 const extractRichMidiContext = (guidebookContent: string): string => {
@@ -70,18 +67,6 @@ const getAvailableModesForKey = (keyScale: string): string[] => {
 
 const BAR_OPTIONS = [1, 2, 4, 8, 16, 32];
 
-// Function to get chord progressions for remix mode
-const getRemixChordProgressions = (originalProgression: string | null, genre: string): string[] => {
-  const baseProgressions = getChordProgressionsForGenre(genre);
-  
-  if (originalProgression) {
-    // Put original progression first, then add genre-specific alternatives
-    return [originalProgression, ...baseProgressions.filter(prog => prog !== originalProgression)];
-  }
-  
-  return baseProgressions;
-};
-
 export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({ 
     currentGuidebookEntry, 
     mainAppInputs, 
@@ -94,10 +79,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     sections,
     targetTempo,
     targetKey,
-    isRemixMode = false,
-    preGeneratedPatterns,
-    originalChordProgression,
-    remixGuideContent
+    isRemixMode = false
 }) => {
   const [settings, setSettings] = useState<MidiSettings>(() => {
     // Remix mode initialization
@@ -110,9 +92,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         songSection: sections?.[0] || MIDI_DEFAULT_SETTINGS.songSection,
         guidebookContext: `Remix mode for ${targetKey || 'C minor'} at ${targetTempo || 128} BPM`,
         targetInstruments: ['Bassline', 'Drums', 'Melody', 'Pads'],
-        bars: 8,
-        chordProgression: originalChordProgression || 'i-VI-III-VII', // Use original or fallback
-        timeSignature: [4, 4] as [number, number] // Standard for most remixes
+        bars: 8
       };
     }
 
@@ -157,11 +137,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     };
   });
   const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(() => {
-    // Use preGeneratedPatterns if available (from automatic MIDI generation)
-    if (preGeneratedPatterns) {
-      return preGeneratedPatterns;
-    }
-    
     if (isRemixMode && initialPatterns) {
       // Convert remix patterns to GeneratedMidiPatterns format
       const convertedPatterns: GeneratedMidiPatterns = {};
@@ -283,7 +258,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     });
   };
 
-  const handleGeneratePatterns = async () => {
+
+const handleGeneratePatterns = async () => {
     setIsLoading(true);
     setLoadingMessage('Regenerating MIDI patterns...');
     setError(null);
@@ -291,67 +267,64 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         stopPlayback();
         setIsPlaying(false);
     }
-    await initializeAudio(); 
-    
+    await initializeAudio();
+
     let settingsForGeneration;
-    
+
     if (isRemixMode) {
-      // For remix mode, use remix-specific context
-      settingsForGeneration = {
-        ...settings,
-        guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
-        genre: settings.genre
-      };
+        settingsForGeneration = {
+            ...settings,
+            guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+            genre: settings.genre
+        };
     } else {
-      // For TrackGuide mode, use guidebook context
-      const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-      const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
-      
-      settingsForGeneration = {
-        ...settings, 
-        guidebookContext: richContextForRegeneration, 
-        genre: primaryGenre 
-      };
+        const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+        const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+
+        settingsForGeneration = {
+            ...settings,
+            guidebookContext: richContextForRegeneration,
+            genre: primaryGenre
+        };
     }
 
-    let accumulatedMidiJson = "";
     try {
-      const midiStream = await generateMidiPatternSuggestions(settingsForGeneration);
-      for await (const chunk of midiStream) {
-        accumulatedMidiJson += chunk.text;
-      }
-      
-      let jsonStr = accumulatedMidiJson.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-      const match = jsonStr.match(fenceRegex);
-      if (match && match[2]) {
-        jsonStr = match[2].trim();
-      }
-      
-      const patternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
-      if (patternsData.drums) {
-          const lowercasedDrums: any = {};
-          for (const key in patternsData.drums) {
-              lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = patternsData.drums[key as keyof typeof patternsData.drums];
-          }
-          patternsData.drums = lowercasedDrums;
-      }
-      setPatterns(patternsData);
-      onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData); 
-    } catch (err: any) {
-      console.error("MIDI Generation Error:", err);
-      const specificMessage = err.message.toLowerCase().includes("json")
-        ? `AI returned invalid JSON for MIDI patterns. (${err.message})`
-        : `Failed to generate MIDI patterns: ${err.message}`;
-      setError(specificMessage);
-      setPatterns(null); // Clear previous patterns on error
-    } finally {
-      setIsLoading(false);
-      setLoadingMessage('');
-    }
-  };
+        const midiResult = await generateMidiPatternSuggestions(settingsForGeneration);
+        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
 
-  const handlePlayAll = async () => {
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+            jsonStr = match[2].trim();
+        }
+
+        const patternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+
+        if (patternsData.drums) {
+            const lowercasedDrums: any = {};
+            for (const key in patternsData.drums) {
+                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = patternsData.drums[key as keyof typeof patternsData.drums];
+            }
+            patternsData.drums = lowercasedDrums;
+        }
+
+        setPatterns(patternsData);
+        onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData);
+    } catch (err: any) {
+        console.error("MIDI Generation Error:", err);
+        const specificMessage = err.message.toLowerCase().includes("json")
+            ? `AI returned invalid JSON for MIDI patterns. (${err.message})`
+            : `Failed to generate MIDI patterns: ${err.message}`;
+        setError(specificMessage);
+        setPatterns(null);
+    } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+    }
+};
+
+
+const handlePlayAll = async () => {
     if (!patterns) return;
     await initializeAudio();
     if (isPlayingRef.current) {
@@ -418,13 +391,13 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
   };
 
-  const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
+  
+const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
     if (!patterns) return;
-    
+
     setIsLoading(true);
-    setLoadingMessage('Generating MIDI...');
+    setLoadingMessage(`Regenerating ${trackType}...`);
     setError(null);
-    
     if (isPlayingRef.current) {
         stopPlayback();
         setIsPlaying(false);
@@ -432,177 +405,152 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     await initializeAudio();
 
     let preservedSettings;
-    
+
     if (isRemixMode) {
-      // For remix mode, use remix-specific context
-      preservedSettings = {
-        ...settings,
-        guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
-        genre: settings.genre,
-        // Keep only the specific track type for regeneration
-        targetInstruments: [trackType]
-      };
+        preservedSettings = {
+            ...settings,
+            guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+            genre: settings.genre,
+            targetInstruments: [trackType]
+        };
     } else {
-      // For TrackGuide mode, use guidebook context
-      const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-      const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+        const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+        const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
-      preservedSettings = {
-        ...settings,
-        guidebookContext: richContextForRegeneration,
-        genre: primaryGenre,
-        // Keep only the specific track type for regeneration
-        targetInstruments: [trackType]
-      };
+        preservedSettings = {
+            ...settings,
+            guidebookContext: richContextForRegeneration,
+            genre: primaryGenre,
+            targetInstruments: [trackType]
+        };
     }
 
-    let accumulatedMidiJson = "";
     try {
-      const midiStream = await generateMidiPatternSuggestions(preservedSettings);
-      for await (const chunk of midiStream) {
-        accumulatedMidiJson += chunk.text;
-      }
+        const midiResult = await generateMidiPatternSuggestions(preservedSettings);
+        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
 
-      let jsonStr = accumulatedMidiJson.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-      const match = jsonStr.match(fenceRegex);
-      if (match && match[2]) {
-        jsonStr = match[2].trim();
-      }
-
-      const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
-      
-      // Preserve existing patterns and only update the regenerated track
-      const updatedPatterns = {
-        ...patterns,
-        [trackType]: newPatternsData[trackType]
-      };
-      
-      if (trackType === 'drums' && newPatternsData.drums) {
-          const lowercasedDrums: any = {};
-          for (const key in newPatternsData.drums) {
-              lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
-          }
-          updatedPatterns.drums = lowercasedDrums;
-      }
-      
-      setPatterns(updatedPatterns);
-      onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
-      setLoadingMessage('');
-    } catch (err) {
-      console.error('Error regenerating single track:', err);
-      setError(`Failed to regenerate ${trackType}. Please try again.`);
-      setLoadingMessage('');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const getTempoRangeText = (genreKey: string) => {
-    const range = MIDI_TEMPO_RANGES[genreKey] || MIDI_TEMPO_RANGES.Default;
-    return `(${range[0]}-${range[1]} BPM for ${genreKey})`;
-  };
-
-  const getChordProgressionsForGenre = (genreKey: string) => {
-    return MIDI_CHORD_PROGRESSIONS[genreKey] || MIDI_CHORD_PROGRESSIONS.Default;
-  };
-
-  const renderPatternPreview = (patternData: any, type: string) => {
-    if (!patternData) return <p className="text-xs text-gray-500">No {type} pattern generated.</p>;
-    
-    // Only show chord values for the Chords section
-    if (type === "Chords" && Array.isArray(patternData)) {
-      const chordEvents = patternData as ChordNoteEvent[];
-      if (chordEvents.length > 0) {
-        let uniqueChords: string[] = [];
-        let lastChordName: string | null = null;
-        for (const event of chordEvents) {
-          if (event.name !== lastChordName) {
-            uniqueChords.push(event.name);
-            lastChordName = event.name;
-          }
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+            jsonStr = match[2].trim();
         }
-        const previewText = uniqueChords.join(' - ');
-        return (
-          <div className="text-xs text-gray-300 bg-gray-700 p-2 rounded-md mt-1 whitespace-normal break-words max-h-20 overflow-y-auto custom-scrollbar">
-            {previewText}
-          </div>
-        );
-      }
-    }
-    
-    // For all other types (Bassline, Melody, Drums), don't show MIDI values
-    return null;
-  };
 
-  const toggleSettingsInputs = async () => {
+        const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+
+        const updatedPatterns = {
+            ...patterns,
+            [trackType]: newPatternsData[trackType]
+        };
+
+        if (trackType === 'drums' && newPatternsData.drums) {
+            const lowercasedDrums: any = {};
+            for (const key in newPatternsData.drums) {
+                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
+            }
+            updatedPatterns.drums = lowercasedDrums;
+        }
+
+        setPatterns(updatedPatterns);
+        onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
+    } catch (err) {
+        console.error('Error regenerating single track:', err);
+        setError(`Failed to regenerate ${trackType}. Please try again.`);
+    } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+    }
+};
+
+
+
+const toggleSettingsInputs = async () => {
     if (!showSettingsInputs) {
-        await initializeAudio(); 
+        await initializeAudio();
     }
     setShowSettingsInputs(prev => !prev);
-  }
-
-  const renderTrackCard = (trackType: KeyOfGeneratedMidiPatterns, title: string) => {
-    const patternData = patterns?.[trackType];
-    const hasData = patternData && 
-                    ((Array.isArray(patternData) && patternData.length > 0) || 
-                     (typeof patternData === 'object' && Object.keys(patternData as object).length > 0 && !(patternData as GeneratedMidiPatterns)?.error));
+};
 
 
-    if (!hasData) { 
-        if (patterns && !patterns[trackType] && settings.targetInstruments.includes(trackType)) {
-             return (
-                <Card title={title} className="bg-gray-700/50 opacity-60" contentClassName="p-3">
-                    <p className="text-xs text-gray-400">Pattern not generated or empty. Try regenerating with this instrument selected.</p>
-                </Card>
-            );
-        }
-        return null; 
+
+  
+    const filenameBase = (currentGuidebookEntry?.title || 'TrackGuideMIDI').replace(/[^a-z0-9_.-]/gi, '_');
+    const midiData = generateMidiFile(singleTrackPattern as GeneratedMidiPatterns, settings, `${filenameBase}_${trackType}`);
+    
+    if (midiData) {
+      downloadMidi(midiData, `${filenameBase}_${trackType}.mid`);
+    } else {
+      alert(`No ${trackType} data to download or error in generation.`);
+    }
+  };
+
+  const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
+    if (!patterns) return;
+
+    setIsLoading(true);
+    setLoadingMessage(`Regenerating ${trackType}...`);
+    setError(null);
+    if (isPlayingRef.current) {
+        stopPlayback();
+        setIsPlaying(false);
+    }
+    await initializeAudio();
+
+    let preservedSettings;
+
+    if (isRemixMode) {
+        preservedSettings = {
+            ...settings,
+            guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+            genre: settings.genre,
+            targetInstruments: [trackType]
+        };
+    } else {
+        const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+        const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+
+        preservedSettings = {
+            ...settings,
+            guidebookContext: richContextForRegeneration,
+            genre: primaryGenre,
+            targetInstruments: [trackType]
+        };
     }
 
-    const previewContent = renderPatternPreview(patternData, title);
-    
-    return (
-      <Card title={title} className="bg-gray-700/50" contentClassName="p-3">
-        {previewContent}
-        <div className={`${previewContent ? 'mt-3' : ''} flex gap-2 items-center`}>
-          <Button 
-            size="sm" 
-            variant="secondary"
-            onClick={() => handlePlaySingleTrack(trackType)}
-            disabled={!hasData || isPlaying}
-            className="px-2.5 py-1.5 flex-1"
-            title={`Preview ${title}`}
-            leftIcon={<PlayIcon className="w-4 h-4"/>}
-          >
-            Preview
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => handleRegenerateSingleTrack(trackType)}
-            className="p-1.5 flex-none" 
-            title={`Regenerate ${title}`}
-            aria-label={`Regenerate ${title}`}
-            disabled={isLoading}
-          >
-            <RefreshIcon className="w-4 h-4" isSpinning={isLoading && loadingMessage.includes(trackType)}/>
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => handleDownloadSingleTrack(trackType)}
-            className="p-1.5 flex-none" 
-            title={`Download ${title} MIDI`}
-            aria-label={`Download ${title} MIDI`}
-            disabled={!hasData}
-          >
-            <DownloadIcon className="w-4 h-4"/>
-          </Button>
-        </div>
-      </Card>
-    );
-  };
+    try {
+        const midiResult = await generateMidiPatternSuggestions(preservedSettings);
+        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
+
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+            jsonStr = match[2].trim();
+        }
+
+        const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+
+        const updatedPatterns = {
+            ...patterns,
+            [trackType]: newPatternsData[trackType]
+        };
+
+        if (trackType === 'drums' && newPatternsData.drums) {
+            const lowercasedDrums: any = {};
+            for (const key in newPatternsData.drums) {
+                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
+            }
+            updatedPatterns.drums = lowercasedDrums;
+        }
+
+        setPatterns(updatedPatterns);
+        onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
+    } catch (err) {
+        console.error('Error regenerating single track:', err);
+        setError(`Failed to regenerate ${trackType}. Please try again.`);
+    } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+    }
+};
 
 
   return (
@@ -621,10 +569,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
             <div>
               <label htmlFor="midi-key" className="block text-sm font-medium text-gray-300 mb-1">
-                Key {isRemixMode ? 
-                  <span className="text-xs text-gray-400">(Remix Target: {targetKey || "N/A"})</span> : 
-                  <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
-                }
+                Key <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
               </label>
               <select 
                 id="midi-key" 
@@ -651,10 +596,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
-                Tempo (BPM) {isRemixMode ? 
-                  <span className="text-xs text-gray-400">Remix Target: {targetTempo || "N/A"}</span> : 
-                  <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
-                }
+                Tempo (BPM) <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
               </label>
               <Input 
                 type="number" 
@@ -665,25 +607,20 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
               />
               <p className="text-xs text-gray-400 mt-1">{getTempoRangeText(settings.genre)}</p>
             </div>
-            {!isRemixMode && (
-              <div>
-                <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">Time Signature</label>
-                <select 
-                  id="midi-timesig" 
-                  value={settings.timeSignature.join('/')} 
-                  onChange={(e) => handleSettingChange('timeSignature', e.target.value.split('/').map(Number) as [number,number])} 
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                >
-                  {MIDI_TIME_SIGNATURES.map(ts => <option key={ts.join('/')} value={ts.join('/')}>{ts.join('/')}</option>)}
-                </select>
-              </div>
-            )}
+            <div>
+              <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">Time Signature</label>
+              <select 
+                id="midi-timesig" 
+                value={settings.timeSignature.join('/')} 
+                onChange={(e) => handleSettingChange('timeSignature', e.target.value.split('/').map(Number) as [number,number])} 
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                {MIDI_TIME_SIGNATURES.map(ts => <option key={ts.join('/')} value={ts.join('/')}>{ts.join('/')}</option>)}
+              </select>
+            </div>
             <div>
               <label htmlFor="midi-chords" className="block text-sm font-medium text-gray-300 mb-1">
-                Chord Progression {isRemixMode ? 
-                  <span className="text-xs text-gray-400">(Based on original + remix style)</span> : 
-                  <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookChordProg || "N/A"})</span>
-                }
+                Chord Progression <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookChordProg || "N/A"})</span>
               </label>
               <select 
                 id="midi-chords" 
@@ -691,28 +628,23 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('chordProgression', e.target.value)} 
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
-                {(isRemixMode ? 
-                  getRemixChordProgressions(originalChordProgression || null, settings.genre) : 
-                  getChordProgressionsForGenre(settings.genre)
-                ).map(cp => <option key={cp} value={cp}>{cp}</option>)}
+                {getChordProgressionsForGenre(settings.genre).map(cp => <option key={cp} value={cp}>{cp}</option>)}
               </select>
             </div>
-            {!isRemixMode && (
-              <div>
-                <label htmlFor="midi-genre" className="block text-sm font-medium text-gray-300 mb-1">MIDI Genre Context</label>
-                <select 
-                  id="midi-genre" 
-                  value={settings.genre} 
-                  onChange={(e) => handleSettingChange('genre', e.target.value)} 
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                >
-                  <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
-                      Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || "Default"})
-                  </option>
-                  {GENRE_SUGGESTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-            )}
+            <div>
+              <label htmlFor="midi-genre" className="block text-sm font-medium text-gray-300 mb-1">MIDI Genre Context</label>
+              <select 
+                id="midi-genre" 
+                value={settings.genre} 
+                onChange={(e) => handleSettingChange('genre', e.target.value)} 
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                <option value={currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || MIDI_DEFAULT_SETTINGS.genre}>
+                    Align with Guidebook ({currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre[0] || "Default"})
+                </option>
+                {GENRE_SUGGESTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
             <div>
               <label htmlFor="midi-bars" className="block text-sm font-medium text-gray-300 mb-1">Loop Length (Bars)</label>
               <select 
@@ -787,9 +719,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         </div>
       )}
        {!patterns && !isLoading && !error && (
-        <p className="text-gray-400 text-sm mt-4 text-center">
-          No MIDI patterns generated yet for this {isRemixMode ? 'RemixGuide' : 'TrackGuide'}. Click "Adjust MIDI Settings" to configure and generate.
-        </p>
+     <p className="text-gray-400 text-sm mt-4 text-center">
+  No MIDI patterns generated yet for this {isRemixMode ? 'RemixGuide' : 'TrackGuide'}. 
+  Click "Adjust MIDI Settings" to configure and generate.
+</p>
       )}
     </Card>
   );
