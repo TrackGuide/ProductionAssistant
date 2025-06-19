@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../types.ts';
 import { generateMidiPatternSuggestions } from '../services/geminiService.ts';
@@ -395,7 +394,71 @@ const handleStopAll = () => {
     }
   };
 
-  
+const renderTrackCard = (trackType: KeyOfGeneratedMidiPatterns, title: string) => {
+  const patternData = patterns?.[trackType];
+  const hasData = patternData && 
+                  ((Array.isArray(patternData) && patternData.length > 0) || 
+                   (typeof patternData === 'object' && Object.keys(patternData as object).length > 0 && !(patternData as GeneratedMidiPatterns)?.error));
+
+  if (!hasData) { 
+      if (patterns && !patterns[trackType] && settings.targetInstruments.includes(trackType)) {
+           return (
+              <Card title={title} className="bg-gray-700/50 opacity-60" contentClassName="p-3">
+                  <p className="text-xs text-gray-400">Pattern not generated or empty. Try regenerating with this instrument selected.</p>
+              </Card>
+          );
+      }
+      return null; 
+  }
+
+  return (
+    <Card title={title} className="bg-gray-700/50" contentClassName="p-3">
+      <div className="flex gap-2 items-center">
+        <Button 
+          size="sm" 
+          variant="secondary"
+          onClick={() => handlePlaySingleTrack(trackType)}
+          disabled={!hasData || isPlaying}
+          className="px-2.5 py-1.5 flex-1"
+          title={`Preview ${title}`}
+          leftIcon={<PlayIcon className="w-4 h-4"/>}
+        >
+          Preview
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => handleRegenerateSingleTrack(trackType)}
+          className="p-1.5 flex-none" 
+          title={`Regenerate ${title}`}
+          aria-label={`Regenerate ${title}`}
+          disabled={isLoading}
+        >
+          <RefreshIcon className="w-4 h-4" isSpinning={isLoading && loadingMessage.includes(trackType)}/>
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => handleDownloadSingleTrack(trackType)}
+          className="p-1.5 flex-none" 
+          title={`Download ${title} MIDI`}
+          aria-label={`Download ${title} MIDI`}
+          disabled={!hasData}
+        >
+          <DownloadIcon className="w-4 h-4"/>
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+const toggleSettingsInputs = async () => {
+  if (!showSettingsInputs) {
+      await initializeAudio(); 
+  }
+  setShowSettingsInputs(prev => !prev);
+};
+
 const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
     if (!patterns) return;
 
