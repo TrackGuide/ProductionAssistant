@@ -7,44 +7,15 @@ import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/aud
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Spinner } from './Spinner.tsx';
-import { Input } from './Input.tsx';
-import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons.tsx';
-import { MIDI_SCALES, MIDI_MODES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants.ts';
+import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, KeyboardIcon } from './icons.tsx';
+import { MIDI_DEFAULT_SETTINGS } from '../constants.ts';
 
-const extractRichMidiContext = (guidebookContent: string): string => {
-  if (!guidebookContent) return "General musical context. Focus on genre and vibe.";
-  const summaryEndIndex = guidebookContent.indexOf('## 3. Instrument & Sound Design Guide');
-  const endIndex = summaryEndIndex > 0 ? summaryEndIndex : (guidebookContent.indexOf('## 2. Structural Blueprint') > 0 ? guidebookContent.indexOf('## 2. Structural Blueprint') : 1500);
-  return guidebookContent.substring(0, Math.min(endIndex, guidebookContent.length));
-};
+export const MidiGeneratorComponent: React.FC<{ currentGuidebookEntry?: GuidebookEntry; mainAppInputs?: UserInputs; onUpdateGuidebookEntryMidi?: (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => void; }> = ({ currentGuidebookEntry, mainAppInputs, onUpdateGuidebookEntryMidi }) => {
 
-const getKeyCenterFromScale = (keyScale: string): string => {
-  const match = keyScale.match(/^([A-G][#b]?)/);
-  return match ? match[1] : 'C';
-};
-
-const getAvailableModesForKey = (keyScale: string): string[] => {
-  const keyCenter = getKeyCenterFromScale(keyScale);
-  return MIDI_MODES[keyCenter] || MIDI_MODES['C'];
-};
-
-const BAR_OPTIONS = [1, 2, 4, 8, 16, 32];
-
-export const MidiGeneratorComponent: React.FC<{ currentGuidebookEntry?: GuidebookEntry; mainAppInputs?: UserInputs; onUpdateGuidebookEntryMidi?: (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => void; parsedGuidebookBpm?: number | null; parsedGuidebookKey?: string | null; parsedGuidebookChordProg?: string | null; initialPatterns?: { [section: string]: { [instrument: string]: string } }; sections?: string[]; targetTempo?: number; targetKey?: string; isRemixMode?: boolean; }> = ({ currentGuidebookEntry, mainAppInputs, onUpdateGuidebookEntryMidi, parsedGuidebookBpm, parsedGuidebookKey, parsedGuidebookChordProg, initialPatterns, sections, targetTempo, targetKey, isRemixMode = false }) => {
-
-  const [settings, setSettings] = useState<MidiSettings>(() => {
-    const initialGenre = currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre?.[0] || MIDI_DEFAULT_SETTINGS.genre;
-    const tempoRange = MIDI_TEMPO_RANGES[initialGenre] || MIDI_TEMPO_RANGES.Default;
-    const defaultTempo = Math.round((tempoRange[0] + tempoRange[1]) / 2);
-    return {
-      ...MIDI_DEFAULT_SETTINGS,
-      genre: initialGenre,
-      key: parsedGuidebookKey || MIDI_DEFAULT_SETTINGS.key,
-      tempo: parsedGuidebookBpm || defaultTempo,
-      chordProgression: parsedGuidebookChordProg || (MIDI_CHORD_PROGRESSIONS[initialGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0],
-      guidebookContext: extractRichMidiContext(currentGuidebookEntry?.content || ''),
-    };
-  });
+  const [settings, setSettings] = useState<MidiSettings>(() => ({
+    ...MIDI_DEFAULT_SETTINGS,
+    genre: currentGuidebookEntry?.genre?.[0] || mainAppInputs?.genre?.[0] || MIDI_DEFAULT_SETTINGS.genre
+  }));
 
   const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(currentGuidebookEntry?.generatedMidiPatterns || null);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +60,7 @@ export const MidiGeneratorComponent: React.FC<{ currentGuidebookEntry?: Guideboo
     if (isPlayingRef.current) {
       stopPlayback();
       setIsPlaying(false);
+      return;
     }
     playMidiPatterns(patterns, settings);
     setIsPlaying(true);
@@ -123,12 +95,12 @@ export const MidiGeneratorComponent: React.FC<{ currentGuidebookEntry?: Guideboo
   return (
     <Card title="🎹 MIDI Tools & Pattern Generator">
       <Button onClick={() => setShowSettingsInputs(!showSettingsInputs)} variant="secondary" className="mb-4" leftIcon={<KeyboardIcon />}>
-        MIDI Settings
+        {showSettingsInputs ? 'Hide MIDI Settings' : 'MIDI Settings'}
       </Button>
 
       {showSettingsInputs && (
         <div className="mb-6">
-          <Button onClick={handleGeneratePatterns} disabled={isLoading} className="w-full mb-4" leftIcon={<RefreshIcon />}>
+          <Button onClick={handleGeneratePatterns} disabled={isLoading} className="w-full mb-4">
             {isLoading ? (loadingMessage || 'Regenerating MIDI Patterns...') : 'Generate MIDI Patterns'}
           </Button>
         </div>
@@ -140,7 +112,7 @@ export const MidiGeneratorComponent: React.FC<{ currentGuidebookEntry?: Guideboo
       {patterns && !isLoading && (
         <div className="mt-6 space-y-4">
           <Button onClick={isPlaying ? handleStopAll : handlePlayAll} variant={isPlaying ? "danger" : "primary"} leftIcon={isPlaying ? <StopIcon /> : <PlayIcon />}>
-            {isPlaying ? 'Stop Preview' : 'Play All Tracks'}
+            {isPlaying ? 'Stop Playback' : 'Play All Tracks'}
           </Button>
           <Button onClick={handleDownloadAll} variant="secondary" leftIcon={<DownloadIcon />}>Download All (.mid)</Button>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
