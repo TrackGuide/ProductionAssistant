@@ -711,4 +711,4 @@ const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns
       )}
     </Card>
   );
-}
+};
