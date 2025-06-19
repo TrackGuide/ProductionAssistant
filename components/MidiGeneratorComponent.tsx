@@ -349,7 +349,11 @@ const handlePlayAll = async () => {
   };
 
 
-  const handleStopAll = () => {
+  
+
+// ERROR: renderTrackCard not found!
+
+const handleStopAll = () => {
     stopPlayback();
     setIsPlaying(false);
   };
@@ -472,6 +476,85 @@ const toggleSettingsInputs = async () => {
 
 
 
+  
+    const filenameBase = (currentGuidebookEntry?.title || 'TrackGuideMIDI').replace(/[^a-z0-9_.-]/gi, '_');
+    const midiData = generateMidiFile(singleTrackPattern as GeneratedMidiPatterns, settings, `${filenameBase}_${trackType}`);
+    
+    if (midiData) {
+      downloadMidi(midiData, `${filenameBase}_${trackType}.mid`);
+    } else {
+      alert(`No ${trackType} data to download or error in generation.`);
+    }
+  };
+
+  const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
+    if (!patterns) return;
+
+    setIsLoading(true);
+    setLoadingMessage(`Regenerating ${trackType}...`);
+    setError(null);
+    if (isPlayingRef.current) {
+        stopPlayback();
+        setIsPlaying(false);
+    }
+    await initializeAudio();
+
+    let preservedSettings;
+
+    if (isRemixMode) {
+        preservedSettings = {
+            ...settings,
+            guidebookContext: `${settings.genre} remix at ${settings.tempo} BPM in ${settings.key}`,
+            genre: settings.genre,
+            targetInstruments: [trackType]
+        };
+    } else {
+        const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
+        const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
+
+        preservedSettings = {
+            ...settings,
+            guidebookContext: richContextForRegeneration,
+            genre: primaryGenre,
+            targetInstruments: [trackType]
+        };
+    }
+
+    try {
+        const midiResult = await generateMidiPatternSuggestions(preservedSettings);
+        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
+
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+            jsonStr = match[2].trim();
+        }
+
+        const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+
+        const updatedPatterns = {
+            ...patterns,
+            [trackType]: newPatternsData[trackType]
+        };
+
+        if (trackType === 'drums' && newPatternsData.drums) {
+            const lowercasedDrums: any = {};
+            for (const key in newPatternsData.drums) {
+                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
+            }
+            updatedPatterns.drums = lowercasedDrums;
+        }
+
+        setPatterns(updatedPatterns);
+        onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
+    } catch (err) {
+        console.error('Error regenerating single track:', err);
+        setError(`Failed to regenerate ${trackType}. Please try again.`);
+    } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+    }
+};
 
 
   return (
