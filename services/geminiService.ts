@@ -28,7 +28,12 @@ Create a detailed TrackGuide for the following:
 - Vibe: ${inputs.vibe?.join(", ") || "Not specified"}
 - Instruments: ${inputs.instruments?.join(", ") || "Not specified"}
 Provide sections on Structure, Instrumentation, Sound Design, Mixing tips.`;
-  return ai.generate(GEMINI_MODEL_NAME, { prompt, stream: true });
+
+  const stream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return stream;
 };
 
 /**
@@ -44,7 +49,12 @@ Genre Context: ${settings.genre}
 Structure Section: ${settings.songSection}, Bars: ${settings.bars}
 Target Instruments: ${settings.targetInstruments.join(", ")}
 Return valid JSON only.`;
-  return ai.generate(GEMINI_MODEL_NAME, { prompt, stream: true });
+
+  const stream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return stream;
 };
 
 /**
@@ -57,8 +67,12 @@ export const generateMixFeedback = async (
 Track: ${inputs.trackName}
 Feedback points: ${inputs.focus || "general"}
 Mix Notes: ${inputs.notes || "none"}`;
-  const res = await ai.generate(GEMINI_MODEL_NAME, { prompt });
-  return res.text;
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return response.text;
 };
 
 /**
@@ -71,8 +85,12 @@ export const generateMixComparison = async (
 A: ${inputs.mixAUrl}
 B: ${inputs.mixBUrl}
 Focus on clarity, balance, stereo image, dynamics.`;
-  const res = await ai.generate(GEMINI_MODEL_NAME, { prompt });
-  return res.text;
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return response.text;
 };
 
 /**
@@ -85,11 +103,17 @@ export const generateAIAssistantResponse = async (
   const history = conversation
     .map(msg => `${msg.role}: ${msg.content}`)
     .join("\n");
+
   const prompt = `You are TrackGuideAI assisting the user.  
 Guidebook Context: ${guidebook.title}
 ${history}
 Assistant:`;
-  return ai.generate(GEMINI_MODEL_NAME, { prompt, stream: true });
+
+  const stream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return stream;
 };
 
 /**
@@ -101,8 +125,12 @@ Original Track: ${inputs.originalTrackTitle}
 Target Genre: ${inputs.targetGenre}
 Key: ${inputs.targetKey}
 Tempo: ${inputs.targetTempo}
+DAW: ${inputs.daw || "Not specified"}
+Plugins: ${inputs.plugins || "Not specified"}
 Additional Notes: ${inputs.notes || "none"}
-Include a new Structural Blueprint (with Instrumentation column) and detailed plugin parameter settings.`;
+Include:
+- A new Structural Blueprint (with Instrumentation column)
+- Detailed plugin parameter settings.`;
 }
 
 /**
@@ -112,13 +140,21 @@ export async function generateRemixGuide(
   inputs: RemixGuideInputs
 ): Promise<AsyncIterable<GenerateContentResponse>> {
   const prompt = generateRemixPrompt(inputs);
-  return ai.generate(GEMINI_MODEL_NAME, { prompt, stream: true });
+
+  const stream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return stream;
 }
 
 /**
  * 8. Low‐level helper for simple prompts
  */
 export async function generateContent(prompt: string): Promise<string> {
-  const res = await ai.generate(GEMINI_MODEL_NAME, { prompt });
-  return res.text;
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return response.text;
 }
