@@ -422,89 +422,47 @@ Focus on practical improvements that can be implemented immediately.`;
 /**
  * 4. Generate mix comparison (one-shot)
  */
-const generateMixComparisonPrompt = (inputs: MixComparisonInputs): string => {
-  const focus = inputs.focus?.trim() || "Overall clarity, balance, stereo image, and dynamics";
+export const generateMixComparison = async (
+  inputs: MixComparisonInputs
+): Promise<string> => {
+  const prompt = `
+You are an expert mixing & mastering AI. The user has uploaded two mixes:
 
-  return `
-You are an expert audio mixing and mastering engineer AI. The user has uploaded two mixes:
+Mix A: "${inputs.mixAName}" — an earlier version  
+Mix B: "${inputs.mixBName}" — the current working version  
 
-Mix A: "${inputs.mixAName}" (Previous version)
-Mix B: "${inputs.mixBName}" (Current version)
+🎧 Instructions:
+- Mix B is the active version — focus all actionable feedback on improving Mix B.
+- Mix A is an earlier version — if Mix A has strengths vs Mix B, point those out.
+- Acknowledge improvements made in Mix B compared to A.
+- Do NOT suggest changes to Mix A (it is not being revised).
 
-Mix B is the latest version. Focus your recommendations ONLY on improving Mix B. Use Mix A for comparison — if Mix A does something better, mention it — but do NOT suggest changes to Mix A.
+If "Request full mix analysis" is selected → add full technical breakdown of Mix B (like in your Mix Feedback function).
 
-Focus on the following areas: ${focus}
+Provide your analysis in clear Markdown format with the following sections:
 
----
+## 🎧 Overall Comparison
 
-## Comparison Structure:
+## 🎛️ Frequency Balance
 
-### 🎧 Overall Comparison
-- Compare the artistic impact, balance, polish between Mix A and Mix B.
-- Note improvements in Mix B.
-- Note where Mix A still sounds better.
+## 🎚️ Stereo Image & Depth
 
-### 🎛️ Frequency Balance
-- Compare low-end, midrange, and high-end.
-- Where can Mix B still improve?
-- Where is it better than Mix A?
+## 📈 Dynamics & Loudness
 
-### 🎚️ Stereo Image & Depth
-- Compare width, depth, spatial clarity.
-- How can Mix B improve further?
+## ⚙️ Technical Quality
 
-### 📈 Dynamics & Loudness
-- Compare compression, transient clarity, punch.
-- Estimated loudness (LUFS), dynamic range.
+## 🏆 Strengths & Opportunities (for Mix B)
 
-### ⚙️ Technical Quality
-- Check for clipping, noise, phase issues, mono compatibility.
+## 🚀 Actionable Recommendations (for Mix B only)
 
----
-
-## 🏆 Strengths & Opportunities (FOR MIX B ONLY)
-- Strengths of Mix B
-- Opportunities for improvement
-
----
-
-## 🚀 Actionable Recommendations (FOR MIX B ONLY)
-For each recommendation:
-
-✅ Suggest common plugins or plugin types
-✅ If DAW or user plugins are known, mention them
-✅ Provide EXAMPLE parameters: EQ freqs/gain, compression ratio/attack/release, saturation drive %, reverb decay, transient shaper %, etc.
-✅ Be concise but specific — avoid vague suggestions
-
-Example:
-
-❌ "Add grit to guitars"
-
-✅ "Use Decapitator (Drive ~5, Tone ~5, Mix 50%) or DAW saturator. Focus on 500 Hz – 3 kHz to add grit to guitars."
-
----
-
-## Final Section:
-
-**Next Steps (For Mix B only):**
-1. Top priority improvements
-2. Polishing & mastering prep
-3. Additional listening advice
-
----
-
-If the user requested individual analysis, include:
-
-- Detailed Frequency Analysis (Sub, Bass, Mids, Highs)
-- Stereo Field Analysis
-- Dynamics Analysis
-- Instrument-specific feedback
-- Technical metrics: estimated LUFS, True Peak, Dynamic Range
-
-Remember: Focus all recommendations on improving Mix B.
 `;
-};
 
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return response.text;
+};
 /**
  * 5. Generate AI-assistant chat response (streaming)
  */
@@ -788,16 +746,18 @@ export const generateMixFeedbackWithAudio = async (
   }
   
   if (!inputs.audioFile) {
+    // Fallback to text-only feedback if no audio file
     return generateMixFeedback(inputs);
   }
 
   try {
+    // Helper function to convert File to base64
     const fileToBase64 = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result as string;
-          resolve(result.split(',')[1]);
+          resolve(result.split(',')[1]); // Remove data:audio/...;base64, prefix
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
@@ -805,32 +765,102 @@ export const generateMixFeedbackWithAudio = async (
     };
 
     const audioBase64 = await fileToBase64(inputs.audioFile);
+    
+    const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
 
-    const prompt = `
-You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio and give professional mix feedback.
+**Track Information:**
+- Track Name: ${inputs.trackName || "Uploaded Mix"}
+- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
+- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
 
-**Track:**
-- Name: ${inputs.trackName || "Uploaded Mix"}
-- Focus: ${inputs.focus || "Overall mix quality"}
-- User Notes: ${inputs.notes || "None"}
+**Comprehensive Analysis Framework:**
 
-**Analysis Sections:**
+## 🎧 Audio Analysis Results
 
-1️⃣ Frequency Spectrum (low, mid, high)
-2️⃣ Stereo Image & Depth
-3️⃣ Dynamics & Loudness
-4️⃣ Technical Quality (distortion, phase, noise)
-5️⃣ Immediate Fixes (top 3)
-6️⃣ EQ Suggestions (with specific Hz ranges and dB values)
-7️⃣ Compression (ratio, attack/release, plugin examples)
-8️⃣ Effects (reverb, delay, creative)
-9️⃣ Mastering Notes
+### Frequency Spectrum Analysis
+**Low-End (20-250 Hz):**
+- Sub-bass presence and control
+- Bass clarity and definition
+- Low-mid muddiness assessment
 
-**IMPORTANT:** Be specific! For every suggestion, include concrete plugin parameters (e.g., "Ratio 4:1, Attack 10ms, Release 80ms") and examples of common plugin types. Do NOT leave vague tips.
+**Midrange (250 Hz - 5 kHz):**
+- Vocal/lead instrument clarity
+- Instrument separation and masking
+- Presence and intelligibility
 
-Also compare to genre standards and suggest any gaps to close.
+**High-End (5 kHz+):**
+- Air and sparkle quality
+- Harshness or sibilance issues
+- Overall brightness balance
 
-Ready? Analyze the uploaded audio and begin!`;
+### Stereo Field & Spatial Analysis
+**Width & Imaging:**
+- Stereo spread effectiveness
+- Phantom center stability
+- Side content balance
+
+**Depth & Dimension:**
+- Reverb usage and space
+- Dry/wet balance
+- Front-to-back positioning
+
+### Dynamic Range Assessment
+**Compression Analysis:**
+- Overall dynamic range
+- Transient preservation
+- Pumping or over-compression
+
+**Loudness Evaluation:**
+- Perceived loudness level
+- Peak management
+- Headroom availability
+
+### Technical Quality Check
+**Distortion & Artifacts:**
+- Unwanted harmonic distortion
+- Digital artifacts or clipping
+- Noise floor assessment
+
+**Phase Relationships:**
+- Mono compatibility
+- Phase cancellation issues
+- Correlation analysis
+
+## 🎯 Specific Recommendations
+
+### Immediate Improvements
+1. **Priority Fix #1:** [Most critical issue with specific solution]
+2. **Priority Fix #2:** [Second most important improvement]
+3. **Priority Fix #3:** [Third priority enhancement]
+
+### Technical Adjustments
+**EQ Suggestions:**
+- Specific frequency cuts/boosts with dB amounts
+- Problem frequency identification
+- Enhancement opportunities
+
+**Compression Recommendations:**
+- Ratio, attack, and release settings
+- Specific compressor types or plugins
+- Bus compression strategies
+
+**Effects Processing:**
+- Reverb and delay adjustments
+- Spatial enhancement techniques
+- Creative processing opportunities
+
+### Professional Polish
+**Mastering Considerations:**
+- Final EQ and compression
+- Stereo enhancement
+- Loudness optimization
+
+**Reference Comparison:**
+- How this mix compares to commercial standards
+- Genre-specific benchmarks
+- Areas for competitive improvement
+
+Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
 
     const textPart = { text: prompt };
     const audioPart = {
@@ -840,32 +870,36 @@ Ready? Analyze the uploaded audio and begin!`;
       },
     };
 
+    const contents = [audioPart, textPart];
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
-      contents: { parts: [audioPart, textPart] },
+      contents: { parts: contents },
     });
 
     const feedbackText = response.text;
     if (typeof feedbackText !== 'string') {
-      throw new Error("Invalid response from Gemini API for mix feedback.");
+      throw new Error("Received an unexpected response format from Gemini API for mix feedback.");
     }
     
     return feedbackText;
 
   } catch (error) {
     console.error("Error generating mix feedback with audio:", error);
-    let message = "Unknown error generating mix feedback.";
+    let specificMessage = "An unknown error occurred while generating mix feedback.";
     if (error instanceof Error) {
-      message = error.message;
+      specificMessage = error.message;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        message = "Invalid API Key or insufficient permissions.";
-      } else if (error.message.includes("network") || error.message.includes("fetch")) {
-        message = "Network error connecting to Gemini API.";
+        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
+      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
+      } else if (error.message.includes("Candidate was blocked")) {
+        specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
       } else if (error.message.includes("audio")) {
-        message = "Problem processing the audio file.";
+        specificMessage = `There was an issue processing the audio file. Ensure it's a common format and not too large. (${error.message})`;
       }
     }
-    throw new Error(message);
+    throw new Error(specificMessage);
   }
 };
 
@@ -904,45 +938,32 @@ export async function generateContent(prompt: string): Promise<string> {
   }
 }
 
-/** * 9. Alternative AI Assistant Response (non-streaming for simple cases) */
+/**
+ * 9. Alternative AI Assistant Response (non-streaming for simple cases)
+ */
 export const generateAIAssistantResponseSimple = async (
   message: string,
   context?: {
     currentGuidebook?: GuidebookEntry;
     userInputs?: UserInputs;
-    conversationHistory?: any[];
-    contextLabel?: string;
   }
 ): Promise<string> => {
   if (!apiKey) {
     throw new Error("API Key not configured. Cannot connect to Gemini API.");
   }
+
   try {
-    // Format conversation history if available
-    const conversationHistory = context?.conversationHistory || [];
-    const formattedHistory = conversationHistory.length > 0 
-      ? `**Recent Conversation:**\n${conversationHistory.map(msg => 
-          `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-        ).join("\n")}`
-      : '';
-    
-    const contextLabel = context?.contextLabel 
-      ? `**Current Context:** ${context.contextLabel}\n` 
-      : '';
-    
-    const contextInfo = context 
-      ? `**Current Project Context:**
+    const contextInfo = context ? `
+**Current Project Context:**
 - Genre: ${context.userInputs?.genre?.join(", ") || context.currentGuidebook?.genre?.join(", ") || 'Not specified'}
 - Vibe: ${context.userInputs?.vibe?.join(", ") || context.currentGuidebook?.vibe?.join(", ") || 'Not specified'}
 - DAW: ${context.userInputs?.daw || context.currentGuidebook?.daw || 'Not specified'}
-- Current guidebook: ${context.currentGuidebook?.title || 'None'}`
-      : '';
-    
+- Current guidebook: ${context.currentGuidebook?.title || 'None'}
+` : '';
+
     const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
 
-${contextLabel}
 ${contextInfo}
-${formattedHistory}
 
 **User Question:** ${message}
 
@@ -952,7 +973,6 @@ ${formattedHistory}
 - Reference the project context when relevant
 - Include specific parameter suggestions when applicable
 - Maintain a professional but friendly tone
-- If the user is asking about adding an instrument or changing the TrackGuide, provide specific suggestions
 
 Provide your expert guidance:`;
 
@@ -960,13 +980,14 @@ Provide your expert guidance:`;
       model: GEMINI_MODEL_NAME,
       contents: prompt,
     });
-    
+
     const responseText = response.text;
     if (typeof responseText !== 'string') {
       throw new Error("Received an unexpected response format from Gemini API.");
     }
-        
+    
     return responseText;
+
   } catch (error) {
     console.error("Error generating AI assistant response:", error);
     let specificMessage = "An unknown error occurred while generating response.";
@@ -975,7 +996,7 @@ Provide your expert guidance:`;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
         specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
       } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection.`;
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
       } else if (error.message.includes("Candidate was blocked")) {
         specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
       }
