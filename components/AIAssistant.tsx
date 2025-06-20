@@ -4,7 +4,7 @@ import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
 import { Spinner } from './Spinner.tsx';
 import { SparklesIcon, CloseIcon } from './icons.tsx';
-import { generateAIAssistantResponse } from '../services/geminiService.ts';
+import { generateAIAssistantResponseSimple } from '../services/geminiService.ts';
 import { UserInputs, GuidebookEntry } from '../types.ts';
 
 interface Message {
@@ -109,23 +109,24 @@ What would you like to work on today?`;
     setIsLoading(true);
     
     try {
-      // Enhanced context with more specific information
+      // Create context object for the AI service
       const context = {
-        currentGuidebook: currentGuidebook?.content || '',
-        userInputs: userInputs || {},
-        conversationHistory: messages.slice(-6), // Last 6 messages for context
-        contextLabel: contextLabel || 'General music production',
+        currentGuidebook: currentGuidebook,
+        userInputs: userInputs,
+        conversationHistory: messages.slice(-6) // Last 6 messages for context
       };
       
       console.log('Sending request with context:', {
         message: userMessage.content,
-        guidebookLength: context.currentGuidebook.length,
-        hasInputs: Object.keys(context.userInputs).length > 0,
-        historyLength: context.conversationHistory.length,
-        contextLabel: context.contextLabel
+        guidebookTitle: currentGuidebook?.title || 'None',
+        contextLabel: contextLabel || 'None'
       });
       
-      const assistantContent = await generateAIAssistantResponse(userMessage.content, context);
+      // Use the simple non-streaming version for easier implementation
+      const assistantContent = await generateAIAssistantResponseSimple(
+        userMessage.content,
+        context
+      );
       
       // Check if response is valid
       if (!assistantContent || typeof assistantContent !== 'string') {
@@ -203,27 +204,15 @@ What would you like to work on today?`;
                 >
                   Clear
                 </Button>
-                {contextLabel ? (
-                  <Button 
-                    onClick={onClose} 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
-                    aria-label="Close assistant"
-                  >
-                    <span className="text-sm">✕</span>
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={onToggle} 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
-                    aria-label="Minimize assistant"
-                  >
-                    <span className="text-sm">−</span>
-                  </Button>
-                )}
+                <Button 
+                  onClick={onToggle || onClose} 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
+                  aria-label={contextLabel ? "Close assistant" : "Minimize assistant"}
+                >
+                  <span className="text-sm">{contextLabel ? "✕" : "−"}</span>
+                </Button>
               </div>
             </div>
             
@@ -303,36 +292,3 @@ What would you like to work on today?`;
     </div>
   );
 };
-
-
-
-AIAssistant.tsx
-Now, let's fix how you're using the component in your parent component:
-
-// In your parent component
-return (
-  <>
-    {/* Other components */}
-    
-    {/* Production Coach - Always Available */}
-    <AIAssistant
-      isOpen={true} // This is fine as we handle visibility with isCollapsed
-      onClose={() => setIsProductionCoachCollapsed(true)} 
-      currentGuidebook={activeGuidebookDetails || undefined}
-      userInputs={inputs}
-      isCollapsed={isProductionCoachCollapsed || isAIAssistantOpen} // Collapse when contextual is open
-      onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
-    />
-
-    {/* Contextual AI Assistant */}
-    <AIAssistant
-      isOpen={isAIAssistantOpen}
-      onClose={closeAIAssistant}
-      contextLabel={aiContextLabel}
-      currentGuidebook={activeGuidebookDetails || undefined}
-      userInputs={inputs}
-      onUpdateGuidebook={onUpdateGuidebook} // Add this if you want to allow updates
-      onUpdateInputs={onUpdateInputs} // Add this if you want to allow updates
-    />
-  </>
-);
