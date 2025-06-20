@@ -451,7 +451,6 @@ export async function generateRemixGuide(
   targetTempo: number;
   targetKey: string;
   sections: string[];
-  generatedMidiPatterns: GeneratedMidiPatterns;
   originalKey?: string;
   originalTempo?: number;
   originalChordProgression?: string;
@@ -491,17 +490,7 @@ export async function generateRemixGuide(
   "originalChordProgression": "i-VI-III-VII",
   "targetTempo": 128,
   "targetKey": "C minor",
-  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
-  "midiPatterns": {
-    "bassline": [{"time": 0, "midi": 36, "duration": 0.5, "velocity": 110, "pitch": "C2"}],
-    "melody": [{"time": 0, "midi": 72, "duration": 1, "velocity": 100, "pitch": "C5"}],
-    "drums": {
-      "kick": [{"time": 0, "duration": 0.1, "velocity": 120}],
-      "snare": [{"time": 1, "duration": 0.1, "velocity": 110}],
-      "hihat_closed": [{"time": 0.5, "duration": 0.1, "velocity": 80}]
-    },
-    "chords": [{"time": 0, "name": "Cm", "duration": 2, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 100}]
-  }
+  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"]
 }
 
 **For the "guide" field, create a detailed markdown guide that includes:**
@@ -592,7 +581,7 @@ ${pluginSection}
 
 Focus on practical, actionable techniques that can be implemented immediately. Provide specific parameter suggestions and creative approaches that honor both the original track and the target genre aesthetic.
 
-**IMPORTANT:** Return ONLY the JSON object with the complete markdown guide in the "guide" field and properly formatted MIDI patterns in the "midiPatterns" field.`;
+**IMPORTANT:** Return ONLY the JSON object with the complete markdown guide in the "guide" field. Focus on detailed analysis and production techniques.`;
 
     const textPart = { text: prompt };
     const audioPart = {
@@ -633,7 +622,6 @@ Focus on practical, actionable techniques that can be implemented immediately. P
         targetTempo: tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128),
         targetKey: keyMatch ? keyMatch[1].trim() : "C minor",
         sections,
-        generatedMidiPatterns: {},
         originalKey: "C minor",
         originalTempo: 120,
         originalChordProgression: "i-VI-III-VII"
@@ -646,7 +634,6 @@ Focus on practical, actionable techniques that can be implemented immediately. P
       targetTempo: parsedResponse.targetTempo || (genreInfo?.tempoRange?.[0] || 128),
       targetKey: parsedResponse.targetKey || "C minor",
       sections: parsedResponse.sections || sections,
-      generatedMidiPatterns: parsedResponse.midiPatterns || {},
       originalKey: parsedResponse.originalKey || "C minor",
       originalTempo: parsedResponse.originalTempo || 120,
       originalChordProgression: parsedResponse.originalChordProgression || "i-VI-III-VII"

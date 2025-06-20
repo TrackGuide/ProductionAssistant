@@ -16,7 +16,7 @@ interface RemixGuideData {
   targetTempo: number;
   targetKey: string;
   sections: string[];
-  generatedMidiPatterns: GeneratedMidiPatterns;
+  generatedMidiPatterns?: GeneratedMidiPatterns;
   originalKey?: string;
   originalTempo?: number;
   originalChordProgression?: string;
@@ -109,9 +109,80 @@ export const RemixGuideAI: React.FC = () => {
 
       const genreInfo = getGenreInfo(selectedGenre);
 
-      // Pass DAW and plugins to the remix guide generation
+      // Step 1: Generate the remix guide (without MIDI)
       const result = await generateRemixGuide(audioData, selectedGenre, genreInfo, daw, plugins);
-      setRemixGuide(result);
+      
+      // Step 2: Automatically generate MIDI patterns
+      console.log('Remix guide generated, now generating MIDI patterns...');
+      
+      try {
+        // Extract chord progression from the generated guide
+        const originalChordProgression = extractOriginalChordProgression(result.guide);
+        
+        const midiSettings: MidiSettings = {
+          key: result.originalKey || result.targetKey,
+          tempo: result.targetTempo,
+          timeSignature: [4, 4],
+          chordProgression: originalChordProgression || result.originalChordProgression || 'i-VI-III-VII',
+          genre: selectedGenre,
+          bars: 8,
+          targetInstruments: ['bassline', 'drums', 'melody', 'chords'],
+          guidebookContext: `${selectedGenre} remix at ${result.targetTempo} BPM in ${result.targetKey}`,
+          songSection: result.sections[0] || 'Intro'
+        };
+
+        console.log('MIDI settings:', midiSettings);
+
+        const midiStream = await generateMidiPatternSuggestions(midiSettings);
+        let jsonStr = '';
+        
+        // Handle streaming response
+        for await (const chunk of midiStream) {
+          if (chunk.text) {
+            jsonStr += chunk.text;
+          }
+        }
+
+        // Clean up the JSON response
+        jsonStr = jsonStr.trim();
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const match = jsonStr.match(fenceRegex);
+        if (match && match[2]) {
+          jsonStr = match[2].trim();
+        }
+
+        console.log('Raw MIDI JSON:', jsonStr);
+
+        const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        
+        // Normalize drum patterns
+        if (generatedMidiPatterns.drums) {
+          const lowercasedDrums: any = {};
+          for (const key in generatedMidiPatterns.drums) {
+            lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = generatedMidiPatterns.drums[key as keyof typeof generatedMidiPatterns.drums];
+          }
+          generatedMidiPatterns.drums = lowercasedDrums;
+        }
+
+        console.log('Generated MIDI patterns:', generatedMidiPatterns);
+
+        // Update the remix guide with MIDI patterns
+        const completeResult = {
+          ...result,
+          generatedMidiPatterns
+        };
+
+        setRemixGuide(completeResult);
+
+      } catch (midiError) {
+        console.error('Error generating MIDI patterns for remix:', midiError);
+        // Still set the remix guide even if MIDI generation fails
+        setRemixGuide({
+          ...result,
+          generatedMidiPatterns: {}
+        });
+        setError(`Remix guide generated successfully, but MIDI generation failed: ${midiError instanceof Error ? midiError.message : 'Unknown error'}`);
+      }
 
     } catch (err) {
       console.error('Error generating remix guide:', err);
@@ -124,6 +195,77 @@ export const RemixGuideAI: React.FC = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setSelectedGenre('');
+  };
+
+  const regenerateMidi = async () => {
+    if (!remixGuide) return;
+
+    setIsGenerating(true);
+    setError('');
+
+    try {
+      // Extract chord progression from the generated guide
+      const originalChordProgression = extractOriginalChordProgression(remixGuide.guide);
+      
+      const midiSettings: MidiSettings = {
+        key: remixGuide.originalKey || remixGuide.targetKey,
+        tempo: remixGuide.targetTempo,
+        timeSignature: [4, 4],
+        chordProgression: originalChordProgression || remixGuide.originalChordProgression || 'i-VI-III-VII',
+        genre: selectedGenre,
+        bars: 8,
+        targetInstruments: ['bassline', 'drums', 'melody', 'chords'],
+        guidebookContext: `${selectedGenre} remix at ${remixGuide.targetTempo} BPM in ${remixGuide.targetKey}`,
+        songSection: remixGuide.sections[0] || 'Intro'
+      };
+
+      console.log('Regenerating MIDI with settings:', midiSettings);
+
+      const midiStream = await generateMidiPatternSuggestions(midiSettings);
+      let jsonStr = '';
+      
+      // Handle streaming response
+      for await (const chunk of midiStream) {
+        if (chunk.text) {
+          jsonStr += chunk.text;
+        }
+      }
+
+      // Clean up the JSON response
+      jsonStr = jsonStr.trim();
+      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+      const match = jsonStr.match(fenceRegex);
+      if (match && match[2]) {
+        jsonStr = match[2].trim();
+      }
+
+      console.log('Raw regenerated MIDI JSON:', jsonStr);
+
+      const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+      
+      // Normalize drum patterns
+      if (generatedMidiPatterns.drums) {
+        const lowercasedDrums: any = {};
+        for (const key in generatedMidiPatterns.drums) {
+          lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = generatedMidiPatterns.drums[key as keyof typeof generatedMidiPatterns.drums];
+        }
+        generatedMidiPatterns.drums = lowercasedDrums;
+      }
+
+      console.log('Regenerated MIDI patterns:', generatedMidiPatterns);
+
+      // Update the remix guide with new MIDI patterns
+      setRemixGuide(prev => prev ? {
+        ...prev,
+        generatedMidiPatterns
+      } : null);
+
+    } catch (midiError) {
+      console.error('Error regenerating MIDI patterns:', midiError);
+      setError(`Failed to regenerate MIDI patterns: ${midiError instanceof Error ? midiError.message : 'Unknown error'}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const resetForm = () => {
@@ -271,7 +413,7 @@ export const RemixGuideAI: React.FC = () => {
         >
           {isGenerating ? (
             <>
-              <Spinner size="sm" /> Analyzing & Generating Complete Remix Guide...
+              <Spinner size="sm" /> Generating Remix Guide + MIDI...
             </>
           ) : (
             '🎛️ Generate Complete Remix Guide + MIDI'
@@ -299,29 +441,64 @@ export const RemixGuideAI: React.FC = () => {
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-xl font-bold text-white mb-6">
-              🎹 MIDI Remix Patterns
-            </h3>
-            <MidiGeneratorComponent
-              key={`remix-${selectedGenre}`}
-              sections={remixGuide.sections}
-              targetTempo={remixGuide.targetTempo}
-              targetKey={remixGuide.targetKey}
-              isRemixMode={true}
-              currentGuidebookEntry={{
-                id: `remix-${Date.now()}`,
-                title: `${selectedGenre} Remix`,
-                genre: [selectedGenre],
-                artistReference: 'Remix Guide',
-                vibe: [selectedGenre],
-                daw: daw || 'Not specified',
-                plugins: plugins || 'Not specified',
-                availableInstruments: 'Remix instruments',
-                content: remixGuide.guide,
-                createdAt: new Date().toISOString(),
-                generatedMidiPatterns: remixGuide.generatedMidiPatterns
-              }}
-            />
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">
+                🎹 MIDI Remix Patterns
+              </h3>
+              <Button
+                onClick={regenerateMidi}
+                disabled={isGenerating}
+                variant="outline"
+                className="text-sm"
+              >
+                {isGenerating ? (
+                  <>
+                    <Spinner size="sm" /> Regenerating...
+                  </>
+                ) : (
+                  '🔄 Regenerate MIDI'
+                )}
+              </Button>
+            </div>
+            {remixGuide.generatedMidiPatterns ? (
+              <MidiGeneratorComponent
+                key={`remix-${selectedGenre}-${Date.now()}`}
+                sections={remixGuide.sections}
+                targetTempo={remixGuide.targetTempo}
+                targetKey={remixGuide.targetKey}
+                isRemixMode={true}
+                currentGuidebookEntry={{
+                  id: `remix-${Date.now()}`,
+                  title: `${selectedGenre} Remix`,
+                  genre: [selectedGenre],
+                  artistReference: 'Remix Guide',
+                  vibe: [selectedGenre],
+                  daw: daw || 'Not specified',
+                  plugins: plugins || 'Not specified',
+                  availableInstruments: 'Remix instruments',
+                  content: remixGuide.guide,
+                  createdAt: new Date().toISOString(),
+                  generatedMidiPatterns: remixGuide.generatedMidiPatterns
+                }}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-400 mb-4">
+                  {isGenerating ? (
+                    <>
+                      <Spinner size="lg" />
+                      <p className="mt-4">Generating MIDI patterns...</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-4xl mb-2">🎹</div>
+                      <p>MIDI patterns will appear here after generation</p>
+                      <p className="text-sm mt-2">Click "Regenerate MIDI" to generate patterns</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       )}
