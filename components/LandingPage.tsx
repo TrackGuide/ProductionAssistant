@@ -384,7 +384,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     <div className="text-center mb-12">
       <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Investment Levels</h2>
       <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-        We're raising capital to finalize our MVP, accelerate user growth, and prepare for launch.
+        We’re raising capital to scale TrackGuide AI — deepen core features, grow early users, and prepare for market launch.
       </p>
       <p className="text-md text-gray-400 mt-4 max-w-xl mx-auto">
         All investments are via SAFE notes with valuation cap. Larger tiers include additional benefits and advisory access.
@@ -397,7 +397,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <h3 className="text-xl font-bold text-white mb-2">Seed Loop</h3>
           <p className="text-gray-300 text-sm mb-2">$10K–$25K</p>
           <p className="text-gray-400 text-sm mb-4">
-            Product polish, UX refinement, performance tuning.
+            AI refinement, UX polish, early traction testing.
           </p>
         </div>
         <p className="text-orange-400 text-sm mt-4">Return: SAFE @ $5M cap + quarterly updates</p>
@@ -436,17 +436,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <p className="text-orange-400 text-sm mt-4">Return: Discounted SAFE cap + 2% revenue share + strategic board seat</p>
       </div>
     </div>
+
+    <div className="text-center mt-12">
+      <a
+        href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
+        className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
+      >
+        <span>Contact for Full Investor Deck</span>
+      </a>
+    </div>
   </div>
 </section>
 
-{/* Investor CTA */}
+
 <section className="px-6 py-20 bg-black/30">
   <div className="max-w-4xl mx-auto text-center">
-   <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-  Contact us for full investor deck & opportunities.
-</h2>
+    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+      Interested in Investing?
+    </h2>
     <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-      We’re building the AI studio assistant of the future — with a human-first philosophy. Join us.
+      Revolutionizing music production with human-first AI. Join us.
     </p>
     <a
       href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
@@ -456,6 +465,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </a>
   </div>
 </section>
+
 
 {/* Footer */}
 <footer className="px-6 py-12 border-t border-orange-500/20 bg-black/20">
