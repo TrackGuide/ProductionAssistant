@@ -106,8 +106,8 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
   };
 
 return (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
       <div className="p-6 border-b border-gray-700">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-white flex items-center">
@@ -235,8 +235,8 @@ return (
         <p className="text-xs text-gray-400 text-center">
           💡 Tip: These are general guidelines. Always trust your ears and adjust based on the specific context of your mix.
         </p>
-      </div>
-    </div>
-  </div>
-);
-};
+</div>
+
+      </div> 
+    </div> 
+  );
