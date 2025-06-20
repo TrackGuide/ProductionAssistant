@@ -33,7 +33,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   currentGuidebook,
   userInputs,
   isCollapsed = false,
-  onToggle
+  onToggle,
+  contextLabel
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -56,11 +57,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 • Provide detailed explanations about any aspect of your track 
 
 What would you like to work on today?`;
-       content: defaultWelcome,
-        timestamp: new Date()
-      }]);
-    }
-  }, [isOpen, messages.length]);
+       setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: defaultWelcome,
+      timestamp: new Date()
+    }]);
+  }
+}, [isOpen, messages.length, contextLabel]);
+   
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -79,10 +84,9 @@ What would you like to work on today?`;
   }, [isOpen]);
 
   const clearConversation = () => {
-    const clearConversation = () => {
-+  const defaultWelcome = contextLabel
-+    ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-+    : `Hi! I'm your AI music production assistant. I can help you:
+  const defaultWelcome = contextLabel
+    ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
+    : `Hi! I'm your AI music production assistant. I can help you:
 
 • Refine your TrackGuide with specific questions
 • Suggest improvements to your current project
