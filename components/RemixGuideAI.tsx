@@ -120,8 +120,8 @@ export const RemixGuideAI: React.FC = () => {
         const originalChordProgression = extractOriginalChordProgression(result.guide);
         
         const midiSettings: MidiSettings = {
-          key: result.originalKey || result.targetKey,
-          tempo: result.targetTempo,
+          key: result.targetKey, // Use the target key from remix guide
+          tempo: result.targetTempo, // Use the target tempo from remix guide
           timeSignature: [4, 4],
           chordProgression: originalChordProgression || result.originalChordProgression || 'i-VI-III-VII',
           genre: selectedGenre,
@@ -208,8 +208,8 @@ export const RemixGuideAI: React.FC = () => {
       const originalChordProgression = extractOriginalChordProgression(remixGuide.guide);
       
       const midiSettings: MidiSettings = {
-        key: remixGuide.originalKey || remixGuide.targetKey,
-        tempo: remixGuide.targetTempo,
+        key: remixGuide.targetKey, // Use the target key from remix guide
+        tempo: remixGuide.targetTempo, // Use the target tempo from remix guide
         timeSignature: [4, 4],
         chordProgression: originalChordProgression || remixGuide.originalChordProgression || 'i-VI-III-VII',
         genre: selectedGenre,
@@ -413,10 +413,10 @@ export const RemixGuideAI: React.FC = () => {
         >
           {isGenerating ? (
             <>
-              <Spinner size="sm" /> Generating Remix Guide + MIDI...
+              <Spinner size="sm" /> Generating RemixGuide...
             </>
           ) : (
-            '🎛️ Generate Complete Remix Guide + MIDI'
+            '🎛️ Generate RemixGuide'
           )}
         </Button>
         <Button onClick={resetForm} variant="outline">

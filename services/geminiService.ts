@@ -43,11 +43,78 @@ function buildPluginParameterSection(daw?: string, plugins?: string): string {
 - Mix: 15-30% for depth without wash`;
   }
 
-  const dawSpecific = daw ? `
-**${daw}-Specific Settings:**` : '';
-  
-  const pluginSpecific = plugins ? `
-**Plugin Chain (${plugins}):**` : '';
+  // Get DAW-specific stock plugins
+  const getStockPlugins = (dawName: string) => {
+    const lowerDaw = dawName.toLowerCase();
+    if (lowerDaw.includes('ableton')) {
+      return {
+        eq: 'EQ Eight',
+        compressor: 'Compressor',
+        reverb: 'Reverb',
+        delay: 'Echo',
+        limiter: 'Limiter',
+        saturator: 'Saturator'
+      };
+    } else if (lowerDaw.includes('logic')) {
+      return {
+        eq: 'Channel EQ',
+        compressor: 'Compressor',
+        reverb: 'ChromaVerb',
+        delay: 'Echo',
+        limiter: 'Adaptive Limiter',
+        saturator: 'Tape'
+      };
+    } else if (lowerDaw.includes('fl studio') || lowerDaw.includes('fl')) {
+      return {
+        eq: 'Parametric EQ 2',
+        compressor: 'Fruity Compressor',
+        reverb: 'Reverb 2',
+        delay: 'Fruity Delay 3',
+        limiter: 'Fruity Limiter',
+        saturator: 'Fruity Waveshaper'
+      };
+    } else if (lowerDaw.includes('pro tools')) {
+      return {
+        eq: 'EQ III',
+        compressor: 'Dyn3 Compressor/Limiter',
+        reverb: 'D-Verb',
+        delay: 'Mod Delay III',
+        limiter: 'Dyn3 Compressor/Limiter',
+        saturator: 'Lo-Fi'
+      };
+    } else if (lowerDaw.includes('cubase') || lowerDaw.includes('nuendo')) {
+      return {
+        eq: 'StudioEQ',
+        compressor: 'Compressor',
+        reverb: 'REVerence',
+        delay: 'ModMachine',
+        limiter: 'Limiter',
+        saturator: 'Tape'
+      };
+    } else if (lowerDaw.includes('reaper')) {
+      return {
+        eq: 'ReaEQ',
+        compressor: 'ReaComp',
+        reverb: 'ReaVerb',
+        delay: 'ReaDelay',
+        limiter: 'ReaLimit',
+        saturator: 'ReaSynth'
+      };
+    } else {
+      return {
+        eq: 'Stock EQ',
+        compressor: 'Stock Compressor',
+        reverb: 'Stock Reverb',
+        delay: 'Stock Delay',
+        limiter: 'Stock Limiter',
+        saturator: 'Stock Saturator'
+      };
+    }
+  };
+
+  const stockPlugins = daw ? getStockPlugins(daw) : null;
+  const dawSpecific = daw && !plugins ? `**${daw} Stock Plugin Chain:**` : daw ? `**${daw}-Specific Settings:**` : '';
+  const pluginSpecific = plugins ? `**Custom Plugin Chain (${plugins}):**` : '';
 
   return `
 ### 🎛️ Processing Tips & Plugin Parameters
@@ -55,19 +122,33 @@ ${dawSpecific}
 ${pluginSpecific}
 
 **EQ Parameters:**
-${daw === 'Ableton Live' ? '- EQ Eight: High-pass at 40 Hz, Low-mid cut at 250 Hz (-3dB), Presence boost at 3 kHz (+2dB)' : 
+${stockPlugins && !plugins ? 
+  `- ${stockPlugins.eq}: High-pass at ${daw?.toLowerCase().includes('logic') ? '35' : daw?.toLowerCase().includes('fl') ? '30' : '40'} Hz, Low-mid cut at ${daw?.toLowerCase().includes('logic') ? '300' : daw?.toLowerCase().includes('fl') ? '400' : '250'} Hz (-3dB), Presence boost at ${daw?.toLowerCase().includes('logic') ? '12 kHz (+1.5dB)' : daw?.toLowerCase().includes('fl') ? '15 kHz (+2dB)' : '3 kHz (+2dB)'}` :
+  daw === 'Ableton Live' ? '- EQ Eight: High-pass at 40 Hz, Low-mid cut at 250 Hz (-3dB), Presence boost at 3 kHz (+2dB)' : 
   daw === 'Logic Pro X' ? '- Channel EQ: High-pass at 35 Hz, Low-mid cut at 300 Hz (-2.5dB), High boost at 12 kHz (+1.5dB)' :
   daw === 'FL Studio' ? '- Parametric EQ 2: High-pass at 30 Hz, Mid cut at 400 Hz (-4dB), Air boost at 15 kHz (+2dB)' :
   '- High-pass filter: 20-40 Hz, Low-mid cut: 200-400 Hz (-2 to -4dB), Presence boost: 2-5 kHz (+1 to +3dB)'}
 
 **Compression Settings:**
-${daw === 'Ableton Live' ? '- Compressor: Ratio 4:1, Attack 15ms, Release 200ms, Knee 2dB' :
+${stockPlugins && !plugins ? 
+  `- ${stockPlugins.compressor}: Ratio ${daw?.toLowerCase().includes('logic') ? '3.5:1' : '4:1'}, Attack ${daw?.toLowerCase().includes('fl') ? '10ms' : daw?.toLowerCase().includes('logic') ? '20ms' : '15ms'}, Release ${daw?.toLowerCase().includes('logic') ? '150ms' : daw?.toLowerCase().includes('fl') ? '250ms' : '200ms'}${daw?.toLowerCase().includes('logic') ? ', Auto-Release enabled' : daw?.toLowerCase().includes('fl') ? ', Knee 3dB' : ', Knee 2dB'}` :
+  daw === 'Ableton Live' ? '- Compressor: Ratio 4:1, Attack 15ms, Release 200ms, Knee 2dB' :
   daw === 'Logic Pro X' ? '- Compressor: Ratio 3.5:1, Attack 20ms, Release 150ms, Auto-Release enabled' :
   daw === 'FL Studio' ? '- Fruity Compressor: Ratio 4:1, Attack 10ms, Release 250ms, Knee 3dB' :
   '- Ratio: 3:1 to 4:1, Attack: 10-30ms, Release: 100-300ms'}
 
+**Reverb & Delay:**
+${stockPlugins && !plugins ? 
+  `- ${stockPlugins.reverb}: Room/Hall setting, 1.2s decay, Pre-delay 20ms, Mix 25%
+- ${stockPlugins.delay}: 1/8 note timing, Feedback 35%, High-cut 8kHz, Mix 20%` :
+  '- Room reverb: 0.8-1.5s decay for space, Delay: 1/8 or 1/4 note timing, High-cut: 8-12 kHz to avoid harshness'}
+
 **Effects Chain:**
-${plugins ? `- Using ${plugins}: Specific parameter recommendations based on your plugin selection` : '- Standard effects: EQ → Compressor → Reverb/Delay → Limiter'}
+${plugins ? 
+  `- Using ${plugins}: Apply specific parameter recommendations based on your plugin selection` : 
+  stockPlugins ? 
+    `- ${stockPlugins.eq} → ${stockPlugins.compressor} → ${stockPlugins.saturator} → ${stockPlugins.reverb}/${stockPlugins.delay} → ${stockPlugins.limiter}` :
+    '- Standard effects: EQ → Compressor → Reverb/Delay → Limiter'}
 - Send levels: 15-25% to reverb bus, 10-20% to delay bus
 - Sidechain settings: 4:1 ratio, fast attack, medium release`;
 }
