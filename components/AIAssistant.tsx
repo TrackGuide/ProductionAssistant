@@ -43,6 +43,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  
 
   // Reset messages when context changes
   useEffect(() => {
@@ -93,6 +94,63 @@ What would you like to work on today?`;
       timestamp: new Date(),
     }]);
   };
+
+  // Add after your existing state declarations, around line 20-30
+const handleRegenerateDocument = async (modificationType: string) => {
+  setIsLoading(true);
+  try {
+    // Extract the latest user message and AI response
+    const latestUserMessage = messages.find(m => m.role === 'user')?.content || '';
+    const latestAIResponse = messages.find(m => m.role === 'assistant')?.content || '';
+    
+    // Combine them to create context for the regeneration
+    const modificationContext = {
+      userRequest: latestUserMessage,
+      aiSuggestion: latestAIResponse,
+      currentGuidebook: currentGuidebook,
+      userInputs: userInputs
+    };
+    
+    // Call the appropriate regeneration function based on type
+    let newContent = '';
+    switch(modificationType) {
+      case 'trackguide':
+        newContent = await regenerateTrackGuide(modificationContext);
+        break;
+      case 'mixfeedback':
+        newContent = await regenerateMixFeedback(modificationContext);
+        break;
+      case 'remixguide':
+        newContent = await regenerateRemixGuide(modificationContext);
+        break;
+      case 'mixcompare':
+        newContent = await regenerateMixCompare(modificationContext);
+        break;
+    }
+    
+    // Update the document content (you'll need to implement this)
+    if (onUpdateDocument) {
+      onUpdateDocument(newContent, modificationType);
+    }
+    
+    // Add a confirmation message to the chat
+    addMessage({
+      role: 'assistant',
+      content: `I've updated the ${modificationType === 'trackguide' ? 'TrackGuide' : 
+                modificationType === 'mixfeedback' ? 'Mix Feedback' : 
+                modificationType === 'remixguide' ? 'Remix Guide' : 
+                'Mix Comparison'} with the requested changes.`
+    });
+  } catch (error) {
+    console.error("Error regenerating document:", error);
+    addMessage({
+      role: 'assistant',
+      content: `Sorry, I encountered an error while trying to update the document: ${error.message}`
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
