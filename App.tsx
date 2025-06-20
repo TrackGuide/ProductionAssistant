@@ -929,6 +929,7 @@ const closeAIAssistant = () => {
       return;
     }
     setIsGeneratingMixFeedback(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixFeedbackResult(null);
     setMixFeedbackError(null);
     try {
@@ -940,6 +941,7 @@ const closeAIAssistant = () => {
     } finally {
       setIsGeneratingMixFeedback(false);
     }
+    
   };
   
   const resetMixFeedbackForm = () => {
@@ -971,6 +973,7 @@ const closeAIAssistant = () => {
       return;
     }
     setIsGeneratingMixComparison(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixCompareResult(null);
     setMixCompareError(null);
     try {
@@ -1577,18 +1580,7 @@ const closeAIAssistant = () => {
                   </div>
                   {mixCompareInputs.mixB && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixB.name} ({(mixCompareInputs.mixB.size / 1024 / 1024).toFixed(2)} MB)</p>}
                   
-                  {/* Include general mix feedback checkbox */}
-                  <div className="mt-4 pt-4 border-t border-gray-600">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={mixCompareInputs.includeMixBFeedback || false}
-                        onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
-                        className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-300">Include Individual Analysis</span>
-                    </label>
-                  </div>
+                 
                 </Card>
 
                 <Card title="Notes for AI" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
@@ -1691,6 +1683,39 @@ const closeAIAssistant = () => {
 </Button>
 
                 </div>
+ <div className="p-4 border-t border-gray-700 flex justify-center">
++                 <Button
++                   onClick={async () => {
++                     if (!mixCompareInputs.mixB) return;
++                     setIsGeneratingMixFeedback(true);
++                     setMixFeedbackResult(null);
++                     setMixFeedbackError(null);
++                     setMixFeedbackInputs({
++                       audioFile: mixCompareInputs.mixB,
++                       userNotes: mixCompareInputs.userNotes
++                     });
++                     try {
++                       const result = await generateMixFeedback({
++                         audioFile: mixCompareInputs.mixB,
++                         userNotes: mixCompareInputs.userNotes
++                       });
++                       setMixFeedbackResult(result);
++                     } catch (err: any) {
++                       console.error("Full Mix B Feedback Error:", err);
++                       setMixFeedbackError(err.message || 'Failed to generate feedback for Mix B.');
++                     } finally {
++                       setIsGeneratingMixFeedback(false);
++                     }
++                   }}
++                   disabled={isGeneratingMixFeedback}
++                   className="w-full mt-4 text-base py-2.5 !bg-orange-600 hover:!bg-orange-700 focus:!ring-orange-500"
++                   leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5" />}
++                 >
++                   {isGeneratingMixFeedback ? 'Analyzing Mix B...' : 'Get Full Feedback for Mix B'}
++                 </Button>
++               </div>
+
+                
               </Card>
             )}
             {!isGeneratingMixFeedback && !isGeneratingMixComparison && !mixFeedbackResult && !mixCompareResult && !mixFeedbackError && !mixCompareError && (
