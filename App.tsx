@@ -4,8 +4,9 @@ import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfG
 import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
-  generateMixFeedbackWithAudio as generateMixFeedback 
-} from './services/geminiService.ts';
+  generateMixFeedbackWithAudio as generateMixFeedback,
+  generateMixComparison
+} from './services/geminiService';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
