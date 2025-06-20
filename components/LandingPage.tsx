@@ -443,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 <section className="px-6 py-20 bg-black/30">
   <div className="max-w-4xl mx-auto text-center">
    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-  Interested in Investing? Contact us for full investor deck & opportunities.
+  Contact us for full investor deck & opportunities.
 </h2>
     <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
       We’re building the AI studio assistant of the future — with a human-first philosophy. Join us.
@@ -454,7 +454,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     >
       <span>Contact for Investment Opportunities</span>
     </a>
-    <p className="text-gray-500 mt-4">dustinspaceproductions@gmail.com</p>
   </div>
 </section>
 
