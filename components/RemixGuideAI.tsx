@@ -2,19 +2,24 @@ import React, { useState, useRef } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Spinner } from './Spinner';
+import { Input } from './Input';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getAllGenres, getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
 import { generateRemixGuide, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
-import { MidiSettings, GeneratedMidiPatterns } from '../types';
+import { MidiSettings, GeneratedMidiPatterns, RemixGuideInputs } from '../types';
+import { DAW_SUGGESTIONS } from '../constants';
 
 interface RemixGuideData {
   guide: string;
   targetTempo: number;
   targetKey: string;
   sections: string[];
-  generatedMidiPatterns?: GeneratedMidiPatterns;
+  generatedMidiPatterns: GeneratedMidiPatterns;
+  originalKey?: string;
+  originalTempo?: number;
+  originalChordProgression?: string;
 }
 
 const extractOriginalChordProgression = (guideContent: string): string | null => {
@@ -48,8 +53,9 @@ export const RemixGuideAI: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
+  const [daw, setDaw] = useState<string>('');
+  const [plugins, setPlugins] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [isGeneratingMidi, setIsGeneratingMidi] = useState<boolean>(false);
   const [remixGuide, setRemixGuide] = useState<RemixGuideData | null>(null);
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,43 +109,9 @@ export const RemixGuideAI: React.FC = () => {
 
       const genreInfo = getGenreInfo(selectedGenre);
 
-      const result = await generateRemixGuide(audioData, selectedGenre, genreInfo);
+      // Pass DAW and plugins to the remix guide generation
+      const result = await generateRemixGuide(audioData, selectedGenre, genreInfo, daw, plugins);
       setRemixGuide(result);
-
-      setIsGeneratingMidi(true);
-      try {
-        const originalChordProgression = extractOriginalChordProgression(result.guide);
-
-        const midiSettings: MidiSettings = {
-          key: result.targetKey,
-          tempo: result.targetTempo,
-          timeSignature: [4, 4],
-          chordProgression: originalChordProgression || 'i-VI-III-VII',
-          genre: 'Electronic',
-          bars: 8,
-          targetInstruments: ['bassline', 'drums', 'melody', 'pads'],
-          guidebookContext: `RemixGuide AI patterns for ${result.targetKey} at ${result.targetTempo} BPM`,
-          songSection: result.sections[0] || 'Intro'
-        };
-
-        const midiResult = await generateMidiPatternSuggestions(midiSettings);
-
-        let jsonStr = typeof midiResult === 'string' ? midiResult.trim() : JSON.stringify(midiResult);
-        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-        const match = jsonStr.match(fenceRegex);
-        if (match && match[2]) {
-          jsonStr = match[2].trim();
-        }
-
-        const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
-
-        setRemixGuide(prev => prev ? { ...prev, generatedMidiPatterns } : null);
-
-      } catch (midiErr) {
-        console.error('Error generating MIDI patterns for remix:', midiErr);
-      } finally {
-        setIsGeneratingMidi(false);
-      }
 
     } catch (err) {
       console.error('Error generating remix guide:', err);
@@ -158,6 +130,8 @@ export const RemixGuideAI: React.FC = () => {
     setAudioFile(null);
     setSelectedCategory('');
     setSelectedGenre('');
+    setDaw('');
+    setPlugins('');
     setRemixGuide(null);
     setError('');
     if (fileInputRef.current) {
@@ -249,6 +223,40 @@ export const RemixGuideAI: React.FC = () => {
         </Card>
       </div>
 
+      {/* DAW and Plugins Configuration */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 text-white">Production Setup (Optional)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              DAW (Digital Audio Workstation)
+            </label>
+            <input
+              type="text"
+              value={daw}
+              onChange={(e) => setDaw(e.target.value)}
+              placeholder="e.g., Ableton Live, Logic Pro X, FL Studio..."
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Available Plugins
+            </label>
+            <input
+              type="text"
+              value={plugins}
+              onChange={(e) => setPlugins(e.target.value)}
+              placeholder="e.g., Serum, FabFilter Pro-Q 3, Valhalla VintageVerb..."
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Specify your DAW and plugins to get tailored parameter recommendations in the remix guide
+        </p>
+      </Card>
+
       {error && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
           {error}
@@ -258,19 +266,15 @@ export const RemixGuideAI: React.FC = () => {
       <div className="flex gap-4">
         <Button
           onClick={generateRemix}
-          disabled={!audioFile || !selectedGenre || isGenerating || isGeneratingMidi}
+          disabled={!audioFile || !selectedGenre || isGenerating}
           className="flex-1"
         >
           {isGenerating ? (
             <>
-              <Spinner size="sm" /> Analyzing & Generating Remix Guide...
-            </>
-          ) : isGeneratingMidi ? (
-            <>
-              <Spinner size="sm" /> Generating MIDI Patterns...
+              <Spinner size="sm" /> Analyzing & Generating Complete Remix Guide...
             </>
           ) : (
-            '🎛️ Generate Remix Guide'
+            '🎛️ Generate Complete Remix Guide + MIDI'
           )}
         </Button>
         <Button onClick={resetForm} variant="outline">
@@ -299,15 +303,24 @@ export const RemixGuideAI: React.FC = () => {
               🎹 MIDI Remix Patterns
             </h3>
             <MidiGeneratorComponent
-              key={`remix-${selectedGenre}`}  // FIXED KEY
-              initialPatterns={remixGuide.generatedMidiPatterns}
+              key={`remix-${selectedGenre}`}
               sections={remixGuide.sections}
               targetTempo={remixGuide.targetTempo}
               targetKey={remixGuide.targetKey}
               isRemixMode={true}
-              preGeneratedPatterns={remixGuide.generatedMidiPatterns}
-              originalChordProgression={extractOriginalChordProgression(remixGuide.guide)}
-              remixGuideContent={remixGuide.guide}
+              currentGuidebookEntry={{
+                id: `remix-${Date.now()}`,
+                title: `${selectedGenre} Remix`,
+                genre: [selectedGenre],
+                artistReference: 'Remix Guide',
+                vibe: [selectedGenre],
+                daw: daw || 'Not specified',
+                plugins: plugins || 'Not specified',
+                availableInstruments: 'Remix instruments',
+                content: remixGuide.guide,
+                createdAt: new Date().toISOString(),
+                generatedMidiPatterns: remixGuide.generatedMidiPatterns
+              }}
             />
           </Card>
         </div>

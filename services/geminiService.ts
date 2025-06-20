@@ -443,13 +443,18 @@ Respond as the helpful TrackGuideAI assistant.`;
 export async function generateRemixGuide(
   audioData: { base64: string; mimeType: string },
   targetGenre: string,
-  genreInfo: any
+  genreInfo: any,
+  daw?: string,
+  plugins?: string
 ): Promise<{
   guide: string;
   targetTempo: number;
   targetKey: string;
   sections: string[];
-  midiPatterns?: Record<string, Record<string, string>>;
+  generatedMidiPatterns: GeneratedMidiPatterns;
+  originalKey?: string;
+  originalTempo?: number;
+  originalChordProgression?: string;
 }> {
   if (!apiKey) {
     throw new Error("API Key not configured. Cannot connect to Gemini API for remix guide.");
@@ -460,20 +465,46 @@ export async function generateRemixGuide(
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
     
     const structuralBlueprint = buildStructuralBlueprint(true);
+    const pluginSection = buildPluginParameterSection(daw, plugins);
     
     const prompt = `You are TrackGuideAI's Remix Specialist. Analyze the uploaded audio track and create a comprehensive remix guide for transforming it into ${targetGenre} style.
+
+**User Production Setup:**
+- **DAW:** ${daw || "Not specified"}
+- **Available Plugins:** ${plugins || "Stock/Generic plugins"}
 
 **Analysis Requirements:**
 1. Identify the original track's tempo, key, harmonic progression, and rhythmic characteristics
 2. Determine optimal transformation approach for ${targetGenre}
 3. Provide detailed production guidance with specific techniques
+4. Include plugin-specific parameter recommendations based on user's setup
 
 **Target Genre:** ${targetGenre}
 **Target Tempo Range:** ${tempoRange}
 **Suggested Sections:** ${sections.join(", ")}
 
-**Required Response Format:**
-Create a detailed markdown guide that includes:
+**CRITICAL: Return your response in this EXACT JSON format:**
+{
+  "guide": "FULL_MARKDOWN_GUIDE_HERE",
+  "originalTempo": 120,
+  "originalKey": "C minor",
+  "originalChordProgression": "i-VI-III-VII",
+  "targetTempo": 128,
+  "targetKey": "C minor",
+  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+  "midiPatterns": {
+    "bassline": [{"time": 0, "midi": 36, "duration": 0.5, "velocity": 110, "pitch": "C2"}],
+    "melody": [{"time": 0, "midi": 72, "duration": 1, "velocity": 100, "pitch": "C5"}],
+    "drums": {
+      "kick": [{"time": 0, "duration": 0.1, "velocity": 120}],
+      "snare": [{"time": 1, "duration": 0.1, "velocity": 110}],
+      "hihat_closed": [{"time": 0.5, "duration": 0.1, "velocity": 80}]
+    },
+    "chords": [{"time": 0, "name": "Cm", "duration": 2, "notes": [{"pitch": "C4", "midi": 60}], "velocity": 100}]
+  }
+}
+
+**For the "guide" field, create a detailed markdown guide that includes:**
 
 # 🎵 REMIX GUIDE: [Original Track] → ${targetGenre}
 
@@ -494,9 +525,9 @@ ${structuralBlueprint}
 
 ## 🎹 Sound Design & Instrumentation Transformation
 **Lead Elements:**
-- **Original → ${targetGenre}:** Transform existing leads using [specific techniques]
+- **Original → ${targetGenre}:** Transform existing leads using specific techniques
 - **New Elements:** Add characteristic ${targetGenre} sounds
-- **Processing Chain:** [Specific plugin recommendations and parameters]
+- **Processing Chain:** Specific plugin recommendations and parameters
 
 **Rhythm Section Redesign:**
 - **Drum Programming:** ${targetGenre}-specific patterns and sounds
@@ -507,6 +538,8 @@ ${structuralBlueprint}
 - **Chord Voicings:** Adapt progressions for ${targetGenre} aesthetic
 - **Pad Textures:** Atmospheric elements and spatial design
 - **Arpeggios/Sequences:** Rhythmic harmonic content
+
+${pluginSection}
 
 ## 🎚️ Production Techniques & Processing
 **Arrangement Strategy:**
@@ -526,30 +559,30 @@ ${structuralBlueprint}
 
 ## 🎼 Step-by-Step Remix Process
 **Phase 1: Preparation**
-1. Tempo adjustment: [Specific technique for tempo change]
-2. Key transposition: [If needed, method and tools]
-3. Audio editing: [Chopping, slicing, and preparation]
+1. Tempo adjustment: Specific technique for tempo change
+2. Key transposition: If needed, method and tools
+3. Audio editing: Chopping, slicing, and preparation
 
 **Phase 2: Foundation**
-1. Drum programming: [${targetGenre} patterns and sounds]
-2. Bass design: [Sub and mid-bass for ${targetGenre}]
-3. Harmonic foundation: [Chord progressions and voicings]
+1. Drum programming: ${targetGenre} patterns and sounds
+2. Bass design: Sub and mid-bass for ${targetGenre}
+3. Harmonic foundation: Chord progressions and voicings
 
 **Phase 3: Development**
-1. Lead transformation: [Processing original or creating new]
-2. Atmospheric elements: [Pads, textures, and ambience]
-3. Rhythmic elements: [Percussion and groove enhancement]
+1. Lead transformation: Processing original or creating new
+2. Atmospheric elements: Pads, textures, and ambience
+3. Rhythmic elements: Percussion and groove enhancement
 
 **Phase 4: Arrangement**
-1. Section structure: [Intro, build-ups, drops, breakdowns]
-2. Transition techniques: [Risers, sweeps, and cuts]
-3. Variation strategies: [Keeping listener engagement]
+1. Section structure: Intro, build-ups, drops, breakdowns
+2. Transition techniques: Risers, sweeps, and cuts
+3. Variation strategies: Keeping listener engagement
 
 **Phase 5: Mix & Master**
-1. Frequency balance: [${targetGenre}-specific EQ approach]
-2. Dynamic control: [Compression and limiting strategies]
-3. Spatial processing: [Stereo width and depth]
-4. Final polish: [Loudness and character enhancement]
+1. Frequency balance: ${targetGenre}-specific EQ approach
+2. Dynamic control: Compression and limiting strategies
+3. Spatial processing: Stereo width and depth
+4. Final polish: Loudness and character enhancement
 
 ## 🔥 Pro Tips for ${targetGenre} Remix Success
 - **Signature Elements:** Key characteristics that define ${targetGenre}
@@ -557,7 +590,9 @@ ${structuralBlueprint}
 - **Creative Opportunities:** Unique ways to blend original with ${targetGenre}
 - **Reference Tracks:** Study these ${targetGenre} examples for inspiration
 
-Focus on practical, actionable techniques that can be implemented immediately. Provide specific parameter suggestions and creative approaches that honor both the original track and the target genre aesthetic.`;
+Focus on practical, actionable techniques that can be implemented immediately. Provide specific parameter suggestions and creative approaches that honor both the original track and the target genre aesthetic.
+
+**IMPORTANT:** Return ONLY the JSON object with the complete markdown guide in the "guide" field and properly formatted MIDI patterns in the "midiPatterns" field.`;
 
     const textPart = { text: prompt };
     const audioPart = {
@@ -571,25 +606,53 @@ Focus on practical, actionable techniques that can be implemented immediately. P
       contents: { parts: contents },
     });
 
-    const guideText = response.text;
-    if (typeof guideText !== 'string') {
+    const responseText = response.text;
+    if (typeof responseText !== 'string') {
       throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
 
-    // Extract tempo and key from the generated guide
-    const tempoMatch = guideText.match(/Target Tempo.*?(\d+)/i);
-    const keyMatch = guideText.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
-    
-    const targetTempo = tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128);
-    const targetKey = keyMatch ? keyMatch[1].trim() : "C minor";
+    // Parse the JSON response
+    let jsonStr = responseText.trim();
+    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+    const match = jsonStr.match(fenceRegex);
+    if (match && match[2]) {
+      jsonStr = match[2].trim();
+    }
 
-    return {
-      guide: guideText,
-      targetTempo,
-      targetKey,
-      sections,
-      midiPatterns: {} // Can be populated with specific MIDI patterns if needed
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.error("Failed to parse JSON response:", jsonStr);
+      // Fallback: extract what we can from the text
+      const tempoMatch = responseText.match(/Target Tempo.*?(\d+)/i);
+      const keyMatch = responseText.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
+      
+      return {
+        guide: responseText,
+        targetTempo: tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128),
+        targetKey: keyMatch ? keyMatch[1].trim() : "C minor",
+        sections,
+        generatedMidiPatterns: {},
+        originalKey: "C minor",
+        originalTempo: 120,
+        originalChordProgression: "i-VI-III-VII"
+      };
+    }
+
+    // Validate and structure the response
+    const result = {
+      guide: parsedResponse.guide || responseText,
+      targetTempo: parsedResponse.targetTempo || (genreInfo?.tempoRange?.[0] || 128),
+      targetKey: parsedResponse.targetKey || "C minor",
+      sections: parsedResponse.sections || sections,
+      generatedMidiPatterns: parsedResponse.midiPatterns || {},
+      originalKey: parsedResponse.originalKey || "C minor",
+      originalTempo: parsedResponse.originalTempo || 120,
+      originalChordProgression: parsedResponse.originalChordProgression || "i-VI-III-VII"
     };
+
+    return result;
 
   } catch (error) {
     console.error("Error generating remix guide:", error);
