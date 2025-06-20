@@ -422,97 +422,89 @@ Focus on practical improvements that can be implemented immediately.`;
 /**
  * 4. Generate mix comparison (one-shot)
  */
-export const generateMixComparison = async (
-  inputs: MixComparisonInputs
-): Promise<string> => {
-  const {
-    mixAFile,
-    mixBFile,
-    mixAName,
-    mixBName,
-    requestMixAAnalysis,
-    requestMixBAnalysis,
-    userNotes
-  } = inputs;
+const generateMixComparisonPrompt = (inputs: MixComparisonInputs): string => {
+  const focus = inputs.focus?.trim() || "Overall clarity, balance, stereo image, and dynamics";
 
-  // Build the main comparison prompt
-  const prompt = `
-You are an expert AI mix engineer. Compare these two mixes:
+  return `
+You are an expert audio mixing and mastering engineer AI. The user has uploaded two mixes:
 
-- Mix A: "${mixAName}" (Previous version)
-- Mix B: "${mixBName}" (Current version)
+Mix A: "${inputs.mixAName}" (Previous version)
+Mix B: "${inputs.mixBName}" (Current version)
 
-Focus your recommendations ONLY on improving Mix B — do NOT suggest changes to Mix A.
+Mix B is the latest version. Focus your recommendations ONLY on improving Mix B. Use Mix A for comparison — if Mix A does something better, mention it — but do NOT suggest changes to Mix A.
 
-If Mix B improves on Mix A → acknowledge that.  
-If Mix A is stronger in some areas → point this out.  
-But prioritize actionable suggestions for Mix B.
+Focus on the following areas: ${focus}
 
-If "Include full analysis" was selected, add a full Mix B section.
+---
 
-User Notes: ${userNotes || "None provided"}
+## Comparison Structure:
 
-${requestMixBAnalysis ? "**Include a full Mix B technical analysis section at the end (modeled on Mix Feedback — with detailed frequency, stereo, dynamics, and technical checks).**" : ""}
+### 🎧 Overall Comparison
+- Compare the artistic impact, balance, polish between Mix A and Mix B.
+- Note improvements in Mix B.
+- Note where Mix A still sounds better.
 
-Comparison Framework:
+### 🎛️ Frequency Balance
+- Compare low-end, midrange, and high-end.
+- Where can Mix B still improve?
+- Where is it better than Mix A?
 
-🎧 **Overall Comparison**
-🎛️ **Frequency Balance**
-🎚️ **Stereo Image & Depth**
-📈 **Dynamics & Loudness**
-⚙️ **Technical Quality**
+### 🎚️ Stereo Image & Depth
+- Compare width, depth, spatial clarity.
+- How can Mix B improve further?
 
-🏆 **Strengths & Opportunities (for Mix B only)**
-🚀 **Actionable Recommendations (for Mix B only)**
+### 📈 Dynamics & Loudness
+- Compare compression, transient clarity, punch.
+- Estimated loudness (LUFS), dynamic range.
 
-DO NOT give suggestions for Mix A.
-Only focus next steps for Mix B (current version).  
-Use clear headings (Markdown format).`;
+### ⚙️ Technical Quality
+- Check for clipping, noise, phase issues, mono compatibility.
 
-  // Build content parts → include inline audio!
-  const textPart = { text: prompt };
+---
 
-  const parts: any[] = [textPart];
+## 🏆 Strengths & Opportunities (FOR MIX B ONLY)
+- Strengths of Mix B
+- Opportunities for improvement
 
-  // Add Mix A audio
-  if (mixAFile) {
-    parts.push({
-      inlineData: {
-        data: mixAFile,
-        mimeType: "audio/mpeg"
-      }
-    });
-  }
+---
 
-  // Add Mix B audio
-  if (mixBFile) {
-    parts.push({
-      inlineData: {
-        data: mixBFile,
-        mimeType: "audio/mpeg"
-      }
-    });
-  }
+## 🚀 Actionable Recommendations (FOR MIX B ONLY)
+For each recommendation:
 
-  try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: parts
-    });
+✅ Suggest common plugins or plugin types
+✅ If DAW or user plugins are known, mention them
+✅ Provide EXAMPLE parameters: EQ freqs/gain, compression ratio/attack/release, saturation drive %, reverb decay, transient shaper %, etc.
+✅ Be concise but specific — avoid vague suggestions
 
-    const text = response.text;
+Example:
 
-    if (!text || typeof text !== "string") {
-      console.error("No valid text response from generateMixComparison:", response);
-      throw new Error("AI returned an invalid response for mix comparison.");
-    }
+❌ "Add grit to guitars"
 
-    return text;
-  } catch (err) {
-    console.error("Error in generateMixComparison:", err);
-    throw new Error(`Failed to generate mix comparison: ${err.message}`);
-  }
+✅ "Use Decapitator (Drive ~5, Tone ~5, Mix 50%) or DAW saturator. Focus on 500 Hz – 3 kHz to add grit to guitars."
+
+---
+
+## Final Section:
+
+**Next Steps (For Mix B only):**
+1. Top priority improvements
+2. Polishing & mastering prep
+3. Additional listening advice
+
+---
+
+If the user requested individual analysis, include:
+
+- Detailed Frequency Analysis (Sub, Bass, Mids, Highs)
+- Stereo Field Analysis
+- Dynamics Analysis
+- Instrument-specific feedback
+- Technical metrics: estimated LUFS, True Peak, Dynamic Range
+
+Remember: Focus all recommendations on improving Mix B.
+`;
 };
+
 /**
  * 5. Generate AI-assistant chat response (streaming)
  */
@@ -796,18 +788,16 @@ export const generateMixFeedbackWithAudio = async (
   }
   
   if (!inputs.audioFile) {
-    // Fallback to text-only feedback if no audio file
     return generateMixFeedback(inputs);
   }
 
   try {
-    // Helper function to convert File to base64
     const fileToBase64 = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result as string;
-          resolve(result.split(',')[1]); // Remove data:audio/...;base64, prefix
+          resolve(result.split(',')[1]);
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
@@ -815,102 +805,32 @@ export const generateMixFeedbackWithAudio = async (
     };
 
     const audioBase64 = await fileToBase64(inputs.audioFile);
-    
-    const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
 
-**Track Information:**
-- Track Name: ${inputs.trackName || "Uploaded Mix"}
-- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
-- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
+    const prompt = `
+You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio and give professional mix feedback.
 
-**Comprehensive Analysis Framework:**
+**Track:**
+- Name: ${inputs.trackName || "Uploaded Mix"}
+- Focus: ${inputs.focus || "Overall mix quality"}
+- User Notes: ${inputs.notes || "None"}
 
-## 🎧 Audio Analysis Results
+**Analysis Sections:**
 
-### Frequency Spectrum Analysis
-**Low-End (20-250 Hz):**
-- Sub-bass presence and control
-- Bass clarity and definition
-- Low-mid muddiness assessment
+1️⃣ Frequency Spectrum (low, mid, high)
+2️⃣ Stereo Image & Depth
+3️⃣ Dynamics & Loudness
+4️⃣ Technical Quality (distortion, phase, noise)
+5️⃣ Immediate Fixes (top 3)
+6️⃣ EQ Suggestions (with specific Hz ranges and dB values)
+7️⃣ Compression (ratio, attack/release, plugin examples)
+8️⃣ Effects (reverb, delay, creative)
+9️⃣ Mastering Notes
 
-**Midrange (250 Hz - 5 kHz):**
-- Vocal/lead instrument clarity
-- Instrument separation and masking
-- Presence and intelligibility
+**IMPORTANT:** Be specific! For every suggestion, include concrete plugin parameters (e.g., "Ratio 4:1, Attack 10ms, Release 80ms") and examples of common plugin types. Do NOT leave vague tips.
 
-**High-End (5 kHz+):**
-- Air and sparkle quality
-- Harshness or sibilance issues
-- Overall brightness balance
+Also compare to genre standards and suggest any gaps to close.
 
-### Stereo Field & Spatial Analysis
-**Width & Imaging:**
-- Stereo spread effectiveness
-- Phantom center stability
-- Side content balance
-
-**Depth & Dimension:**
-- Reverb usage and space
-- Dry/wet balance
-- Front-to-back positioning
-
-### Dynamic Range Assessment
-**Compression Analysis:**
-- Overall dynamic range
-- Transient preservation
-- Pumping or over-compression
-
-**Loudness Evaluation:**
-- Perceived loudness level
-- Peak management
-- Headroom availability
-
-### Technical Quality Check
-**Distortion & Artifacts:**
-- Unwanted harmonic distortion
-- Digital artifacts or clipping
-- Noise floor assessment
-
-**Phase Relationships:**
-- Mono compatibility
-- Phase cancellation issues
-- Correlation analysis
-
-## 🎯 Specific Recommendations
-
-### Immediate Improvements
-1. **Priority Fix #1:** [Most critical issue with specific solution]
-2. **Priority Fix #2:** [Second most important improvement]
-3. **Priority Fix #3:** [Third priority enhancement]
-
-### Technical Adjustments
-**EQ Suggestions:**
-- Specific frequency cuts/boosts with dB amounts
-- Problem frequency identification
-- Enhancement opportunities
-
-**Compression Recommendations:**
-- Ratio, attack, and release settings
-- Specific compressor types or plugins
-- Bus compression strategies
-
-**Effects Processing:**
-- Reverb and delay adjustments
-- Spatial enhancement techniques
-- Creative processing opportunities
-
-### Professional Polish
-**Mastering Considerations:**
-- Final EQ and compression
-- Stereo enhancement
-- Loudness optimization
-
-**Reference Comparison:**
-- How this mix compares to commercial standards
-- Genre-specific benchmarks
-- Areas for competitive improvement
-
-Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
+Ready? Analyze the uploaded audio and begin!`;
 
     const textPart = { text: prompt };
     const audioPart = {
@@ -920,36 +840,32 @@ Provide actionable, specific feedback that can be implemented immediately to imp
       },
     };
 
-    const contents = [audioPart, textPart];
-
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
-      contents: { parts: contents },
+      contents: { parts: [audioPart, textPart] },
     });
 
     const feedbackText = response.text;
     if (typeof feedbackText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API for mix feedback.");
+      throw new Error("Invalid response from Gemini API for mix feedback.");
     }
     
     return feedbackText;
 
   } catch (error) {
     console.error("Error generating mix feedback with audio:", error);
-    let specificMessage = "An unknown error occurred while generating mix feedback.";
+    let message = "Unknown error generating mix feedback.";
     if (error instanceof Error) {
-      specificMessage = error.message;
+      message = error.message;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      } else if (error.message.includes("Candidate was blocked")) {
-        specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
+        message = "Invalid API Key or insufficient permissions.";
+      } else if (error.message.includes("network") || error.message.includes("fetch")) {
+        message = "Network error connecting to Gemini API.";
       } else if (error.message.includes("audio")) {
-        specificMessage = `There was an issue processing the audio file. Ensure it's a common format and not too large. (${error.message})`;
+        message = "Problem processing the audio file.";
       }
     }
-    throw new Error(specificMessage);
+    throw new Error(message);
   }
 };
 
