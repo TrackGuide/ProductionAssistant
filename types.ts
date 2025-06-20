@@ -89,8 +89,36 @@ export interface MidiSettings {
 
 // Types for Mix Feedback Feature
 export interface MixFeedbackInputs {
-  audioFile: File | null;
-  userNotes: string;
+  trackName: string;
+  focus?: string;
+  notes?: string;
+  audioFile?: File | null;
+  userNotes?: string;
+}
+
+export interface MixComparisonInputs {
+  mixAUrl: string;
+  mixBUrl: string;
+  focus?: string;
+}
+
+export interface RemixGuideInputs {
+  originalTrackTitle: string;
+  targetGenre: string;
+  targetKey: string;
+  targetTempo: number;
+  daw?: string;
+  plugins?: string;
+  notes?: string;
+  audioData?: {
+    base64: string;
+    mimeType: string;
+  };
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide' | 'patchGuide' | 'eqGuide';
