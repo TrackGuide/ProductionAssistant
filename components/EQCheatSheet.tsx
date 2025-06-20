@@ -230,6 +230,7 @@ return (
           )}
         </div>
       </div>
+        </div>
 
       <div className="p-4 border-t border-gray-700 bg-gray-800/50">
         <p className="text-xs text-gray-400 text-center">
