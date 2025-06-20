@@ -554,6 +554,87 @@ Respond as the helpful TrackGuideAI assistant.`;
   return stream;
 };
 
+export const generateAIAssistantResponseSimple = async (
+  message: string,
+  context?: {
+    currentGuidebook?: GuidebookEntry;
+    userInputs?: UserInputs;
+    conversationHistory?: any[];
+    contextLabel?: string;
+  }
+): Promise<string> => {
+  if (!apiKey) {
+    throw new Error("API Key not configured. Cannot connect to Gemini API.");
+  }
+  
+  try {
+    // Extract context information
+    const guidebookContent = context?.currentGuidebook?.content || '';
+    const guidebookTitle = context?.currentGuidebook?.title || 'None';
+    const genres = context?.userInputs?.genre?.join(", ") || context?.currentGuidebook?.genre?.join(", ") || 'Not specified';
+    const vibe = context?.userInputs?.vibe?.join(", ") || context?.currentGuidebook?.vibe?.join(", ") || 'Not specified';
+    const daw = context?.userInputs?.daw || context?.currentGuidebook?.daw || 'Not specified';
+    const contextLabel = context?.contextLabel || '';
+    
+    // Format conversation history if available
+    const conversationHistory = context?.conversationHistory || [];
+    const formattedHistory = conversationHistory.map(msg => 
+      `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+    ).join("\n");
+    
+    // Build a comprehensive prompt with all available context
+    const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
+
+${contextLabel ? `**Current Context:** ${contextLabel}` : ''}
+
+**Project Details:**
+- Genre: ${genres}
+- Vibe: ${vibe}
+- DAW: ${daw}
+- Current guidebook: ${guidebookTitle}
+
+${guidebookContent ? `**Current TrackGuide Content:**
+${guidebookContent.substring(0, 1000)}${guidebookContent.length > 1000 ? '...(truncated)' : ''}` : ''}
+
+${formattedHistory ? `**Recent Conversation:**
+${formattedHistory}` : ''}
+
+**User Question:** ${message}
+
+**Your Response Guidelines:**
+- Provide helpful, concise advice related to music production, mixing, sound design, or composition
+- Keep responses practical and actionable
+- Reference the project context when relevant
+- Include specific parameter suggestions when applicable
+- Maintain a professional but friendly tone
+- If the user is asking about adding an instrument or changing the TrackGuide, provide specific suggestions on how to incorporate it
+
+Provide your expert guidance:`;
+
+    console.log('Sending prompt to Gemini API with length:', prompt.length);
+    
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: prompt,
+    });
+    
+    const responseText = response.text;
+    if (typeof responseText !== 'string') {
+      throw new Error("Received an unexpected response format from Gemini API.");
+    }
+    
+    return responseText;
+  } catch (error) {
+    console.error("Error generating AI assistant response:", error);
+    let specificMessage = "An unknown error occurred while generating response.";
+    
+    if (error instanceof Error) {
+      specificMessage = error.message;
+      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
+        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
+      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})
+
 /**
  * 6. Generate RemixGuide with full functionality (matches component expectations)
  */
@@ -719,7 +800,7 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 
     // Parse the JSON response
     let jsonStr = responseText.trim();
-    const fenceRegex = /^(\w*)?\s*\n?(.*?)\n?\s*$/s;
+    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
     if (match && match[2]) {
       jsonStr = match[2].trim();
@@ -904,14 +985,14 @@ export async function generateContent(prompt: string): Promise<string> {
   }
 }
 
-/** * 9. Alternative AI Assistant Response (non-streaming for simple cases) */
+/**
+ * 9. Alternative AI Assistant Response (non-streaming for simple cases)
+ */
 export const generateAIAssistantResponseSimple = async (
   message: string,
   context?: {
     currentGuidebook?: GuidebookEntry;
     userInputs?: UserInputs;
-    conversationHistory?: Message[];
-    contextLabel?: string;
   }
 ): Promise<string> => {
   if (!apiKey) {
@@ -921,24 +1002,15 @@ export const generateAIAssistantResponseSimple = async (
   try {
     const contextInfo = context ? `
 **Current Project Context:**
-${context.contextLabel ? `- Context: ${context.contextLabel}` : ''}
 - Genre: ${context.userInputs?.genre?.join(", ") || context.currentGuidebook?.genre?.join(", ") || 'Not specified'}
 - Vibe: ${context.userInputs?.vibe?.join(", ") || context.currentGuidebook?.vibe?.join(", ") || 'Not specified'}
 - DAW: ${context.userInputs?.daw || context.currentGuidebook?.daw || 'Not specified'}
 - Current guidebook: ${context.currentGuidebook?.title || 'None'}
 ` : '';
 
-    // Format conversation history if available
-    const historyText = context?.conversationHistory?.length ? 
-      context.conversationHistory.map(msg => 
-        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-      ).join("\n\n") : '';
-
     const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
 
 ${contextInfo}
-
-${historyText ? `**Recent Conversation:**\n${historyText}\n\n` : ''}
 
 **User Question:** ${message}
 
@@ -948,7 +1020,6 @@ ${historyText ? `**Recent Conversation:**\n${historyText}\n\n` : ''}
 - Reference the project context when relevant
 - Include specific parameter suggestions when applicable
 - Maintain a professional but friendly tone
-${context?.contextLabel ? '- If the user is asking about modifying a document, suggest specific changes and improvements' : ''}
 
 Provide your expert guidance:`;
 
@@ -980,243 +1051,3 @@ Provide your expert guidance:`;
     throw new Error(specificMessage);
   }
 }
-
-/** * 10. Regenerate TrackGuide with modifications from chat */
-export const regenerateTrackGuide = async (
-  context: {
-    userRequest: string;
-    aiSuggestion: string;
-    currentGuidebook?: GuidebookEntry;
-    userInputs?: UserInputs;
-  }
-): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-  
-  try {
-    const { userRequest, aiSuggestion, currentGuidebook, userInputs } = context;
-    
-    // Extract current content
-    const currentContent = currentGuidebook?.content || '';
-    const songTitle = currentGuidebook?.title || userInputs?.title || 'Untitled Track';
-    
-    // Build prompt for regeneration
-    const prompt = `You are TrackGuideAI, an expert music production assistant. 
-You need to update an existing TrackGuide for "${songTitle}" based on the user's request.
-
-**Current TrackGuide Content:**
-${currentContent}
-
-**User's Modification Request:**
-${userRequest}
-
-**Your Previous Suggestion:**
-${aiSuggestion}
-
-**Task:**
-Generate a complete, updated version of the TrackGuide that incorporates the requested changes.
-- Maintain the overall structure and formatting of the original TrackGuide
-- Seamlessly integrate the new elements or changes
-- Be specific and detailed in your additions
-- Do not use placeholders or templates
-- Include the entire TrackGuide in your response, not just the changes
-
-Generate the complete updated TrackGuide:`;
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-    
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error regenerating TrackGuide:", error);
-    throw new Error(`Failed to update TrackGuide: ${error instanceof Error ? error.message : "Unknown error"}`);
-  }
-};
-
-/** * 11. Regenerate Mix Feedback with modifications from chat */
-export const regenerateMixFeedback = async (
-  context: {
-    userRequest: string;
-    aiSuggestion: string;
-    currentGuidebook?: GuidebookEntry;
-    userInputs?: UserInputs;
-  }
-): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-  
-  try {
-    const { userRequest, aiSuggestion, currentGuidebook, userInputs } = context;
-    
-    // Extract current content
-    const currentContent = currentGuidebook?.content || '';
-    const songTitle = currentGuidebook?.title || userInputs?.title || 'Untitled Track';
-    
-    // Build prompt for regeneration
-    const prompt = `You are TrackGuideAI, an expert music production assistant. 
-You need to update an existing Mix Feedback for "${songTitle}" based on the user's request.
-
-**Current Mix Feedback Content:**
-${currentContent}
-
-**User's Modification Request:**
-${userRequest}
-
-**Your Previous Suggestion:**
-${aiSuggestion}
-
-**Task:**
-Generate a complete, updated version of the Mix Feedback that incorporates the requested changes.
-- Maintain the overall structure and formatting of the original feedback
-- Seamlessly integrate the new elements or changes
-- Be specific and detailed in your additions
-- Do not use placeholders or templates
-- Include the entire Mix Feedback in your response, not just the changes
-
-Generate the complete updated Mix Feedback:`;
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-    
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error regenerating Mix Feedback:", error);
-    throw new Error(`Failed to update Mix Feedback: ${error instanceof Error ? error.message : "Unknown error"}`);
-  }
-};
-
-/** * 12. Regenerate Remix Guide with modifications from chat */
-export const regenerateRemixGuide = async (
-  context: {
-    userRequest: string;
-    aiSuggestion: string;
-    currentGuidebook?: GuidebookEntry;
-    userInputs?: UserInputs;
-  }
-): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-  
-  try {
-    const { userRequest, aiSuggestion, currentGuidebook, userInputs } = context;
-    
-    // Extract current content
-    const currentContent = currentGuidebook?.content || '';
-    const songTitle = currentGuidebook?.title || userInputs?.title || 'Untitled Track';
-    
-    // Build prompt for regeneration
-    const prompt = `You are TrackGuideAI, an expert music production assistant. 
-You need to update an existing Remix Guide for "${songTitle}" based on the user's request.
-
-**Current Remix Guide Content:**
-${currentContent}
-
-**User's Modification Request:**
-${userRequest}
-
-**Your Previous Suggestion:**
-${aiSuggestion}
-
-**Task:**
-Generate a complete, updated version of the Remix Guide that incorporates the requested changes.
-- Maintain the overall structure and formatting of the original guide
-- Seamlessly integrate the new elements or changes
-- Be specific and detailed in your additions
-- Do not use placeholders or templates
-- Include the entire Remix Guide in your response, not just the changes
-
-Generate the complete updated Remix Guide:`;
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-    
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error regenerating Remix Guide:", error);
-    throw new Error(`Failed to update Remix Guide: ${error instanceof Error ? error.message : "Unknown error"}`);
-  }
-};
-
-/** * 10. Regenerate Mix Comparison with modifications from chat */
-export const regenerateMixCompare = async (
-  context: {
-    userRequest: string;
-    aiSuggestion: string;
-    currentGuidebook?: GuidebookEntry;
-    userInputs?: UserInputs;
-  }
-): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-  
-  try {
-    const { userRequest, aiSuggestion, currentGuidebook, userInputs } = context;
-    
-    // Extract current content
-    const currentContent = currentGuidebook?.content || '';
-    const songTitle = currentGuidebook?.title || userInputs?.title || 'Untitled Track';
-    
-    // Build prompt for regeneration
-    const prompt = `You are TrackGuideAI, an expert music production assistant. 
-You need to update an existing Mix Comparison for "${songTitle}" based on the user's request.
-
-**Current Mix Comparison Content:**
-${currentContent}
-
-**User's Modification Request:**
-${userRequest}
-
-**Your Previous Suggestion:**
-${aiSuggestion}
-
-**Task:**
-Generate a complete, updated version of the Mix Comparison that incorporates the requested changes.
-- Maintain the overall structure and formatting of the original comparison
-- Seamlessly integrate the new elements or changes
-- Be specific and detailed in your additions
-- Do not use placeholders or templates
-- Include the entire Mix Comparison in your response, not just the changes
-
-Generate the complete updated Mix Comparison:`;
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-    
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error regenerating Mix Comparison:", error);
-    throw new Error(`Failed to update Mix Comparison: ${error instanceof Error ? error.message : "Unknown error"}`);
-  }
-};
