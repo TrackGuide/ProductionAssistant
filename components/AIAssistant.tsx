@@ -4,9 +4,16 @@ import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
 import { Spinner } from './Spinner.tsx';
 import { SparklesIcon, CloseIcon } from './icons.tsx';
-import { generateAIAssistantResponseSimple } from '../services/geminiService.ts';
+import { 
+  generateAIAssistantResponseSimple,
+  regenerateTrackGuide,
+  regenerateMixFeedback,
+  regenerateRemixGuide,
+  regenerateMixCompare
+} from '../services/geminiService.ts';
 import { UserInputs, GuidebookEntry } from '../types.ts';
 
+// Make sure this type is exported if it's used in geminiService.ts
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -24,6 +31,7 @@ interface AIAssistantProps {
   isCollapsed?: boolean;
   onToggle?: () => void;
   contextLabel?: string;
+  onUpdateDocument?: (content: string, documentType: string) => void;
 }
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
@@ -99,9 +107,17 @@ What would you like to work on today?`;
 const handleRegenerateDocument = async (modificationType: string) => {
   setIsLoading(true);
   try {
-    // Extract the latest user message and AI response
-    const latestUserMessage = messages.find(m => m.role === 'user')?.content || '';
-    const latestAIResponse = messages.find(m => m.role === 'assistant')?.content || '';
+    // Find the most recent user and assistant messages
+    const userMessages = messages.filter(m => m.role === 'user');
+    const assistantMessages = messages.filter(m => m.role === 'assistant');
+    
+    const latestUserMessage = userMessages.length > 0 
+      ? userMessages[userMessages.length - 1].content 
+      : '';
+      
+    const latestAIResponse = assistantMessages.length > 0 
+      ? assistantMessages[assistantMessages.length - 1].content 
+      : '';
     
     // Combine them to create context for the regeneration
     const modificationContext = {
@@ -126,9 +142,11 @@ const handleRegenerateDocument = async (modificationType: string) => {
       case 'mixcompare':
         newContent = await regenerateMixCompare(modificationContext);
         break;
+      default:
+        throw new Error(`Unknown document type: ${modificationType}`);
     }
     
-    // Update the document content (you'll need to implement this)
+    // Update the document content
     if (onUpdateDocument) {
       onUpdateDocument(newContent, modificationType);
     }
@@ -145,7 +163,7 @@ const handleRegenerateDocument = async (modificationType: string) => {
     console.error("Error regenerating document:", error);
     addMessage({
       role: 'assistant',
-      content: `Sorry, I encountered an error while trying to update the document: ${error.message}`
+      content: `Sorry, I encountered an error while trying to update the document: ${error instanceof Error ? error.message : "Unknown error"}`
     });
   } finally {
     setIsLoading(false);
@@ -171,7 +189,9 @@ const handleRegenerateDocument = async (modificationType: string) => {
       const context = {
         currentGuidebook: currentGuidebook,
         userInputs: userInputs,
-        conversationHistory: messages.slice(-6) // Last 6 messages for context
+
+        conversationHistory: messages.slice(-6), // Last 6 messages for context
+        contextLabel: contextLabel
       };
       
       console.log('Sending request with context:', {
@@ -224,6 +244,29 @@ const handleRegenerateDocument = async (modificationType: string) => {
 
   // If not open, don't render anything
   if (!isOpen) return null;
+
+  // Add this helper function
+  const addMessage = (message: { role: 'user' | 'assistant', content: string }) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      role: message.role,
+      content: message.content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
+
+  // Example implementation for a page component
+  const handleUpdateDocument = (content: string, documentType: string) => {
+    if (documentType === 'trackguide' && currentGuidebook) {
+      // Update the guidebook with new content
+      const updatedGuidebook = {
+        ...currentGuidebook,
+        content: content
+      };
+      setCurrentGuidebook
+    }
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">

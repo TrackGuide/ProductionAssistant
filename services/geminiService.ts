@@ -719,7 +719,7 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 
     // Parse the JSON response
     let jsonStr = responseText.trim();
-    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+    const fenceRegex = /^(\w*)?\s*\n?(.*?)\n?\s*$/s;
     const match = jsonStr.match(fenceRegex);
     if (match && match[2]) {
       jsonStr = match[2].trim();
@@ -910,39 +910,35 @@ export const generateAIAssistantResponseSimple = async (
   context?: {
     currentGuidebook?: GuidebookEntry;
     userInputs?: UserInputs;
-    conversationHistory?: any[];
+    conversationHistory?: Message[];
     contextLabel?: string;
   }
 ): Promise<string> => {
   if (!apiKey) {
     throw new Error("API Key not configured. Cannot connect to Gemini API.");
   }
+
   try {
-    // Format conversation history if available
-    const conversationHistory = context?.conversationHistory || [];
-    const formattedHistory = conversationHistory.length > 0 
-      ? `**Recent Conversation:**\n${conversationHistory.map(msg => 
-          `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-        ).join("\n")}`
-      : '';
-    
-    const contextLabel = context?.contextLabel 
-      ? `**Current Context:** ${context.contextLabel}\n` 
-      : '';
-    
-    const contextInfo = context 
-      ? `**Current Project Context:**
+    const contextInfo = context ? `
+**Current Project Context:**
+${context.contextLabel ? `- Context: ${context.contextLabel}` : ''}
 - Genre: ${context.userInputs?.genre?.join(", ") || context.currentGuidebook?.genre?.join(", ") || 'Not specified'}
 - Vibe: ${context.userInputs?.vibe?.join(", ") || context.currentGuidebook?.vibe?.join(", ") || 'Not specified'}
 - DAW: ${context.userInputs?.daw || context.currentGuidebook?.daw || 'Not specified'}
-- Current guidebook: ${context.currentGuidebook?.title || 'None'}`
-      : '';
-    
+- Current guidebook: ${context.currentGuidebook?.title || 'None'}
+` : '';
+
+    // Format conversation history if available
+    const historyText = context?.conversationHistory?.length ? 
+      context.conversationHistory.map(msg => 
+        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+      ).join("\n\n") : '';
+
     const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
 
-${contextLabel}
 ${contextInfo}
-${formattedHistory}
+
+${historyText ? `**Recent Conversation:**\n${historyText}\n\n` : ''}
 
 **User Question:** ${message}
 
@@ -952,7 +948,7 @@ ${formattedHistory}
 - Reference the project context when relevant
 - Include specific parameter suggestions when applicable
 - Maintain a professional but friendly tone
-- If the user is asking about adding an instrument or changing the TrackGuide, provide specific suggestions
+${context?.contextLabel ? '- If the user is asking about modifying a document, suggest specific changes and improvements' : ''}
 
 Provide your expert guidance:`;
 
@@ -960,13 +956,14 @@ Provide your expert guidance:`;
       model: GEMINI_MODEL_NAME,
       contents: prompt,
     });
-    
+
     const responseText = response.text;
     if (typeof responseText !== 'string') {
       throw new Error("Received an unexpected response format from Gemini API.");
     }
-        
+    
     return responseText;
+
   } catch (error) {
     console.error("Error generating AI assistant response:", error);
     let specificMessage = "An unknown error occurred while generating response.";
@@ -975,7 +972,7 @@ Provide your expert guidance:`;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
         specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
       } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection.`;
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
       } else if (error.message.includes("Candidate was blocked")) {
         specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
       }
@@ -1040,7 +1037,7 @@ Generate the complete updated TrackGuide:`;
     return responseText;
   } catch (error) {
     console.error("Error regenerating TrackGuide:", error);
-    throw new Error(`Failed to update TrackGuide: ${error.message}`);
+    throw new Error(`Failed to update TrackGuide: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
 
@@ -1100,7 +1097,7 @@ Generate the complete updated Mix Feedback:`;
     return responseText;
   } catch (error) {
     console.error("Error regenerating Mix Feedback:", error);
-    throw new Error(`Failed to update Mix Feedback: ${error.message}`);
+    throw new Error(`Failed to update Mix Feedback: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
 
@@ -1160,7 +1157,7 @@ Generate the complete updated Remix Guide:`;
     return responseText;
   } catch (error) {
     console.error("Error regenerating Remix Guide:", error);
-    throw new Error(`Failed to update Remix Guide: ${error.message}`);
+    throw new Error(`Failed to update Remix Guide: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
 
@@ -1220,6 +1217,6 @@ Generate the complete updated Mix Comparison:`;
     return responseText;
   } catch (error) {
     console.error("Error regenerating Mix Comparison:", error);
-    throw new Error(`Failed to update Mix Comparison: ${error.message}`);
+    throw new Error(`Failed to update Mix Comparison: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
