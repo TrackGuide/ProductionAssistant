@@ -425,43 +425,93 @@ Focus on practical improvements that can be implemented immediately.`;
 export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
+  const {
+    mixAFile,
+    mixBFile,
+    mixAName,
+    mixBName,
+    requestMixAAnalysis,
+    requestMixBAnalysis,
+    userNotes
+  } = inputs;
+
+  // Build the main comparison prompt
   const prompt = `
-You are an expert mixing & mastering AI. The user has uploaded two mixes:
+You are an expert AI mix engineer. Compare these two mixes:
 
-Mix A: "${inputs.mixAName}" — an earlier version  
-Mix B: "${inputs.mixBName}" — the current working version  
+- Mix A: "${mixAName}" (Previous version)
+- Mix B: "${mixBName}" (Current version)
 
-🎧 Instructions:
-- Mix B is the active version — focus all actionable feedback on improving Mix B.
-- Mix A is an earlier version — if Mix A has strengths vs Mix B, point those out.
-- Acknowledge improvements made in Mix B compared to A.
-- Do NOT suggest changes to Mix A (it is not being revised).
+Focus your recommendations ONLY on improving Mix B — do NOT suggest changes to Mix A.
 
-If "Request full mix analysis" is selected → add full technical breakdown of Mix B (like in your Mix Feedback function).
+If Mix B improves on Mix A → acknowledge that.  
+If Mix A is stronger in some areas → point this out.  
+But prioritize actionable suggestions for Mix B.
 
-Provide your analysis in clear Markdown format with the following sections:
+If "Include full analysis" was selected, add a full Mix B section.
 
-## 🎧 Overall Comparison
+User Notes: ${userNotes || "None provided"}
 
-## 🎛️ Frequency Balance
+${requestMixBAnalysis ? "**Include a full Mix B technical analysis section at the end (modeled on Mix Feedback — with detailed frequency, stereo, dynamics, and technical checks).**" : ""}
 
-## 🎚️ Stereo Image & Depth
+Comparison Framework:
 
-## 📈 Dynamics & Loudness
+🎧 **Overall Comparison**
+🎛️ **Frequency Balance**
+🎚️ **Stereo Image & Depth**
+📈 **Dynamics & Loudness**
+⚙️ **Technical Quality**
 
-## ⚙️ Technical Quality
+🏆 **Strengths & Opportunities (for Mix B only)**
+🚀 **Actionable Recommendations (for Mix B only)**
 
-## 🏆 Strengths & Opportunities (for Mix B)
+DO NOT give suggestions for Mix A.
+Only focus next steps for Mix B (current version).  
+Use clear headings (Markdown format).`;
 
-## 🚀 Actionable Recommendations (for Mix B only)
+  // Build content parts → include inline audio!
+  const textPart = { text: prompt };
 
-`;
+  const parts: any[] = [textPart];
 
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
-  return response.text;
+  // Add Mix A audio
+  if (mixAFile) {
+    parts.push({
+      inlineData: {
+        data: mixAFile,
+        mimeType: "audio/mpeg"
+      }
+    });
+  }
+
+  // Add Mix B audio
+  if (mixBFile) {
+    parts.push({
+      inlineData: {
+        data: mixBFile,
+        mimeType: "audio/mpeg"
+      }
+    });
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: parts
+    });
+
+    const text = response.text;
+
+    if (!text || typeof text !== "string") {
+      console.error("No valid text response from generateMixComparison:", response);
+      throw new Error("AI returned an invalid response for mix comparison.");
+    }
+
+    return text;
+  } catch (err) {
+    console.error("Error in generateMixComparison:", err);
+    throw new Error(`Failed to generate mix comparison: ${err.message}`);
+  }
 };
 /**
  * 5. Generate AI-assistant chat response (streaming)
