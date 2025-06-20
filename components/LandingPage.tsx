@@ -38,7 +38,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           {/* NAV LINKS */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="#how-it-works" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">How It Works</a>
-            <a href="#ai-challenge" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">AI Challenge</a>
+            <a href="#problems-we-solve" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Problems We Solve</a>
             <a href="#investment-levels" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Investment Levels</a>
           </div>
 
@@ -59,37 +59,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative px-6 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
-                <span className="text-orange-500">AI Studio Assistant:</span>
-                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
-                  A Complement to Creativity,
-                </span>
-                <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
-                  Not a Substitute.
-                </span>
-              </h1>
-              <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
-                Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>, <span className="text-orange-500 font-semibold">speed</span>, and <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 mt-8 lg:justify-start">
-                <button
-                  onClick={onGetStarted}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-white/20"
-                >
-                  <TrackGuideLogo className="h-8 w-8" />
-                  <span>Start Creating Now</span>
-                </button>
-              </div>
+     {/* Hero Section */}
+<section className="relative px-6 py-16">
+  <div className="max-w-7xl mx-auto">
+    <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="space-y-8">
+        <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
+          <span className="text-orange-500">AI Studio Assistant:</span>
+          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
+            A Complement to Creativity,
+          </span>
+          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
+            Not a Substitute.
+          </span>
+        </h1>
+        <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
+          Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>, <span className="text-orange-500 font-semibold">speed</span>, and <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-6 mt-8 lg:justify-start">
+          <button
+            onClick={onGetStarted}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-white/20"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-white/20 blur-sm"></div>
+              <TrackGuideLogo className="h-8 w-8 relative z-10" />
             </div>
-            {/* Geometric Elements can remain as in your original */}
-          </div>
+            <span>Start Creating Now</span>
+          </button>
         </div>
-      </section>
+      </div>
+      {/* Geometric Elements can remain as in your original */}
+    </div>
+  </div>
+</section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="relative px-6 py-20">
@@ -205,17 +208,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </p>
             </div>
 
-            {/* Live Production Coach */}
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">💬</span>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">Live Production Coach</h3>
-              <p className="text-gray-300">
-                AI chat assistant to guide your session — revise earlier guides, update blueprints, troubleshoot your mix, and more.
-              </p>
-            </div>
-
             {/* EQ Guide */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
@@ -270,7 +262,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* Modern Era of Production Section */}
-      <section className="relative px-6 py-20 bg-black/20">
+      <section id="problems-we-solve" className="relative px-6 py-20 bg-black/20">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: text content */}
@@ -444,24 +436,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <p className="text-orange-400 text-sm mt-4">Return: Discounted SAFE cap + 2% revenue share + strategic board seat</p>
       </div>
     </div>
-
-    <div className="text-center mt-12">
-      <a
-        href="mailto:dustinspaceproductions@gmail.com?subject=Investment Inquiry - TrackGuide AI"
-        className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-xl"
-      >
-        <span>Contact for Full Investor Deck</span>
-      </a>
-    </div>
   </div>
 </section>
 
 {/* Investor CTA */}
 <section className="px-6 py-20 bg-black/30">
   <div className="max-w-4xl mx-auto text-center">
-    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-      Interested in Investing?
-    </h2>
+   <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+  Interested in Investing? Contact us for full investor deck & opportunities.
+</h2>
     <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
       We’re building the AI studio assistant of the future — with a human-first philosophy. Join us.
     </p>
