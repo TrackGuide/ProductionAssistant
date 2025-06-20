@@ -554,6 +554,87 @@ Respond as the helpful TrackGuideAI assistant.`;
   return stream;
 };
 
+export const generateAIAssistantResponseSimple = async (
+  message: string,
+  context?: {
+    currentGuidebook?: GuidebookEntry;
+    userInputs?: UserInputs;
+    conversationHistory?: any[];
+    contextLabel?: string;
+  }
+): Promise<string> => {
+  if (!apiKey) {
+    throw new Error("API Key not configured. Cannot connect to Gemini API.");
+  }
+  
+  try {
+    // Extract context information
+    const guidebookContent = context?.currentGuidebook?.content || '';
+    const guidebookTitle = context?.currentGuidebook?.title || 'None';
+    const genres = context?.userInputs?.genre?.join(", ") || context?.currentGuidebook?.genre?.join(", ") || 'Not specified';
+    const vibe = context?.userInputs?.vibe?.join(", ") || context?.currentGuidebook?.vibe?.join(", ") || 'Not specified';
+    const daw = context?.userInputs?.daw || context?.currentGuidebook?.daw || 'Not specified';
+    const contextLabel = context?.contextLabel || '';
+    
+    // Format conversation history if available
+    const conversationHistory = context?.conversationHistory || [];
+    const formattedHistory = conversationHistory.map(msg => 
+      `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+    ).join("\n");
+    
+    // Build a comprehensive prompt with all available context
+    const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
+
+${contextLabel ? `**Current Context:** ${contextLabel}` : ''}
+
+**Project Details:**
+- Genre: ${genres}
+- Vibe: ${vibe}
+- DAW: ${daw}
+- Current guidebook: ${guidebookTitle}
+
+${guidebookContent ? `**Current TrackGuide Content:**
+${guidebookContent.substring(0, 1000)}${guidebookContent.length > 1000 ? '...(truncated)' : ''}` : ''}
+
+${formattedHistory ? `**Recent Conversation:**
+${formattedHistory}` : ''}
+
+**User Question:** ${message}
+
+**Your Response Guidelines:**
+- Provide helpful, concise advice related to music production, mixing, sound design, or composition
+- Keep responses practical and actionable
+- Reference the project context when relevant
+- Include specific parameter suggestions when applicable
+- Maintain a professional but friendly tone
+- If the user is asking about adding an instrument or changing the TrackGuide, provide specific suggestions on how to incorporate it
+
+Provide your expert guidance:`;
+
+    console.log('Sending prompt to Gemini API with length:', prompt.length);
+    
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: prompt,
+    });
+    
+    const responseText = response.text;
+    if (typeof responseText !== 'string') {
+      throw new Error("Received an unexpected response format from Gemini API.");
+    }
+    
+    return responseText;
+  } catch (error) {
+    console.error("Error generating AI assistant response:", error);
+    let specificMessage = "An unknown error occurred while generating response.";
+    
+    if (error instanceof Error) {
+      specificMessage = error.message;
+      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
+        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
+      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})
+
 /**
  * 6. Generate RemixGuide with full functionality (matches component expectations)
  */
