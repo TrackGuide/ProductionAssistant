@@ -14,18 +14,17 @@ interface Message {
   timestamp: Date;
 }
 
- interface AIAssistantProps {
-   isOpen: boolean;
-   onClose: () => void;
-   currentGuidebook?: GuidebookEntry;
-   userInputs?: UserInputs;
-   onUpdateGuidebook?: (content: string) => void;
-   onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
-   isCollapsed?: boolean;
-   onToggle?: () => void;
-   contextLabel?: string;
- }
-
+interface AIAssistantProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentGuidebook?: GuidebookEntry;
+  userInputs?: UserInputs;
+  onUpdateGuidebook?: (content: string) => void;
+  onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+  contextLabel?: string;
+}
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
   isOpen,
@@ -46,27 +45,26 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   // Initialize with welcome message when first opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-     const defaultWelcome = contextLabel
-  ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-  : `Hi! I'm your AI music production assistant. I can help you: 
-
-• Refine your TrackGuide with specific questions 
-• Suggest improvements to your current project 
-• Answer production techniques questions 
-• Help adjust your genre, vibe, or arrangement ideas 
-• Provide detailed explanations about any aspect of your track 
+      const defaultWelcome = contextLabel 
+        ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.` 
+        : `Hi! I'm your AI music production assistant. I can help you:
+• Refine your TrackGuide with specific questions
+• Suggest improvements to your current project
+• Answer production techniques questions
+• Help adjust your genre, vibe, or arrangement ideas
+• Provide detailed explanations about any aspect of your track
 
 What would you like to work on today?`;
-       setMessages([{
-      id: '1',
-      role: 'assistant',
-      content: defaultWelcome,
-      timestamp: new Date()
-    }]);
-  }
-}, [isOpen, messages.length, contextLabel]);
-   
-
+      
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: defaultWelcome,
+        timestamp: new Date()
+      }]);
+    }
+  }, [isOpen, messages.length, contextLabel]);
+  
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -83,11 +81,10 @@ What would you like to work on today?`;
     }
   }, [isOpen]);
 
-const clearConversation = () => {
-  const defaultWelcome = contextLabel
-    ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-    : `Hi! I'm your AI music production assistant. I can help you:
-
+  const clearConversation = () => {
+    const defaultWelcome = contextLabel
+      ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
+      : `Hi! I'm your AI music production assistant. I can help you:
 • Refine your TrackGuide with specific questions
 • Suggest improvements to your current project
 • Answer production techniques questions
@@ -95,25 +92,22 @@ const clearConversation = () => {
 • Provide detailed explanations about any aspect of your track
 
 What would you like to work on today?`;
-
-  setMessages([{
-    id: '1',
-    role: 'assistant',
-    content: defaultWelcome,
-    timestamp: new Date(),
-  }]);
-};
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: defaultWelcome,
+      timestamp: new Date(),
+    }]);
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
-
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: inputMessage.trim(),
       timestamp: new Date()
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
@@ -124,16 +118,13 @@ What would you like to work on today?`;
         userInputs: userInputs || {},
         conversationHistory: messages.slice(-6) // Last 6 messages for context
       };
-
       const assistantContent = await generateAIAssistantResponse(userMessage.content, context);
-
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: assistantContent,
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('AI Assistant Error:', error);
@@ -156,7 +147,8 @@ What would you like to work on today?`;
     }
   };
 
-
+  // If not open, don't render anything
+  if (!isOpen) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
@@ -169,7 +161,7 @@ What would you like to work on today?`;
           <img 
             src="/production-coach-icon.svg" 
             alt="Production Coach" 
-            className="w-8 h-8"
+            className="w-8 h-8" 
           />
         </div>
       ) : (
@@ -201,7 +193,6 @@ What would you like to work on today?`;
                 </Button>
               </div>
             </div>
-
             {/* Messages Container */}
             <div 
               ref={chatContainerRef}
@@ -241,7 +232,6 @@ What would you like to work on today?`;
               
               <div ref={messagesEndRef} />
             </div>
-
             {/* Input Area */}
             <div className="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">
               <div className="flex gap-2 mb-2">
