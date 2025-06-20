@@ -170,7 +170,7 @@ return (
     <option value="no air">No Air</option>
   </select>
  </div>
-</div> {/* closes grid of 3 filter dropdowns */}
+</div> 
 
       <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
         <div className="mb-6">
