@@ -12,6 +12,7 @@ import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
+import { AIAssistant } from './components/AIAssistant.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -189,9 +190,23 @@ const App: React.FC = () => {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
+  
   // Production Coach chat state
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
+// AI Assistant (integrated version)
+const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+const [aiContextLabel, setAIContextLabel] = useState<string | undefined>();
+
+const openAIAssistant = (label?: string) => {
+  setAIContextLabel(label);
+  setIsAIAssistantOpen(true);
+};
+
+const closeAIAssistant = () => {
+  setIsAIAssistantOpen(false);
+  setAIContextLabel(undefined);
+};
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -1341,6 +1356,14 @@ const App: React.FC = () => {
                   )}
 
                   <MarkdownRenderer content={generatedGuidebook} />
+                  <Button
+  onClick={() => openAIAssistant('TrackGuide for this project')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
               </Card>
@@ -1639,6 +1662,14 @@ const App: React.FC = () => {
 
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixFeedbackResult} />
+                  <Button
+  onClick={() => openAIAssistant('Mix Feedback')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                 </div>
               </Card>
             )}
@@ -1651,6 +1682,14 @@ const App: React.FC = () => {
 
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixCompareResult} />
+                  <Button
+  onClick={() => openAIAssistant('Mix Comparison')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                 </div>
               </Card>
             )}
@@ -1706,6 +1745,11 @@ const App: React.FC = () => {
         onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
       />
 
+<AIAssistant
+  isOpen={isAIAssistantOpen}
+  onClose={closeAIAssistant}
+  contextLabel={aiContextLabel}
+/>
 
 
 
