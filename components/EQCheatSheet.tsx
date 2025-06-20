@@ -121,56 +121,57 @@ return (
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Filter by Instrument</label>
-            <select 
-              value={selectedInstrument} 
-              onChange={(e) => setSelectedInstrument(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
-            >
-              {INSTRUMENTS.map(inst => (
-                <option key={inst} value={inst}>{inst}</option>
-              ))}
-            </select>
-          </div>
+        <<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-2">Filter by Instrument</label>
+    <select 
+      value={selectedInstrument} 
+      onChange={(e) => setSelectedInstrument(e.target.value)}
+      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
+    >
+      {INSTRUMENTS.map(inst => (
+        <option key={inst} value={inst}>{inst}</option>
+      ))}
+    </select>
+  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Frequency Zone</label>
-            <select 
-              value={selectedZone} 
-              onChange={(e) => setSelectedZone(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
-            >
-              {FREQUENCY_ZONES.map(zone => (
-                <option key={zone.id} value={zone.id}>{zone.label}</option>
-              ))}
-            </select>
-          </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-2">Frequency Zone</label>
+    <select 
+      value={selectedZone} 
+      onChange={(e) => setSelectedZone(e.target.value)}
+      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
+    >
+      {FREQUENCY_ZONES.map(zone => (
+        <option key={zone.id} value={zone.id}>{zone.label}</option>
+      ))}
+    </select>
+  </div>
 
-          <div>
-  <label className="block text-sm font-medium text-gray-300 mb-2">Issue</label>
-  <select
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
-  >
-    <option value="">All</option>
-    <option value="boxy">Boxiness</option>
-    <option value="muddy">Muddiness</option>
-    <option value="honky">Honkiness</option>
-    <option value="nasal">Nasal</option>
-    <option value="harsh">Harshness</option>
-    <option value="sibilant">Sibilance</option>
-    <option value="thin">Thinness</option>
-    <option value="dull">Dullness</option>
-    <option value="bright">Too Bright</option>
-    <option value="no punch">No Punch</option>
-    <option value="no low-end">No Low-end</option>
-    <option value="no air">No Air</option>
-  </select>
- </div>
-</div>  {/* close grid-cols-3 */}
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-2">Issue</label>
+    <select
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
+    >
+      <option value="">All</option>
+      <option value="boxy">Boxiness</option>
+      <option value="muddy">Muddiness</option>
+      <option value="honky">Honkiness</option>
+      <option value="nasal">Nasal</option>
+      <option value="harsh">Harshness</option>
+      <option value="sibilant">Sibilance</option>
+      <option value="thin">Thinness</option>
+      <option value="dull">Dullness</option>
+      <option value="bright">Too Bright</option>
+      <option value="no punch">No Punch</option>
+      <option value="no low-end">No Low-end</option>
+      <option value="no air">No Air</option>
+    </select>
+  </div>
+</div> 
+
 
 
       <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
