@@ -237,6 +237,6 @@ return (
         </p>
 </div>
 
-      </div> 
-    </div> 
-  );
+    </div>  {/* end Modal container */}
+  </div>  {/* end Backdrop wrapper */}
+);
