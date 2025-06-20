@@ -425,97 +425,87 @@ Focus on practical improvements that can be implemented immediately.`;
 export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
-  const prompt = `You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison:
+  const prompt = `
+You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files:
 
-- Mix A (Original/Reference): "${inputs.mixAName}"
-- Mix B (Current Working Version): "${inputs.mixBName || "Unnamed Mix B"}"
+- **Mix A (Reference)**: "${inputs.mixAName}"
+- **Mix B (Current Working Mix)**: "${inputs.mixBName}"
 
-Your role is to compare the mixes and provide actionable feedback to help the user improve Mix B. DO NOT suggest any changes to Mix A — only improvements to Mix B.
-
-If Mix A has strengths compared to Mix B — point those out.
-If Mix B improves on Mix A — acknowledge the improvements.
-
-Next steps should focus entirely on Mix B.
+Your task: Provide a detailed comparative analysis. Treat Mix B as the current version in progress — give actionable improvement advice only for Mix B. If Mix A has strengths, point them out — but DO NOT suggest changes for Mix A.
 
 ---
 
-**Comparison Framework:**
+## Comparison Framework:
 
-1. **Frequency Response**
-   - Low-end: Bass clarity and sub-bass control
-   - Midrange: Vocal/instrument presence and separation
-   - High-end: Air, brightness, harshness
+### 1️⃣ Frequency Response
+- Low-end (Sub, Bass): Clarity, punch, masking
+- Midrange (Vocals, Instruments): Separation, presence
+- High-end (Air, sparkle, harshness)
 
-2. **Stereo Image & Spatial Design**
-   - Width: Stereo spread and balance
-   - Depth: Use of reverb/delay
-   - Center focus: Lead clarity
+### 2️⃣ Stereo Image & Spatial Design
+- Width and imaging
+- Depth (Reverb space, 3D field)
+- Focus (Center vs sides)
 
-3. **Dynamic Range & Compression**
-   - Punch and transient impact
-   - Compression style (transparent vs colored)
-   - Loudness (LUFS) and headroom
+### 3️⃣ Dynamics & Compression
+- Transient impact
+- Compression behavior
+- Loudness & LUFS (perceived + technical)
 
-4. **Technical Quality**
-   - Distortion or artifacts
-   - Phase coherence / mono compatibility
-   - Background noise and clarity
-
----
-
-**Detailed Analysis:**
-
-- Strengths of Mix B
-- Improvements of Mix B over Mix A (if applicable)
-- Areas where Mix A still has strengths vs Mix B
-- Next step recommendations to improve Mix B
+### 4️⃣ Technical Quality
+- Distortion, noise floor
+- Phase and mono compatibility
+- Artifacts or issues
 
 ---
 
-**Important:**
+## Strengths & Weaknesses:
 
-- DO NOT suggest changing Mix A
-- Mix B is the active version
-- If "Request full analysis" is selected for Mix B — include a full detailed mix feedback similar to a mastering report
+- **Mix A**: Key strengths (if any), standout qualities
+- **Mix B**: Improvements made vs Mix A, remaining weaknesses
 
-${inputs.focus ? `\nUser Focus Areas: ${inputs.focus}` : ''}
+---
 
-${inputs.requestMixAAnalysis ? `\nAlso include full technical mix analysis for Mix A (detailed per-band EQ, dynamics, stereo image)` : ''}
+## Musical Impact:
 
-${inputs.requestMixBAnalysis ? `\nAlso include full technical mix analysis for Mix B (detailed per-band EQ, dynamics, stereo image)` : ''}
+- Emotional translation
+- Genre appropriateness
+- Overall polish and vibe
+
+---
+
+## Next Steps (For Mix B ONLY):
+- 3 to 5 clear, actionable improvements
+- Focus suggestions for finalizing Mix B
+- DO NOT suggest fixing Mix A
+
+---
+
+${inputs.requestMixAAnalysis ? `### Full Mix A analysis: Include a standalone Mix A section after comparison.` : ''}
+${inputs.requestMixBAnalysis ? `### Full Mix B analysis: Include a standalone Mix B section after comparison.` : ''}
+
+Always return clean, clear markdown with headings (## and ###). Use professional but encouraging tone.
 `;
-
-  const parts = [
-    { text: prompt },
-    {
-      inlineData: {
-        data: inputs.mixAFile!,
-        mimeType: "audio/mpeg",
-      },
-    },
-  ];
-
-  if (inputs.mixBFile) {
-    parts.push({
-      inlineData: {
-        data: inputs.mixBFile,
-        mimeType: "audio/mpeg",
-      },
-    });
-  }
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
-    contents: parts,
-    config: {
-      responseMimeType: "text/plain",
-    },
+    contents: [
+      { text: prompt },
+      { inlineData: { data: inputs.mixAFile, mimeType: "audio/mpeg" } },
+      ...(inputs.mixBFile
+        ? [{ inlineData: { data: inputs.mixBFile, mimeType: "audio/mpeg" } }]
+        : []),
+    ],
+    config: { responseMimeType: 'text/plain' }
   });
 
-  return response.text;
+  const text = response.text;
+  if (typeof text !== 'string') {
+    throw new Error("Mix Comparison: Invalid AI response");
+  }
+
+  return text;
 };
-
-
 /**
  * 5. Generate AI-assistant chat response (streaming)
  */
