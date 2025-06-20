@@ -425,49 +425,96 @@ Focus on practical improvements that can be implemented immediately.`;
 export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
-  const prompt = `You are TrackGuideAI's Mix Comparison Specialist. Compare two mixes in detail.
+  const prompt = `You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison:
 
-**Mix Comparison:**
-- Mix A: ${inputs.mixAUrl}
-- Mix B: ${inputs.mixBUrl}
-- Focus Areas: ${inputs.focus || "Overall clarity, balance, stereo image, and dynamics"}
+- Mix A (Original/Reference): "${inputs.mixAName}"
+- Mix B (Current Working Version): "${inputs.mixBName || "Unnamed Mix B"}"
+
+Your role is to compare the mixes and provide actionable feedback to help the user improve Mix B. DO NOT suggest any changes to Mix A — only improvements to Mix B.
+
+If Mix A has strengths compared to Mix B — point those out.
+If Mix B improves on Mix A — acknowledge the improvements.
+
+Next steps should focus entirely on Mix B.
+
+---
 
 **Comparison Framework:**
 
 1. **Frequency Response**
-   - Low-end: Which mix has better sub-bass control and bass clarity?
-   - Midrange: Vocal/instrument separation and presence comparison
-   - High-end: Air, sparkle, and harshness differences
+   - Low-end: Bass clarity and sub-bass control
+   - Midrange: Vocal/instrument presence and separation
+   - High-end: Air, brightness, harshness
 
 2. **Stereo Image & Spatial Design**
-   - Width: Stereo spread and imaging differences
-   - Depth: Reverb usage and dimensional qualities
-   - Focus: Center content clarity and side element balance
+   - Width: Stereo spread and balance
+   - Depth: Use of reverb/delay
+   - Center focus: Lead clarity
 
 3. **Dynamic Range & Compression**
-   - Transient preservation: Punch and impact comparison
-   - Compression style: Transparent vs colored processing
-   - Loudness: LUFS levels and perceived volume
+   - Punch and transient impact
+   - Compression style (transparent vs colored)
+   - Loudness (LUFS) and headroom
 
 4. **Technical Quality**
-   - Distortion: Harmonic content and artifacts
-   - Phase coherence: Mono compatibility
-   - Noise floor: Background noise and clarity
+   - Distortion or artifacts
+   - Phase coherence / mono compatibility
+   - Background noise and clarity
+
+---
 
 **Detailed Analysis:**
-- Strengths and weaknesses of each mix
-- Specific technical differences with measurements
-- Recommendations for improvement
-- Which mix better serves the artistic intent
 
-Provide actionable insights for achieving the better qualities from both mixes.`;
+- Strengths of Mix B
+- Improvements of Mix B over Mix A (if applicable)
+- Areas where Mix A still has strengths vs Mix B
+- Next step recommendations to improve Mix B
+
+---
+
+**Important:**
+
+- DO NOT suggest changing Mix A
+- Mix B is the active version
+- If "Request full analysis" is selected for Mix B — include a full detailed mix feedback similar to a mastering report
+
+${inputs.focus ? `\nUser Focus Areas: ${inputs.focus}` : ''}
+
+${inputs.requestMixAAnalysis ? `\nAlso include full technical mix analysis for Mix A (detailed per-band EQ, dynamics, stereo image)` : ''}
+
+${inputs.requestMixBAnalysis ? `\nAlso include full technical mix analysis for Mix B (detailed per-band EQ, dynamics, stereo image)` : ''}
+`;
+
+  const parts = [
+    { text: prompt },
+    {
+      inlineData: {
+        data: inputs.mixAFile!,
+        mimeType: "audio/mpeg",
+      },
+    },
+  ];
+
+  if (inputs.mixBFile) {
+    parts.push({
+      inlineData: {
+        data: inputs.mixBFile,
+        mimeType: "audio/mpeg",
+      },
+    });
+  }
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
-    contents: prompt,
+    contents: parts,
+    config: {
+      responseMimeType: "text/plain",
+    },
   });
+
   return response.text;
 };
+
 
 /**
  * 5. Generate AI-assistant chat response (streaming)
