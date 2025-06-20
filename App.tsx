@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
-import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback, generateMixComparison } from './services/geminiService.ts';
+import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback, generateMixComparisonWithAudio as generateMixComparison } from './services/geminiService.ts';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
