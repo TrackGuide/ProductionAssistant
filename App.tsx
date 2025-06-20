@@ -1,13 +1,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
-import { generateGuidebookContent, generateMidiPatternSuggestions, generateMixFeedback, generateMixComparison } from './services/geminiService.ts';
+import { 
+  generateGuidebookContent, 
+  generateMidiPatternSuggestions, 
+  generateMixFeedbackWithAudio as generateMixFeedback 
+} from './services/geminiService.ts';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
+import { AIAssistant } from './components/AIAssistant.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -185,9 +190,23 @@ const App: React.FC = () => {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
+  
   // Production Coach chat state
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
+// AI Assistant (integrated version)
+const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+const [aiContextLabel, setAIContextLabel] = useState<string | undefined>();
+
+const openAIAssistant = (label?: string) => {
+  setAIContextLabel(label);
+  setIsAIAssistantOpen(true);
+};
+
+const closeAIAssistant = () => {
+  setIsAIAssistantOpen(false);
+  setAIContextLabel(undefined);
+};
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -910,6 +929,7 @@ const App: React.FC = () => {
       return;
     }
     setIsGeneratingMixFeedback(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixFeedbackResult(null);
     setMixFeedbackError(null);
     try {
@@ -921,6 +941,7 @@ const App: React.FC = () => {
     } finally {
       setIsGeneratingMixFeedback(false);
     }
+    
   };
   
   const resetMixFeedbackForm = () => {
@@ -952,6 +973,7 @@ const App: React.FC = () => {
       return;
     }
     setIsGeneratingMixComparison(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixCompareResult(null);
     setMixCompareError(null);
     try {
@@ -1337,6 +1359,14 @@ const App: React.FC = () => {
                   )}
 
                   <MarkdownRenderer content={generatedGuidebook} />
+                  <Button
+  onClick={() => openAIAssistant('TrackGuide for this project')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
               </Card>
@@ -1550,18 +1580,7 @@ const App: React.FC = () => {
                   </div>
                   {mixCompareInputs.mixB && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixB.name} ({(mixCompareInputs.mixB.size / 1024 / 1024).toFixed(2)} MB)</p>}
                   
-                  {/* Include general mix feedback checkbox */}
-                  <div className="mt-4 pt-4 border-t border-gray-600">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={mixCompareInputs.includeMixBFeedback || false}
-                        onChange={(e) => setMixCompareInputs(prev => ({ ...prev, includeMixBFeedback: e.target.checked }))}
-                        className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-300">Include Individual Analysis</span>
-                    </label>
-                  </div>
+                 
                 </Card>
 
                 <Card title="Notes for AI" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
@@ -1635,6 +1654,14 @@ const App: React.FC = () => {
 
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixFeedbackResult} />
+                  <Button
+  onClick={() => openAIAssistant('Mix Feedback')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                 </div>
               </Card>
             )}
@@ -1647,7 +1674,48 @@ const App: React.FC = () => {
 
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixCompareResult} />
+                  <Button
+  onClick={() => openAIAssistant('Mix Comparison')}
+  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+>
+  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
+  Ask follow-up questions
+</Button>
+
                 </div>
+ <div className="p-4 border-t border-gray-700 flex justify-center">
+                <Button
+                   onClick={async () => {
+                     if (!mixCompareInputs.mixB) return;
+                     setIsGeneratingMixFeedback(true);
+                     setMixFeedbackResult(null);
+                     setMixFeedbackError(null);
+                     setMixFeedbackInputs({
+                       audioFile: mixCompareInputs.mixB,
+                       userNotes: mixCompareInputs.userNotes
+                     });
+                     try {
+                       const result = await generateMixFeedback({
+                         audioFile: mixCompareInputs.mixB,
+                         userNotes: mixCompareInputs.userNotes
+                       });
+                       setMixFeedbackResult(result);
+                     } catch (err: any) {
+                       console.error("Full Mix B Feedback Error:", err);
+                       setMixFeedbackError(err.message || 'Failed to generate feedback for Mix B.');
+                     } finally {
+                       setIsGeneratingMixFeedback(false);
+                     }
+                   }}
+                   disabled={isGeneratingMixFeedback}
+                   className="w-full mt-4 text-base py-2.5 !bg-orange-600 hover:!bg-orange-700 focus:!ring-orange-500"
+                   leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5" />}
+                 >
+                   {isGeneratingMixFeedback ? 'Analyzing Mix B...' : 'Get Full Feedback for Mix B'}
+                 </Button>
+               </div>
+
+                
               </Card>
             )}
             {!isGeneratingMixFeedback && !isGeneratingMixComparison && !mixFeedbackResult && !mixCompareResult && !mixFeedbackError && !mixCompareError && (
@@ -1692,16 +1760,22 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Production Coach - Always Available */}
-      <AIAssistant
-        isOpen={true}
-        onClose={() => {}} // Not used in collapsed mode
-        currentGuidebook={activeGuidebookDetails || undefined}
-        userInputs={inputs}
-        isCollapsed={isProductionCoachCollapsed}
-        onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
-      />
+     {/* Production Coach - Always Available */}
+<AIAssistant
+  isOpen={!isAIAssistantOpen} // Only open when the contextual assistant is closed
+  onClose={() => setIsProductionCoachCollapsed(true)} // Set to collapsed when closed
+  currentGuidebook={activeGuidebookDetails || undefined}
+  userInputs={inputs}
+  isCollapsed={isProductionCoachCollapsed}
+  onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
+/>
 
+{/* Contextual AI Assistant */}
+<AIAssistant
+  isOpen={isAIAssistantOpen}
+  onClose={closeAIAssistant}
+  contextLabel={aiContextLabel}
+/>
 
 
 

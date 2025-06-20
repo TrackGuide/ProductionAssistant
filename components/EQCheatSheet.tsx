@@ -13,47 +13,35 @@ interface EQBand {
 }
 
 const EQ_DATA: EQBand[] = [
-  // Sub Bass (20-60 Hz)
-  { frequency: '20-30 Hz', description: 'Sub-bass rumble, often felt more than heard. Can cause speaker damage if excessive.', instruments: ['Kick drum', 'Sub bass', '808s', 'Synthesizer bass'], action: 'cut', category: 'sub' },
-  { frequency: '30-40 Hz', description: 'Deep bass foundation, adds power and weight. Essential for electronic music.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', '808s'], action: 'boost', category: 'sub' },
-  { frequency: '40-60 Hz', description: 'Bass fundamentals, warmth and body. Key frequency for bass instruments.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', 'Synthesizer bass', 'Tuba'], action: 'boost', category: 'sub' },
-  
-  // Bass (60-250 Hz)
-  { frequency: '60-80 Hz', description: 'Bass guitar fundamentals, kick drum thump. Critical for rhythm section.', instruments: ['Bass guitar', 'Kick drum', 'Male vocals', 'Cello', 'Synthesizer bass'], action: 'boost', category: 'bass' },
-  { frequency: '80-120 Hz', description: 'Bass clarity and definition. Too much causes muddiness.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Drums'], action: 'boost', category: 'bass' },
-  { frequency: '120-200 Hz', description: 'Warmth zone, can get muddy if excessive. Often needs gentle cutting.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Strings', 'Brass'], action: 'cut', category: 'bass' },
-  { frequency: '200-250 Hz', description: 'Muddiness zone, often problematic. Cut to clean up mix.', instruments: ['Most instruments', 'Vocals', 'Guitar', 'Piano'], action: 'cut', category: 'bass' },
-  
-  // Low Mids (250-500 Hz)
-  { frequency: '250-350 Hz', description: 'Cardboard/boxy sound, often problematic. Cut to reduce boxiness.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Strings'], action: 'cut', category: 'low-mid' },
-  { frequency: '350-450 Hz', description: 'Honky/nasal frequencies. Can make vocals sound unnatural.', instruments: ['Vocals', 'Horns', 'Guitar', 'Saxophone', 'Trumpet'], action: 'cut', category: 'low-mid' },
-  { frequency: '450-500 Hz', description: 'Lower midrange clarity. Boost for warmth, cut for clarity.', instruments: ['Vocals', 'Guitar', 'Piano', 'Strings', 'Woodwinds'], action: 'cut', category: 'low-mid' },
-  
-  // Mids (500-2000 Hz)
-  { frequency: '500-800 Hz', description: 'Vocal clarity and instrument definition. Key for presence.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Violin'], action: 'boost', category: 'mid' },
-  { frequency: '800-1200 Hz', description: 'Vocal presence, can sound harsh if overdone. Critical for intelligibility.', instruments: ['Vocals', 'Snare', 'Hi-hats', 'Guitar', 'Brass'], action: 'boost', category: 'mid' },
-  { frequency: '1-1.5 kHz', description: 'Attack and punch, vocal intelligibility. Boost for clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Drums'], action: 'boost', category: 'mid' },
-  { frequency: '1.5-2 kHz', description: 'Presence and definition. Can become fatiguing if excessive.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano', 'Cymbals'], action: 'boost', category: 'mid' },
-  
-  // High Mids (2-6 kHz)
-  { frequency: '2-2.5 kHz', description: 'Vocal presence, can be fatiguing. Boost for clarity, cut for smoothness.', instruments: ['Vocals', 'Snare', 'Cymbals', 'Guitar', 'Violin'], action: 'boost', category: 'high-mid' },
-  { frequency: '2.5-4 kHz', description: 'Clarity and definition, harshness zone. Often needs careful handling.', instruments: ['Vocals', 'Snare', 'Guitar', 'Cymbals', 'Piano'], action: 'cut', category: 'high-mid' },
-  { frequency: '4-5 kHz', description: 'Vocal intelligibility, can sound harsh. Critical for speech clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Cymbals', 'Brass'], action: 'boost', category: 'high-mid' },
-  { frequency: '5-6 kHz', description: 'Sibilance in vocals, cymbal harshness. Often needs de-essing.', instruments: ['Vocals', 'Cymbals', 'Hi-hats', 'Acoustic guitar'], action: 'cut', category: 'high-mid' },
-  
-  // Presence (6-12 kHz)
-  { frequency: '6-8 kHz', description: 'Vocal sibilance, cymbal brightness. Cut to reduce harshness.', instruments: ['Vocals', 'Cymbals', 'Acoustic guitar', 'Hi-hats'], action: 'cut', category: 'presence' },
-  { frequency: '8-10 kHz', description: 'Brightness and clarity, can be harsh. Boost for sparkle.', instruments: ['Cymbals', 'Hi-hats', 'Vocals', 'Acoustic guitar', 'Strings'], action: 'boost', category: 'presence' },
-  { frequency: '10-12 kHz', description: 'High-frequency clarity and definition. Adds presence and life.', instruments: ['Cymbals', 'Hi-hats', 'Vocals', 'Strings', 'Flute'], action: 'boost', category: 'presence' },
-  
-  // Air (12+ kHz)
-  { frequency: '12-16 kHz', description: 'Air and sparkle, openness. Adds dimension and space.', instruments: ['Cymbals', 'Vocals', 'Strings', 'Acoustic guitar', 'Room mics'], action: 'boost', category: 'air' },
-  { frequency: '16-20 kHz', description: 'Ultra-high frequencies, air and space. Subtle but important for realism.', instruments: ['Cymbals', 'Room mics', 'Strings', 'Vocals'], action: 'boost', category: 'air' },
-  { frequency: '20+ kHz', description: 'Extreme high frequencies, mostly harmonics. Can add subtle air.', instruments: ['Cymbals', 'Room mics'], action: 'boost', category: 'air' },
+  // SUB BASS
+  { frequency: '20-30 Hz', description: 'Extreme sub-bass rumble. Rarely useful except for cinematic or sub-heavy genres.', instruments: ['Kick drum', 'Sub bass', '808s', 'Synth bass'], action: 'cut', category: 'sub' },
+  { frequency: '30-50 Hz', description: 'Deep low-end power. Adds weight, but too much = flabbiness.', instruments: ['Kick drum', 'Sub bass', 'Bass guitar', '808s'], action: 'boost', category: 'sub' },
+  { frequency: '50-60 Hz', description: 'Bass punch and fullness. Defines the "bottom" of mix.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', 'Synths'], action: 'boost', category: 'sub' },
+  // BASS
+  { frequency: '60-100 Hz', description: 'Bass body and tone. Core of bass instruments. Too much = boom.', instruments: ['Bass guitar', 'Kick drum', 'Synth bass', 'Cello'], action: 'boost', category: 'bass' },
+  { frequency: '100-160 Hz', description: 'Low warmth. Helps glue bass + low mids. Overdone = muddiness.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Drums'], action: 'cut', category: 'bass' },
+  { frequency: '160-250 Hz', description: 'Upper bass/low mid overlap. Often cut to clean mud.', instruments: ['Bass guitar', 'Vocals', 'Strings', 'Brass'], action: 'cut', category: 'bass' },
+  // LOW MIDS
+  { frequency: '250-350 Hz', description: 'Boxiness / wool. Can cloud guitars & vocals.', instruments: ['Vocals', 'Guitar', 'Piano', 'Snare'], action: 'cut', category: 'low-mid' },
+  { frequency: '350-500 Hz', description: 'Warmth vs. mud. Boost for body, cut for clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Keys'], action: 'cut', category: 'low-mid' },
+  // MIDS
+  { frequency: '500-800 Hz', description: 'Core midrange — thickness and presence. Often cluttered.', instruments: ['Vocals', 'Guitar', 'Snare', 'Keys'], action: 'cut', category: 'mid' },
+  { frequency: '800 Hz - 1.5 kHz', description: 'Body and clarity. Essential for definition.', instruments: ['Vocals', 'Guitar', 'Piano', 'Snare'], action: 'boost', category: 'mid' },
+  { frequency: '1.5-2 kHz', description: 'Presence and attack. Boost for definition.', instruments: ['Vocals', 'Snare', 'Guitar'], action: 'boost', category: 'mid' },
+  // HIGH MIDS
+  { frequency: '2-3 kHz', description: 'Vocal clarity and edge. Boost carefully.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano'], action: 'boost', category: 'high-mid' },
+  { frequency: '3-5 kHz', description: 'Presence, bite, intelligibility. Too much = harsh.', instruments: ['Vocals', 'Snare', 'Cymbals'], action: 'cut', category: 'high-mid' },
+  // PRESENCE
+  { frequency: '5-8 kHz', description: 'Detail and sparkle. Brings life, but sibilant if overdone.', instruments: ['Vocals', 'Hi-hats', 'Acoustic guitar', 'Cymbals'], action: 'boost', category: 'presence' },
+  // AIR
+  { frequency: '8-12 kHz', description: 'Air and openness. Adds space.', instruments: ['Vocals', 'Strings', 'Cymbals', 'Room mics'], action: 'boost', category: 'air' },
+  { frequency: '12-20 kHz', description: 'Extreme highs. Use for shimmer.', instruments: ['Cymbals', 'Room mics', 'Vocals'], action: 'boost', category: 'air' },
 ];
 
 const INSTRUMENTS = [
-  'All', 'Vocals', 'Male vocals', 'Kick drum', 'Snare', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Piano', 'Cymbals', 'Hi-hats', 'Sub bass', '808s', 'Synthesizer bass', 'Horns', 'Strings', 'Room mics', 'Drums', 'Violin', 'Cello', 'Tuba', 'Saxophone', 'Trumpet', 'Brass', 'Woodwinds', 'Flute'
+  'All', 'Vocals', 'Male vocals', 'Kick drum', 'Snare', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Piano',
+  'Cymbals', 'Hi-hats', 'Sub bass', '808s', 'Synthesizer bass', 'Horns', 'Strings', 'Room mics', 'Drums',
+  'Violin', 'Cello', 'Tuba', 'Saxophone', 'Trumpet', 'Brass', 'Woodwinds', 'Flute'
 ];
 
 const FREQUENCY_ZONES = [
@@ -77,18 +65,19 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
   const [selectedZone, setSelectedZone] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-
   if (!isOpen) return null;
 
   const filteredData = EQ_DATA.filter(band => {
-    const matchesInstrument = selectedInstrument === 'All' || band.instruments.includes(selectedInstrument);
     const matchesZone = selectedZone === 'all' || band.category === selectedZone;
-    const matchesSearch = searchTerm === '' || 
-      band.frequency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      band.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      band.instruments.some(inst => inst.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = searchTerm === '' || band.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesInstrument && matchesZone && matchesSearch;
+    // "All" = show all relevant instruments
+    if (selectedInstrument === 'All') {
+      return matchesZone && matchesSearch;
+    } else {
+      const matchesInstrument = band.instruments.includes(selectedInstrument);
+      return matchesInstrument && matchesZone && matchesSearch;
+    }
   });
 
   const getActionColor = (action: string) => {
@@ -109,8 +98,6 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
     }
   };
 
-
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
@@ -126,48 +113,55 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
               </Button>
             </div>
           </div>
-          
-
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Filter by Instrument</label>
               <select 
-                value={selectedInstrument} 
+                value={selectedInstrument}
                 onChange={(e) => setSelectedInstrument(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
               >
                 {INSTRUMENTS.map(inst => (
                   <option key={inst} value={inst}>{inst}</option>
                 ))}
               </select>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Frequency Zone</label>
               <select 
-                value={selectedZone} 
+                value={selectedZone}
                 onChange={(e) => setSelectedZone(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100"
               >
                 {FREQUENCY_ZONES.map(zone => (
                   <option key={zone.id} value={zone.id}>{zone.label}</option>
                 ))}
               </select>
             </div>
-            
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Search</label>
-              <Input 
-                type="text"
-                placeholder="Search frequencies, descriptions..."
+              <label className="block text-sm font-medium text-gray-300 mb-2">Issue</label>
+              <select
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="">All</option>
+                <option value="boxy">Boxiness</option>
+                <option value="muddy">Muddiness</option>
+                <option value="honky">Honkiness</option>
+                <option value="nasal">Nasal</option>
+                <option value="harsh">Harshness</option>
+                <option value="sibilant">Sibilance</option>
+                <option value="thin">Thinness</option>
+                <option value="dull">Dullness</option>
+                <option value="bright">Too Bright</option>
+                <option value="no punch">No Punch</option>
+                <option value="no low-end">No Low-end</option>
+                <option value="no air">No Air</option>
+              </select>
             </div>
           </div>
         </div>
-        
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-3">Frequency Zones</h3>
@@ -178,7 +172,7 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
                   onClick={() => setSelectedZone(zone.id)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
                     selectedZone === zone.id 
-                      ? `${zone.color} text-white shadow-lg` 
+                      ? `${zone.color} text-white shadow-lg`
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
@@ -187,10 +181,9 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
               ))}
             </div>
           </div>
-          
           <div className="space-y-3">
             {filteredData.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No EQ data matches your current filters.</p>
+              <p className="text-gray-400 text-center py-8">No EQ data matches your current filters or search.</p>
             ) : (
               filteredData.map((band, index) => (
                 <Card key={index} className="bg-gray-700/50 hover:bg-gray-700/70 transition-colors">
@@ -224,7 +217,6 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
             )}
           </div>
         </div>
-        
         <div className="p-4 border-t border-gray-700 bg-gray-800/50">
           <p className="text-xs text-gray-400 text-center">
             💡 Tip: These are general guidelines. Always trust your ears and adjust based on the specific context of your mix.
