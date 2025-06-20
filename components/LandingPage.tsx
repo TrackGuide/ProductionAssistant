@@ -348,7 +348,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
 {/* Business Model */}
 <section className="relative px-6 py-20 bg-black/20">
-  <div className="max-w-7xl mx-auto text-center">
+  <div className="max-w-5xl mx-auto">
     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
       Scalable <span className="text-orange-500">Business Model</span>
     </h2>
