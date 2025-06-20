@@ -499,7 +499,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   </div>
 </footer>
 
-</div> {/* closes main wrapper div */}
+</div> (/* closes main wrapper div */)
 );
 };
 
