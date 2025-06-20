@@ -55,7 +55,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 • Help adjust your genre, vibe, or arrangement ideas 
 • Provide detailed explanations about any aspect of your track 
 
-What would you like to work on today?`;,
+What would you like to work on today?`;
        content: defaultWelcome,
         timestamp: new Date()
       }]);
