@@ -13,12 +13,37 @@ interface EQBand {
 }
 
 const EQ_DATA: EQBand[] = [
-  // === ORIGINAL FULL EQ DATA (keep yours unchanged) ===
-  { frequency: '20-30 Hz', description: 'Sub-bass rumble, often felt more than heard. Can cause speaker damage if excessive.', instruments: ['Kick drum', 'Sub bass', '808s', 'Synthesizer bass'], action: 'cut', category: 'sub' },
-  { frequency: '30-40 Hz', description: 'Deep bass foundation, adds power and weight. Essential for electronic music.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', '808s'], action: 'boost', category: 'sub' },
-  { frequency: '40-60 Hz', description: 'Bass fundamentals, warmth and body. Key frequency for bass instruments.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', 'Synthesizer bass', 'Tuba'], action: 'boost', category: 'sub' },
-  // ... KEEP THE REST OF YOUR FULL EQ_DATA
+  // SUB BASS
+  { frequency: '20-30 Hz', description: 'Extreme sub-bass rumble. Rarely useful except for cinematic or sub-heavy genres.', instruments: ['Kick drum', 'Sub bass', '808s', 'Synth bass'], action: 'cut', category: 'sub' },
+  { frequency: '30-50 Hz', description: 'Deep low-end power. Adds weight, but too much = flabbiness.', instruments: ['Kick drum', 'Sub bass', 'Bass guitar', '808s'], action: 'boost', category: 'sub' },
+  { frequency: '50-60 Hz', description: 'Bass punch and fullness. Defines the "bottom" of mix.', instruments: ['Kick drum', 'Bass guitar', 'Sub bass', 'Synths'], action: 'boost', category: 'sub' },
+
+  // BASS
+  { frequency: '60-100 Hz', description: 'Bass body and tone. Core of bass instruments. Too much = boom.', instruments: ['Bass guitar', 'Kick drum', 'Synth bass', 'Cello'], action: 'boost', category: 'bass' },
+  { frequency: '100-160 Hz', description: 'Low warmth. Helps glue bass + low mids. Overdone = muddiness.', instruments: ['Bass guitar', 'Piano', 'Guitar', 'Vocals', 'Drums'], action: 'cut', category: 'bass' },
+  { frequency: '160-250 Hz', description: 'Upper bass/low mid overlap. Often cut to clean mud.', instruments: ['Bass guitar', 'Vocals', 'Strings', 'Brass'], action: 'cut', category: 'bass' },
+
+  // LOW MIDS
+  { frequency: '250-350 Hz', description: 'Boxiness / wool. Can cloud guitars & vocals.', instruments: ['Vocals', 'Guitar', 'Piano', 'Snare'], action: 'cut', category: 'low-mid' },
+  { frequency: '350-500 Hz', description: 'Warmth vs. mud. Boost for body, cut for clarity.', instruments: ['Vocals', 'Snare', 'Guitar', 'Keys'], action: 'cut', category: 'low-mid' },
+
+  // MIDS
+  { frequency: '500-800 Hz', description: 'Core midrange — thickness and presence. Often cluttered.', instruments: ['Vocals', 'Guitar', 'Snare', 'Keys'], action: 'cut', category: 'mid' },
+  { frequency: '800 Hz - 1.5 kHz', description: 'Body and clarity. Essential for definition.', instruments: ['Vocals', 'Guitar', 'Piano', 'Snare'], action: 'boost', category: 'mid' },
+  { frequency: '1.5-2 kHz', description: 'Presence and attack. Boost for definition.', instruments: ['Vocals', 'Snare', 'Guitar'], action: 'boost', category: 'mid' },
+
+  // HIGH MIDS
+  { frequency: '2-3 kHz', description: 'Vocal clarity and edge. Boost carefully.', instruments: ['Vocals', 'Snare', 'Guitar', 'Piano'], action: 'boost', category: 'high-mid' },
+  { frequency: '3-5 kHz', description: 'Presence, bite, intelligibility. Too much = harsh.', instruments: ['Vocals', 'Snare', 'Cymbals'], action: 'cut', category: 'high-mid' },
+
+  // PRESENCE
+  { frequency: '5-8 kHz', description: 'Detail and sparkle. Brings life, but sibilant if overdone.', instruments: ['Vocals', 'Hi-hats', 'Acoustic guitar', 'Cymbals'], action: 'boost', category: 'presence' },
+
+  // AIR
+  { frequency: '8-12 kHz', description: 'Air and openness. Adds space.', instruments: ['Vocals', 'Strings', 'Cymbals', 'Room mics'], action: 'boost', category: 'air' },
+  { frequency: '12-20 kHz', description: 'Extreme highs. Use for shimmer.', instruments: ['Cymbals', 'Room mics', 'Vocals'], action: 'boost', category: 'air' },
 ];
+
 
 const INSTRUMENTS = [
   'All', 'Vocals', 'Male vocals', 'Kick drum', 'Snare', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Piano',
@@ -51,10 +76,7 @@ export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen, onClose }) =
 
   const filteredData = EQ_DATA.filter(band => {
     const matchesZone = selectedZone === 'all' || band.category === selectedZone;
-    const matchesSearch = searchTerm === '' ||
-      band.frequency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      band.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      band.instruments.some(inst => inst.toLowerCase().includes(searchTerm.toLowerCase()));
+   const matchesSearch = searchTerm === '' || band.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     // "All" = show all relevant instruments
     if (selectedInstrument === 'All') {
@@ -127,16 +149,28 @@ return (
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Search (Freq, Instrument, Issue...)</label>
-            <Input 
-              type="text"
-              placeholder="Ex: 'muddiness', 'harshness', 'sibilance', 'kick drum', '2kHz'..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+  <label className="block text-sm font-medium text-gray-300 mb-2">Issue</label>
+  <select
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 focus:ring-purple-500 focus:border-purple-500"
+  >
+    <option value="">All</option>
+    <option value="boxy">Boxiness</option>
+    <option value="muddy">Muddiness</option>
+    <option value="honky">Honkiness</option>
+    <option value="nasal">Nasal</option>
+    <option value="harsh">Harshness</option>
+    <option value="sibilant">Sibilance</option>
+    <option value="thin">Thinness</option>
+    <option value="dull">Dullness</option>
+    <option value="bright">Too Bright</option>
+    <option value="no punch">No Punch</option>
+    <option value="no low-end">No Low-end</option>
+    <option value="no air">No Air</option>
+  </select>
+</div>
+
 
       <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
         <div className="mb-6">
