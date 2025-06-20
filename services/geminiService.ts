@@ -554,6 +554,7 @@ Respond as the helpful TrackGuideAI assistant.`;
   return stream;
 };
 
+/** * 9. Alternative AI Assistant Response (non-streaming for simple cases) */
 export const generateAIAssistantResponseSimple = async (
   message: string,
   context?: {
@@ -611,8 +612,6 @@ ${formattedHistory}` : ''}
 
 Provide your expert guidance:`;
 
-    console.log('Sending prompt to Gemini API with length:', prompt.length);
-    
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: prompt,
@@ -633,7 +632,15 @@ Provide your expert guidance:`;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
         specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
       } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})
+        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection.`;
+      } else if (error.message.includes("Candidate was blocked")) {
+        specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
+      }
+    }
+    
+    throw new Error(specificMessage);
+  }
+};
 
 /**
  * 6. Generate RemixGuide with full functionality (matches component expectations)
