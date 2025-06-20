@@ -1760,16 +1760,17 @@ const closeAIAssistant = () => {
         />
       )}
 
-      {/* Production Coach - Always Available */}
-      <AIAssistant
-        isOpen={true}
-        onClose={() => {}} // Not used in collapsed mode
-        currentGuidebook={activeGuidebookDetails || undefined}
-        userInputs={inputs}
-        isCollapsed={isProductionCoachCollapsed}
-        onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
-      />
+     {/* Production Coach - Always Available */}
+<AIAssistant
+  isOpen={!isAIAssistantOpen} // Only open when the contextual assistant is closed
+  onClose={() => setIsProductionCoachCollapsed(true)} // Set to collapsed when closed
+  currentGuidebook={activeGuidebookDetails || undefined}
+  userInputs={inputs}
+  isCollapsed={isProductionCoachCollapsed}
+  onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
+/>
 
+{/* Contextual AI Assistant */}
 <AIAssistant
   isOpen={isAIAssistantOpen}
   onClose={closeAIAssistant}
