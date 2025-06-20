@@ -1,5 +1,4 @@
-
-// MixComparator v1.3 - AI-updated version (June 20)
+// MixComparator v1.4 - fixed to show full analysis checkbox only for Mix B
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -21,7 +20,6 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [copyStatus, setCopyStatus] = useState<string>('');
-  const [requestMixAAnalysis, setRequestMixAAnalysis] = useState(false);
   const [requestMixBAnalysis, setRequestMixBAnalysis] = useState(false);
 
   if (!isOpen) return null;
@@ -33,18 +31,17 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
 
   const handleAnalyze = async () => {
     if (!mixA) return;
-    
+
     setIsAnalyzing(true);
     try {
       const mixABase64 = await fileToBase64(mixA);
       const mixBBase64 = mixB ? await fileToBase64(mixB) : undefined;
-      
+
       const analysisContent = await generateMixComparison({
         mixAFile: mixABase64,
         mixBFile: mixBBase64,
         mixAName: mixA.name,
         mixBName: mixB?.name,
-        requestMixAAnalysis,
         requestMixBAnalysis
       });
 
@@ -74,13 +71,12 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
     setMixB(null);
     setAnalysis('');
     setCopyStatus('');
-    setRequestMixAAnalysis(false);
     setRequestMixBAnalysis(false);
   };
 
   const handleCopyAnalysis = async () => {
     if (!analysis) return;
-    
+
     try {
       await navigator.clipboard.writeText(analysis);
       setCopyStatus("Copied!");
@@ -103,10 +99,8 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Mix A Upload */}
-          <MixUploadBox type="A" file={mixA} setFile={setMixA} requestFullAnalysis={requestMixAAnalysis} setRequestFullAnalysis={setRequestMixAAnalysis} />
-          {/* Mix B Upload */}
-          <MixUploadBox type="B" file={mixB} setFile={setMixB} requestFullAnalysis={requestMixBAnalysis} setRequestFullAnalysis={setRequestMixBAnalysis} />
+          <MixUploadBox type="A" file={mixA} setFile={setMixA} showFullAnalysisCheckbox={false} />
+          <MixUploadBox type="B" file={mixB} setFile={setMixB} showFullAnalysisCheckbox={true} requestFullAnalysis={requestMixBAnalysis} setRequestFullAnalysis={setRequestMixBAnalysis} />
         </div>
 
         <div className="flex gap-4 mb-6">
@@ -135,7 +129,7 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   );
 }
 
-function MixUploadBox({ type, file, setFile, requestFullAnalysis, setRequestFullAnalysis }) {
+function MixUploadBox({ type, file, setFile, showFullAnalysisCheckbox, requestFullAnalysis, setRequestFullAnalysis }) {
   const label = type === 'A' ? 'Mix A (Original)' : 'Mix B (Revised)';
   return (
     <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
@@ -153,7 +147,7 @@ function MixUploadBox({ type, file, setFile, requestFullAnalysis, setRequestFull
           <input type="file" accept="audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} />
         </label>
       )}
-      {file && (
+      {showFullAnalysisCheckbox && file && (
         <div className="mt-4 pt-4 border-t border-gray-600">
           <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
             <input type="checkbox" checked={requestFullAnalysis} onChange={(e) => setRequestFullAnalysis(e.target.checked)} className="rounded border-gray-500 text-blue-600" />
