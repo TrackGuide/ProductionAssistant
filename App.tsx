@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
-import { generateGuidebookContent, import { 
+import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
   generateMixFeedbackWithAudio as generateMixFeedback 
