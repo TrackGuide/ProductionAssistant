@@ -1360,13 +1360,7 @@ const closeAIAssistant = () => {
                   )}
 
                   <MarkdownRenderer content={generatedGuidebook} />
-                  <Button
-  onClick={() => openAIAssistant('TrackGuide for this project')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+                
 
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
@@ -1655,13 +1649,7 @@ const closeAIAssistant = () => {
 
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixFeedbackResult} />
-                  <Button
-  onClick={() => openAIAssistant('Mix Feedback')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+            
 
                 </div>
               </Card>
@@ -1675,13 +1663,7 @@ const closeAIAssistant = () => {
 
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixCompareResult} />
-                  <Button
-  onClick={() => openAIAssistant('Mix Comparison')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+                  
 
                 </div>
  <div className="p-4 border-t border-gray-700 flex justify-center">
