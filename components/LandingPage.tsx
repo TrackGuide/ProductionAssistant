@@ -500,6 +500,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 </footer>
 
 </div> {/* closes main wrapper div */}
-); };
+);
+};
 
 export default LandingPage;
