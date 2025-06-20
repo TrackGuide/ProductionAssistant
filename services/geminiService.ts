@@ -426,85 +426,80 @@ export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
   const prompt = `
-You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files:
+You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison:
 
-- **Mix A (Reference)**: "${inputs.mixAName}"
-- **Mix B (Current Working Mix)**: "${inputs.mixBName}"
+- **Mix A (Reference)**: ${inputs.mixAName}
+- **Mix B (Current Version)**: ${inputs.mixBName}
 
-Your task: Provide a detailed comparative analysis. Treat Mix B as the current version in progress — give actionable improvement advice only for Mix B. If Mix A has strengths, point them out — but DO NOT suggest changes for Mix A.
+Analyze both mixes carefully. **Mix B** is the version currently being worked on — focus your improvement advice on Mix B.
 
----
+### Key Rules:
+✅ If Mix A has strengths vs Mix B — mention them  
+✅ If Mix B improves upon Mix A — acknowledge improvements  
+✅ DO NOT suggest changes to Mix A — suggestions must focus on improving Mix B
 
-## Comparison Framework:
+### Comparison Structure:
 
-### 1️⃣ Frequency Response
-- Low-end (Sub, Bass): Clarity, punch, masking
-- Midrange (Vocals, Instruments): Separation, presence
-- High-end (Air, sparkle, harshness)
+## 🎧 Overall Comparison
+- General differences between Mix A and Mix B
+- Does Mix B improve overall compared to Mix A?
 
-### 2️⃣ Stereo Image & Spatial Design
-- Width and imaging
-- Depth (Reverb space, 3D field)
-- Focus (Center vs sides)
+## 🎛️ Frequency Balance
+- Low-end: Bass/sub-bass clarity & control
+- Midrange: Vocal/instrument presence & separation
+- High-end: Air/sparkle/harshness comparison
 
-### 3️⃣ Dynamics & Compression
-- Transient impact
-- Compression behavior
-- Loudness & LUFS (perceived + technical)
+## 🎚️ Stereo Image & Depth
+- Width: Stereo spread & spatial balance
+- Depth: 3D space, reverb/delay use
+- Mono compatibility / phase issues
 
-### 4️⃣ Technical Quality
-- Distortion, noise floor
-- Phase and mono compatibility
-- Artifacts or issues
+## 📈 Dynamics & Loudness
+- Compression style & dynamic range
+- LUFS level comparison
+- Transient impact & punch
 
----
+## ⚙️ Technical Quality
+- Distortion, clipping or artifacts
+- Noise floor & background clarity
+- Phase coherence
 
-## Strengths & Weaknesses:
+## 🏆 Strengths & Opportunities
+- Strengths in Mix B (vs Mix A)
+- Areas where Mix B could still improve
 
-- **Mix A**: Key strengths (if any), standout qualities
-- **Mix B**: Improvements made vs Mix A, remaining weaknesses
-
----
-
-## Musical Impact:
-
-- Emotional translation
-- Genre appropriateness
-- Overall polish and vibe
-
----
-
-## Next Steps (For Mix B ONLY):
-- 3 to 5 clear, actionable improvements
-- Focus suggestions for finalizing Mix B
-- DO NOT suggest fixing Mix A
+## 🚀 Actionable Recommendations (for Mix B)
+1. Focused EQ adjustments
+2. Compression / dynamic improvements
+3. Stereo image / space suggestions
+4. Technical polish tips
+5. Next steps to finalize Mix B
 
 ---
 
-${inputs.requestMixAAnalysis ? `### Full Mix A analysis: Include a standalone Mix A section after comparison.` : ''}
-${inputs.requestMixBAnalysis ? `### Full Mix B analysis: Include a standalone Mix B section after comparison.` : ''}
+${inputs.requestMixAAnalysis || inputs.requestMixBAnalysis ? `
+## 🎙️ Individual Mix Analysis (as requested)
 
-Always return clean, clear markdown with headings (## and ###). Use professional but encouraging tone.
-`;
+${inputs.requestMixAAnalysis ? `
+### Full Analysis: Mix A (${inputs.mixAName})
+(Provide in-depth feedback for Mix A, covering frequency, dynamics, space, technical quality)
+` : ''}
+
+${inputs.requestMixBAnalysis ? `
+### Full Analysis: Mix B (${inputs.mixBName})
+(Provide in-depth feedback for Mix B, covering frequency, dynamics, space, technical quality — focus here since Mix B is current)
+` : ''}
+
+` : ''}
+
+**REMEMBER:** Focus suggestions only on improving Mix B — DO NOT suggest changes for Mix A.`;
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
-    contents: [
-      { text: prompt },
-      { inlineData: { data: inputs.mixAFile, mimeType: "audio/mpeg" } },
-      ...(inputs.mixBFile
-        ? [{ inlineData: { data: inputs.mixBFile, mimeType: "audio/mpeg" } }]
-        : []),
-    ],
-    config: { responseMimeType: 'text/plain' }
+    contents: prompt,
   });
 
-  const text = response.text;
-  if (typeof text !== 'string') {
-    throw new Error("Mix Comparison: Invalid AI response");
-  }
-
-  return text;
+  return response.text;
 };
 /**
  * 5. Generate AI-assistant chat response (streaming)
