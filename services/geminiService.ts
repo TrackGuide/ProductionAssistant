@@ -426,79 +426,41 @@ export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
   const prompt = `
-You are an expert audio mixing and mastering engineer AI. The user has uploaded two audio files for comparison:
+You are an expert mixing & mastering AI. The user has uploaded two mixes:
 
-- **Mix A (Reference)**: ${inputs.mixAName}
-- **Mix B (Current Version)**: ${inputs.mixBName}
+Mix A: "${inputs.mixAName}" — an earlier version  
+Mix B: "${inputs.mixBName}" — the current working version  
 
-Analyze both mixes carefully. **Mix B** is the version currently being worked on — focus your improvement advice on Mix B.
+🎧 Instructions:
+- Mix B is the active version — focus all actionable feedback on improving Mix B.
+- Mix A is an earlier version — if Mix A has strengths vs Mix B, point those out.
+- Acknowledge improvements made in Mix B compared to A.
+- Do NOT suggest changes to Mix A (it is not being revised).
 
-### Key Rules:
-✅ If Mix A has strengths vs Mix B — mention them  
-✅ If Mix B improves upon Mix A — acknowledge improvements  
-✅ DO NOT suggest changes to Mix A — suggestions must focus on improving Mix B
+If "Request full mix analysis" is selected → add full technical breakdown of Mix B (like in your Mix Feedback function).
 
-### Comparison Structure:
+Provide your analysis in clear Markdown format with the following sections:
 
 ## 🎧 Overall Comparison
-- General differences between Mix A and Mix B
-- Does Mix B improve overall compared to Mix A?
 
 ## 🎛️ Frequency Balance
-- Low-end: Bass/sub-bass clarity & control
-- Midrange: Vocal/instrument presence & separation
-- High-end: Air/sparkle/harshness comparison
 
 ## 🎚️ Stereo Image & Depth
-- Width: Stereo spread & spatial balance
-- Depth: 3D space, reverb/delay use
-- Mono compatibility / phase issues
 
 ## 📈 Dynamics & Loudness
-- Compression style & dynamic range
-- LUFS level comparison
-- Transient impact & punch
 
 ## ⚙️ Technical Quality
-- Distortion, clipping or artifacts
-- Noise floor & background clarity
-- Phase coherence
 
-## 🏆 Strengths & Opportunities
-- Strengths in Mix B (vs Mix A)
-- Areas where Mix B could still improve
+## 🏆 Strengths & Opportunities (for Mix B)
 
-## 🚀 Actionable Recommendations (for Mix B)
-1. Focused EQ adjustments
-2. Compression / dynamic improvements
-3. Stereo image / space suggestions
-4. Technical polish tips
-5. Next steps to finalize Mix B
+## 🚀 Actionable Recommendations (for Mix B only)
 
----
-
-${inputs.requestMixAAnalysis || inputs.requestMixBAnalysis ? `
-## 🎙️ Individual Mix Analysis (as requested)
-
-${inputs.requestMixAAnalysis ? `
-### Full Analysis: Mix A (${inputs.mixAName})
-(Provide in-depth feedback for Mix A, covering frequency, dynamics, space, technical quality)
-` : ''}
-
-${inputs.requestMixBAnalysis ? `
-### Full Analysis: Mix B (${inputs.mixBName})
-(Provide in-depth feedback for Mix B, covering frequency, dynamics, space, technical quality — focus here since Mix B is current)
-` : ''}
-
-` : ''}
-
-**REMEMBER:** Focus suggestions only on improving Mix B — DO NOT suggest changes for Mix A.`;
+`;
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
-
   return response.text;
 };
 /**
