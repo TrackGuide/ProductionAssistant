@@ -83,7 +83,7 @@ What would you like to work on today?`;
     }
   }, [isOpen]);
 
-  const clearConversation = () => {
+const clearConversation = () => {
   const defaultWelcome = contextLabel
     ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
     : `Hi! I'm your AI music production assistant. I can help you:
@@ -94,11 +94,15 @@ What would you like to work on today?`;
 • Help adjust your genre, vibe, or arrangement ideas
 • Provide detailed explanations about any aspect of your track
 
-What would you like to work on today?`,
-  content: defaultWelcome,
-      timestamp: new Date()
-    }]);
-  };
+What would you like to work on today?`;
+
+  setMessages([{
+    id: '1',
+    role: 'assistant',
+    content: defaultWelcome,
+    timestamp: new Date(),
+  }]);
+};
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
