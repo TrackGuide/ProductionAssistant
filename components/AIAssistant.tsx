@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
@@ -14,18 +15,16 @@ interface Message {
   timestamp: Date;
 }
 
- interface AIAssistantProps {
-   isOpen: boolean;
-   onClose: () => void;
-   currentGuidebook?: GuidebookEntry;
-   userInputs?: UserInputs;
-   onUpdateGuidebook?: (content: string) => void;
-   onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
-   isCollapsed?: boolean;
-   onToggle?: () => void;
-   contextLabel?: string;
- }
-
+interface AIAssistantProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentGuidebook?: GuidebookEntry;
+  userInputs?: UserInputs;
+  onUpdateGuidebook?: (content: string) => void;
+  onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+}
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
   isOpen,
@@ -45,18 +44,18 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   // Initialize with welcome message when first opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-     const defaultWelcome = contextLabel
-  ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-  : `Hi! I'm your AI music production assistant. I can help you: 
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: `Hi! I'm your AI music production assistant. I can help you:
 
-• Refine your TrackGuide with specific questions 
-• Suggest improvements to your current project 
-• Answer production techniques questions 
-• Help adjust your genre, vibe, or arrangement ideas 
-• Provide detailed explanations about any aspect of your track 
+• Refine your TrackGuide with specific questions
+• Suggest improvements to your current project
+• Answer production techniques questions
+• Help adjust your genre, vibe, or arrangement ideas
+• Provide detailed explanations about any aspect of your track
 
-What would you like to work on today?`;
-       content: defaultWelcome,
+What would you like to work on today?`,
         timestamp: new Date()
       }]);
     }
@@ -79,10 +78,10 @@ What would you like to work on today?`;
   }, [isOpen]);
 
   const clearConversation = () => {
-    const clearConversation = () => {
-+  const defaultWelcome = contextLabel
-+    ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-+    : `Hi! I'm your AI music production assistant. I can help you:
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: `Hi! I'm your AI music production assistant. I can help you:
 
 • Refine your TrackGuide with specific questions
 • Suggest improvements to your current project
@@ -91,7 +90,6 @@ What would you like to work on today?`;
 • Provide detailed explanations about any aspect of your track
 
 What would you like to work on today?`,
-  content: defaultWelcome,
       timestamp: new Date()
     }]);
   };
