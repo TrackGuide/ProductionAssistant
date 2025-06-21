@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
