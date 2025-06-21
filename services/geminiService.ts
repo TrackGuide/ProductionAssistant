@@ -185,33 +185,43 @@ function buildStructuralBlueprint(includeInstrumentation: boolean = true): strin
 | **Outro** | 16-32 bars | Gradual fade, Ambient tail | Low${instrumentationRows[7]}|`;
 }
 
+// ⚡ Updated to include all UserInputs: title, artist, and guidebookContext
 /**
  * 1. Generate the core TrackGuide content (streaming)
  */
 export const generateGuidebookContent = async (
   inputs: UserInputs
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
-  const genreContext = inputs.genre?.join(", ") || "Not specified";
-  const vibeContext = inputs.vibe?.join(", ") || "Not specified";
+  const titleContext      = inputs.songTitle       ? `- **Project Name**: ${inputs.songTitle}`           : "";
+  const artistContext     = inputs.artistReference ? `- **Artist References**: ${inputs.artistReference}` : "";
+  const genreContext      = inputs.genre?.join(", ")  || "Not specified";
+  const vibeContext       = inputs.vibe?.join(", ")   || "Not specified";
   const instrumentContext = inputs.availableInstruments || "Not specified";
-  const keyContext = inputs.key ? `Key: ${inputs.key}` : "";
-  const scaleContext = inputs.scale ? `Scale/Mode: ${inputs.scale}` : "";
-  const chordsContext = inputs.chords ? `Chord Progression: ${inputs.chords}` : "";
-  const referenceContext = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
-  const lyricsContext = inputs.lyrics ? `Lyrics Theme: ${inputs.lyrics}` : "";
-  const notesContext = inputs.generalNotes ? `Additional Notes: ${inputs.generalNotes}` : "";
+  const dawContext        = inputs.daw               ? inputs.daw : "Not specified";
+  const pluginContext     = inputs.plugins           ? inputs.plugins : "Stock/Generic plugins";
+  const keyContext        = inputs.key               ? `Key: ${inputs.key}`                    : "";
+  const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`           : "";
+  const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}`    : "";
+  const referenceContext  = inputs.referenceTrackLink
+                               ? `Reference Track: ${inputs.referenceTrackLink}`
+                               : "";
+  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`         : "";
+  const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const structuralBlueprint = buildStructuralBlueprint(true);
-  const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
+  const pluginSection       = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
-  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
+  const prompt = `// ⚡ Including all fields
+You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
 
 Create a detailed TrackGuide for the following specifications:
+${titleContext}
+${artistContext}
 - **Genre**: ${genreContext}
 - **Vibe**: ${vibeContext}
 - **Available Instruments**: ${instrumentContext}
-- **DAW**: ${inputs.daw || "Not specified"}
-- **Plugins**: ${inputs.plugins || "Stock/Generic plugins"}
+- **DAW**: ${dawContext}
+- **Plugins**: ${pluginContext}
 ${keyContext}
 ${scaleContext}
 ${chordsContext}
@@ -281,7 +291,7 @@ ${pluginSection}
 - Chorus variations: Building intensity across repetitions
 - Bridge/breakdown: Contrast and reset before final sections
 
-Focus on practical, actionable advice that can be immediately applied in ${inputs.daw || "any DAW"}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
+Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
@@ -296,7 +306,8 @@ Focus on practical, actionable advice that can be immediately applied in ${input
 export const generateMidiPatternSuggestions = async (
   settings: MidiSettings
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
-  const prompt = `You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID JSON format only.
+  const prompt = `// ⚡ Including guidebookContext
+You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID JSON format only.
 
 **Requirements:**
 - Key: ${settings.key}
@@ -308,55 +319,14 @@ export const generateMidiPatternSuggestions = async (
 - Song Section: ${settings.songSection || "General Loop"}
 - Bars: ${settings.bars}
 - Target Instruments: ${settings.targetInstruments.join(", ")}
+- Guidebook Context: ${settings.guidebookContext || "Not specified"}
 
 **JSON Structure Required:**
 {
-  "chords": [
-    {
-      "time": 0,
-      "name": "Cmaj7",
-      "duration": 2,
-      "notes": [
-        {"pitch": "C4", "midi": 60},
-        {"pitch": "E4", "midi": 64},
-        {"pitch": "G4", "midi": 67},
-        {"pitch": "B4", "midi": 71}
-      ],
-      "velocity": 100
-    }
-  ],
-  "bassline": [
-    {
-      "time": 0,
-      "midi": 36,
-      "duration": 0.5,
-      "velocity": 110,
-      "pitch": "C2"
-    }
-  ],
-  "melody": [
-    {
-      "time": 0,
-      "midi": 72,
-      "duration": 1,
-      "velocity": 100,
-      "pitch": "C5"
-    }
-  ],
-  "drums": {
-    "kick": [
-      {"time": 0, "duration": 0.1, "velocity": 120},
-      {"time": 1, "duration": 0.1, "velocity": 115}
-    ],
-    "snare": [
-      {"time": 1, "duration": 0.1, "velocity": 110},
-      {"time": 3, "duration": 0.1, "velocity": 105}
-    ],
-    "hihat_closed": [
-      {"time": 0.5, "duration": 0.1, "velocity": 80},
-      {"time": 1.5, "duration": 0.1, "velocity": 75}
-    ]
-  }
+  "chords": [...],
+  "bassline": [...],
+  "melody": [...],
+  "drums": { ... }
 }
 
 **CRITICAL:** Return ONLY valid JSON. No explanatory text, no markdown formatting, no code blocks. Just the raw JSON object that can be parsed directly.
@@ -369,6 +339,7 @@ Generate patterns appropriate for ${settings.genre} in the ${settings.songSectio
   });
   return stream;
 };
+
 
 /**
  * 3. Generate mix feedback (one-shot)
