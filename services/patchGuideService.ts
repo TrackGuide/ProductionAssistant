@@ -39,19 +39,32 @@ export interface PatchGuideResult {
   modMatrix?: ModRouting[];
 }
 
+interface PatchGuideInputs {
+  description: string;
+  synth: string;
+  voiceType: string;
+  descriptor: string;
+  genre: string;
+  notes?: string;
+}
+
+/**
+ * Generate a detailed synth patch guide using Google GenAI.
+ * Requires GENAI_API_KEY to be set in environment variables.
+ */
 export async function generateSynthPatchGuide(
-  inputs: {
-    description: string;
-    synth: string;
-    voiceType: string;
-    descriptor: string;
-    genre: string;
-    notes?: string;
-  }
+  inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
+  // Ensure API key is provided
+  const apiKey = process.env.GENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing GENAI_API_KEY environment variable');
+  }
+
+  // Build prompt for AI
   const prompt = `
 You are an expert sound designer. Given the following inputs,
-generate a JSON response with keys: text, waveform, oscSettings,
+return a JSON object with keys: text, waveform, oscSettings,
 adsrVCF, adsrVCA, knobs, modMatrix.
 
 Inputs:
@@ -62,9 +75,10 @@ Inputs:
 - Notes: ${inputs.notes || 'None'}
 
 Return JSON only.
-  `;
+`;
 
-  const ai = new GoogleGenAI();
+  // Initialize AI client
+  const ai = new GoogleGenAI({ apiKey });
   const response: GenerateContentResponse = await ai.generateContent({
     model: GEMINI_MODEL_NAME,
     prompt,
@@ -72,6 +86,7 @@ Return JSON only.
     maxTokens: 800,
   });
 
+  // Parse AI response as JSON
   let parsed: any;
   try {
     parsed = JSON.parse(response.text);
@@ -79,6 +94,7 @@ Return JSON only.
     throw new Error('Invalid JSON response from AI');
   }
 
+  // Return structured result
   return {
     text: parsed.text,
     waveform: parsed.waveform,
