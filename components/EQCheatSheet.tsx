@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
-import Chart from 'chart.js/auto';
+import { Chart, registerables } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import Meyda from 'meyda';
+
+Chart.register(...registerables, annotationPlugin);
 
 /**
  * Data definitions
