@@ -10,14 +10,22 @@ export interface PatchStep {
 }
 
 export interface PatchGuideResult {
-  steps: PatchStep[];
+  steps?: PatchStep[];
   notes?: string;
-  text?: string;
+  text: string;
   waveform?: string;
-  adsr?: { attack: number; decay: number; sustain: number; release: number };
+  adsr?: {
+    attack: number;
+    decay: number;
+    sustain: number;
+    release: number;
+  };
   knobs?: Record<string, number>;
-  modMatrix?: Array<{ source: string; target: string; amount: number }>;
-  pluginUI?: any;
+  modMatrix?: Array<{
+    source: string;
+    target: string;
+    amount: number;
+  }>;
 }
 
 /**
@@ -178,7 +186,94 @@ export async function generatePatchGuide(
  * @returns Promise resolving to patch guide data with visual elements
  */
 export async function generateSynthPatchGuide({ description, synth }: { description: string; synth: string; }): Promise<PatchGuideResult> {
-  const prompt = `You are PatchGuide AI. Provide detailed synthesis instructions, visuals, and UI mockup data. Create a patch for "${description}" on ${synth}. Return valid JSON with keys: text, waveform, adsr, knobs, modMatrix, pluginUI.`;
+  const prompt = `You are PatchGuide AI, an expert sound designer specializing in synthesizer programming. 
+  
+Create a detailed, professional patch recipe for a "${description}" sound on ${synth}.
+
+Your response MUST be valid JSON with the following structure:
+{
+  "text": "# ${synth} Patch: ${description}\\n\\n## Overview\\nBrief description of the sound and approach.\\n\\n## Oscillator Section\\n• Waveform selection and tuning\\n• Unison/voice settings\\n• Sub oscillator settings\\n\\n## Filter Section\\n• Filter type and cutoff frequency\\n• Resonance and drive settings\\n• Envelope modulation amount\\n\\n## Envelope Settings\\n• Filter envelope timing and shape\\n• Amplitude envelope for dynamics\\n\\n## Modulation\\n• LFO assignments and rates\\n• Modulation matrix routings\\n\\n## Effects\\n• Reverb, delay, and other effects\\n• Processing chain order\\n\\n## Performance Tips\\n• Key velocity response\\n• Expression controls\\n• Live performance suggestions",
+  
+  "waveform": "saw",
+  
+  "adsr": {
+    "filterEnv": {
+      "attack": 0.1,
+      "decay": 0.5,
+      "sustain": 0.7,
+      "release": 1.0
+    },
+    "ampEnv": {
+      "attack": 0.05,
+      "decay": 0.3,
+      "sustain": 0.8,
+      "release": 1.2
+    }
+  },
+  
+  "knobs": [
+    {
+      "name": "Cutoff",
+      "value": 0.7,
+      "section": "Filter"
+    },
+    {
+      "name": "Resonance",
+      "value": 0.3,
+      "section": "Filter"
+    },
+    {
+      "name": "Drive",
+      "value": 0.2,
+      "section": "Filter"
+    },
+    {
+      "name": "Reverb Size",
+      "value": 0.6,
+      "section": "Effects"
+    },
+    {
+      "name": "Delay Time",
+      "value": 0.4,
+      "section": "Effects"
+    },
+    {
+      "name": "LFO Rate",
+      "value": 0.3,
+      "section": "Modulation"
+    },
+    {
+      "name": "LFO Depth",
+      "value": 0.5,
+      "section": "Modulation"
+    }
+  ],
+  
+  "modMatrix": [
+    {
+      "source": "LFO 1",
+      "target": "Filter Cutoff",
+      "amount": 0.6
+    },
+    {
+      "source": "Filter Env",
+      "target": "Filter Cutoff",
+      "amount": 0.8
+    },
+    {
+      "source": "Velocity",
+      "target": "Filter Cutoff",
+      "amount": 0.4
+    }
+  ],
+  
+  "pluginUI": {
+    "title": "${synth} - ${description}",
+    "sections": ["Oscillator", "Filter", "Envelopes", "Modulation", "Effects"]
+  }
+}
+
+Make sure your patch instructions are detailed, professional, and easy to follow. Focus on practical settings that will create the desired sound on ${synth}. Use proper markdown formatting in the text field.`;
   
   try {
     console.log('Generating patch guide with Gemini API...');
@@ -215,12 +310,25 @@ export async function generateSynthPatchGuide({ description, synth }: { descript
       
       // Ensure all required fields are present with defaults if needed
       return {
-        text: result.text || `Patch instructions for ${description} on ${synth}`,
+        text: result.text || `# ${synth} Patch: ${description}\n\n## Overview\nA professional patch recipe for creating this sound.\n\n## Oscillator Section\n• Use sawtooth waveform for rich harmonics\n• Set unison to 4-8 voices for thickness\n• Detune slightly for analog warmth\n\n## Filter Section\n• Low-pass filter with moderate cutoff\n• Add resonance for character\n• Use envelope modulation for movement\n\n## Envelope Settings\n• Quick attack for immediate response\n• Medium decay and sustain for body\n• Longer release for smooth fade\n\n## Effects\n• Add reverb for space\n• Use delay for depth\n• Apply subtle chorus for width`,
         waveform: result.waveform || 'saw',
-        adsr: result.adsr || { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 },
-        knobs: result.knobs || { cutoff: 0.7, resonance: 0.3, drive: 0.2, mix: 0.5 },
-        modMatrix: result.modMatrix || [],
-        pluginUI: result.pluginUI || { title: `${synth} Patch` }
+        adsr: result.adsr || {
+          filterEnv: { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 },
+          ampEnv: { attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 }
+        },
+        knobs: result.knobs || [
+          { name: "Cutoff", value: 0.7, section: "Filter" },
+          { name: "Resonance", value: 0.3, section: "Filter" },
+          { name: "Drive", value: 0.2, section: "Filter" },
+          { name: "Reverb Size", value: 0.6, section: "Effects" },
+          { name: "LFO Rate", value: 0.3, section: "Modulation" },
+          { name: "LFO Depth", value: 0.5, section: "Modulation" }
+        ],
+        modMatrix: result.modMatrix || [
+          { source: "LFO 1", target: "Filter Cutoff", amount: 0.6 },
+          { source: "Filter Env", target: "Filter Cutoff", amount: 0.8 }
+        ],
+        pluginUI: result.pluginUI || { title: `${synth} - ${description}` }
       };
     } catch (parseError) {
       console.error('Error parsing JSON response:', parseError);
@@ -233,12 +341,25 @@ export async function generateSynthPatchGuide({ description, synth }: { descript
           const extractedJson = JSON.parse(jsonMatch[1]) as PatchGuideResult;
           
           return {
-            text: extractedJson.text || `Patch instructions for ${description} on ${synth}`,
+            text: extractedJson.text || `# ${synth} Patch: ${description}\n\n## Overview\nA professional patch recipe for creating this sound.\n\n## Oscillator Section\n• Use sawtooth waveform for rich harmonics\n• Set unison to 4-8 voices for thickness\n• Detune slightly for analog warmth\n\n## Filter Section\n• Low-pass filter with moderate cutoff\n• Add resonance for character\n• Use envelope modulation for movement\n\n## Envelope Settings\n• Quick attack for immediate response\n• Medium decay and sustain for body\n• Longer release for smooth fade\n\n## Effects\n• Add reverb for space\n• Use delay for depth\n• Apply subtle chorus for width`,
             waveform: extractedJson.waveform || 'saw',
-            adsr: extractedJson.adsr || { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 },
-            knobs: extractedJson.knobs || { cutoff: 0.7, resonance: 0.3, drive: 0.2, mix: 0.5 },
-            modMatrix: extractedJson.modMatrix || [],
-            pluginUI: extractedJson.pluginUI || { title: `${synth} Patch` }
+            adsr: extractedJson.adsr || {
+              filterEnv: { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 },
+              ampEnv: { attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 }
+            },
+            knobs: extractedJson.knobs || [
+              { name: "Cutoff", value: 0.7, section: "Filter" },
+              { name: "Resonance", value: 0.3, section: "Filter" },
+              { name: "Drive", value: 0.2, section: "Filter" },
+              { name: "Reverb Size", value: 0.6, section: "Effects" },
+              { name: "LFO Rate", value: 0.3, section: "Modulation" },
+              { name: "LFO Depth", value: 0.5, section: "Modulation" }
+            ],
+            modMatrix: extractedJson.modMatrix || [
+              { source: "LFO 1", target: "Filter Cutoff", amount: 0.6 },
+              { source: "Filter Env", target: "Filter Cutoff", amount: 0.8 }
+            ],
+            pluginUI: extractedJson.pluginUI || { title: `${synth} - ${description}` }
           };
         }
       } catch (e) {
@@ -247,12 +368,25 @@ export async function generateSynthPatchGuide({ description, synth }: { descript
       
       // If all else fails, return a basic structure with the text
       return {
-        text: `Here's how to create a ${description} sound on ${synth}:\n\n${json.substring(0, 1000)}...`,
+        text: `# ${synth} Patch Guide: ${description}\n\n## Raw Response\n${json.substring(0, 1000)}...`,
         waveform: 'saw',
-        adsr: { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 },
-        knobs: { cutoff: 0.7, resonance: 0.3, drive: 0.2, mix: 0.5 },
-        modMatrix: [],
-        pluginUI: { title: `${synth} Patch` }
+        adsr: {
+          filterEnv: { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 },
+          ampEnv: { attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 }
+        },
+        knobs: [
+          { name: "Cutoff", value: 0.7, section: "Filter" },
+          { name: "Resonance", value: 0.3, section: "Filter" },
+          { name: "Drive", value: 0.2, section: "Filter" },
+          { name: "Reverb Size", value: 0.6, section: "Effects" },
+          { name: "LFO Rate", value: 0.3, section: "Modulation" },
+          { name: "LFO Depth", value: 0.5, section: "Modulation" }
+        ],
+        modMatrix: [
+          { source: "LFO 1", target: "Filter Cutoff", amount: 0.6 },
+          { source: "Filter Env", target: "Filter Cutoff", amount: 0.8 }
+        ],
+        pluginUI: { title: `${synth} - ${description}` }
       };
     }
   } catch (error) {
@@ -260,12 +394,25 @@ export async function generateSynthPatchGuide({ description, synth }: { descript
     
     // Return a fallback response instead of throwing
     return {
-      text: `Error generating patch guide: ${error.message || "Unknown error"}. Please try again.`,
+      text: `# Error Generating Patch Guide\n\nWe encountered an issue while creating your patch guide for "${description}" on ${synth}. Please try again or try a different description.\n\nError details: ${error.message || "Unknown error"}`,
       waveform: "saw",
-      adsr: { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 },
-      knobs: { cutoff: 0.7, resonance: 0.3, drive: 0.2, mix: 0.5 },
-      modMatrix: [],
-      pluginUI: { title: `${synth} Patch` }
+      adsr: {
+        filterEnv: { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 },
+        ampEnv: { attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 }
+      },
+      knobs: [
+        { name: "Cutoff", value: 0.7, section: "Filter" },
+        { name: "Resonance", value: 0.3, section: "Filter" },
+        { name: "Drive", value: 0.2, section: "Filter" },
+        { name: "Reverb Size", value: 0.6, section: "Effects" },
+        { name: "LFO Rate", value: 0.3, section: "Modulation" },
+        { name: "LFO Depth", value: 0.5, section: "Modulation" }
+      ],
+      modMatrix: [
+        { source: "LFO 1", target: "Filter Cutoff", amount: 0.6 },
+        { source: "Filter Env", target: "Filter Cutoff", amount: 0.8 }
+      ],
+      pluginUI: { title: `${synth} - ${description}` }
     };
   }
 }

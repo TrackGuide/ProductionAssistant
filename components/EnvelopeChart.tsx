@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 
 interface EnvelopeChartProps {
   attack: number;
@@ -21,34 +21,6 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
   width = 400,
   height = 150
 }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  const downloadEnvelope = () => {
-    if (!svgRef.current) return;
-    
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    canvas.width = width;
-    canvas.height = height;
-    
-    img.onload = () => {
-      if (ctx) {
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0);
-        
-        const link = document.createElement('a');
-        link.download = `envelope_A${attack}_D${decay}_S${sustain}_R${release}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }
-    };
-    
-    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
-  };
   // Normalize values to 0-1 range
   const normalizedAttack = Math.max(0, Math.min(1, attack));
   const normalizedDecay = Math.max(0, Math.min(1, decay));
@@ -74,21 +46,41 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
   // Start point
   const pathData = [`M ${currentX} ${maxY}`];
   
-  // Attack phase
+  // Attack phase - exponential curve
+  const attackPoints = 20;
+  for (let i = 1; i <= attackPoints; i++) {
+    const t = i / attackPoints;
+    const x = currentX + t * attackTime;
+    // Exponential curve for attack (1 - e^(-5t))
+    const y = maxY - (1 - Math.exp(-5 * t)) * (maxY - minY);
+    pathData.push(`L ${x} ${y}`);
+  }
   currentX += attackTime;
-  pathData.push(`L ${currentX} ${minY}`);
   
-  // Decay phase
+  // Decay phase - exponential curve
+  const decayPoints = 20;
+  for (let i = 1; i <= decayPoints; i++) {
+    const t = i / decayPoints;
+    const x = currentX + t * decayTime;
+    // Exponential curve for decay
+    const y = minY + (1 - Math.exp(-3 * t)) * (sustainY - minY);
+    pathData.push(`L ${x} ${y}`);
+  }
   currentX += decayTime;
-  pathData.push(`L ${currentX} ${sustainY}`);
   
   // Sustain phase
+  pathData.push(`L ${currentX + sustainTime} ${sustainY}`);
   currentX += sustainTime;
-  pathData.push(`L ${currentX} ${sustainY}`);
   
-  // Release phase
-  currentX += releaseTime;
-  pathData.push(`L ${currentX} ${maxY}`);
+  // Release phase - exponential curve
+  const releasePoints = 20;
+  for (let i = 1; i <= releasePoints; i++) {
+    const t = i / releasePoints;
+    const x = currentX + t * releaseTime;
+    // Exponential curve for release
+    const y = sustainY + (1 - Math.exp(-3 * t)) * (maxY - sustainY);
+    pathData.push(`L ${x} ${y}`);
+  }
   
   const path = pathData.join(' ');
   
@@ -96,14 +88,14 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-medium text-gray-300">ADSR Envelope</h3>
-        <button
-          onClick={downloadEnvelope}
-          className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
-        >
-          Download
-        </button>
+        <div className="flex space-x-2">
+          <span className="text-xs text-orange-500">A: {normalizedAttack.toFixed(2)}</span>
+          <span className="text-xs text-orange-500">D: {normalizedDecay.toFixed(2)}</span>
+          <span className="text-xs text-orange-500">S: {normalizedSustain.toFixed(2)}</span>
+          <span className="text-xs text-orange-500">R: {normalizedRelease.toFixed(2)}</span>
+        </div>
       </div>
-      <svg ref={svgRef} width={width} height={height} className="w-full h-auto">
+      <svg width={width} height={height} className="w-full h-auto">
         {/* Background grid */}
         <defs>
           <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
@@ -120,6 +112,17 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
+        />
+        
+        {/* Add a subtle glow effect */}
+        <path
+          d={path}
+          fill="none"
+          stroke="rgba(249, 115, 22, 0.3)"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          filter="blur(3px)"
         />
         
         {/* Phase labels */}
@@ -143,6 +146,7 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
         {/* Value indicators */}
         <circle cx={padding + attackTime} cy={minY} r="3" fill="#f97316" />
         <circle cx={padding + attackTime + decayTime} cy={sustainY} r="3" fill="#f97316" />
+        <circle cx={padding + attackTime + decayTime + sustainTime} cy={sustainY} r="3" fill="#f97316" />
         
         {/* Y-axis labels */}
         <text x="5" y={minY + 5} className="fill-gray-400 text-xs">1.0</text>
@@ -151,26 +155,6 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
         </text>
         <text x="5" y={maxY + 5} className="fill-gray-400 text-xs">0.0</text>
       </svg>
-      
-      {/* Parameter values */}
-      <div className="grid grid-cols-4 gap-2 mt-2 text-xs text-gray-400">
-        <div className="text-center">
-          <div className="font-medium">Attack</div>
-          <div>{normalizedAttack.toFixed(2)}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium">Decay</div>
-          <div>{normalizedDecay.toFixed(2)}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium">Sustain</div>
-          <div>{normalizedSustain.toFixed(2)}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium">Release</div>
-          <div>{normalizedRelease.toFixed(2)}</div>
-        </div>
-      </div>
     </div>
   );
 };

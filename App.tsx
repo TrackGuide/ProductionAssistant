@@ -1123,7 +1123,21 @@ const closeAIAssistant = () => {
     variant={activeView === 'remixGuide' ? 'primary' : 'secondary'}
     leftIcon={<span className="w-4 h-4 text-center">🎛️</span>}
   >
-    RemixGuide AI
+    🎛️ RemixGuide AI
+  </Button>
+
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'patchGuide'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('patchGuide')}
+    variant={activeView === 'patchGuide' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎛️</span>}
+  >
+    🎛️ PatchGuide AI
   </Button>
 
   <Button
@@ -1137,10 +1151,8 @@ const closeAIAssistant = () => {
     variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
     leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
   >
-    Mix Feedback AI
+    🎚️ Mix Feedback AI
   </Button>
-
-
 
   <Button
     size="sm"
@@ -1154,19 +1166,6 @@ const closeAIAssistant = () => {
     leftIcon={<AdjustmentsHorizontalIcon className="w-4 h-4" />}
   >
     EQ Guide
-  </Button>
-
-  <Button
-    className={`flex-1 text-xs md:text-sm ${
-      activeView === 'patchGuide'
-        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
-        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
-    }`}
-    onClick={() => setActiveView('patchGuide')}
-    variant={activeView === 'patchGuide' ? 'primary' : 'secondary'}
-    leftIcon={<span className="w-4 h-4 text-center">🎛️</span>}
-  >
-    PatchGuide AI
   </Button>
 
 </nav>

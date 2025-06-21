@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
-import { Input } from './Input';
 import { Spinner } from './Spinner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { WaveformPreview } from './WaveformPreview';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
 import { ModulationMatrix } from './ModulationMatrix';
-import { PluginUI } from './PluginUI';
 import { generateSynthPatchGuide, PatchGuideResult } from '../services/patchGuideService';
 
 // Common synth list for electronic music production
@@ -24,13 +24,20 @@ const SYNTH_OPTIONS = [
  */
 export const PatchGuide: React.FC = () => {
   const [desc, setDesc] = useState<string>('');
-  const [synth, setSynth] = useState<string>('Generic');
+  const [synth, setSynth] = useState<string>('Serum');
   const [guide, setGuide] = useState<string | null>(null);
   const [wave, setWave] = useState<string>('saw');
-  const [adsr, setAdsr] = useState({ attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 });
-  const [knobs, setKnobs] = useState<Record<string, number>>({ cutoff: 0.7, resonance: 0.2, drive: 0.1, mix: 0.5 });
+  const [filterEnv, setFilterEnv] = useState({ attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 });
+  const [ampEnv, setAmpEnv] = useState({ attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 });
+  const [knobs, setKnobs] = useState<Array<{ name: string; value: number; section: string }>>([
+    { name: "Cutoff", value: 0.7, section: "Filter" },
+    { name: "Resonance", value: 0.3, section: "Filter" },
+    { name: "Drive", value: 0.2, section: "Filter" },
+    { name: "Reverb Size", value: 0.6, section: "Effects" },
+    { name: "LFO Rate", value: 0.3, section: "Modulation" },
+    { name: "LFO Depth", value: 0.5, section: "Modulation" }
+  ]);
   const [mods, setMods] = useState<Array<{ source: string; target: string; amount: number }>>([]);
-  const [uiData, setUI] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
@@ -49,19 +56,20 @@ export const PatchGuide: React.FC = () => {
       }
       
       if (result.adsr) {
-        setAdsr(result.adsr);
+        if (result.adsr.filterEnv) {
+          setFilterEnv(result.adsr.filterEnv);
+        }
+        if (result.adsr.ampEnv) {
+          setAmpEnv(result.adsr.ampEnv);
+        }
       }
       
-      if (result.knobs) {
+      if (result.knobs && Array.isArray(result.knobs)) {
         setKnobs(result.knobs);
       }
       
       if (result.modMatrix && Array.isArray(result.modMatrix)) {
         setMods(result.modMatrix);
-      }
-      
-      if (result.pluginUI) {
-        setUI(result.pluginUI);
       }
     } catch (err) {
       console.error('Error generating patch guide:', err);
@@ -73,13 +81,20 @@ export const PatchGuide: React.FC = () => {
 
   const resetForm = () => {
     setDesc('');
-    setSynth('Generic');
+    setSynth('Serum');
     setGuide(null);
     setWave('saw');
-    setAdsr({ attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 });
-    setKnobs({ cutoff: 0.7, resonance: 0.2, drive: 0.1, mix: 0.5 });
+    setFilterEnv({ attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 });
+    setAmpEnv({ attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 });
+    setKnobs([
+      { name: "Cutoff", value: 0.7, section: "Filter" },
+      { name: "Resonance", value: 0.3, section: "Filter" },
+      { name: "Drive", value: 0.2, section: "Filter" },
+      { name: "Reverb Size", value: 0.6, section: "Effects" },
+      { name: "LFO Rate", value: 0.3, section: "Modulation" },
+      { name: "LFO Depth", value: 0.5, section: "Modulation" }
+    ]);
     setMods([]);
-    setUI(null);
     setError('');
   };
 
@@ -88,9 +103,9 @@ export const PatchGuide: React.FC = () => {
       <Card>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-2">🎛️ PatchGuide AI (Gemini)</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">🎛️ PatchGuide AI</h1>
             <p className="text-gray-400">
-              Describe your target sound and get detailed patch recipes with visual guides
+              Create professional synth patches with AI-powered sound design recipes
             </p>
           </div>
 
@@ -103,7 +118,7 @@ export const PatchGuide: React.FC = () => {
               <textarea
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
-                placeholder="e.g., warm analog bass with slight distortion, plucky lead synth with bright attack, atmospheric pad with slow filter sweep..."
+                placeholder="e.g., warm analog bass with slight distortion, plucky lead synth with bright attack, ethereal pad with slow filter sweep..."
                 className="w-full h-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
               />
             </div>
@@ -140,7 +155,7 @@ export const PatchGuide: React.FC = () => {
               >
                 {loading ? (
                   <>
-                    <Spinner size="sm" /> Generating PatchGuide...
+                    <Spinner size="sm" /> Generating Patch...
                   </>
                 ) : (
                   '🎛️ Generate Patch Guide'
@@ -160,8 +175,10 @@ export const PatchGuide: React.FC = () => {
           {/* Patch Guide Text */}
           <Card>
             <h2 className="text-xl font-bold text-white mb-4">Patch Recipe</h2>
-            <div className="bg-gray-800 text-gray-200 p-4 rounded-lg whitespace-pre-wrap">
-              {guide}
+            <div className="bg-gray-800 text-gray-200 p-4 rounded-lg prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {guide}
+              </ReactMarkdown>
             </div>
           </Card>
 
@@ -170,12 +187,28 @@ export const PatchGuide: React.FC = () => {
             {/* Waveform Preview */}
             <WaveformPreview waveform={wave} width={500} height={150} />
             
-            {/* Envelope Chart */}
+            {/* Filter Envelope Chart */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Filter Envelope</h3>
+              <EnvelopeChart
+                attack={filterEnv.attack}
+                decay={filterEnv.decay}
+                sustain={filterEnv.sustain}
+                release={filterEnv.release}
+                width={500}
+                height={200}
+              />
+            </div>
+          </div>
+
+          {/* Amp Envelope */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-2">Amplitude Envelope</h3>
             <EnvelopeChart
-              attack={adsr.attack}
-              decay={adsr.decay}
-              sustain={adsr.sustain}
-              release={adsr.release}
+              attack={ampEnv.attack}
+              decay={ampEnv.decay}
+              sustain={ampEnv.sustain}
+              release={ampEnv.release}
               width={500}
               height={200}
             />
@@ -183,11 +216,28 @@ export const PatchGuide: React.FC = () => {
 
           {/* Knobs */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Parameters</h3>
-            <div className="flex flex-wrap gap-6">
-              {Object.entries(knobs).map(([name, value]) => (
-                <Knob key={name} label={name} value={value} />
-              ))}
+            <h3 className="text-lg font-semibold text-white mb-4">Key Parameters</h3>
+            <div className="space-y-6">
+              {/* Group knobs by section */}
+              {['Filter', 'Effects', 'Modulation'].map(section => {
+                const sectionKnobs = knobs.filter(knob => knob.section === section);
+                if (sectionKnobs.length === 0) return null;
+                
+                return (
+                  <div key={section}>
+                    <h4 className="text-md font-medium text-gray-300 mb-3">{section}</h4>
+                    <div className="flex flex-wrap gap-6 justify-center">
+                      {sectionKnobs.map((knob) => (
+                        <Knob 
+                          key={knob.name} 
+                          label={knob.name} 
+                          value={knob.value} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
@@ -196,18 +246,6 @@ export const PatchGuide: React.FC = () => {
             <Card>
               <h3 className="text-lg font-semibold text-white mb-4">Modulation Matrix</h3>
               <ModulationMatrix routings={mods} />
-            </Card>
-          )}
-
-          {/* Plugin UI */}
-          {uiData && (
-            <Card>
-              <h3 className="text-lg font-semibold text-white mb-4">Plugin Interface</h3>
-              <PluginUI 
-                data={uiData} 
-                synthName={synth}
-                patchName={desc.substring(0, 30) + (desc.length > 30 ? '...' : '')}
-              />
             </Card>
           )}
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface WaveformPreviewProps {
   waveform?: string;
@@ -16,7 +16,6 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
   height = 100
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imageUrl, setImageUrl] = useState<string>('');
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,19 +33,7 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     
     // Add grid lines
     drawGridLines(ctx, width, height);
-    
-    // Convert to image URL for download
-    setImageUrl(canvas.toDataURL('image/png'));
   }, [waveform, width, height]);
-
-  const downloadWaveform = () => {
-    if (!imageUrl) return;
-    
-    const link = document.createElement('a');
-    link.download = `waveform_${waveform}.png`;
-    link.href = imageUrl;
-    link.click();
-  };
   
   const drawWaveform = (ctx: CanvasRenderingContext2D, w: number, h: number, type: string) => {
     ctx.strokeStyle = '#f97316'; // orange-500
@@ -54,40 +41,44 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     ctx.beginPath();
     
     const centerY = h / 2;
-    const samples = 300;
+    const samples = 600; // Higher resolution
+    const cycles = 4; // Show 4 cycles of the waveform
     
     for (let i = 0; i < samples; i++) {
       const x = (i / samples) * w;
       let amplitude = 0;
+      const t = (i / samples) * cycles * Math.PI * 2;
       
       // Generate different waveforms based on type
       switch (type.toLowerCase()) {
         case 'sine':
-          amplitude = Math.sin(i * 0.1) * 0.8;
+          amplitude = Math.sin(t) * 0.8;
           break;
         case 'square':
-          amplitude = (i % 50 < 25) ? 0.8 : -0.8;
+          amplitude = Math.sin(t) >= 0 ? 0.8 : -0.8;
           break;
         case 'saw':
         case 'sawtooth':
-          amplitude = ((i % 50) / 50 * 2 - 1) * 0.8;
+          amplitude = ((t % (Math.PI * 2)) / (Math.PI * 2) * 2 - 1) * 0.8;
           break;
         case 'triangle':
-          const phase = (i % 50) / 50;
+          const phase = (t % (Math.PI * 2)) / (Math.PI * 2);
           amplitude = (phase < 0.5 ? phase * 4 - 1 : 3 - phase * 4) * 0.8;
           break;
         case 'noise':
-          amplitude = (Math.random() * 2 - 1) * 0.7;
+          // For noise, we use a seeded random to make it consistent
+          amplitude = (Math.sin(i * 12345.6789) * 0.5 + Math.sin(i * 9876.54321) * 0.5) * 0.7;
           break;
         case 'pulse':
-          amplitude = (i % 50 < 10) ? 0.8 : -0.8;
+          amplitude = Math.sin(t) > 0.5 ? 0.8 : -0.8; // 25% duty cycle pulse
           break;
         default:
-          // Custom/complex waveform
-          const freq1 = Math.sin(i * 0.05) * 0.4;
-          const freq2 = Math.sin(i * 0.15) * 0.2;
-          const freq3 = Math.sin(i * 0.3) * 0.1;
-          amplitude = freq1 + freq2 + freq3;
+          // Custom/complex waveform - a mix of harmonics
+          const fundamental = Math.sin(t) * 0.5;
+          const harmonic2 = Math.sin(t * 2) * 0.25;
+          const harmonic3 = Math.sin(t * 3) * 0.125;
+          const harmonic5 = Math.sin(t * 5) * 0.0625;
+          amplitude = fundamental + harmonic2 + harmonic3 + harmonic5;
       }
       
       const y = centerY + amplitude * centerY * 0.8;
@@ -100,6 +91,14 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     }
     
     ctx.stroke();
+    
+    // Add a subtle glow effect
+    ctx.save();
+    ctx.filter = 'blur(2px)';
+    ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)'; // orange-500 with transparency
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.restore();
   };
   
   const drawGridLines = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -115,9 +114,17 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     ctx.lineTo(w, centerY);
     ctx.stroke();
     
+    // Horizontal grid lines (25% and 75%)
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.25);
+    ctx.lineTo(w, h * 0.25);
+    ctx.moveTo(0, h * 0.75);
+    ctx.lineTo(w, h * 0.75);
+    ctx.stroke();
+    
     // Vertical grid lines
-    for (let i = 1; i < 4; i++) {
-      const x = (i / 4) * w;
+    for (let i = 1; i < 8; i++) {
+      const x = (i / 8) * w;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, h);
@@ -127,16 +134,17 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     ctx.setLineDash([]);
   };
   
+  // Format the waveform name for display
+  const formatWaveformName = (name: string): string => {
+    if (!name) return 'Custom';
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
+  
   return (
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium text-gray-300">Waveform: {waveform}</h3>
-        <button
-          onClick={downloadWaveform}
-          className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
-        >
-          Download
-        </button>
+        <h3 className="text-sm font-medium text-gray-300">Oscillator Waveform</h3>
+        <span className="text-sm font-medium text-orange-500">{formatWaveformName(waveform)}</span>
       </div>
       <canvas
         ref={canvasRef}
