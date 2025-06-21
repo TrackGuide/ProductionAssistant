@@ -29,132 +29,142 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
   
   // Calculate time segments (proportional to parameter values)
   const totalTime = normalizedAttack + normalizedDecay + 0.3 + normalizedRelease; // 0.3 for sustain hold
-  const attackTime = (normalizedAttack / totalTime) * width * 0.8;
-  const decayTime = (normalizedDecay / totalTime) * width * 0.8;
-  const sustainTime = (0.3 / totalTime) * width * 0.8;
-  const releaseTime = (normalizedRelease / totalTime) * width * 0.8;
+  const attackWidth = (normalizedAttack / totalTime) * width * 0.8;
+  const decayWidth = (normalizedDecay / totalTime) * width * 0.8;
+  const sustainWidth = (0.3 / totalTime) * width * 0.8;
+  const releaseWidth = (normalizedRelease / totalTime) * width * 0.8;
   
   // Calculate Y positions (inverted for SVG coordinate system)
   const maxY = height * 0.9;
   const minY = height * 0.1;
   const sustainY = minY + (1 - normalizedSustain) * (maxY - minY);
   
-  // Build the path
+  // Build the path with exponential curves for more realistic ADSR
   const padding = width * 0.1;
   let currentX = padding;
   
   // Start point
   const pathData = [`M ${currentX} ${maxY}`];
   
-  // Attack phase - exponential curve
-  const attackPoints = 20;
-  for (let i = 1; i <= attackPoints; i++) {
-    const t = i / attackPoints;
-    const x = currentX + t * attackTime;
-    // Exponential curve for attack (1 - e^(-5t))
-    const y = maxY - (1 - Math.exp(-5 * t)) * (maxY - minY);
-    pathData.push(`L ${x} ${y}`);
-  }
-  currentX += attackTime;
+  // Attack phase (exponential curve)
+  const attackControlX = currentX + attackWidth * 0.5;
+  const attackControlY = maxY - (maxY - minY) * 0.1; // Slight curve
+  pathData.push(`C ${attackControlX} ${attackControlY}, ${currentX + attackWidth * 0.8} ${minY + 10}, ${currentX + attackWidth} ${minY}`);
+  currentX += attackWidth;
   
-  // Decay phase - exponential curve
-  const decayPoints = 20;
-  for (let i = 1; i <= decayPoints; i++) {
-    const t = i / decayPoints;
-    const x = currentX + t * decayTime;
-    // Exponential curve for decay
-    const y = minY + (1 - Math.exp(-3 * t)) * (sustainY - minY);
-    pathData.push(`L ${x} ${y}`);
-  }
-  currentX += decayTime;
+  // Decay phase (exponential curve)
+  const decayControlX = currentX + decayWidth * 0.3;
+  const decayControlY = minY + (sustainY - minY) * 0.2;
+  pathData.push(`C ${decayControlX} ${decayControlY}, ${currentX + decayWidth * 0.7} ${sustainY - 5}, ${currentX + decayWidth} ${sustainY}`);
+  currentX += decayWidth;
   
-  // Sustain phase
-  pathData.push(`L ${currentX + sustainTime} ${sustainY}`);
-  currentX += sustainTime;
+  // Sustain phase (straight line)
+  pathData.push(`L ${currentX + sustainWidth} ${sustainY}`);
+  currentX += sustainWidth;
   
-  // Release phase - exponential curve
-  const releasePoints = 20;
-  for (let i = 1; i <= releasePoints; i++) {
-    const t = i / releasePoints;
-    const x = currentX + t * releaseTime;
-    // Exponential curve for release
-    const y = sustainY + (1 - Math.exp(-3 * t)) * (maxY - sustainY);
-    pathData.push(`L ${x} ${y}`);
-  }
+  // Release phase (exponential curve)
+  const releaseControlX = currentX + releaseWidth * 0.7;
+  const releaseControlY = sustainY + (maxY - sustainY) * 0.8;
+  pathData.push(`C ${currentX + releaseWidth * 0.3} ${sustainY + 5}, ${releaseControlX} ${releaseControlY}, ${currentX + releaseWidth} ${maxY}`);
   
   const path = pathData.join(' ');
   
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium text-gray-300">ADSR Envelope</h3>
-        <div className="flex space-x-2">
-          <span className="text-xs text-orange-500">A: {normalizedAttack.toFixed(2)}</span>
-          <span className="text-xs text-orange-500">D: {normalizedDecay.toFixed(2)}</span>
-          <span className="text-xs text-orange-500">S: {normalizedSustain.toFixed(2)}</span>
-          <span className="text-xs text-orange-500">R: {normalizedRelease.toFixed(2)}</span>
-        </div>
-      </div>
-      <svg width={width} height={height} className="w-full h-auto">
-        {/* Background grid */}
-        <defs>
-          <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 30" fill="none" stroke="#374151" strokeWidth="1" opacity="0.3"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-        
-        {/* Envelope curve */}
-        <path
-          d={path}
-          fill="none"
-          stroke="#f97316"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        {/* Add a subtle glow effect */}
-        <path
-          d={path}
-          fill="none"
-          stroke="rgba(249, 115, 22, 0.3)"
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          filter="blur(3px)"
-        />
-        
-        {/* Phase labels */}
-        <text x={padding + attackTime / 2} y={height - 5} 
-              textAnchor="middle" className="fill-gray-400 text-xs">
-          A
-        </text>
-        <text x={padding + attackTime + decayTime / 2} y={height - 5} 
-              textAnchor="middle" className="fill-gray-400 text-xs">
-          D
-        </text>
-        <text x={padding + attackTime + decayTime + sustainTime / 2} y={height - 5} 
-              textAnchor="middle" className="fill-gray-400 text-xs">
-          S
-        </text>
-        <text x={padding + attackTime + decayTime + sustainTime + releaseTime / 2} y={height - 5} 
-              textAnchor="middle" className="fill-gray-400 text-xs">
-          R
-        </text>
-        
-        {/* Value indicators */}
-        <circle cx={padding + attackTime} cy={minY} r="3" fill="#f97316" />
-        <circle cx={padding + attackTime + decayTime} cy={sustainY} r="3" fill="#f97316" />
-        <circle cx={padding + attackTime + decayTime + sustainTime} cy={sustainY} r="3" fill="#f97316" />
-        
-        {/* Y-axis labels */}
-        <text x="5" y={minY + 5} className="fill-gray-400 text-xs">1.0</text>
-        <text x="5" y={sustainY + 5} className="fill-gray-400 text-xs">
-          {normalizedSustain.toFixed(1)}
-        </text>
-        <text x="5" y={maxY + 5} className="fill-gray-400 text-xs">0.0</text>
-      </svg>
-    </div>
+    <svg width={width} height={height} className="w-full h-auto">
+      {/* Background */}
+      <rect width="100%" height="100%" fill="#1f2937" rx="4" ry="4" />
+      
+      {/* Grid lines */}
+      <line x1="0" y1={maxY} x2={width} y2={maxY} stroke="#4b5563" strokeWidth="1" strokeDasharray="4,4" />
+      <line x1="0" y1={minY} x2={width} y2={minY} stroke="#4b5563" strokeWidth="1" strokeDasharray="4,4" />
+      <line x1="0" y1={sustainY} x2={width} y2={sustainY} stroke="#4b5563" strokeWidth="1" strokeDasharray="4,4" />
+      
+      {/* Envelope curve */}
+      <path
+        d={path}
+        fill="none"
+        stroke="#f97316"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      
+      {/* Phase markers */}
+      <line 
+        x1={padding + attackWidth} 
+        y1={minY - 5} 
+        x2={padding + attackWidth} 
+        y2={maxY + 5} 
+        stroke="#6b7280" 
+        strokeWidth="1" 
+        strokeDasharray="4,4" 
+      />
+      <line 
+        x1={padding + attackWidth + decayWidth} 
+        y1={minY - 5} 
+        x2={padding + attackWidth + decayWidth} 
+        y2={maxY + 5} 
+        stroke="#6b7280" 
+        strokeWidth="1" 
+        strokeDasharray="4,4" 
+      />
+      <line 
+        x1={padding + attackWidth + decayWidth + sustainWidth} 
+        y1={minY - 5} 
+        x2={padding + attackWidth + decayWidth + sustainWidth} 
+        y2={maxY + 5} 
+        stroke="#6b7280" 
+        strokeWidth="1" 
+        strokeDasharray="4,4" 
+      />
+      
+      {/* Phase labels */}
+      <text 
+        x={padding + attackWidth / 2} 
+        y={height - 5} 
+        textAnchor="middle" 
+        fill="#d1d5db" 
+        fontSize="10"
+      >
+        A
+      </text>
+      <text 
+        x={padding + attackWidth + decayWidth / 2} 
+        y={height - 5} 
+        textAnchor="middle" 
+        fill="#d1d5db" 
+        fontSize="10"
+      >
+        D
+      </text>
+      <text 
+        x={padding + attackWidth + decayWidth + sustainWidth / 2} 
+        y={height - 5} 
+        textAnchor="middle" 
+        fill="#d1d5db" 
+        fontSize="10"
+      >
+        S
+      </text>
+      <text 
+        x={padding + attackWidth + decayWidth + sustainWidth + releaseWidth / 2} 
+        y={height - 5} 
+        textAnchor="middle" 
+        fill="#d1d5db" 
+        fontSize="10"
+      >
+        R
+      </text>
+      
+      {/* Value indicators */}
+      <text x="5" y={minY + 15} fill="#d1d5db" fontSize="10">1.0</text>
+      <text x="5" y={sustainY + 15} fill="#d1d5db" fontSize="10">{normalizedSustain.toFixed(1)}</text>
+      <text x="5" y={maxY - 5} fill="#d1d5db" fontSize="10">0.0</text>
+      
+      {/* Parameter values */}
+      <text x={width - 5} y={15} textAnchor="end" fill="#d1d5db" fontSize="10">
+        A: {normalizedAttack.toFixed(2)} D: {normalizedDecay.toFixed(2)} S: {normalizedSustain.toFixed(2)} R: {normalizedRelease.toFixed(2)}
+      </text>
+    </svg>
   );
 };

@@ -9,7 +9,7 @@ import { WaveformPreview } from './WaveformPreview';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
 import { ModulationMatrix } from './ModulationMatrix';
-import { generateSynthPatchGuide, PatchGuideResult } from '../services/patchGuideService';
+import { generateSynthPatchGuide } from '../services/patchGuideService';
 
 // Common synth list for electronic music production
 const SYNTH_OPTIONS = [
@@ -27,16 +27,13 @@ export const PatchGuide: React.FC = () => {
   const [synth, setSynth] = useState<string>('Serum');
   const [guide, setGuide] = useState<string | null>(null);
   const [wave, setWave] = useState<string>('saw');
-  const [filterEnv, setFilterEnv] = useState({ attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 });
-  const [ampEnv, setAmpEnv] = useState({ attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 });
-  const [knobs, setKnobs] = useState<Array<{ name: string; value: number; section: string }>>([
-    { name: "Cutoff", value: 0.7, section: "Filter" },
-    { name: "Resonance", value: 0.3, section: "Filter" },
-    { name: "Drive", value: 0.2, section: "Filter" },
-    { name: "Reverb Size", value: 0.6, section: "Effects" },
-    { name: "LFO Rate", value: 0.3, section: "Modulation" },
-    { name: "LFO Depth", value: 0.5, section: "Modulation" }
-  ]);
+  const [adsr, setAdsr] = useState({ attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 });
+  const [knobs, setKnobs] = useState<Record<string, number>>({
+    "Cutoff": 0.7,
+    "Resonance": 0.3,
+    "Drive": 0.2,
+    "Mix": 0.5
+  });
   const [mods, setMods] = useState<Array<{ source: string; target: string; amount: number }>>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -56,15 +53,10 @@ export const PatchGuide: React.FC = () => {
       }
       
       if (result.adsr) {
-        if (result.adsr.filterEnv) {
-          setFilterEnv(result.adsr.filterEnv);
-        }
-        if (result.adsr.ampEnv) {
-          setAmpEnv(result.adsr.ampEnv);
-        }
+        setAdsr(result.adsr);
       }
       
-      if (result.knobs && Array.isArray(result.knobs)) {
+      if (result.knobs) {
         setKnobs(result.knobs);
       }
       
@@ -84,16 +76,13 @@ export const PatchGuide: React.FC = () => {
     setSynth('Serum');
     setGuide(null);
     setWave('saw');
-    setFilterEnv({ attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.0 });
-    setAmpEnv({ attack: 0.05, decay: 0.3, sustain: 0.8, release: 1.2 });
-    setKnobs([
-      { name: "Cutoff", value: 0.7, section: "Filter" },
-      { name: "Resonance", value: 0.3, section: "Filter" },
-      { name: "Drive", value: 0.2, section: "Filter" },
-      { name: "Reverb Size", value: 0.6, section: "Effects" },
-      { name: "LFO Rate", value: 0.3, section: "Modulation" },
-      { name: "LFO Depth", value: 0.5, section: "Modulation" }
-    ]);
+    setAdsr({ attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 });
+    setKnobs({
+      "Cutoff": 0.7,
+      "Resonance": 0.3,
+      "Drive": 0.2,
+      "Mix": 0.5
+    });
     setMods([]);
     setError('');
   };
@@ -103,7 +92,7 @@ export const PatchGuide: React.FC = () => {
       <Card>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-2">🎛️ PatchGuide AI</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">🎹 PatchGuide AI</h1>
             <p className="text-gray-400">
               Create professional synth patches with AI-powered sound design recipes
             </p>
@@ -158,7 +147,7 @@ export const PatchGuide: React.FC = () => {
                     <Spinner size="sm" /> Generating Patch...
                   </>
                 ) : (
-                  '🎛️ Generate Patch Guide'
+                  '🎹 Generate Patch Guide'
                 )}
               </Button>
               <Button onClick={resetForm} variant="outline" type="button">
@@ -185,61 +174,40 @@ export const PatchGuide: React.FC = () => {
           {/* Visual Aids */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Waveform Preview */}
-            <WaveformPreview waveform={wave} width={500} height={150} />
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-2">Waveform</h3>
+              <WaveformPreview waveform={wave} width={500} height={150} />
+            </Card>
             
-            {/* Filter Envelope Chart */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Filter Envelope</h3>
+            {/* Envelope Chart */}
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-2">ADSR Envelope</h3>
               <EnvelopeChart
-                attack={filterEnv.attack}
-                decay={filterEnv.decay}
-                sustain={filterEnv.sustain}
-                release={filterEnv.release}
+                attack={adsr.attack}
+                decay={adsr.decay}
+                sustain={adsr.sustain}
+                release={adsr.release}
                 width={500}
                 height={200}
               />
-            </div>
-          </div>
-
-          {/* Amp Envelope */}
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-2">Amplitude Envelope</h3>
-            <EnvelopeChart
-              attack={ampEnv.attack}
-              decay={ampEnv.decay}
-              sustain={ampEnv.sustain}
-              release={ampEnv.release}
-              width={500}
-              height={200}
-            />
+            </Card>
           </div>
 
           {/* Knobs */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Key Parameters</h3>
-            <div className="space-y-6">
-              {/* Group knobs by section */}
-              {['Filter', 'Effects', 'Modulation'].map(section => {
-                const sectionKnobs = knobs.filter(knob => knob.section === section);
-                if (sectionKnobs.length === 0) return null;
-                
-                return (
-                  <div key={section}>
-                    <h4 className="text-md font-medium text-gray-300 mb-3">{section}</h4>
-                    <div className="flex flex-wrap gap-6 justify-center">
-                      {sectionKnobs.map((knob) => (
-                        <Knob 
-                          key={knob.name} 
-                          label={knob.name} 
-                          value={knob.value} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          {Object.keys(knobs).length > 0 && (
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-4">Key Parameters</h3>
+              <div className="flex flex-wrap gap-6 justify-center">
+                {Object.entries(knobs).map(([name, value]) => (
+                  <Knob 
+                    key={name} 
+                    label={name} 
+                    value={value} 
+                  />
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Modulation Matrix */}
           {mods.length > 0 && (
