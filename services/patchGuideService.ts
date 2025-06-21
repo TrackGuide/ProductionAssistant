@@ -95,8 +95,11 @@ Return JSON only.
   try {
     parsed = JSON.parse(jsonText);
   } catch (err) {
-    throw new Error('Invalid JSON response from AI: ' + err);
+    throw new Error('Invalid JSON response from AI: ' + (err as Error).message);
   }
+
+  // Ensure modMatrix is always an array
+  const matrix: ModRouting[] = Array.isArray(parsed.modMatrix) ? parsed.modMatrix : [];
 
   return {
     text: parsed.text,
@@ -105,6 +108,6 @@ Return JSON only.
     adsrVCF: parsed.adsrVCF,
     adsrVCA: parsed.adsrVCA,
     knobs: parsed.knobs,
-    modMatrix: parsed.modMatrix,
+    modMatrix: matrix,
   };
 }
