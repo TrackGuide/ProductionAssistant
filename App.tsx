@@ -4,8 +4,9 @@ import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfG
 import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
-  generateMixFeedbackWithAudio as generateMixFeedback 
-} from './services/geminiService.ts';
+  generateMixFeedbackWithAudio as generateMixFeedback,
+  generateMixComparison
+} from './services/geminiService';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
@@ -13,6 +14,7 @@ import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
+import { EQGuide } from './components/EQGuide';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -28,7 +30,8 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+import { EQGuide } from './components/EQGuide';
+import { PatchGuide } from './components/PatchGuide.tsx';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
@@ -1112,6 +1115,20 @@ const closeAIAssistant = () => {
   <Button
     size="sm"
     className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'mixFeedback'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('mixFeedback')}
+    variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
+  >
+    Mix Feedback AI
+  </Button>
+
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
       activeView === 'remixGuide'
         ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
         : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
@@ -1126,18 +1143,16 @@ const closeAIAssistant = () => {
   <Button
     size="sm"
     className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
-      activeView === 'mixFeedback'
+      activeView === 'patchGuide'
         ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
         : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
     }`}
-    onClick={() => setActiveView('mixFeedback')}
-    variant={activeView === 'mixFeedback' ? 'primary' : 'secondary'}
-    leftIcon={<span className="w-4 h-4 text-center">🎚️</span>}
+    onClick={() => setActiveView('patchGuide')}
+    variant={activeView === 'patchGuide' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎹</span>}
   >
-    Mix Feedback AI
+    PatchGuide AI
   </Button>
-
-
 
   <Button
     size="sm"
@@ -1152,7 +1167,6 @@ const closeAIAssistant = () => {
   >
     EQ Guide
   </Button>
-
 
 </nav>
 
@@ -1359,13 +1373,7 @@ const closeAIAssistant = () => {
                   )}
 
                   <MarkdownRenderer content={generatedGuidebook} />
-                  <Button
-  onClick={() => openAIAssistant('TrackGuide for this project')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+                
 
                   {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
                 </div>
@@ -1654,13 +1662,7 @@ const closeAIAssistant = () => {
 
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixFeedbackResult} />
-                  <Button
-  onClick={() => openAIAssistant('Mix Feedback')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+            
 
                 </div>
               </Card>
@@ -1674,13 +1676,7 @@ const closeAIAssistant = () => {
 
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixCompareResult} />
-                  <Button
-  onClick={() => openAIAssistant('Mix Comparison')}
-  className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <img src="/production-coach-icon.svg" alt="AI" className="w-5 h-5" />
-  Ask follow-up questions
-</Button>
+                  
 
                 </div>
  <div className="p-4 border-t border-gray-700 flex justify-center">
@@ -1746,7 +1742,13 @@ const closeAIAssistant = () => {
 
       {activeView === 'eqGuide' && (
         <div className="max-w-7xl mx-auto">
-          <EQCheatSheet isOpen={true} onClose={() => setActiveView('trackGuide')} />
+          <EQGuide />
+        </div>
+      )}
+
+      {activeView === 'patchGuide' && (
+        <div className="max-w-7xl mx-auto">
+          <PatchGuide />
         </div>
       )}
 
@@ -1760,22 +1762,6 @@ const closeAIAssistant = () => {
         />
       )}
 
-     {/* Production Coach - Always Available */}
-<AIAssistant
-  isOpen={!isAIAssistantOpen} // Only open when the contextual assistant is closed
-  onClose={() => setIsProductionCoachCollapsed(true)} // Set to collapsed when closed
-  currentGuidebook={activeGuidebookDetails || undefined}
-  userInputs={inputs}
-  isCollapsed={isProductionCoachCollapsed}
-  onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
-/>
-
-{/* Contextual AI Assistant */}
-<AIAssistant
-  isOpen={isAIAssistantOpen}
-  onClose={closeAIAssistant}
-  contextLabel={aiContextLabel}
-/>
 
 
 

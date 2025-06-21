@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon, CopyIcon } from './icons.tsx';
-import { generateMixComparison } from '../services/geminiService.ts';
+import { generateMixComparison } from '../services/geminiService';
 
 interface MixComparatorProps {
   isOpen: boolean;

@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 
 interface WaveformPreviewProps {
-  audioData?: string;
+  waveform?: string;
   width?: number;
   height?: number;
 }
 
 /**
  * Waveform visualization component using Canvas API
- * Displays a static waveform representation
+ * Displays a visual representation of common synthesizer waveforms
  */
 export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
-  audioData,
+  waveform = 'sine',
   width = 400,
   height = 100
 }) => {
@@ -28,56 +28,57 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     ctx.fillStyle = '#1f2937'; // gray-800
     ctx.fillRect(0, 0, width, height);
     
-    if (!audioData) {
-      // Draw placeholder waveform
-      drawPlaceholderWaveform(ctx, width, height);
-      return;
-    }
-    
-    // If audioData is provided, try to decode and draw
-    // For now, we'll draw a sample waveform
-    drawSampleWaveform(ctx, width, height);
-  }, [audioData, width, height]);
-  
-  const drawPlaceholderWaveform = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    ctx.strokeStyle = '#6b7280'; // gray-500
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    
-    const centerY = h / 2;
-    const samples = 200;
-    
-    for (let i = 0; i < samples; i++) {
-      const x = (i / samples) * w;
-      const amplitude = Math.sin(i * 0.1) * Math.sin(i * 0.02) * 0.3;
-      const y = centerY + amplitude * centerY;
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    
-    ctx.stroke();
-  };
-  
-  const drawSampleWaveform = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    // Draw waveform
     ctx.strokeStyle = '#f97316'; // orange-500
     ctx.lineWidth = 2;
     ctx.beginPath();
     
-    const centerY = h / 2;
-    const samples = 300;
+    const centerY = height / 2;
+    const amplitude = height * 0.4; // 40% of height
+    const samples = width;
     
     for (let i = 0; i < samples; i++) {
-      const x = (i / samples) * w;
-      // Generate a more complex waveform
-      const freq1 = Math.sin(i * 0.05) * 0.4;
-      const freq2 = Math.sin(i * 0.15) * 0.2;
-      const freq3 = Math.sin(i * 0.3) * 0.1;
-      const amplitude = freq1 + freq2 + freq3;
-      const y = centerY + amplitude * centerY;
+      const x = i;
+      let y = centerY;
+      
+      // Calculate y position based on waveform type
+      const normalizedX = (i / samples) * 16; // 16 cycles across the width
+      
+      switch (waveform.toLowerCase()) {
+        case 'sine':
+          y = centerY + Math.sin(normalizedX * Math.PI) * amplitude;
+          break;
+          
+        case 'square':
+          y = centerY + (Math.sin(normalizedX * Math.PI) >= 0 ? amplitude : -amplitude);
+          break;
+          
+        case 'saw':
+        case 'sawtooth':
+          y = centerY + ((normalizedX % 1) * 2 - 1) * amplitude;
+          break;
+          
+        case 'triangle':
+          const tri = normalizedX % 1;
+          y = centerY + (tri < 0.5 ? tri * 4 - 1 : 3 - tri * 4) * amplitude;
+          break;
+          
+        case 'noise':
+          y = centerY + (Math.random() * 2 - 1) * amplitude;
+          break;
+          
+        case 'pulse':
+          y = centerY + (Math.sin(normalizedX * Math.PI) > 0.5 ? amplitude : -amplitude);
+          break;
+          
+        default:
+          // Default to sine with some harmonics for custom/complex waveforms
+          y = centerY + (
+            Math.sin(normalizedX * Math.PI) * 0.6 + 
+            Math.sin(normalizedX * Math.PI * 2) * 0.3 + 
+            Math.sin(normalizedX * Math.PI * 3) * 0.1
+          ) * amplitude;
+      }
       
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -88,38 +89,28 @@ export const WaveformPreview: React.FC<WaveformPreviewProps> = ({
     
     ctx.stroke();
     
-    // Add grid lines
-    ctx.strokeStyle = '#374151'; // gray-700
+    // Draw center line
+    ctx.strokeStyle = '#4b5563'; // gray-600
     ctx.lineWidth = 1;
-    ctx.setLineDash([2, 2]);
-    
-    // Horizontal center line
     ctx.beginPath();
     ctx.moveTo(0, centerY);
-    ctx.lineTo(w, centerY);
+    ctx.lineTo(width, centerY);
     ctx.stroke();
     
-    // Vertical grid lines
-    for (let i = 1; i < 4; i++) {
-      const x = (i / 4) * w;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-    }
+    // Draw waveform label
+    ctx.fillStyle = '#d1d5db'; // gray-300
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(waveform.toUpperCase(), width - 10, height - 10);
     
-    ctx.setLineDash([]);
-  };
+  }, [waveform, width, height]);
   
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-2">Waveform Preview</h3>
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="w-full h-auto rounded border border-gray-600"
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      className="w-full h-auto rounded border border-gray-700"
+    />
   );
 };

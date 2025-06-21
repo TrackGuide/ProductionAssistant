@@ -1,10 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
 import { Spinner } from './Spinner.tsx';
 import { SparklesIcon, CloseIcon } from './icons.tsx';
-import { generateAIAssistantResponseSimple } from '../services/geminiService.ts';
+import { generateAIAssistantResponse } from '../services/geminiService.ts';
 import { UserInputs, GuidebookEntry } from '../types.ts';
 
 interface Message {
@@ -23,7 +24,6 @@ interface AIAssistantProps {
   onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
   isCollapsed?: boolean;
   onToggle?: () => void;
-  contextLabel?: string;
 }
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
@@ -31,11 +31,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   onClose,
   currentGuidebook,
   userInputs,
-  onUpdateGuidebook,
-  onUpdateInputs,
   isCollapsed = false,
-  onToggle,
-  contextLabel
+  onToggle
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -43,21 +40,26 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  
-
-  // Reset messages when context changes
-  useEffect(() => {
-    if (contextLabel) {
-      clearConversation();
-    }
-  }, [contextLabel]);
 
   // Initialize with welcome message when first opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      clearConversation();
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: `Hi! I'm your AI music production assistant. I can help you:
+
+• Refine your TrackGuide with specific questions
+• Suggest improvements to your current project
+• Answer production techniques questions
+• Help adjust your genre, vibe, or arrangement ideas
+• Provide detailed explanations about any aspect of your track
+
+What would you like to work on today?`,
+        timestamp: new Date()
+      }]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -70,88 +72,67 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && !isCollapsed && inputRef.current) {
+    if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [isOpen, isCollapsed]);
+  }, [isOpen]);
 
   const clearConversation = () => {
-    const defaultWelcome = contextLabel
-      ? `Hi! You're chatting about: "${contextLabel}". You can ask to revise, clarify, or expand.`
-      : `Hi! I'm your AI music production assistant. I can help you:
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: `Hi! I'm your AI music production assistant. I can help you:
+
 • Refine your TrackGuide with specific questions
 • Suggest improvements to your current project
 • Answer production techniques questions
 • Help adjust your genre, vibe, or arrangement ideas
 • Provide detailed explanations about any aspect of your track
 
-What would you like to work on today?`;
-    
-    setMessages([{
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: defaultWelcome,
-      timestamp: new Date(),
+What would you like to work on today?`,
+      timestamp: new Date()
     }]);
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
-    
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: inputMessage.trim(),
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
-    
+
     try {
-      // Create context object for the AI service
       const context = {
-        currentGuidebook: currentGuidebook,
-        userInputs: userInputs,
+        currentGuidebook: currentGuidebook?.content || '',
+        userInputs: userInputs || {},
         conversationHistory: messages.slice(-6) // Last 6 messages for context
       };
-      
-      console.log('Sending request with context:', {
-        message: userMessage.content,
-        guidebookTitle: currentGuidebook?.title || 'None',
-        contextLabel: contextLabel || 'None'
-      });
-      
-      // Use the simple non-streaming version for easier implementation
-      const assistantContent = await generateAIAssistantResponseSimple(
-        userMessage.content,
-        context
-      );
-      
-      // Check if response is valid
-      if (!assistantContent || typeof assistantContent !== 'string') {
-        throw new Error('Invalid response from AI service');
-      }
-      
+
+      const assistantContent = await generateAIAssistantResponse(userMessage.content, context);
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: assistantContent,
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('AI Assistant Error:', error);
-      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. This might be due to the AI service being unavailable or the request format. Please try again in a moment.',
+        content: 'Sorry, I encountered an error. Please try again or rephrase your question.',
         timestamp: new Date()
       };
-      
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -165,24 +146,22 @@ What would you like to work on today?`;
     }
   };
 
-  // If not open, don't render anything
-  if (!isOpen) return null;
+
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
       {isCollapsed ? (
         // Collapsed state - floating button
-        <button 
+        <div 
           onClick={onToggle}
           className="w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-white/20"
-          aria-label="Open Production Coach"
         >
           <img 
             src="/production-coach-icon.svg" 
             alt="Production Coach" 
-            className="w-8 h-8" 
+            className="w-8 h-8"
           />
-        </button>
+        </div>
       ) : (
         // Expanded state - full chat window
         <div className="w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
@@ -191,9 +170,7 @@ What would you like to work on today?`;
             <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 flex-shrink-0">
               <div className="flex items-center min-w-0 flex-1">
                 <SparklesIcon className="w-5 h-5 text-white mr-2 flex-shrink-0" />
-                <h2 className="text-lg font-bold text-white truncate">
-                  {contextLabel ? `Chat: ${contextLabel}` : 'Production Coach'}
-                </h2>
+                <h2 className="text-lg font-bold text-white truncate">Production Coach</h2>
               </div>
               <div className="flex gap-1 flex-shrink-0 ml-2">
                 <Button 
@@ -201,22 +178,20 @@ What would you like to work on today?`;
                   variant="outline" 
                   size="sm" 
                   className="text-white border-white/30 hover:bg-white/10 hidden sm:inline-flex"
-                  aria-label="Clear conversation"
                 >
                   Clear
                 </Button>
                 <Button 
-                  onClick={onToggle || onClose} 
+                  onClick={onToggle} 
                   variant="outline" 
                   size="sm" 
                   className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
-                  aria-label={contextLabel ? "Close assistant" : "Minimize assistant"}
                 >
-                  <span className="text-sm">{contextLabel ? "✕" : "−"}</span>
+                  <span className="text-sm">−</span>
                 </Button>
               </div>
             </div>
-            
+
             {/* Messages Container */}
             <div 
               ref={chatContainerRef}
@@ -256,17 +231,14 @@ What would you like to work on today?`;
               
               <div ref={messagesEndRef} />
             </div>
-            
+
             {/* Input Area */}
             <div className="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">
               <div className="flex gap-2 mb-2">
                 <Input
                   ref={inputRef}
                   type="text"
-                  placeholder={contextLabel 
-                    ? `Ask about ${contextLabel}...` 
-                    : "Ask about production techniques..."
-                  }
+                  placeholder="Ask about production techniques..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
