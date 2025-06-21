@@ -29,7 +29,7 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { EQCheatSheet } from './components/EQCheatSheet.tsx';
+import { EQGuide } from './components/EQGuide.tsx';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
@@ -1729,7 +1729,7 @@ const closeAIAssistant = () => {
 
       {activeView === 'eqGuide' && (
         <div className="max-w-7xl mx-auto">
-          <EQCheatSheet isOpen={true} onClose={() => setActiveView('trackGuide')} />
+          <EQGuide />
         </div>
       )}
 
