@@ -1,6 +1,6 @@
 // services/geminiService.ts
 
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GEMINI_MODEL_NAME } from "../constants";
 import {
   UserInputs,
@@ -14,7 +14,7 @@ import {
 
 const apiKey = process.env.API_KEY!;
 if (!apiKey) throw new Error("API_KEY is not set. Cannot connect to Gemini API.");
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenerativeAI({ apiKey });
 
 /**
  * Helper function to build plugin-specific parameter suggestions
