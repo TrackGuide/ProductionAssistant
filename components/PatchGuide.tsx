@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, FormEvent } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -5,35 +6,42 @@ import { Spinner } from './Spinner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
-import { Knob } from './Knob';
 import { ModulationMatrix } from './ModulationMatrix';
 import synthConfigs, { SynthConfig } from '../config/synthConfigs';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
+
+const VOICE_TYPES = [
+  'Soft Lead','Hard Lead','Evolving Pad','Bass','Pluck',
+  'Ambient Texture','Arpeggio','Drone','FX','Keys'
+];
+
+const DESCRIPTORS = [
+  'Warm','Bright','Gritty','Smooth','Distorted',
+  'Clean','Vintage','Modern','Aggressive','Subtle'
+];
+
+const GENRES = [
+  'Ambient','EDM','Rock','Pop','Hip-Hop',
+  'Jazz','Classical','Experimental','Techno','House'
+];
 
 export const PatchGuide: React.FC = () => {
   const [synth, setSynth] = useState<string>('Generic');
   const config: SynthConfig = synthConfigs[synth] || synthConfigs['Generic'];
 
+  const [voiceType, setVoiceType] = useState('Soft Lead');
+  const [descriptor, setDescriptor] = useState('Warm');
+  const [genre, setGenre] = useState('Ambient');
+  const [notes, setNotes] = useState('');
+
   const [guide, setGuide] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [oscParams, setOscParams] = useState<Record<string, number>>({});
-  const [filterParams, setFilterParams] = useState<Record<string, number>>({});
   const [envParams, setEnvParams] = useState<Record<string, number>>({});
   const [mods, setMods] = useState<any[]>([]);
 
   useEffect(() => {
-    const oParams: Record<string, number> = {};
-    config.oscillators.forEach((osc, i) => {
-      osc.params.forEach(p => { oParams[`osc${i}_${p}`] = 0; });
-    });
-    setOscParams(oParams);
-
-    const fParams: Record<string, number> = {};
-    config.filters[0].params.forEach(p => { fParams[p] = 0.5; });
-    setFilterParams(fParams);
-
     const eParams: Record<string, number> = {};
     for (let i = 0; i < (config.envelopes.count || 0); i++) {
       ['A','D','S','R'].forEach(stage => {
@@ -41,7 +49,6 @@ export const PatchGuide: React.FC = () => {
       });
     }
     setEnvParams(eParams);
-
     setMods([]);
     setGuide(null);
     setError('');
@@ -55,15 +62,13 @@ export const PatchGuide: React.FC = () => {
     try {
       const res = await generateSynthPatchGuide({ synth });
       setGuide(res.text || '');
-      if (res.oscSettings) setOscParams(prev => ({ ...prev, ...res.oscSettings }));
-      if (res.knobs) setFilterParams(prev => ({ ...prev, ...res.knobs }));
       if (res.adsrVCF && res.adsrVCA) {
         setEnvParams(prev => ({
           ...prev,
-          'env1_A': res.adsrVCF.attack,
-          'env1_D': res.adsrVCF.decay,
-          'env1_S': res.adsrVCF.sustain,
-          'env1_R': res.adsrVCF.release
+          'env1_A': res.adsrVCF?.attack ?? 0,
+          'env1_D': res.adsrVCF?.decay ?? 0,
+          'env1_S': res.adsrVCF?.sustain ?? 0,
+          'env1_R': res.adsrVCF?.release ?? 0
         }));
       }
       if (res.modMatrix) setMods(res.modMatrix);
@@ -79,9 +84,42 @@ export const PatchGuide: React.FC = () => {
       <form onSubmit={onSubmit} className="space-y-4">
         <Card>
           <h2 className="text-xl font-semibold text-white">Patch Guide Parameters</h2>
-          <select value={synth} onChange={e => setSynth(e.target.value)}>
-            {Object.keys(synthConfigs).map(name => <option key={name}>{name}</option>)}
-          </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+              <label className="block text-gray-200">Synth</label>
+              <select value={synth} onChange={e => setSynth(e.target.value)} className="mt-1 block w-full bg-gray-700 text-white p-2 rounded">
+                {Object.keys(synthConfigs).map(name => <option key={name}>{name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-gray-200">Voice Type</label>
+              <select value={voiceType} onChange={e => setVoiceType(e.target.value)} className="mt-1 block w-full bg-gray-700 text-white p-2 rounded">
+                {VOICE_TYPES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-gray-200">Descriptor</label>
+              <select value={descriptor} onChange={e => setDescriptor(e.target.value)} className="mt-1 block w-full bg-gray-700 text-white p-2 rounded">
+                {DESCRIPTORS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-gray-200">Genre</label>
+              <select value={genre} onChange={e => setGenre(e.target.value)} className="mt-1 block w-full bg-gray-700 text-white p-2 rounded">
+                {GENRES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-gray-200">Additional Notes</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="mt-1 block w-full bg-gray-700 text-white p-2 rounded" placeholder="Any specifics…" />
+            </div>
+
+          </div>
         </Card>
 
         <div className="flex space-x-4">
@@ -95,44 +133,14 @@ export const PatchGuide: React.FC = () => {
         <>
           <Card>
             <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert p-4 bg-gray-800 rounded">
-              {guide}
-            </ReactMarkdown>
+            <div className="prose prose-invert p-4 bg-gray-800 rounded">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{guide}</ReactMarkdown>
+            </div>
           </Card>
 
           <Card>
-            <h3 className="text-lg font-semibold text-white">Oscillator Settings</h3>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead><tr><th>Osc</th><th>Param</th><th>Value</th></tr></thead>
-              <tbody>
-                {config.oscillators.map((osc, i) => (
-                  <React.Fragment key={osc.id}>
-                    {osc.params.map(param => (
-                      <tr key={param} className="border-t border-gray-700">
-                        <td>{osc.name}</td>
-                        <td>{param}</td>
-                        <td>{Math.round((oscParams[`osc${i}_${param}`]||0)*100)}</td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-
-          <Card>
-            <h3 className="text-lg font-semibold text-white">Filter</h3>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead><tr><th>Param</th><th>Value</th></tr></thead>
-              <tbody>
-                {config.filters[0].params.map(param => (
-                  <tr key={param} className="border-t border-gray-700">
-                    <td>{param}</td>
-                    <td>{Math.round((filterParams[param]||0)*100)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h3 className="text-lg font-semibold text-white">Modulation Matrix</h3>
+            <ModulationMatrix config={config} routings={mods} />
           </Card>
 
           <Card>
@@ -140,18 +148,14 @@ export const PatchGuide: React.FC = () => {
             <div className="flex space-x-4">
               {Array.from({ length: config.envelopes.count }, (_, i) => (
                 <EnvelopeChart key={i}
-                  label={config.envelopes.labels?.[i] || `Env ${i+1}`}
                   attack={envParams[`env${i+1}_A`]}
                   decay={envParams[`env${i+1}_D`]}
                   sustain={envParams[`env${i+1}_S`]}
-                  release={envParams[`env${i+1}_R`]} width={300} height={150} />
+                  release={envParams[`env${i+1}_R`]}
+                  width={300}
+                  height={150} />
               ))}
             </div>
-          </Card>
-
-          <Card>
-            <h3 className="text-lg font-semibold text-white">Modulation Matrix</h3>
-            <ModulationMatrix config={config} routings={mods} />
           </Card>
         </>
       )}
