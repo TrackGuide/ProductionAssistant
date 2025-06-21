@@ -63,7 +63,7 @@ interface EQGuideProps {
   onClose: () => void;
 }
 
-export const EQGuide: React.FC<EQGuideProps>: React.FC<EQCheatSheetProps> = ({ isOpen,onClose }) => {
+export const EQGuide: React.FC<EQGuideProps> = ({ isOpen, onClose }) => ({ isOpen,onClose }) => {
   const [selectedInstrument,setSelectedInstrument]=useState('All');
   const [selectedZone,setSelectedZone]=useState('all');
   const [searchTerm,setSearchTerm]=useState('');
