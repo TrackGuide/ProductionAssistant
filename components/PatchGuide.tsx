@@ -9,10 +9,27 @@ import { Knob } from './Knob';
 import { ModulationMatrix, ModRouting } from './ModulationMatrix';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
 
-const SYNTH_OPTIONS = [ /* … */ ];
-const VOICE_TYPES = [ /* … */ ];
-const DESCRIPTORS = [ /* … */ ];
-const GENRES = [ /* … */ ];
+const SYNTH_OPTIONS = [
+  'Serum','Vital','Pigments','Massive','Massive X',
+  'Diva','Hive 2','Sylenth1','Wavestate','Jupiter-8',
+  'Juno-106','SH-101','Operator','Wavetable','Retro Synth',
+  'Alchemy','FM8','Phase Plant','Omnisphere','Analog Lab','Generic'
+];
+
+const VOICE_TYPES = [
+  'Soft Lead','Hard Lead','Evolving Pad','Bass','Pluck',
+  'Ambient Texture','Arpeggio','Drone','FX','Keys'
+];
+
+const DESCRIPTORS = [
+  'Warm','Bright','Gritty','Smooth','Distorted',
+  'Clean','Vintage','Modern','Aggressive','Subtle'
+];
+
+const GENRES = [
+  'Ambient','EDM','Rock','Pop','Hip-Hop',
+  'Jazz','Classical','Experimental','Techno','House'
+];
 
 // Map knob [0-1] to frequency [20-20000] Hz
 const knobToHz = (v: number) =>
@@ -50,9 +67,11 @@ export const PatchGuide: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Helpers to safely pull knob values
-  const getKnob = (k: string) => Number.isFinite(knobs[k]) ? knobs[k] : 0;
+  // Helper
+  const getKnob = (k: string) =>
+    typeof knobs[k] === 'number' && isFinite(knobs[k]) ? knobs[k] : 0;
 
+  // Submit
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -63,7 +82,6 @@ export const PatchGuide: React.FC = () => {
         description: `${voiceType}, ${descriptor} for ${genre}. ${notes}`,
         synth, voiceType, descriptor, genre, notes
       });
-
       setGuide(res.text || '');
 
       if (res.oscSettings) {
@@ -84,7 +102,7 @@ export const PatchGuide: React.FC = () => {
       if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
       if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
       if (res.knobs) setKnobs(res.knobs);
-      if (Array.isArray(res.modMatrix)) setMods(res.modMatrix);
+      // modMatrix omitted per last request
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error generating guide');
     } finally {
@@ -92,6 +110,7 @@ export const PatchGuide: React.FC = () => {
     }
   };
 
+  // Reset
   const resetAll = () => {
     setSynth('Generic');
     setVoiceType('Soft Lead');
@@ -116,7 +135,6 @@ export const PatchGuide: React.FC = () => {
       ChorusRate: 0.15,
       MasterTune: 0
     });
-    setMods([]);
   };
 
   return (
@@ -126,6 +144,7 @@ export const PatchGuide: React.FC = () => {
         <Card>
           <h2 className="text-xl font-semibold text-white">Patch Guide Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             {/* Synth */}
             <div>
               <label className="block text-gray-200">Synth</label>
@@ -134,9 +153,12 @@ export const PatchGuide: React.FC = () => {
                 onChange={e => setSynth(e.target.value)}
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
-                {SYNTH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {SYNTH_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
+
             {/* Voice Type */}
             <div>
               <label className="block text-gray-200">Voice Type</label>
@@ -145,9 +167,12 @@ export const PatchGuide: React.FC = () => {
                 onChange={e => setVoiceType(e.target.value)}
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
-                {VOICE_TYPES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {VOICE_TYPES.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
+
             {/* Descriptor */}
             <div>
               <label className="block text-gray-200">Descriptor</label>
@@ -156,9 +181,12 @@ export const PatchGuide: React.FC = () => {
                 onChange={e => setDescriptor(e.target.value)}
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
-                {DESCRIPTORS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {DESCRIPTORS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
+
             {/* Genre */}
             <div>
               <label className="block text-gray-200">Genre</label>
@@ -167,9 +195,12 @@ export const PatchGuide: React.FC = () => {
                 onChange={e => setGenre(e.target.value)}
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
-                {GENRES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {GENRES.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
+
             {/* Notes */}
             <div className="md:col-span-2">
               <label className="block text-gray-200">Additional Notes</label>
@@ -181,8 +212,10 @@ export const PatchGuide: React.FC = () => {
                 placeholder="Any specifics…"
               />
             </div>
+
           </div>
         </Card>
+
         <div className="flex items-center space-x-4">
           <Button type="submit" disabled={loading}>
             {loading ? 'Generating…' : 'Generate Patch Guide'}
