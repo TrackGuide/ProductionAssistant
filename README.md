@@ -1,6 +1,6 @@
-# Run and deploy your AI Studio app
+# TrackGuide Production Assistant
 
-This contains everything you need to run your app locally.
+This app includes TrackGuide AI, Mix Feedback AI, RemixGuide AI, and PatchGuide AI to help music producers.
 
 ## Run Locally
 
