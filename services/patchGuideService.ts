@@ -79,9 +79,9 @@ Return JSON only.
 `;
 
   const ai = new GoogleGenAI({ apiKey });
-  const response: GenerateContentResponse = await ai.generateContent({
+  const response: GenerateContentResponse = const response: GenerateContentResponse = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
-    prompt,
+    contents: prompt,
     temperature: 0.7,
     maxTokens: 800,
   });
