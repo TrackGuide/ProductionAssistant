@@ -29,17 +29,17 @@ export const PatchGuide: React.FC = () => {
 
   // AI results
   const [guide, setGuide] = useState<string|null>(null);
-  const [wave, setWave] = useState('sawtooth');
+  const [wave, setWave] = useState('sawtooth + noise');
   const [oscOct, setOscOct] = useState({ o1:0, o2:0, o3:0 });
   const [tunings, setTunings] = useState({ c1:0, c2:0, c3:0, f1:0, f2:0, f3:0 });
   const [adsrVCF, setAdsrVCF] = useState({ attack:0.1, decay:0.5, sustain:0.8, release:1.5 });
   const [adsrVCA, setAdsrVCA] = useState({ attack:0.05, decay:0.3, sustain:0.9, release:0.6 });
   const [knobs, setKnobs] = useState<Record<string,number>>({
-    Cutoff:0.3,
-    Resonance:0.4,
-    Drive:0.1,
-    Mix:0.5,
-    'Filter Drive':0.2
+    Cutoff:0,
+    Resonance:0,
+    Drive:0,
+    Mix:0,
+    'Filter Drive':0
   });
   const [mods, setMods] = useState<ModRouting[]>([]);
 
@@ -79,7 +79,7 @@ export const PatchGuide: React.FC = () => {
       if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
       if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
       if (res.knobs) setKnobs(res.knobs);
-      if (res.modMatrix) setMods(res.modMatrix.filter(m=>m.amount>0));
+      if (res.modMatrix) setMods(res.modMatrix);
     } catch(err) {
       setError(err instanceof Error ? err.message : 'Error generating guide');
     } finally {
@@ -95,38 +95,51 @@ export const PatchGuide: React.FC = () => {
     setSynth('Generic');
     setGuide(null);
     setError('');
-    setWave('sawtooth');
+    setWave('sawtooth + noise');
     setOscOct({ o1:0,o2:0,o3:0 });
     setTunings({ c1:0,c2:0,c3:0,f1:0,f2:0,f3:0 });
     setAdsrVCF({ attack:0.1, decay:0.5, sustain:0.8, release:1.5 });
     setAdsrVCA({ attack:0.05, decay:0.3, sustain:0.9, release:0.6 });
-    setKnobs({ Cutoff:0.3, Resonance:0.4, Drive:0.1, Mix:0.5, 'Filter Drive':0.2 });
+    setKnobs({ Cutoff:0, Resonance:0, Drive:0, Mix:0, 'Filter Drive':0 });
     setMods([]);
   };
 
   // Build audio graph for preview
   const renderAudioGraph = (ctx:OfflineAudioContext) => {
-    const o1 = ctx.createOscillator(); o1.type = wave as OscillatorType;
-    const o2 = ctx.createOscillator(); o2.type = wave as OscillatorType; o2.detune.value = tunings.f2;
-    const o3 = ctx.createOscillator(); o3.type = wave as OscillatorType; o3.detune.value = tunings.f3;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = knobs.Cutoff * ctx.sampleRate / 2;
-    filter.Q.value = knobs.Resonance * 20;
+    // Oscillators
+    ['o1','o2','o3'].forEach((osc,i) => {
+      const o = ctx.createOscillator() as OscillatorNode;
+      o.type = 'sawtooth';
+      o.detune.value = tunings[`f${i+1}` as keyof typeof tunings];
+      o.connect(ctx.createBiquadFilter());
+      o.start();
+    });
+    // Noise
+    const bufferSize = ctx.sampleRate * duration;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i=0; i<bufferSize; i++) data[i] = (Math.random()*2 -1) * 0.05;
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    noiseSource.loop = true;
+    noiseSource.connect(ctx.destination);
+    noiseSource.start();
+
+    // Gain envelope (VCA)
     const gain = ctx.createGain();
-    o1.connect(filter); o2.connect(filter); o3.connect(filter);
-    filter.connect(gain); gain.connect(ctx.destination);
-    o1.start(); o2.start(); o3.start();
-    const now=0;
-    gain.gain.setValueAtTime(0,now);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(1, now + adsrVCA.attack);
     gain.gain.linearRampToValueAtTime(adsrVCA.sustain, now + adsrVCA.attack + adsrVCA.decay);
     gain.gain.setValueAtTime(adsrVCA.sustain, now + duration);
     gain.gain.linearRampToValueAtTime(0, now + duration + adsrVCA.release);
+
     return gain;
   };
 
   return (
+
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       <Card>
         <h1 className="text-2xl font-bold text-white">PatchGuide AI</h1>
@@ -146,149 +159,4 @@ export const PatchGuide: React.FC = () => {
             <input type="text" placeholder="Optional notes..." value={notes} onChange={e=>setNotes(e.target.value)} className="p-2 bg-gray-700 rounded text-white"/>
           </div>
 
-          <select value={synth} onChange={e=>setSynth(e.target.value)} className="w-full p-2 bg-gray-700 rounded text-white">
-            {SYNTH_OPTIONS.map(o=><option key={o}>{o}</option>)}
-          </select>
-          {error && <div className="text-red-400">{error}</div>}
-
-          <div className="flex space-x-3">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? <><Spinner size="sm"/> Generating...</> : 'Generate Guide'}
-            </Button>
-            <Button variant="outline" onClick={resetAll}>Reset</Button>
-          </div>
-        </form>
-      </Card>
-
-      {guide && (
-        <>
-          {/* 1. Oscillator Settings */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white mb-2">1. Oscillator Settings</h2>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="p-2 text-left">Osc</th>
-                  <th className="p-2 text-left">Wave</th>
-                  <th className="p-2 text-left">Oct</th>
-                  <th className="p-2 text-left">Coarse</th>
-                  <th className="p-2 text-left">Fine</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-gray-700">
-                  <td className="p-2">Osc 1</td>
-                  <td className="p-2">{wave}</td>
-                  <td className="p-2">{oscOct.o1}</td>
-                  <td className="p-2">{tunings.c1}</td>
-                  <td className="p-2">{tunings.f1}</td>
-                </tr>
-                {oscOct.o3 !== 0 && (
-                <tr className="border-t border-gray-700">
-                  <td className="p-2">Osc 3</td>
-                  <td className="p-2">{wave}</td>
-                  <td className="p-2">{oscOct.o3}</td>
-                  <td className="p-2">{tunings.c3}</td>
-                  <td className="p-2">{tunings.f3}</td>
-                </tr>
-                )}
-              </tbody>
-            </table>
-          </Card>
-
-          {/* 2. Filter Settings */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white mb-2">2. Filter Settings</h2>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="p-2 text-left">Param</th>
-                  <th className="p-2 text-left">Value</th>
-                  <th className="p-2 text-left">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {['Cutoff','Resonance','Drive','Mix','Filter Drive'].map(k => (
-                <tr key={k} className="border-t border-gray-700">
-                  <td className="p-2">{k}</td>
-                  <td className="p-2">{isNaN(knobs[k]) ? '0%' : Math.round(knobs[k]*100) + '%'}</td>
-                  <td className="p-2">—</td>
-                </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-
-          {/* 3. VCF & VCA Envelopes */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white mb-2">3. VCF & VCA Envelopes</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <table className="text-gray-200 border-collapse">
-                <thead>
-                  <tr className="bg-gray-800"><th className="p-2">VCF</th><th className="p-2">A</th><th className="p-2">D</th><th className="p-2">S</th><th className="p-2">R</th></tr>
-                </thead>
-                <tbody>
-                  <tr className="border-t border-gray-700">
-                    <td className="p-2">VCF</td>
-                    <td className="p-2">{adsrVCF.attack}</td>
-                    <td className="p-2">{adsrVCF.decay}</td>
-                    <td className="p-2">{adsrVCF.sustain}</td>
-                    <td className="p-2">{adsrVCF.release}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <table className="text-gray-200 border-collapse">
-                <thead>
-                  <tr className="bg-gray-800"><th className="p-2">VCA</th><th className="p-2">A</th><th className="p-2">D</th><th className="p-2">S</th><th className="p-2">R</th></tr>
-                </thead>
-                <tbody>
-                  <tr className="border-t border-gray-700">
-                    <td className="p-2">VCA</td>
-                    <td className="p-2">{adsrVCA.attack}</td>
-                    <td className="p-2">{adsrVCA.decay}</td>
-                    <td className="p-2">{adsrVCA.sustain}</td>
-                    <td className="p-2">{adsrVCA.release}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          {/* 4. Effects & Performance */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white mb-2">4. Effects & Performance</h2>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead>
-                <tr className="bg-gray-800"><th className="p-2">Effect</th><th className="p-2">Setting</th></tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-gray-700"><td className="p-2">Reverb</td><td className="p-2">Hall, 3–5s decay, 40% mix</td></tr>
-                <tr className="border-t border-gray-700"><td className="p-2">Chorus</td><td className="p-2">Rate 0.3Hz, Depth 20%</td></tr>
-                <tr className="border-t border-gray-700"><td className="p-2">Delay</td><td className="p-2">400ms, Feedback 15%</td></tr>
-              </tbody>
-            </table>
-            <ul className="list-disc pl-5 text-gray-200 mt-2">
-              <li>Use Mod Wheel for live filter sweeps</li>
-              <li>Aftertouch → VCF Resonance for dynamic peaks</li>
-            </ul>
-          </Card>
-
-          {/* 5. Visual Aids */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white mb-2">5. Visual Aids</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-[150px]">
-              <AnimatedWaveformPreview renderAudioGraph={renderAudioGraph} width={400} height={120} duration={duration} fps={20} />
-            </div>
-              <EnvelopeChart {...adsrVCA} width={300} height={150}/>
-              <div className="flex flex-wrap gap-4">
-              {Object.entries(knobs).map(([l, v]) => <Knob key={l} label={l} value={v} />)}
-            </div>
-              {mods.length>0 && <ModulationMatrix routings={mods}/>}  
-            </div>
-          </Card>
-        </>
-      )}
-    </div>
-  );
-};
+          <select value={synth} onChange={e=>setSynth(e.target.value)} className="w-full p-2 bg-gray-700 rounded text
