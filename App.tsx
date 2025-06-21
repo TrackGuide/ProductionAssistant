@@ -29,7 +29,7 @@ import { AIAssistant } from './components/AIAssistant.tsx';
 
 import { LandingPage } from './components/LandingPage.tsx';
 import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { EQGuide } from './components/EQGuide.tsx';
+import { EQGuide } from './components/EQGuide';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
 
