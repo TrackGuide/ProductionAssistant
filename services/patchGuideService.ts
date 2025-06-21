@@ -1,9 +1,8 @@
 // services/patchGuideService.ts
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
-const apiKey = process.env.VITE_GEMINI_API_KEY;
-if (!apiKey) throw new Error('Missing VITE_GEMINI_API_KEY');
+import { GEMINI_MODEL_NAME } from '../constants';
 
-
+// ====== Interfaces ======
 export interface OscSettings {
   o1Oct?: number;
   o2Oct?: number;
@@ -52,16 +51,19 @@ interface PatchGuideInputs {
 
 /**
  * Generate a detailed synth patch guide using Google GenAI.
- * Uses the VITE_GEMINI_API_KEY environment variable.
+ * Reads GEMINI_API_KEY from environment variables (server-side) or VITE_GEMINI_API_KEY (client-side).
  */
 export async function generateSynthPatchGuide(
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
+  // Prefer server-side key, fallback to Vite client key
+  const apiKey = process.env.GEMINI_API_KEY ||
+                 (typeof import.meta !== 'undefined' && import.meta.env.VITE_GEMINI_API_KEY);
   if (!apiKey) {
-    throw new Error('Missing VITE_GEMINI_API_KEY environment variable');
+    throw new Error('Missing GEMINI_API_KEY or VITE_GEMINI_API_KEY environment variable');
   }
 
+  // Build the AI prompt
   const prompt = `
 You are an expert sound designer. Given the following inputs,
 return a JSON object with keys: text, waveform, oscSettings,
@@ -77,6 +79,7 @@ Inputs:
 Return JSON only.
 `;
 
+  // Initialize GenAI client
   const ai = new GoogleGenAI({ apiKey });
   const response: GenerateContentResponse = await ai.generateContent({
     model: GEMINI_MODEL_NAME,
@@ -85,13 +88,15 @@ Return JSON only.
     maxTokens: 800,
   });
 
+  // Parse JSON
   let parsed: any;
   try {
     parsed = JSON.parse(response.text);
-  } catch {
-    throw new Error('Invalid JSON response from AI');
+  } catch (e) {
+    throw new Error('Invalid JSON response from AI: ' + e);
   }
 
+  // Return structured result
   return {
     text: parsed.text,
     waveform: parsed.waveform,
