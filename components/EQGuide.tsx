@@ -171,7 +171,7 @@ const EQ_DATA = [
 
 // UI OPTIONS
 const INSTRUMENTS = [
-  'All', 'Vocals', 'Male vocals', 'Female vocals', 'Kick drum', 'Snare', 'Toms', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Electric guitar',
+  'All', 'Vocals', 'Kick drum', 'Snare', 'Toms', 'Bass guitar', 'Guitar', 'Acoustic guitar', 'Electric guitar',
   'Piano', 'Cymbals', 'Hi-hats', 'Sub bass', '808s', 'Synth bass', 'Brass', 'Trumpet', 'Tuba', 'Trombone', 'Saxophone',
   'Strings', 'Violin', 'Cello', 'Room mics', 'Overheads', 'Drums', 'Keys', 'Synth'
 ];
