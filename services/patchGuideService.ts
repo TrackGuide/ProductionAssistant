@@ -1,8 +1,6 @@
 // services/patchGuideService.ts
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
-const apiKey = process.env.VITE_GEMINI_API_KEY;
-if (!apiKey) throw new Error('Missing VITE_GEMINI_API_KEY');
-
+import { GEMINI_MODEL_NAME } from '../constants';
 
 export interface OscSettings {
   o1Oct?: number;
@@ -52,14 +50,17 @@ interface PatchGuideInputs {
 
 /**
  * Generate a detailed synth patch guide using Google GenAI.
- * Uses the VITE_GEMINI_API_KEY environment variable.
+ * Reads GEMINI_API_KEY from server env or VITE_GEMINI_API_KEY from client.
  */
 export async function generateSynthPatchGuide(
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    (typeof import.meta !== 'undefined' && import.meta.env.VITE_GEMINI_API_KEY);
+
   if (!apiKey) {
-    throw new Error('Missing VITE_GEMINI_API_KEY environment variable');
+    throw new Error('Missing GEMINI_API_KEY or VITE_GEMINI_API_KEY environment variable');
   }
 
   const prompt = `
@@ -88,8 +89,8 @@ Return JSON only.
   let parsed: any;
   try {
     parsed = JSON.parse(response.text);
-  } catch {
-    throw new Error('Invalid JSON response from AI');
+  } catch (err) {
+    throw new Error('Invalid JSON response from AI: ' + err);
   }
 
   return {
