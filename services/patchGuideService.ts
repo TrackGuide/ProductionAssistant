@@ -86,9 +86,14 @@ Return JSON only.
     maxTokens: 800,
   });
 
+  // Strip Markdown code fences if present
+  const raw = response.text.trim();
+  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const jsonText = fenceMatch ? fenceMatch[1].trim() : raw;
+
   let parsed: any;
   try {
-    parsed = JSON.parse(response.text);
+    parsed = JSON.parse(jsonText);
   } catch (err) {
     throw new Error('Invalid JSON response from AI: ' + err);
   }
