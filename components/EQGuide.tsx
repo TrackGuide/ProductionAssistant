@@ -58,8 +58,12 @@ const FREQUENCY_ZONES = [
   { id:'air', label:'Air (12kHz+)', color:'bg-purple-600' },
 ];
 
-interface EQCheatSheetProps { isOpen:boolean; onClose:()=>void }
-export const EQCheatSheet: React.FC<EQCheatSheetProps> = ({ isOpen,onClose }) => {
+interface EQGuideProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const EQGuide: React.FC<EQGuideProps>: React.FC<EQCheatSheetProps> = ({ isOpen,onClose }) => {
   const [selectedInstrument,setSelectedInstrument]=useState('All');
   const [selectedZone,setSelectedZone]=useState('all');
   const [searchTerm,setSearchTerm]=useState('');
