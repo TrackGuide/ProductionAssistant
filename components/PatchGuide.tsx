@@ -248,11 +248,11 @@ export const PatchGuide: React.FC = () => {
             <table className="w-full text-gray-200 border-collapse">
               <thead>
                 <tr className="bg-gray-800">
-                  <th className="p-2">Source</th>
-                  <th className="p-2">Wave</th>
-                  <th className="p-2">Oct</th>
-                  <th className="p-2">Coarse</th>
-                  <th className="p-2">Fine</th>
+                <th className="p-2 text-left">Source</th>
+               <th className="p-2 text-left">Wave</th>
+               <th className="p-2 text-left">Oct</th>
+               <th className="p-2 text-left">Coarse</th>
+               <th className="p-2 text-left">Fine</th>
                 </tr>
               </thead>
               <tbody>
