@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
-import { AdjustmentsHorizontalIcon } from './icons.tsx';
+import { AdjustmentsHorizontalIcon } from './icons.tsx'; 
 
 // === Pro-level EQ Data (full coverage, crossovers, all instruments) ===
 const EQ_DATA = [
