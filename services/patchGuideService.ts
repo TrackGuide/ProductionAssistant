@@ -1,4 +1,4 @@
-import { GenerateContentResponse } from '@google/genai';
+import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { GEMINI_MODEL_NAME } from '../constants';
 
 const genAI = new GoogleGenAI({
