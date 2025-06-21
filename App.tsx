@@ -14,6 +14,7 @@ import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
+import { EQGuide } from './components/EQGuide';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
