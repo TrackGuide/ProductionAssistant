@@ -1,7 +1,8 @@
-import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
+
+import { GoogleGenerativeAI, GenerateContentResponse } from '@google/generative-ai';
 import { GEMINI_MODEL_NAME } from '../constants';
 
-const genAI = new GoogleGenAI({
+const genAI = new GoogleGenerativeAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY
 });
 
