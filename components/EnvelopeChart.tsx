@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 interface EnvelopeChartProps {
   attack: number;
@@ -21,6 +21,34 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
   width = 400,
   height = 150
 }) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const downloadEnvelope = () => {
+    if (!svgRef.current) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svgRef.current);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    img.onload = () => {
+      if (ctx) {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        
+        const link = document.createElement('a');
+        link.download = `envelope_A${attack}_D${decay}_S${sustain}_R${release}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
   // Normalize values to 0-1 range
   const normalizedAttack = Math.max(0, Math.min(1, attack));
   const normalizedDecay = Math.max(0, Math.min(1, decay));
@@ -66,8 +94,16 @@ export const EnvelopeChart: React.FC<EnvelopeChartProps> = ({
   
   return (
     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-medium text-gray-300 mb-2">ADSR Envelope</h3>
-      <svg width={width} height={height} className="w-full h-auto">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium text-gray-300">ADSR Envelope</h3>
+        <button
+          onClick={downloadEnvelope}
+          className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
+        >
+          Download
+        </button>
+      </div>
+      <svg ref={svgRef} width={width} height={height} className="w-full h-auto">
         {/* Background grid */}
         <defs>
           <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
