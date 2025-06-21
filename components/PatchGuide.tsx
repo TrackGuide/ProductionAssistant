@@ -277,9 +277,13 @@ export const PatchGuide: React.FC = () => {
           <Card>
             <h2 className="text-xl font-semibold text-white mb-2">5. Visual Aids</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatedWaveformPreview renderAudioGraph={renderAudioGraph} width={400} height={120} duration={duration} fps={20}/>
+              <div className="h-[150px]">
+              <AnimatedWaveformPreview renderAudioGraph={renderAudioGraph} width={400} height={120} duration={duration} fps={20} />
+            </div>
               <EnvelopeChart {...adsrVCA} width={300} height={150}/>
-              <div className="flex flex-wrap gap-4">{Object.entries(knobs).map(([l,v])=> <Knob key={l}	label={l}	value={v}/>)}}</div>
+              <div className="flex flex-wrap gap-4">
+              {Object.entries(knobs).map(([l, v]) => <Knob key={l} label={l} value={v} />)}
+            </div>
               {mods.length>0 && <ModulationMatrix routings={mods}/>}  
             </div>
           </Card>
