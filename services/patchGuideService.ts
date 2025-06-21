@@ -16,6 +16,16 @@ export interface PatchGuideResult {
     target: string;
     amount: number;
   }>;
+  oscSettings?: {
+    osc1Wave?: string;
+    osc2Wave?: string;
+    osc1Oct?: number;
+    osc2Oct?: number;
+    osc1Coarse?: number;
+    osc2Coarse?: number;
+    osc1Fine?: number;
+    osc2Fine?: number;
+  };
 }
 
 /**
@@ -47,7 +57,8 @@ Provide a detailed, step-by-step guide for creating this sound. Include specific
     "cutoff": 0.7,
     "resonance": 0.3,
     "drive": 0.5,
-    "mix": 0.8
+    "mix": 0.8,
+    "Filter Drive": 0.4
   },
   "modMatrix": [
     {
@@ -60,7 +71,17 @@ Provide a detailed, step-by-step guide for creating this sound. Include specific
       "target": "Oscillator Pitch",
       "amount": 0.3
     }
-  ]
+  ],
+  "oscSettings": {
+    "osc1Wave": "saw",
+    "osc2Wave": "square",
+    "osc1Oct": 0,
+    "osc2Oct": -1,
+    "osc1Coarse": 0,
+    "osc2Coarse": 7,
+    "osc1Fine": 0,
+    "osc2Fine": 5
+  }
 }
 
 For the "text" field, provide professional, clear instructions in markdown format. Include:
@@ -89,9 +110,16 @@ Focus on practical, achievable settings that will create the desired sound. Be s
  * @returns Promise resolving to patch guide data
  */
 export async function generateSynthPatchGuide(
-  params: { description: string; synth: string }
+  params: { 
+    description: string; 
+    synth: string;
+    voiceType?: string;
+    descriptor?: string;
+    genre?: string;
+    notes?: string;
+  }
 ): Promise<PatchGuideResult> {
-  const { description, synth } = params;
+  const { description, synth, voiceType, descriptor, genre, notes } = params;
   const prompt = generatePatchGuidePrompt(description, synth);
   
   try {
