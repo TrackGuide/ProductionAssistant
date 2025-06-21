@@ -1,8 +1,9 @@
-import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
+import { GenerateContentResponse } from '@google/genai';
+import { genAI } from './geminiService';
 import { GEMINI_MODEL_NAME } from '../constants';
 
 export interface OscSettings {
-  [key: string]: number; // dynamic keys like 'osc0_Waveform', 'osc1_Warp', etc.
+  [key: string]: number;
 }
 
 export interface ADSR {
@@ -31,12 +32,9 @@ interface PatchGuideInputs {
   synth: string;
 }
 
-const genAI = new GoogleGenAI();
-
 export const generateSynthPatchGuide = async (
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> => {
-
   const prompt = `
 You are an expert sound designer. The user has selected the synth: "${inputs.synth}".
 
@@ -67,7 +65,6 @@ Respond ONLY with this JSON.`;
     prompt
   });
 
-  // Fallback parsing
   const text = result.text() || '';
 
   try {
