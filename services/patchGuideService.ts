@@ -50,18 +50,16 @@ interface PatchGuideInputs {
 
 /**
  * Generate a detailed synth patch guide using Google GenAI.
- * Requires GENAI_API_KEY to be set in environment variables.
+ * Uses the VITE_GEMINI_API_KEY environment variable.
  */
 export async function generateSynthPatchGuide(
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
-  // Ensure API key is provided
-  const apiKey = process.env.GENAI_API_KEY;
+  const apiKey = process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('Missing GENAI_API_KEY environment variable');
+    throw new Error('Missing VITE_GEMINI_API_KEY environment variable');
   }
 
-  // Build prompt for AI
   const prompt = `
 You are an expert sound designer. Given the following inputs,
 return a JSON object with keys: text, waveform, oscSettings,
@@ -77,7 +75,6 @@ Inputs:
 Return JSON only.
 `;
 
-  // Initialize AI client
   const ai = new GoogleGenAI({ apiKey });
   const response: GenerateContentResponse = await ai.generateContent({
     model: GEMINI_MODEL_NAME,
@@ -86,15 +83,13 @@ Return JSON only.
     maxTokens: 800,
   });
 
-  // Parse AI response as JSON
   let parsed: any;
   try {
     parsed = JSON.parse(response.text);
-  } catch (err) {
+  } catch {
     throw new Error('Invalid JSON response from AI');
   }
 
-  // Return structured result
   return {
     text: parsed.text,
     waveform: parsed.waveform,
