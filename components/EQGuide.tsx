@@ -203,7 +203,7 @@ export const EQGuide: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-3">
         <div className="flex items-center gap-2">
           <AdjustmentsHorizontalIcon className="w-7 h-7 text-orange-500" />
-          <h2 className="text-2xl font-bold text-white">EQ Cheat Sheet</h2>
+          <h2 className="text-2xl font-bold text-white">EQ Guide</h2>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <select
