@@ -131,45 +131,57 @@ export const PatchGuide: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       <Card>
-        <h1 className="text-2xl font-bold text-white">PatchGuide AI</h1>
-        <p className="text-gray-300">Select voice, descriptor, genre, synth & notes.</p>
-        <form onSubmit={onSubmit} className="mt-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <select className="p-2 bg-gray-700 rounded text-white" value={voiceType} onChange={e => setVoiceType(e.target.value)}>
-              {VOICE_TYPES.map(o => <option key={o}>{o}</option>)}
-            </select>
-            <select className="p-2 bg-gray-700 rounded text-white" value={descriptor} onChange={e => setDescriptor(e.target.value)}>
-              {DESCRIPTORS.map(o => <option key={o}>{o}</option>)}
-            </select>
-            <select className="p-2 bg-gray-700 rounded text-white" value={genre} onChange={e => setGenre(e.target.value)}>
-              {GENRES.map(o => <option key={o}>{o}</option>)}
-            </select>
-            <input className="p-2 bg-gray-700 rounded text-white" placeholder="Notes..." value={notes} onChange={e => setNotes(e.target.value)} />
-          </div>
-          <select className="w-full p-2 bg-gray-700 rounded text-white" value={synth} onChange={e => setSynth(e.target.value)}>
-            {SYNTH_OPTIONS.map(o => <option key={o}>{o}</option>)}
-          </select>
-          {error && <div className="text-red-400 text-center">{error}</div>}
-          <div className="flex space-x-3">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? <> <Spinner size="sm"/> Generating...</> : 'Generate Guide'}
-            </Button>
-            <Button variant="outline" onClick={resetAll}>Reset</Button>
-          </div>
-        </form>
-      </Card>
+            <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert p-4 bg-gray-800 rounded">{guide}</ReactMarkdown>
+          </Card>
 
-      {loading && (
-        <Card>
-          <p className="text-center text-white">Generating patch…</p>
-        </Card>
-      )}
-      {!loading && !guide && !error && (
-        <Card>
-          <p className="text-center text-gray-500">Hit “Generate Guide” to get started.</p>
-        </Card>
-      )}
-      {guide && (
-        <>
+          {/* 1. Oscillator Settings */}
           <Card>
-            <h2 className="text-xl font-semibold text-white">Patch Instructions</n
+            <h2 className="text-xl font-semibold text-white">1. Oscillator Settings</h2>
+            <table className="w-full text-gray-200 border-collapse">
+              <thead><tr className="bg-gray-800"><th className="p-2">Osc</th><th className="p-2">Wave</th><th className="p-2">Oct</th><th className="p-2">Coarse</th><th className="p-2">Fine</th></tr></thead>
+              <tbody>
+                <tr className="border-t border-gray-700"><td className="p-2">Osc 1</td><td className="p-2">{wave}</td><td className="p-2">{oscOct.o1}</td><td className="p-2">{tunings.c1}</td><td className="p-2">{tunings.f1}</td></tr>
+                {oscOct.o2!==0 && <tr className="border-t border-gray-700"><td className="p-2">Osc 2</td><td className="p-2">{wave}</td><td className="p-2">{oscOct.o2}</td><td className="p-2">{tunings.c2}</td><td className="p-2">{tunings.f2}</td></tr>}
+                {oscOct.o3!==0 && <tr className="border-t border-gray-700"><td className="p-2">Osc 3</td><td className="p-2">{wave}</td><td className="p-2">{oscOct.o3}</td><td className="p-2">{tunings.c3}</td><td className="p-2">{tunings.f3}</td></tr>}
+                <tr className="border-t border-gray-700"><td className="p-2">Sub Osc</td><td className="p-2">Square</td><td className="p-2">—</td><td className="p-2">—</td><td className="p-2">-12dB</td></tr>
+                <tr className="border-t border-gray-700"><td className="p-2">Noise</td><td className="p-2">White Noise</td><td className="p-2">—</td><td className="p-2">—</td><td className="p-2">—</td></tr>
+              </tbody>
+            </table>
+          </Card>
+
+          {/* 2. Filter Settings */}
+          <Card>
+            <h2 className="text-xl font-semibold text-white">2. Filter Settings</h2>
+            <table className="w-full text-gray-200 border-collapse">
+              <thead><tr className="bg-gray-800"><th className="p-2">Param</th><th className="p-2">Value</th><th className="p-2">Notes</th></tr></thead>
+              <tbody>{Object.entries(knobs).map(([k,v]) => <tr key={k} className="border-t border-gray-700"><td className="p-2">{k}</td><td className="p-2">{Math.round(v*100)}%</td><td className="p-2">—</td></tr>)}</tbody>
+            </table>
+          </Card>
+
+          {/* 3. Envelopes */}
+          <Card>
+            <h2 className="text-xl font-semibold text-white">3. Envelopes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg">
+              <EnvelopeChart {...adsrVCF} width={300} height={150} label="VCF (Filter)" />
+              <EnvelopeChart {...adsrVCA} width={300} height={150} label="VCA (Amp)" />
+            </div>
+          </Card>
+
+          {/* 4. Effects & Performance */}
+          <Card>
+            <h2 className="text-xl font-semibold text-white">4. Effects & Performance</h2>
+            <div className="flex flex-wrap gap-4 mb-4">{Object.entries(knobs).map(([l,v]) => <Knob key={l} label={l} value={v} />)}</div>
+            {mods.length>0 && <ModulationMatrix routings={mods} />}
+          </Card>
+
+          {/* 5. Visual Aids */}
+          <Card>
+            <h2 className="text-xl font-semibold text-white">5. Visual Aids</h2>
+            <AnimatedWaveformPreview renderAudioGraph={renderAudioGraph} width={400} height={120} duration={duration} fps={20} />
+          </Card>
+        </>
+      )}
+    </div>
+  );
+};
