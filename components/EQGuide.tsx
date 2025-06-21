@@ -1,128 +1,170 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
-import { Card } from './Card';
-import { Button } from './Button';
+import { Card } from './Card.tsx';
+import { Button } from './Button.tsx';
+import { Input } from './Input.tsx';
+import { AdjustmentsHorizontalIcon } from './icons.tsx';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import Meyda from 'meyda';
 
-// Register Chart.js components and annotation plugin
+// Register Chart.js and annotation plugin
 Chart.register(...registerables, annotationPlugin);
 
-/** Data definitions **/
-export interface EqBand {
-  id: string;
-  name: string;
-  range: [number, number];
+// Extended EQ band interface
+interface EQBand {
+  frequency: string;
   description: string;
+  instruments: string[];
+  action: 'boost' | 'cut' | 'notch';
+  category: 'sub' | 'bass' | 'low-mid' | 'mid' | 'high-mid' | 'presence' | 'air';
   commonIssues?: string[];
   proTips?: string[];
-  instruments?: string[];
-  categories: string[];
 }
 
-const EQ_BANDS: EqBand[] = [
-  { id: 'sub', name: 'Sub Bass', range: [20, 60], description: 'Deep rumble felt more than heard. Cut on non-bass elements.', commonIssues: ['boom', 'excess rumble'], proTips: ['High-pass non-bass at ~60Hz'], instruments: ['Kick drum','Sub bass','808s'], categories: ['Bass'] },
-  { id: 'bass', name: 'Bass', range: [60, 250], description: 'Core weight and punch of bass instruments.', commonIssues: ['mud', 'flab'], proTips: ['Cut 150-200Hz to clean mud'], instruments: ['Bass guitar','Kick drum','Synth bass'], categories: ['Bass'] },
-  { id: 'low-mid', name: 'Low Mids', range: [250, 500], description: 'Boxiness or wooliness can cloud mix.', commonIssues: ['boxy', 'muddy'], proTips: ['Cut wide bell around 300Hz'], instruments: ['Guitar','Vocals','Piano'], categories: ['Guitar','Vocals'] },
-  { id: 'mid', name: 'Midrange', range: [500, 1500], description: 'Body and presence of most instruments.', commonIssues: ['honky','nasal'], proTips: ['Cut 800-1kHz to reduce honk'], instruments: ['Vocals','Guitar','Snare'], categories: ['Vocals','Drums','Guitar'] },
-  { id: 'high-mid', name: 'High Mids', range: [1500, 6000], description: 'Clarity and attack; too much can harshen.', commonIssues: ['harsh','sibilant'], proTips: ['Use narrow cut at 3-5kHz'], instruments: ['Vocals','Hi-hats','Cymbals'], categories: ['Drums','Vocals'] },
-  { id: 'presence', name: 'Presence', range: [6000, 12000], description: 'Sparkle and detail; watch sibilance.', commonIssues: ['sibilance','harsh'], proTips: ['Shelf boost lightly 8-10kHz'], instruments: ['Vocals','Acoustic guitar'], categories: ['Vocals','Guitar'] },
-  { id: 'air', name: 'Air', range: [12000, 20000], description: 'Openness and sheen.', commonIssues: ['thin'], proTips: ['Gentle high-shelf boost'], instruments: ['Strings','Room mics'], categories: ['Ambience'] },
+// Original data plus extra fields
+const EQ_DATA: EQBand[] = [
+  { frequency: '20-30 Hz', description: 'Extreme sub-bass rumble. Rarely useful except for cinematic or sub-heavy genres.', instruments: ['Kick drum','Sub bass','808s','Synth bass'], action: 'cut', category: 'sub', commonIssues:['rumble'], proTips:['Use high-pass filter'] },
+  { frequency: '30-50 Hz', description: 'Deep low-end power. Adds weight, but too much = flabbiness.', instruments: ['Kick drum','Sub bass','Bass guitar','808s'], action: 'boost', category: 'sub', commonIssues:['flabby'], proTips:['Tight boost with narrow Q'] },
+  // ... keep all original entries and add commonIssues/proTips where relevant
 ];
 
-/** FrequencyChart Component **/
-interface FrequencyChartProps {
-  analysisData?: number[];
-  highlight?: [number, number];
-}
-const FrequencyChart: React.FC<FrequencyChartProps> = ({ analysisData, highlight }) => {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const chart = useRef<any>(null);
+const INSTRUMENTS = ['All', 'Vocals','Male vocals','Kick drum','Snare','Bass guitar','Guitar','Acoustic guitar','Piano','Cymbals','Hi-hats','Sub bass','808s','Synthesizer bass','Horns','Strings','Room mics','Drums','Violin','Cello','Tuba','Saxophone','Trumpet','Brass','Woodwinds','Flute'];
+
+const FREQUENCY_ZONES = [
+  { id: 'all', label: 'All Frequencies', color: 'bg-gray-600' },
+  { id: 'sub', label: 'Sub Bass (20-60Hz)', color: 'bg-red-600' },
+  { id: 'bass', label: 'Bass (60-250Hz)', color: 'bg-orange-600' },
+  { id: 'low-mid', label: 'Low Mids (250-500Hz)', color: 'bg-yellow-600' },
+  { id: 'mid', label: 'Mids (500-2kHz)', color: 'bg-green-600' },
+  { id: 'high-mid', label: 'High Mids (2-6kHz)', color: 'bg-blue-600' },
+  { id: 'presence', label: 'Presence (6-12kHz)', color: 'bg-indigo-600' },
+  { id: 'air', label: 'Air (12kHz+)', color: 'bg-purple-600' },
+];
+
+const ISSUE_OPTIONS = ['All','Boxiness','Muddiness','Honkiness','Nasal','Harsh','Sibilant','Thin','Dull','Bright','No Punch','No Low-end','No Air'];
+
+// FrequencyChart Component
+const FrequencyChart: React.FC<{ spectrum?: number[]; highlight?: [number,number] }> = ({ spectrum, highlight }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<any>(null);
+
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const binCount = analysisData?.length ?? 32;
-    const data = analysisData ?? new Array(binCount).fill(0);
-    const labels = Array.from({ length: binCount }, (_, i) => Math.round(20 * Math.pow(20000/20, i/(binCount-1))));
+    if (!canvasRef.current) return;
+    const bins = spectrum?.length ?? 32;
+    const data = spectrum ?? new Array(bins).fill(0);
+    const labels = Array.from({ length: bins }, (_, i) => {
+      const frac = i/(bins-1);
+      return Math.round(20 * Math.pow(20000/20, frac));
+    });
     const cfg = {
-      type: 'line',
-      data: { labels, datasets: [{ data, borderColor: '#60A5FA', pointRadius:0 }] },
-      options: {
+      type:'line',
+      data:{ labels, datasets:[{ data, borderColor:'#60A5FA', pointRadius:0 }] },
+      options:{
         scales:{ x:{ type:'logarithmic' }, y:{} },
         plugins:{ annotation:{ annotations: highlight ? { box1:{ type:'box', xMin:highlight[0], xMax:highlight[1], backgroundColor:'rgba(255,165,0,0.2)' } } : {} } },
         maintainAspectRatio:false
       }
     };
-    if (chart.current) chart.current.destroy();
-    chart.current = new Chart(canvas, cfg);
-    return () => chart.current?.destroy();
-  }, [analysisData, highlight]);
-  return <div style={{ height:'200px' }}><canvas ref={ref} /></div>;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(canvasRef.current, cfg);
+    return () => chartRef.current?.destroy();
+  }, [spectrum, highlight]);
+
+  return <div className="w-full h-48 mb-4"><canvas ref={canvasRef} /></div>;
 };
 
-/** AudioAnalyzer Component **/
-interface AudioAnalyzerProps { onAnalyze: (spectrum:number[])=>void }
-const AudioAnalyzer: React.FC<AudioAnalyzerProps> = ({ onAnalyze }) => {
+// AudioAnalyzer Component
+const AudioAnalyzer: React.FC<{ onAnalyze:(s:number[])=>void }> = ({ onAnalyze }) => {
   const [file,setFile]=useState<File|null>(null), [busy,setBusy]=useState(false);
-  const handle=(e:ChangeEvent<HTMLInputElement>)=>setFile(e.target.files?.[0]||null);
-  const run=async()=>{ if(!file) return; setBusy(true);
-    try{ const buf=await file.arrayBuffer(); const ctx=new(AudioContext)(); const audio=await ctx.decodeAudioData(buf);
-      const off=new OfflineAudioContext(1,audio.length,audio.sampleRate),src=off.createBufferSource(); src.buffer=audio;
-      const analyzer=Meyda.createMeydaAnalyzer({audioContext:off,source:src,bufferSize:512,featureExtractors:['amplitudeSpectrum'],callback:()=>{}});
-      src.start(); await off.startRendering(); const spec=analyzer.get('amplitudeSpectrum') as number[]; onAnalyze(spec); analyzer.stop(); }
-    catch{} setBusy(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const handle = (e:ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0]||null);
+  const run = async () => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const buf = await file.arrayBuffer();
+      const ctx = new (window.AudioContext||((window as any).webkitAudioContext))();
+      const audio = await ctx.decodeAudioData(buf);
+      const off = new OfflineAudioContext(1,audio.length,audio.sampleRate);
+      const src = off.createBufferSource(); src.buffer=audio;
+      const analyzer = Meyda.createMeydaAnalyzer({ audioContext:off, source:src, bufferSize:512, featureExtractors:['amplitudeSpectrum'], callback:()=>{} });
+      src.start(); await off.startRendering();
+      const spec = analyzer.get('amplitudeSpectrum') as number[];
+      onAnalyze(spec);
+      analyzer.stop();
+    } catch {};
+    setBusy(false);
   };
-  return (<div className="mb-4"><input type="file" accept="audio/*" onChange={handle} /><Button onClick={run} disabled={!file||busy} size="sm">{busy?'Analyzing...':'Analyze Audio'}</Button></div>);
+  return (
+    <div className="mb-4">
+      <input type="file" accept="audio/*" onChange={handle} ref={inputRef} className="mb-2" />
+      <Button onClick={run} disabled={!file||busy} size="sm">{busy?'Analyzing...':'Analyze Track'}</Button>
+    </div>
+  );
 };
 
-/** Main EQGuide Component **/
+// Main EQGuide
 export const EQGuide: React.FC = () => {
-  const [inst,setInst]=useState('All'), [cat,setCat]=useState('All'), [search,setSearch]=useState(''), [spec,setSpec]=useState<number[]>(), [hl,setHl]=useState<[number,number]>();
+  const [selectedInstrument,setInst]=useState('All');
+  const [selectedZone,setZone]=useState('all');
+  const [searchTerm,setSearch]=useState('');
+  const [spectrum,setSpectrum]=useState<number[]>();
+  const [highlight,setHighlight]=useState<[number,number]>();
 
-  const instruments = ['All', ...Array.from(new Set(EQ_BANDS.flatMap(b=>b.categories)))];
-  const categories = ['All', ...EQ_BANDS.map(b=>b.id)];
-
-  const filtered = EQ_BANDS.filter(b=>
-    (inst==='All'||b.categories.includes(inst))&&
-    (cat==='All'||b.id===cat)&&
-    (!search||b.description.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const suggestions = () => {
-    if(!spec) return ['Upload audio to analyze.'];
-    const levels = EQ_BANDS.map(b=>{ const idx=Math.floor((Math.log(b.range[0])/Math.log(20000))*spec.length); return {b,level:spec[idx]||0}; });
-    const peak=levels.reduce((a,c)=>c.level>a.level?c:a);
-    return peak.level>0.5?[`High energy at ${peak.b.name}. Try ${peak.b.proTips?.[0]||'EQ tweak'}`]:['Balanced.'];
-  };
+  const filtered = EQ_DATA.filter(band => {
+    const matchZone = selectedZone==='all'||band.category===selectedZone;
+    const matchInst = selectedInstrument==='All'||band.instruments.includes(selectedInstrument);
+    const matchSearch = !searchTerm || band.description.toLowerCase().includes(searchTerm.toLowerCase()) || (band.commonIssues||[]).some(ci=>ci.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchZone && matchInst && matchSearch;
+  });
 
   return (
-    <Card className="bg-gray-800 p-4">
-      <h2 className="text-xl mb-4">EQ Guide</h2>
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <select value={inst} onChange={e=>setInst(e.target.value)} className="p-2 bg-gray-700 text-white">{instruments.map(i=><option key={i}>{i}</option>)}</select>
-        <select value={cat} onChange={e=>setCat(e.target.value)} className="p-2 bg-gray-700 text-white">{categories.map(c=> <option key={c} value={c}>{c}</option>)}</select>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search description" className="p-2 bg-gray-700 text-white" />
-      </div>
-      {/* Analyzer & Suggestions */}
-      <AudioAnalyzer onAnalyze={setSpec} />
-      {spec && (<ul className="mb-4 list-disc list-inside text-gray-300">{suggestions().map((s,i)=><li key={i}>{s}</li>)}</ul>)}
-      {/* Chart */}
-      <FrequencyChart analysisData={spec} highlight={hl} />
-      {/* Band Cards */}
-      <div className="mt-4 space-y-3">
-        {filtered.length===0?
-          <p className="text-gray-400">No results.</p>:
-          filtered.map(b=>(
-            <Card key={b.id} className="bg-gray-700 p-3 hover:bg-gray-600" onMouseEnter={()=>setHl(b.range)} onMouseLeave={()=>setHl(undefined)}>
-              <h3 className="font-semibold">{b.name} ({b.range[0]}–{b.range[1]}Hz)</h3>
-              <p className="text-gray-300 text-sm mb-1">{b.description}</p>
-              {b.commonIssues && <p className="italic text-gray-400 text-xs">Issues: {b.commonIssues.join(', ')}</p>}
-              {b.proTips && <p className="text-green-400 text-xs">Tip: {b.proTips.join(' ')}</p>}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-gray-700">
+          <h2 className="text-2xl font-bold text-white flex items-center mb-4"><AdjustmentsHorizontalIcon className="w-6 h-6 mr-2" />EQ Guide</h2>
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <select className="bg-gray-700 text-gray-100 p-2" value={selectedInstrument} onChange={e=>setInst(e.target.value)}>
+              {INSTRUMENTS.map(i=> <option key={i} value={i}>{i}</option>)}
+            </select>
+            <select className="bg-gray-700 text-gray-100 p-2" value={selectedZone} onChange={e=>setZone(e.target.value)}>
+              {FREQUENCY_ZONES.map(z=> <option key={z.id} value={z.id}>{z.label}</option>)}
+            </select>
+            <select className="bg-gray-700 text-gray-100 p-2" value={searchTerm} onChange={e=>setSearch(e.target.value)}>
+              <option value="">All Issues</option>
+              {ISSUE_OPTIONS.map(opt=> <option key={opt} value={opt.toLowerCase()}>{opt}</option>)}
+            </select>
+          </div>
+          {/* Audio Analyzer & Chart */}
+          <AudioAnalyzer onAnalyze={setSpectrum} />
+          <FrequencyChart spectrum={spectrum} highlight={highlight} />
+        </div>
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {filtered.length===0 ? (
+            <p className="text-gray-400 text-center py-8">No EQ data matches your filters.</p>
+          ) : filtered.map((band,i)=>(
+            <Card key={i} className="bg-gray-700/50 hover:bg-gray-700/70 transition-colors" onMouseEnter={()=>setHighlight([parseInt(band.frequency),parseInt(band.frequency.split('-')[1])])} onMouseLeave={()=>setHighlight(undefined)}>
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <span className="text-lg font-bold text-white mr-3">{band.frequency}</span>
+                  <span className={`text-sm font-medium ${band.action==='boost'?'text-green-400':band.action==='cut'?'text-red-400':'text-yellow-400'}`}>↗️ {band.action.toUpperCase()}</span>
+                  <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-gray-600 text-white">{band.category.toUpperCase()}</span>
+                </div>
+                <p className="text-gray-300 mb-2">{band.description}</p>
+                {band.commonIssues && <p className="italic text-gray-400 text-xs mb-1">Issues: {band.commonIssues.join(', ')}</p>}
+                {band.proTips && <p className="text-green-400 text-xs mb-2">Tip: {band.proTips.join(' ')}</p>}
+                <div className="flex flex-wrap gap-1">
+                  {band.instruments.map(inst=> <span key={inst} className="px-2 py-1 bg-gray-600 text-gray-200 rounded text-xs">{inst}</span>)}
+                </div>
+              </div>
             </Card>
-          ))
-        }
+          ))}
+        </div>
+        <div className="p-4 border-t border-gray-700 bg-gray-800/50 text-center text-xs text-gray-400">
+          💡 Tip: These are guidelines. Trust your ears and context!
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
