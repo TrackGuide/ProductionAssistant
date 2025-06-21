@@ -1,6 +1,9 @@
 import { GenerateContentResponse } from '@google/genai';
-import { genAI } from './geminiService';
 import { GEMINI_MODEL_NAME } from '../constants';
+
+const genAI = new GoogleGenAI({
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY
+});
 
 export interface OscSettings {
   [key: string]: number;
