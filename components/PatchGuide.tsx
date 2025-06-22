@@ -11,29 +11,6 @@ import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'characterMood', 'movementDynamics'];
 const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
 
-// Helper: Group synths by company, robust to string/object
-const synthGroups: Record<string, string[]> = {};
-SYNTH_OPTIONS.forEach(synth => {
-  if (typeof synth === 'string') {
-    const [company] = synth.split(' ');
-    if (!synthGroups[company]) synthGroups[company] = [];
-    synthGroups[company].push(synth);
-  } else if (synth && typeof synth === 'object' && synth.label && Array.isArray(synth.options)) {
-    // For grouped options like Generic Synth
-    synth.options.forEach(opt => {
-      if (!synthGroups[synth.label]) synthGroups[synth.label] = [];
-      synthGroups[synth.label].push(opt.value);
-    });
-  }
-});
-Object.keys(synthGroups).forEach(company => {
-  synthGroups[company].sort();
-});
-const synthGroupList = Object.entries(synthGroups).sort(([a], [b]) => a.localeCompare(b));
-
-// Helper: Genre categories and mapping
-const GENRE_CATEGORIES = PATCH_INPUT_CATEGORIES.find(cat => cat.key === 'genre')?.examples as { subCategory: string; examples: string[]; }[];
-
 export const PatchGuide: React.FC = () => {
   // Form inputs
   const [synth, setSynth] = useState('Generic');
@@ -119,15 +96,12 @@ export const PatchGuide: React.FC = () => {
     setSynthConfig(null);
   };
 
-  // --- GENRE BUBBLE SELECTOR ---
-  const [selectedGenreCategory, setSelectedGenreCategory] = useState<string | null>(null);
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       {/* FORM */}
       <form onSubmit={onSubmit} className="space-y-4">
         <Card>
-          <h2 className="text-xl font-semibold text-white">Patch Guide Parameters</h2>
+          <h2 className="text-xl font-semibold text-white">Describe the sound, select your synth and voice type, and get a detailed patch recipe.</h2>
           {/* --- Top row: genre, synth, voice type as dropdowns in three columns --- */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Genre dropdown */}
@@ -139,9 +113,9 @@ export const PatchGuide: React.FC = () => {
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
                 <option value="" disabled>Select genre</option>
-                {PATCH_INPUT_CATEGORIES[0].examples.map(group => (
+                {(PATCH_INPUT_CATEGORIES[0].examples as { group: string; examples: string[] }[]).filter(group => typeof group === 'object' && group.group && Array.isArray(group.examples)).map(group => (
                   <optgroup key={group.group} label={group.group}>
-                    {group.examples.map(g => (
+                    {group.examples.map((g: string) => (
                       <option key={g} value={g}>{g}</option>
                     ))}
                   </optgroup>
@@ -178,61 +152,46 @@ export const PatchGuide: React.FC = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Genre selection grouped by category */}
-            <div>
-              <label className="block text-gray-200">Genre</label>
-              {/* Genre bubble selector */}
-              <div className="flex flex-wrap gap-2 mt-1">
-                {GENRE_CATEGORIES.map(cat => (
-                  <button
-                    type="button"
-                    key={cat.subCategory}
-                    className={`px-3 py-1 rounded-full border text-sm ${selectedGenreCategory === cat.subCategory ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
-                    onClick={() => setSelectedGenreCategory(cat.subCategory)}
-                  >
-                    {cat.subCategory}
-                  </button>
-                ))}
-              </div>
-              {selectedGenreCategory && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {GENRE_CATEGORIES.find(cat => cat.subCategory === selectedGenreCategory)?.examples.map(g => (
+            {/* Render collapsible bubble selectors for all additional categories (characterMood, movementDynamics, era, concept) */}
+            {['characterMood', 'movementDynamics', 'era', 'concept'].map(key => {
+              const cat = PATCH_INPUT_CATEGORIES.find(c => c.key === key);
+              if (!cat) return null;
+              return (
+                <div key={cat.category} className="col-span-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-gray-200">{cat.category}</label>
                     <button
                       type="button"
-                      key={g}
-                      className={`px-3 py-1 rounded-full border text-sm ${inputs.genre.includes(g) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
-                      onClick={() => {
-                        setInputs({ ...inputs, genre: inputs.genre.includes(g) ? inputs.genre.filter(v => v !== g) : [...inputs.genre, g] });
-                      }}
+                      onClick={() => setCollapsed(c => ({ ...c, [cat.key]: !c[cat.key] }))}
+                      className="text-gray-400 hover:text-gray-200"
                     >
-                      {g}
+                      {collapsed[cat.key] ? '▼' : '▲'}
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Synth selection grouped by company */}
-            <div>
-              <label className="block text-gray-200">Synth</label>
-              {/* Synth bubble selector */}
-              {synthGroupList.map(([company, synths]) => (
-                <div key={company} className="mb-2">
-                  <div className="text-xs text-gray-400 mb-1">{company}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {synths.map(s => (
-                      <button
-                        type="button"
-                        key={s}
-                        className={`px-3 py-1 rounded-full border text-sm ${synth === s ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
-                        onClick={() => setSynth(s)}
-                      >
-                        {s.replace(company + ' ', '')}
-                      </button>
-                    ))}
                   </div>
+                  {!collapsed[cat.key] && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {cat.examples.map((ex: any) => (
+                        <button
+                          type="button"
+                          key={ex}
+                          className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(ex) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                          onClick={() => {
+                            const arr = Array.isArray(inputs[cat.key]) ? [...inputs[cat.key] as string[]] : [];
+                            if (arr.includes(ex)) {
+                              setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== ex) });
+                            } else {
+                              setInputs({ ...inputs, [cat.key]: [...arr, ex] });
+                            }
+                          }}
+                        >
+                          {ex}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </Card>
         <div className="flex items-center space-x-4">
