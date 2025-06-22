@@ -262,35 +262,39 @@
   },
   "Generic": {
     "name": "Generic Synth",
+    "company": "General",
+    "type": "Virtual Analog",
     "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
-      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+      {
+        "type": "Saw, Square, Sine, Triangle",
+        "features": ["Blend/Mix", "Detune", "Unison"]
+      }
     ],
     "filters": [
       {
-        "name": "Filter",
-        "types": ["Lowpass", "Highpass", "Bandpass"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive"]
+        "type": "Lowpass, Highpass, Bandpass",
+        "features": ["Resonance", "Drive"]
       }
     ],
-    "modSources": [
-      {"name": "Envelope", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Velocity", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
+    "envelopes": [
+      {
+        "type": "ADSR",
+        "features": ["Assignable to Amp, Filter, Pitch"]
+      }
     ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Pulse Width"]},
-      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive"]},
-      {"section": "Amp", "params": ["Level"]}
+    "lfos": [
+      {
+        "type": "LFO 1, LFO 2",
+        "features": ["Assignable to most parameters", "Sync to tempo"]
+      }
     ],
     "effects": [
-      {"name": "Reverb", "parameters": ["Mix", "Decay"]},
-      {"name": "Delay", "parameters": ["Mix", "Time", "Feedback"]},
-      {"name": "Chorus", "parameters": ["Rate", "Depth", "Mix"]}
-    ]
+      "Chorus", "Delay", "Reverb", "Distortion"
+    ],
+    "modulation": [
+      "Matrix routing", "Macro controls"
+    ],
+    "description": "A generic synthesizer with common subtractive synthesis features. Use this if your synth is not listed."
   },
   "Alchemy": {
     "name": "Apple Alchemy",

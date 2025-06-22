@@ -232,7 +232,12 @@ export const SYNTH_OPTIONS = [
   'Kilohearts Phase Plant',
   'Omnisphere',
   'Arturia Analog Lab',
-  'Generic Synth',
+  {
+    label: 'General',
+    options: [
+      { value: 'Generic Synth', label: 'Generic Synth' }
+    ]
+  },
   'TAL TAL-U-No-LX',
   'u-he Repro-5',
   'u-he Repro-1',

@@ -38,6 +38,33 @@ export const PatchGuide: React.FC = () => {
     // advanced keys default to []
     ...Object.fromEntries(ADVANCED_INPUT_KEYS.map(k => [k, []]))
   });
+  // Fix type error: add index signature to collapsed state type
+  type CollapsedState = {
+    [key: string]: boolean;
+    genre: boolean;
+    synth: boolean;
+    voiceType: boolean;
+    timbre: boolean;
+    notes: boolean;
+    movement: boolean;
+    mood: boolean;
+    era: boolean;
+    inspiration: boolean;
+    dynamics: boolean;
+  };
+
+  const [collapsed, setCollapsed] = useState<CollapsedState>({
+    genre: false,
+    synth: false,
+    voiceType: true,
+    timbre: true,
+    notes: true,
+    movement: true,
+    mood: true,
+    era: true,
+    inspiration: true,
+    dynamics: true,
+  });
 
   // AI results & parameters
   const [guide, setGuide] = useState<string | null>(null);
@@ -136,27 +163,38 @@ export const PatchGuide: React.FC = () => {
             {/* Bubble selector for other categories */}
             {PATCH_INPUT_CATEGORIES.filter(cat => cat.key !== 'genre').map(cat => (
               <div key={cat.category} className="col-span-2">
-                <label className="block text-gray-200">{cat.category}</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {cat.examples.map((ex: any) => (
-                    <button
-                      type="button"
-                      key={typeof ex === 'string' ? ex : ex.subCategory}
-                      className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(typeof ex === 'string' ? ex : ex.subCategory) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
-                      onClick={() => {
-                        const val = typeof ex === 'string' ? ex : ex.subCategory;
-                        const arr = Array.isArray(inputs[cat.key]) ? [...inputs[cat.key] as string[]] : [];
-                        if (arr.includes(val)) {
-                          setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== val) });
-                        } else {
-                          setInputs({ ...inputs, [cat.key]: [...arr, val] });
-                        }
-                      }}
-                    >
-                      {typeof ex === 'string' ? ex : ex.subCategory}
-                    </button>
-                  ))}
+                <div className="flex justify-between items-center">
+                  <label className="block text-gray-200">{cat.category}</label>
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(c => ({ ...c, [cat.key]: !c[cat.key] }))}
+                    className="text-gray-400 hover:text-gray-200"
+                  >
+                    {collapsed[cat.key] ? '▼' : '▲'}
+                  </button>
                 </div>
+                {!collapsed[cat.key] && (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {cat.examples.map((ex: any) => (
+                      <button
+                        type="button"
+                        key={typeof ex === 'string' ? ex : ex.subCategory}
+                        className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(typeof ex === 'string' ? ex : ex.subCategory) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                        onClick={() => {
+                          const val = typeof ex === 'string' ? ex : ex.subCategory;
+                          const arr = Array.isArray(inputs[cat.key]) ? [...inputs[cat.key] as string[]] : [];
+                          if (arr.includes(val)) {
+                            setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== val) });
+                          } else {
+                            setInputs({ ...inputs, [cat.key]: [...arr, val] });
+                          }
+                        }}
+                      >
+                        {typeof ex === 'string' ? ex : ex.subCategory}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
