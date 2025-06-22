@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
 import { ModulationMatrix, ModRouting } from './ModulationMatrix';
-import { generateSynthPatchGuide } from '../services/patchGuideService';
+import { generateSynthPatchGuide } from '../services/geminiService';
 
 const SYNTH_OPTIONS = [
   'Serum','Vital','Pigments','Massive','Massive X',
