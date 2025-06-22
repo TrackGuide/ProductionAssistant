@@ -189,26 +189,17 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
 
 // --- Patch Guide input categories for robust UI ---
 export const PATCH_INPUT_CATEGORIES = [
-  {
-    category: "Genre",
-    key: "genre",
-    examples: [
-      { group: "Electronic", examples: [
-        "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "IDM", "Breakbeat", "Jungle", "Hardstyle", "Gabber", "Psytrance", "Progressive House", "Deep House", "Tech House", "Afro House", "Electro", "Future Bass", "Trap (EDM)", "Minimal Techno", "Acid House", "UK Garage", "Grime", "Footwork", "Synthwave", "Lofi", "Ambient", "Downtempo", "Chillout", "Vaporwave", "New Age", "Berlin School", "Glitch", "EBM", "Industrial", "Darkwave"
-      ]},
-      { group: "Band, Pop, and World", examples: [
-        "Rock", "Post-Punk", "Shoegaze", "Krautrock", "Goth", "Space Rock", "Drone Metal", "Funk", "Pop", "Soul", "R&B", "New Wave", "Synth-Pop", "Disco", "Hyperpop", "Hip Hop", "Reggae", "Dub", "Jazz Fusion", "Smooth Jazz", "Folk-Tronic", "World Music", "Afrobeat"
-      ]},
-      { group: "Cinematic, Scoring and Abstract", examples: [
-        "Cinematic", "Experimental", "Video Game Score", "Chiptune", "SFX for Film", "Noise"
-      ]}
-    ]
-  },
-  { category: "Voice Type", key: "voiceType", examples: ["Lead", "Pad", "Bass", "Pluck", "Bell", "Arp", "FX", "Drone", "Wobble", "Stab", "Texture", "Atmosphere", "Riser", "Impact"] },
-  { category: "Character & Mood", key: "characterMood", examples: ["Glassy", "Warm", "Bright", "Dark", "Metallic", "Wooden", "Raspy", "Smooth", "Gritty", "Fuzzy", "Distorted", "Clean", "Hollow", "Resonant", "Breathy", "Digital", "Analog", "Noisy", "Sharp", "Dull", "Crisp", "Dreamy", "Aggressive", "Melancholic", "Uplifting", "Eerie", "Serene", "Tense", "Playful", "Mysterious", "Epic", "Brooding", "Anxious", "Joyful", "Haunting", "Sacred"] },
-  { category: "Movement & Dynamics", key: "movementDynamics", examples: ["Evolving", "Swells", "Pulsing", "Rhythmic", "Static", "Sweeping", "Morphing", "Glitchy", "Choppy", "Fluttering", "Driving", "Floating", "Warped", "Phasing", "Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] },
-  { category: "Era/Style", key: "era", examples: ["Vintage", "Modern", "80s", "90s", "Futuristic", "Retro", "Old-School", "Contemporary", "Y2K", "Cyberpunk"] },
-  { category: "Inspiration/Concept", key: "concept", examples: ["Cosmic", "Underwater", "Robotic", "Alien", "Nature", "Industrial", "Organic", "Mechanical", "Spiritual", "Abstract", "Forest", "Cave", "Machine", "Ghost", "Desert", "Arctic", "Volcanic"] }
+  { category: "Genre", key: "genre", examples: [
+    "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "Synthwave", "Ambient", "Industrial", "Rock", "Pop", "Hip Hop", "R&B", "Jazz", "Experimental", "Cinematic", "Video Game Score", "Chiptune", "Noise"
+  ]},
+  { category: "Voice Type", key: "voiceType", examples: [
+    "Lead", "Pad", "Bass", "Pluck", "Arp", "FX", "Drone", "Texture", "Atmosphere", "Riser", "Impact", "Chord", "Stab"
+  ]},
+  { category: "Style & Mood", key: "styleMood", examples: [
+    "Glassy", "Warm", "Bright", "Dark", "Metallic", "Raspy", "Analog", "Digital", "Dreamy", "Aggressive", "Mysterious", "Epic", "Brooding", "Punchy", "Floating", "Gritty", "Distorted", "Clean", "Organic", "Mechanical",
+    "Futuristic", "Retro", "Cyberpunk", "Space", "Underwater", "Industrial", "Forest", "Ghost", "Machine", "Sacred", "Alien", "Abstract"
+  ]},
+  { category: "Reference Notes", key: "notes", type: "text", placeholder: "Reference artist, track, sound design concept, or extra notes..." }
 ];
 
 export const SYNTH_OPTIONS = [

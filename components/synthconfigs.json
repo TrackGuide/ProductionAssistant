@@ -44,15 +44,79 @@
       {"section": "Global", "params": ["Master Tune", "Master Level"]}
     ],
     "effects": [
-      {"name": "Hyper/Dimension", "modulatable": true, "parameters": ["Mix", "Size", "Detune"]},
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Hyper/Dimension", "modulatable": true, "parameters": [
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Detune", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
       {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
@@ -102,13 +166,66 @@
       {"section": "Global", "params": ["Master Tune", "Master Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "Pigments": {
@@ -157,13 +274,66 @@
       {"section": "Global", "params": ["Master Tune", "Master Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "Diva": {
@@ -278,9 +448,32 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "Alchemy": {
@@ -319,15 +512,74 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Bitcrusher", "modulatable": true, "parameters": ["Amount", "Mix"]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
       {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
@@ -364,10 +616,32 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "FM8": {
@@ -410,12 +684,32 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus/Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Rate", "Depth"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Tremolo", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "Hive2": {
@@ -461,13 +755,66 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Type", "Mix"]},
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]}
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "MassiveX": {
@@ -503,7 +850,7 @@
     ],
     "modDestinations": [
       {"section": "Oscillator", "params": ["Pitch", "Warp", "Level"]},
-      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix", "Type"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
@@ -513,7 +860,21 @@
       {"name": "Stereo FX 1", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
       {"name": "Stereo FX 2", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
       {"name": "Stereo FX 3", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Shelf", "Boost", "Freq", "High Shelf"]}
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "Low Gain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Mid Freq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "Mid Gain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "High Gain", "unit": "dB", "range": [-12, 12], "type": "float" }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]}
     ]
   },
   "Omnisphere": {
@@ -553,69 +914,75 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Wah", "modulatable": true, "parameters": ["Type", "Mix", "Frequency"]},
-      {"name": "Tape Saturation", "modulatable": true, "parameters": ["Amount", "Mix"]}
-    ]
-  },
-  "PhasePlant": {
-    "name": "Kilohearts Phase Plant",
-    "oscillators": [
-      {"id": "1", "name": "Generator 1", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
-      {"id": "2", "name": "Generator 2", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
-      {"id": "3", "name": "Generator 3", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "Filter 1",
-        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      },
-      {
-        "name": "Filter 2",
-        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "Env 3", "type": "Envelope"},
-      {"name": "Env 4", "type": "Envelope"},
-      {"name": "LFO 1", "type": "LFO"},
-      {"name": "LFO 2", "type": "LFO"},
-      {"name": "LFO 3", "type": "LFO"},
-      {"name": "LFO 4", "type": "LFO"},
-      {"name": "Random", "type": "Random"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Velocity", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"},
-      {"name": "Aftertouch", "type": "MIDI"},
-      {"name": "Pitch Bend", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Generator", "params": ["Pitch", "Level", "Type"]},
-      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Distortion", "modulatable": true, "parameters": ["Type", "Drive", "Mix"]},
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "RetroSynth": {
@@ -649,12 +1016,75 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
   "SH101": {
@@ -725,263 +1155,38 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Type", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]}
-    ]
-  },
-  "Wavetable": {
-    "name": "Ableton Wavetable",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "Filter 1",
-        "types": ["Clean", "OSR", "MS2", "SMP", "PRD", "Classic", "Bandpass", "Notch", "Highpass", "Lowpass"],
-        "defaultType": "Clean",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Morph", "Keytrack", "Mix"]
-      },
-      {
-        "name": "Filter 2",
-        "types": ["Clean", "OSR", "MS2", "SMP", "PRD", "Classic", "Bandpass", "Notch", "Highpass", "Lowpass"],
-        "defaultType": "Clean",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Morph", "Keytrack", "Mix"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "Env 3", "type": "Envelope"},
-      {"name": "LFO 1", "type": "LFO"},
-      {"name": "LFO 2", "type": "LFO"},
-      {"name": "LFO 3", "type": "LFO"},
-      {"name": "LFO 4", "type": "LFO"},
-      {"name": "Random", "type": "Random"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Velocity", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"},
-      {"name": "Aftertouch", "type": "MIDI"},
-      {"name": "Pitch Bend", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Position", "Warp", "Level"]},
-      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Morph", "Mix"]},
-      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Morph", "Mix"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
-    ]
-  },
-  "Jupiter8": {
-    "name": "Roland Jupiter-8",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 12dB", "Lowpass 24dB", "Highpass"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO 1", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"},
-      {"name": "Pitch Bend", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]}
-    ]
-  },
-  "TAL-U-No-LX": {
-    "name": "TAL TAL-U-No-LX",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Level"]},
-      {"id": "Sub", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass", "Highpass"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": false, "parameters": ["On/Off", "Mode"]}
-    ]
-  },
-  "Repro-5": {
-    "name": "u-he Repro-5",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
-    ]
-  },
-  "Repro-1": {
-    "name": "u-he Repro-1",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
-    ]
-  },
-  "Monark": {
-    "name": "Native Instruments Monark",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "3", "name": "Osc 3", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
-    ]
-  },
-  "Bazille": {
-    "name": "Bazille",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
-      {"id": "3", "name": "Osc 3", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
-      {"id": "4", "name": "Osc 4", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "Filter 1",
-        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      },
-      {
-        "name": "Filter 2",
-        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO 1", "type": "LFO"},
-      {"name": "LFO 2", "type": "LFO"},
-      {"name": "LFO 3", "type": "LFO"},
-      {"name": "LFO 4", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Velocity", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"},
-      {"name": "Aftertouch", "type": "MIDI"},
-      {"name": "Pitch Bend", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level", "Phase"]},
-      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]}
     ]
   },
   "Zebra2": {
@@ -1028,161 +1233,104 @@
       {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+      {"name": "Chorus", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 10], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Delay", "unit": "ms", "range": [1, 30], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Flanger", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Manual", "unit": "ms", "range": [0, 10], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 99], "type": "float" },
+        { "name": "Phase", "unit": "°", "range": [0, 180], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "LFOShape", "type": "enum", "options": ["Sine", "Triangle", "Saw"] }
+      ]},
+      {"name": "Phaser", "modulatable": true, "parameters": [
+        { "name": "Rate", "unit": "Hz", "range": [0.1, 5], "type": "float" },
+        { "name": "Depth", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 95], "type": "float" },
+        { "name": "Stages", "unit": "", "range": [2, 12], "type": "int" },
+        { "name": "Center", "unit": "Hz", "range": [100, 2000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "Distortion", "modulatable": true, "parameters": [
+        { "name": "Drive", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Tone", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Level", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["SoftClip", "HardClip", "Tube", "Fuzz"] }
+      ]},
+      {"name": "Compressor", "modulatable": true, "parameters": [
+        { "name": "Threshold", "unit": "dB", "range": [-60, 0], "type": "float" },
+        { "name": "Ratio", "unit": ":", "range": [1, 20], "type": "float" },
+        { "name": "Attack", "unit": "ms", "range": [0.1, 100], "type": "float" },
+        { "name": "Release", "unit": "ms", "range": [10, 2000], "type": "float" },
+        { "name": "Knee", "unit": "dB", "range": [0, 12], "type": "float" },
+        { "name": "MakeupGain", "unit": "dB", "range": [0, 20], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" }
+      ]},
+      {"name": "EQ", "modulatable": true, "parameters": [
+        { "name": "LowFreq", "unit": "Hz", "range": [20, 500], "type": "float" },
+        { "name": "LowGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidFreq", "unit": "Hz", "range": [200, 5000], "type": "float" },
+        { "name": "MidGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "MidQ", "unit": "", "range": [0.5, 10], "type": "float" },
+        { "name": "HighFreq", "unit": "Hz", "range": [1000, 20000], "type": "float" },
+        { "name": "HighGain", "unit": "dB", "range": [-12, 12], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["LowShelf", "Peaking", "HighShelf"] }
+      ]},
+      {"name": "Reverb", "modulatable": true, "parameters": [
+        { "name": "Decay", "unit": "s", "range": [0.1, 10], "type": "float" },
+        { "name": "PreDelay", "unit": "ms", "range": [0, 200], "type": "float" },
+        { "name": "Damping", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Size", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "HighCut", "unit": "Hz", "range": [500, 20000], "type": "float" },
+        { "name": "LowCut", "unit": "Hz", "range": [20, 1000], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Type", "type": "enum", "options": ["Room", "Hall", "Plate", "Spring"] }
+      ]},
+      {"name": "Delay", "modulatable": true, "parameters": [
+        { "name": "Time", "unit": "ms", "range": [1, 5000], "type": "float" },
+        { "name": "Feedback", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Mix", "unit": "%", "range": [0, 100], "type": "float" },
+        { "name": "Sync", "type": "boolean" },
+        { "name": "PingPong", "type": "boolean" },
+        { "name": "Tone", "unit": "Hz", "range": [20, 20000], "type": "float" }
+      ]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
     ]
   },
-  "PolyBrute": {
-    "name": "Arturia PolyBrute",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "Steiner-Parker",
-        "types": ["Lowpass", "Highpass", "Bandpass", "Notch"],
-        "defaultType": "Lowpass",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      },
-      {
-        "name": "Ladder",
-        "types": ["Lowpass 12dB", "Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "Env 3", "type": "Envelope"},
-      {"name": "LFO 1", "type": "LFO"},
-      {"name": "LFO 2", "type": "LFO"},
-      {"name": "LFO 3", "type": "LFO"},
-      {"name": "Morph", "type": "Macro"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Velocity", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"},
-      {"name": "Aftertouch", "type": "MIDI"},
-      {"name": "Pitch Bend", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "Steiner-Parker", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Ladder", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
-      {"section": "Amp", "params": ["Level"]},
-      {"section": "Morph", "params": ["Morph Amount"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
-      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
-      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
-    ]
-  },
-  "Minimoog": {
-    "name": "Moog Minimoog",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "3", "name": "Osc 3", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
-    ]
-  },
-  "OB-Xd": {
-    "name": "DiscoDSP OB-Xd",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "VCF",
-        "types": ["Lowpass 12dB", "Lowpass 24dB"],
-        "defaultType": "Lowpass 24dB",
-        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
-      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
-    ]
-  },
-  "MS-20": {
-    "name": "Korg MS-20",
-    "oscillators": [
-      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
-      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
-    ],
-    "filters": [
-      {
-        "name": "HPF",
-        "types": ["Highpass 12dB"],
-        "defaultType": "Highpass 12dB",
-        "parameters": ["Cutoff", "Resonance"]
-      },
-      {
-        "name": "LPF",
-        "types": ["Lowpass 12dB"],
-        "defaultType": "Lowpass 12dB",
-        "parameters": ["Cutoff", "Resonance"]
-      }
-    ],
-    "modSources": [
-      {"name": "Env 1", "type": "Envelope"},
-      {"name": "Env 2", "type": "Envelope"},
-      {"name": "LFO", "type": "LFO"},
-      {"name": "Keytrack", "type": "MIDI"},
-      {"name": "Mod Wheel", "type": "MIDI"}
-    ],
-    "modDestinations": [
-      {"section": "Oscillator", "params": ["Pitch", "Level"]},
-      {"section": "HPF", "params": ["Cutoff", "Resonance"]},
-      {"section": "LPF", "params": ["Cutoff", "Resonance"]},
-      {"section": "Amp", "params": ["Level"]}
-    ],
-    "effects": [
-      {"name": "Distortion", "modulatable": false, "parameters": ["Amount", "Mix"]}
-    ]
-  }
+  "fallbackStandardEffects": [
+    { "name": "Chorus" },
+    { "name": "Delay" },
+    { "name": "Reverb" },
+    { "name": "Flanger" },
+    { "name": "Phaser" },
+    { "name": "Distortion" },
+    { "name": "Bitcrusher" },
+    { "name": "Tape Saturation" },
+    { "name": "Compressor" },
+    { "name": "EQ" },
+    { "name": "Filter" },
+    { "name": "Wah" },
+    { "name": "Tremolo" },
+    { "name": "Insert Distortion" },
+    { "name": "Insert Bitcrusher" },
+    { "name": "Insert Comb Filter" },
+    { "name": "Insert Frequency Shifter" },
+    { "name": "Insert Ring Mod" },
+    { "name": "Insert Sample & Hold" },
+    { "name": "Insert EQ" },
+    { "name": "Stereo Chorus" },
+    { "name": "Stereo Flanger" },
+    { "name": "Stereo Phaser" },
+    { "name": "Stereo Delay" },
+    { "name": "Stereo Reverb" },
+    { "name": "Stereo Tape Saturation" },
+    { "name": "Hyper/Dimension" }
+  ]
 }
