@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
+import { PATCH_INPUT_CATEGORIES } from '../constants';
 
 const SYNTH_OPTIONS = [
   'Serum','Vital','Pigments','Massive','Massive X',
@@ -15,32 +16,26 @@ const SYNTH_OPTIONS = [
   'Alchemy','FM8','Phase Plant','Omnisphere','Analog Lab','Generic'
 ];
 
-const VOICE_TYPES = [
-  'Soft Lead','Hard Lead','Evolving Pad','Bass','Pluck',
-  'Ambient Texture','Arpeggio','Drone','FX','Keys'
-];
-
-const DESCRIPTORS = [
-  'Warm','Bright','Gritty','Smooth','Distorted',
-  'Clean','Vintage','Modern','Aggressive','Subtle'
-];
-
-const GENRES = [
-  'Ambient','EDM','Rock','Pop','Hip-Hop',
-  'Jazz','Classical','Experimental','Techno','House'
-];
-
 // Map knob [0-1] to frequency [20-20000] Hz
 const knobToHz = (v: number) =>
   Math.round(Math.max(20, Math.min(20000, 20 + v * (20000 - 20))));
 
+const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'timbre', 'notes'];
+const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
+
 export const PatchGuide: React.FC = () => {
   // Form inputs
   const [synth, setSynth] = useState('Generic');
-  const [voiceType, setVoiceType] = useState('Soft Lead');
-  const [descriptor, setDescriptor] = useState('Warm');
-  const [genre, setGenre] = useState('Ambient');
-  const [notes, setNotes] = useState('');
+  // New input state for robust form
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [inputs, setInputs] = useState<Record<string, string[] | string>>({
+    genre: [],
+    voiceType: [],
+    timbre: [],
+    notes: '',
+    // advanced keys default to []
+    ...Object.fromEntries(ADVANCED_INPUT_KEYS.map(k => [k, []]))
+  });
 
   // AI results & parameters
   const [guide, setGuide] = useState<string | null>(null);
@@ -79,8 +74,8 @@ export const PatchGuide: React.FC = () => {
     setGuide(null);
     try {
       const res = await generateSynthPatchGuide({
-        description: `${voiceType}, ${descriptor} for ${genre}. ${notes}`,
-        synth, voiceType, descriptor, genre, notes
+        description: `${inputs.patchStyle}, ${inputs.timbre} ${inputs.movement} ${inputs.mood} ${inputs.era} ${inputs.inspiration} ${inputs.dynamics}. ${inputs.notes}`,
+        synth, ...inputs
       });
       setGuide(res.text || '');
 
@@ -114,10 +109,14 @@ export const PatchGuide: React.FC = () => {
   // Reset
   const resetAll = () => {
     setSynth('Generic');
-    setVoiceType('Soft Lead');
-    setDescriptor('Warm');
-    setGenre('Ambient');
-    setNotes('');
+    setInputs({
+      genre: [],
+      voiceType: [],
+      timbre: [],
+      notes: '',
+      // advanced keys default to []
+      ...Object.fromEntries(ADVANCED_INPUT_KEYS.map(k => [k, []]))
+    });
     setGuide(null);
     setError('');
     setOscOct({ o1: 0, o2: 0, o3: 0 });
@@ -146,76 +145,74 @@ export const PatchGuide: React.FC = () => {
         <Card>
           <h2 className="text-xl font-semibold text-white">Patch Guide Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            {/* Synth */}
-            <div>
-              <label className="block text-gray-200">Synth</label>
-              <select
-                value={synth}
-                onChange={e => setSynth(e.target.value)}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
-                {SYNTH_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Voice Type */}
-            <div>
-              <label className="block text-gray-200">Voice Type</label>
-              <select
-                value={voiceType}
-                onChange={e => setVoiceType(e.target.value)}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
-                {VOICE_TYPES.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Descriptor */}
-            <div>
-              <label className="block text-gray-200">Descriptor</label>
-              <select
-                value={descriptor}
-                onChange={e => setDescriptor(e.target.value)}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
-                {DESCRIPTORS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Genre */}
-            <div>
-              <label className="block text-gray-200">Genre</label>
-              <select
-                value={genre}
-                onChange={e => setGenre(e.target.value)}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
-                {GENRES.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Notes */}
-            <div className="md:col-span-2">
-              <label className="block text-gray-200">Additional Notes</label>
+            {PATCH_INPUT_CATEGORIES.filter(cat => DEFAULT_INPUT_KEYS.includes(cat.key)).map(cat => (
+              <div key={cat.category}>
+                <label className="block text-gray-200">{cat.category}</label>
+                {Array.isArray(cat.examples[0]) || cat.examples[0]?.subCategory ? (
+                  <select
+                    multiple
+                    value={inputs[cat.key] as string[]}
+                    onChange={e => setInputs({ ...inputs, [cat.key]: Array.from(e.target.selectedOptions, o => o.value) })}
+                    className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+                  >
+                    {cat.examples.map((sub: any) => (
+                      sub.subCategory ? (
+                        <optgroup key={sub.subCategory} label={sub.subCategory}>
+                          {sub.examples.map((ex: string) => (
+                            <option key={ex} value={ex}>{ex}</option>
+                          ))}
+                        </optgroup>
+                      ) : (
+                        <option key={sub} value={sub}>{sub}</option>
+                      )
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    multiple
+                    value={inputs[cat.key] as string[]}
+                    onChange={e => setInputs({ ...inputs, [cat.key]: Array.from(e.target.selectedOptions, o => o.value) })}
+                    className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+                  >
+                    {cat.examples.map((ex: string) => (
+                      <option key={ex} value={ex}>{ex}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ))}
+            <div className="col-span-2">
+              <label className="block text-gray-200">Notes</label>
               <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                rows={3}
+                value={inputs.notes as string}
+                onChange={e => setInputs({ ...inputs, notes: e.target.value })}
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-                placeholder="Any specifics…"
+                rows={2}
               />
             </div>
-
           </div>
+          <Button type="button" onClick={() => setShowAdvanced(v => !v)}>
+            {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}
+          </Button>
+          {showAdvanced && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              {PATCH_INPUT_CATEGORIES.filter(cat => ADVANCED_INPUT_KEYS.includes(cat.key)).map(cat => (
+                <div key={cat.category}>
+                  <label className="block text-gray-200">{cat.category}</label>
+                  <select
+                    multiple
+                    value={inputs[cat.key] as string[]}
+                    onChange={e => setInputs({ ...inputs, [cat.key]: Array.from(e.target.selectedOptions, o => o.value) })}
+                    className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+                  >
+                    {cat.examples.map((ex: string) => (
+                      <option key={ex} value={ex}>{ex}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         <div className="flex items-center space-x-4">

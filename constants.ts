@@ -186,3 +186,27 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
   'bass_drum': 36,
   'snare_drum': 38
 };
+
+// --- Patch Guide input categories for robust UI ---
+export const PATCH_INPUT_CATEGORIES = [
+  {
+    category: "Genre",
+    key: "genre",
+    examples: [
+      { subCategory: "Electronic - Dance", examples: ["Techno", "House", "Trance", "Dubstep", "Drum & Bass", "IDM", "Breakbeat", "Jungle", "Hardstyle", "Gabber", "Psytrance", "Progressive House", "Deep House", "Tech House", "Afro House", "Electro", "Future Bass", "Trap (EDM)", "Minimal Techno", "Acid House", "UK Garage", "Grime", "Footwork"] },
+      { subCategory: "Electronic - Chill & Ambient", examples: ["Synthwave", "Lofi", "Ambient", "Downtempo", "Chillout", "Vaporwave", "New Age", "Berlin School"] },
+      { subCategory: "Electronic - Experimental & Industrial", examples: ["Glitch", "EBM", "Industrial", "Darkwave", "Noise"] },
+      { subCategory: "Rock & Alternative", examples: ["Rock", "Post-Punk", "Shoegaze", "Krautrock", "Goth", "Space Rock", "Drone Metal"] },
+      { subCategory: "Pop, Funk, Soul & Hip Hop", examples: ["Funk", "Pop", "Soul", "R&B", "New Wave", "Synth-Pop", "Disco", "Hyperpop", "Hip Hop"] },
+      { subCategory: "Jazz, World & Reggae", examples: ["Reggae", "Dub", "Jazz Fusion", "Smooth Jazz", "Folk-Tronic", "World Music", "Afrobeat"] },
+      { subCategory: "Cinematic, Scores & Abstract", examples: ["Cinematic", "Experimental", "Video Game Score", "Chiptune", "SFX for Film"] }
+    ]
+  },
+  { category: "Voice Type", key: "voiceType", examples: ["Lead", "Pad", "Bass", "Pluck", "Bell", "Arp", "FX", "Drone", "Wobble", "Stab", "Texture", "Atmosphere", "Riser", "Impact"] },
+  { category: "Timbre/Character", key: "timbre", examples: ["Glassy", "Warm", "Bright", "Dark", "Metallic", "Wooden", "Raspy", "Smooth", "Gritty", "Fuzzy", "Distorted", "Clean", "Hollow", "Resonant", "Breathy", "Digital", "Analog", "Noisy", "Sharp", "Dull", "Crisp"] },
+  { category: "Movement/Evolution", key: "movement", examples: ["Evolving", "Swells", "Pulsing", "Rhythmic", "Static", "Sweeping", "Morphing", "Glitchy", "Choppy", "Fluttering", "Driving", "Floating", "Warped", "Phasing"] },
+  { category: "Emotion/Mood", key: "mood", examples: ["Dreamy", "Aggressive", "Melancholic", "Uplifting", "Eerie", "Serene", "Tense", "Playful", "Mysterious", "Epic", "Dark", "Brooding", "Anxious", "Joyful", "Haunting", "Sacred"] },
+  { category: "Era/Style", key: "era", examples: ["Vintage", "Modern", "80s", "90s", "Futuristic", "Retro", "Old-School", "Contemporary", "Y2K", "Cyberpunk"] },
+  { category: "Inspiration/Concept", key: "inspiration", examples: ["Cosmic", "Underwater", "Robotic", "Alien", "Nature", "Industrial", "Organic", "Mechanical", "Spiritual", "Abstract", "Forest", "Cave", "Machine", "Ghost", "Desert", "Arctic", "Volcanic"] },
+  { category: "Dynamics/Envelope Shape", key: "dynamics", examples: ["Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] }
+];

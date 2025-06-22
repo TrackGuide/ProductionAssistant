@@ -229,25 +229,122 @@ Inputs:
   function getRelevantParamsAndEffects(desc: string, genre: string, config: any) {
     const keywords = (desc + ' ' + genre).toLowerCase();
     const effectMap: Record<string, string[]> = {
-      'ambient': ['Reverb', 'Delay'],
-      'spacious': ['Reverb', 'Delay'],
-      'pad': ['Reverb', 'Chorus', 'Delay'],
-      'pluck': ['Filter', 'Envelope', 'Attack', 'Decay'],
+      // --- GENRE/SUBCATEGORY ---
+      'techno': ['Drive', 'Resonance', 'Delay', 'Reverb', 'Filter'],
+      'house': ['Reverb', 'Chorus', 'Delay', 'Filter'],
+      'trance': ['Reverb', 'Delay', 'Filter', 'Resonance'],
+      'dubstep': ['LFO', 'Filter', 'Drive', 'Distortion'],
+      'drum & bass': ['Filter', 'Drive', 'Envelope', 'LFO'],
+      'idm': ['Glitch', 'Delay', 'Reverb', 'Filter'],
+      'ambient': ['Reverb', 'Delay', 'Chorus', 'Envelope'],
+      'synthwave': ['Chorus', 'Reverb', 'Delay', 'Drive'],
+      'lofi': ['Noise', 'Chorus', 'Reverb', 'Filter'],
+      'glitch': ['Glitch', 'LFO', 'Envelope'],
+      'rock': ['Drive', 'Filter', 'Reverb'],
+      'pop': ['Reverb', 'Delay', 'Chorus'],
+      'funk': ['Envelope', 'Filter', 'Drive'],
+      'jazz': ['Chorus', 'Reverb', 'Envelope'],
+      'cinematic': ['Reverb', 'Delay', 'Envelope', 'Filter'],
+      // --- PATCH STYLE ---
+      'lead': ['Filter', 'Envelope', 'Reverb', 'Delay'],
+      'pad': ['Reverb', 'Chorus', 'Envelope', 'Filter'],
       'bass': ['Drive', 'Filter', 'Envelope'],
-      'lead': ['Reverb', 'Delay', 'Chorus'],
-      'distorted': ['Drive'],
-      'aggressive': ['Drive', 'Resonance'],
+      'pluck': ['Envelope', 'Filter', 'Delay'],
+      'bell': ['Envelope', 'Reverb', 'Delay'],
+      'arp': ['Envelope', 'Delay', 'Filter'],
+      'fx': ['LFO', 'Envelope', 'Filter', 'Reverb'],
+      'drone': ['Envelope', 'Filter', 'Reverb'],
+      'texture': ['Envelope', 'Reverb', 'Chorus'],
+      'atmosphere': ['Reverb', 'Envelope', 'Filter'],
+      // --- TIMBRE/CHARACTER ---
+      'glassy': ['Chorus', 'Envelope'],
+      'warm': ['Drive', 'Filter'],
+      'bright': ['Filter', 'Resonance'],
+      'dark': ['Filter', 'Envelope'],
+      'metallic': ['Chorus', 'Envelope'],
+      'raspy': ['Drive', 'Envelope'],
       'smooth': ['Chorus', 'Reverb'],
+      'gritty': ['Drive', 'Distortion'],
+      'distorted': ['Drive', 'Distortion'],
+      'clean': ['Envelope', 'Filter'],
+      'resonant': ['Resonance', 'Filter'],
+      'noisy': ['Noise', 'Envelope'],
+      // --- MOVEMENT/EVO ---
+      'evolving': ['LFO', 'Envelope', 'Filter'],
+      'swells': ['Envelope', 'Reverb'],
+      'pulsing': ['LFO', 'Envelope'],
+      'rhythmic': ['LFO', 'Envelope'],
+      'sweeping': ['LFO', 'Filter'],
+      'morphing': ['LFO', 'Envelope'],
+      'glitchy': ['Glitch', 'LFO'],
+      'phasing': ['Chorus', 'LFO'],
+      // --- EMOTION/MOOD ---
+      'dreamy': ['Reverb', 'Chorus'],
+      'aggressive': ['Drive', 'Distortion', 'Resonance'],
+      'melancholic': ['Reverb', 'Envelope'],
+      'uplifting': ['Reverb', 'Delay'],
+      'eerie': ['Envelope', 'Filter'],
+      'serene': ['Reverb', 'Envelope'],
+      'tense': ['Envelope', 'Filter'],
+      'playful': ['Envelope', 'Delay'],
+      'mysterious': ['Envelope', 'Filter'],
+      'epic': ['Reverb', 'Delay'],
+      'brooding': ['Envelope', 'Filter'],
+      'anxious': ['Envelope', 'Filter'],
+      'joyful': ['Envelope', 'Reverb'],
+      'haunting': ['Envelope', 'Reverb'],
+      // --- ERA/STYLE ---
       'vintage': ['Chorus', 'Reverb'],
       'modern': ['Delay', 'Reverb'],
-      'fx': ['Reverb', 'Delay', 'Chorus'],
-      'subtle': ['Envelope', 'Filter'],
-      'bright': ['Filter', 'Resonance'],
-      'warm': ['Drive', 'Filter'],
+      '80s': ['Chorus', 'Reverb'],
+      '90s': ['Delay', 'Reverb'],
+      'futuristic': ['LFO', 'Envelope'],
+      'retro': ['Chorus', 'Reverb'],
+      // --- INSPIRATION/CONCEPT ---
+      'cosmic': ['Reverb', 'Envelope'],
+      'underwater': ['Chorus', 'Envelope'],
+      'robotic': ['LFO', 'Envelope'],
+      'alien': ['LFO', 'Envelope'],
+      'nature': ['Envelope', 'Reverb'],
+      'industrial': ['Drive', 'Distortion'],
+      'organic': ['Envelope', 'Filter'],
+      'mechanical': ['LFO', 'Envelope'],
+      'spiritual': ['Reverb', 'Envelope'],
+      'forest': ['Envelope', 'Reverb'],
+      'cave': ['Reverb', 'Envelope'],
+      'machine': ['LFO', 'Envelope'],
+      'ghost': ['Envelope', 'Reverb'],
+      'desert': ['Envelope', 'Reverb'],
+      'arctic': ['Envelope', 'Reverb'],
+      'volcanic': ['Drive', 'Envelope'],
+      // --- DYNAMICS/ENVELOPE SHAPE ---
+      'short': ['Envelope'],
+      'long': ['Envelope'],
+      'percussive': ['Envelope', 'Filter'],
+      'sustained': ['Envelope', 'Reverb'],
+      'slow attack': ['Envelope'],
+      'fast release': ['Envelope'],
+      'gated': ['Envelope', 'Filter'],
+      'punchy': ['Envelope', 'Filter'],
+      'clicky': ['Envelope'],
+      'decaying': ['Envelope', 'Filter']
     };
+    // --- Multi-keyword, multi-select, weighted mapping ---
     let relevant: string[] = [];
+    let weights: Record<string, number> = {};
+    // Accept array or string for desc/genre
+    const allKeywords = (Array.isArray(desc) ? desc : [desc])
+      .concat(Array.isArray(genre) ? genre : [genre])
+      .concat(Array.isArray(inputs.notes) ? inputs.notes : [inputs.notes])
+      .map(s => (s || '').toLowerCase())
+      .join(' ');
     Object.entries(effectMap).forEach(([k, params]) => {
-      if (keywords.includes(k)) relevant.push(...params);
+      if (allKeywords.includes(k)) {
+        params.forEach(p => {
+          weights[p] = (weights[p] || 0) + 1;
+          relevant.push(p);
+        });
+      }
     });
     // Always include Cutoff/Resonance if present
     if (config.filters?.[0]?.params) {
@@ -256,11 +353,13 @@ Inputs:
     }
     // Only keep unique
     relevant = [...new Set(relevant)];
+    // Sort by weight (most relevant first)
+    relevant.sort((a, b) => (weights[b] || 0) - (weights[a] || 0));
     // Filter effects
     const relevantEffects = config.effects?.filter((fx: any) => relevant.includes(fx.name)) || config.effects;
     // Filter filter params
     const relevantFilterParams = config.filters?.[0]?.params?.filter((p: string) => relevant.includes(p)) || config.filters?.[0]?.params;
-    return { relevantEffects, relevantFilterParams };
+    return { relevantEffects, relevantFilterParams, weights };
   }
 
   const desc = inputs.description || '';
