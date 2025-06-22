@@ -128,6 +128,55 @@ export const PatchGuide: React.FC = () => {
       <form onSubmit={onSubmit} className="space-y-4">
         <Card>
           <h2 className="text-xl font-semibold text-white">Patch Guide Parameters</h2>
+          {/* --- Top row: genre, synth, voice type as dropdowns in three columns --- */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Genre dropdown */}
+            <div>
+              <label className="block text-gray-200">Genre</label>
+              <select
+                value={inputs.genre[0] || ''}
+                onChange={e => setInputs({ ...inputs, genre: [e.target.value] })}
+                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+              >
+                <option value="" disabled>Select genre</option>
+                {PATCH_INPUT_CATEGORIES[0].examples.map(group => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.examples.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            {/* Synth dropdown */}
+            <div>
+              <label className="block text-gray-200">Synth</label>
+              <select
+                value={synth}
+                onChange={e => setSynth(e.target.value)}
+                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+              >
+                <option value="" disabled>Select synth</option>
+                {SYNTH_OPTIONS.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            {/* Voice type dropdown */}
+            <div>
+              <label className="block text-gray-200">Voice Type</label>
+              <select
+                value={inputs.voiceType[0] || ''}
+                onChange={e => setInputs({ ...inputs, voiceType: [e.target.value] })}
+                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+              >
+                <option value="" disabled>Select voice type</option>
+                {PATCH_INPUT_CATEGORIES.find(cat => cat.key === 'voiceType')?.examples.map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Genre selection grouped by category */}
             <div>
@@ -184,42 +233,6 @@ export const PatchGuide: React.FC = () => {
                 </div>
               ))}
             </div>
-            {/* Bubble selector for other categories */}
-            {PATCH_INPUT_CATEGORIES.filter(cat => cat.key !== 'genre').map(cat => (
-              <div key={cat.category} className="col-span-2">
-                <div className="flex justify-between items-center">
-                  <label className="block text-gray-200">{cat.category}</label>
-                  <button
-                    type="button"
-                    onClick={() => setCollapsed(c => ({ ...c, [cat.key]: !c[cat.key] }))}
-                    className="text-gray-400 hover:text-gray-200"
-                  >
-                    {collapsed[cat.key] ? '▼' : '▲'}
-                  </button>
-                </div>
-                {!collapsed[cat.key] && (
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {cat.examples.map((ex: any) => (
-                      <button
-                        type="button"
-                        key={ex}
-                        className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(ex) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
-                        onClick={() => {
-                          const arr = Array.isArray(inputs[cat.key]) ? [...inputs[cat.key] as string[]] : [];
-                          if (arr.includes(ex)) {
-                            setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== ex) });
-                          } else {
-                            setInputs({ ...inputs, [cat.key]: [...arr, ex] });
-                          }
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </Card>
         <div className="flex items-center space-x-4">
@@ -289,19 +302,6 @@ export const PatchGuide: React.FC = () => {
                 </thead>
                 <tbody>
                   {synthConfig.effects.map((fx: any, idx: number) => (
-                    <tr key={fx.name || idx} className="border-t border-gray-700">
-                      <td className="p-2 font-bold text-green-300">{fx.name}</td>
-                      <td className="p-2">{fx.defaultSetting || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
-          </Card>
-
-          {/* 2. Filters and Envelopes */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">2. Filters and Envelopes</h3>
             <div className="flex flex-wrap gap-8">
               {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
                 <div key={filter.name || idx} className="flex flex-col">
