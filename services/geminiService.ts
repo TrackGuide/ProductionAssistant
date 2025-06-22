@@ -1,6 +1,5 @@
 // services/geminiService.ts
 
-import { GoogleGenerativeAI } from "@google/genai";
 import { GEMINI_MODEL_NAME } from "../constants";
 import {
   UserInputs,
@@ -289,11 +288,20 @@ ${pluginSection}
 
 Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
-  const stream = await GoogleGenerativeAI.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const stream = await fetch('/api/generateGuidebookContent', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ inputs: prompt }),
   });
-  return stream;
+
+  if (!stream.ok) {
+    throw new Error('Failed to generate guidebook content');
+  }
+
+  const responseData = await stream.json();
+  return responseData.contents;
 };
 
 /**
@@ -329,11 +337,20 @@ You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID J
 
 Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
 
-  const stream = await GoogleGenerativeAI.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const stream = await fetch('/api/generateMidiPatternSuggestions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ settings: prompt }),
   });
-  return stream;
+
+  if (!stream.ok) {
+    throw new Error('Failed to generate MIDI pattern suggestions');
+  }
+
+  const responseData = await stream.json();
+  return responseData.contents;
 };
 
 
@@ -379,11 +396,20 @@ export const generateMixFeedback = async (
 
 Focus on practical improvements that can be implemented immediately.`;
 
-  const response = await GoogleGenerativeAI.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const stream = await fetch('/api/generateMixFeedback', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ inputs: prompt }),
   });
-  return response.text;
+
+  if (!stream.ok) {
+    throw new Error('Failed to generate mix feedback');
+  }
+
+  const responseData = await stream.json();
+  return responseData.contents;
 };
 
 /**
@@ -428,11 +454,20 @@ ${history}
 
 Respond as the helpful TrackGuideAI assistant.`;
 
-  const stream = await GoogleGenerativeAI.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const stream = await fetch('/api/generateAIAssistantResponse', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ contents: prompt }),
   });
-  return stream;
+
+  if (!stream.ok) {
+    throw new Error('Failed to generate AI assistant response');
+  }
+
+  const responseData = await stream.json();
+  return responseData.contents;
 };
 
 /**
@@ -584,18 +619,22 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 
     const contents = [audioPart, textPart];
 
-    const response = await GoogleGenerativeAI.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: { parts: contents },
+    const response = await fetch('/api/generateRemixGuide', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ contents: { parts: contents } }),
     });
 
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API for remix guide.");
+    if (!response.ok) {
+      throw new Error('Failed to generate remix guide');
     }
 
+    const responseData = await response.json();
+
     // Parse the JSON response
-    let jsonStr = responseText.trim();
+    let jsonStr = responseData.text.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
     if (match && match[2]) {
@@ -608,11 +647,11 @@ Focus on practical, actionable techniques that can be implemented immediately. P
     } catch (parseError) {
       console.error("Failed to parse JSON response:", jsonStr);
       // Fallback: extract what we can from the text
-      const tempoMatch = responseText.match(/Target Tempo.*?(\d+)/i);
-      const keyMatch = responseText.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
+      const tempoMatch = responseData.text.match(/Target Tempo.*?(\d+)/i);
+      const keyMatch = responseData.text.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
       
       return {
-        guide: responseText,
+        guide: responseData.text,
         targetTempo: tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128),
         targetKey: keyMatch ? keyMatch[1].trim() : "C minor",
         sections,
@@ -624,7 +663,7 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 
     // Validate and structure the response
     const result = {
-      guide: parsedResponse.guide || responseText,
+      guide: parsedResponse.guide || responseData.text,
       targetTempo: parsedResponse.targetTempo || (genreInfo?.tempoRange?.[0] || 128),
       targetKey: parsedResponse.targetKey || "C minor",
       sections: parsedResponse.sections || sections,
@@ -787,17 +826,20 @@ Provide actionable, specific feedback that can be implemented immediately to imp
 
     const contents = [audioPart, textPart];
 
-    const response = await GoogleGenerativeAI.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: { parts: contents },
+    const response = await fetch('/api/generateMixFeedbackWithAudio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ contents: { parts: contents } }),
     });
 
-    const feedbackText = response.text;
-    if (typeof feedbackText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API for mix feedback.");
+    if (!response.ok) {
+      throw new Error('Failed to generate mix feedback with audio');
     }
     
-    return feedbackText;
+    const responseData = await response.json();
+    return responseData.contents;
 
   } catch (error) {
     console.error("Error generating mix feedback with audio:", error);
@@ -823,17 +865,20 @@ Provide actionable, specific feedback that can be implemented immediately to imp
  */
 export async function generateContent(prompt: string): Promise<string> {
   try {
-    const response = await GoogleGenerativeAI.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
+    const response = await fetch('/api/generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
     });
     
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
+    if (!response.ok) {
+      throw new Error('Failed to generate content');
     }
-    
-    return responseText;
+
+    const responseData = await response.json();
+    return responseData.contents;
   } catch (error) {
     console.error("Error generating content:", error);
     let specificMessage = "An unknown error occurred while generating content.";
@@ -883,17 +928,20 @@ ${contextInfo}
 
 Provide your expert guidance:`;
 
-    const response = await GoogleGenerativeAI.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
+    const response = await fetch('/api/generateAIAssistantResponseSimple', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: prompt }),
     });
 
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
+    if (!response.ok) {
+      throw new Error('Failed to generate AI assistant response');
     }
-    
-    return responseText;
+
+    const responseData = await response.json();
+    return responseData.contents;
 
   } catch (error) {
     console.error("Error generating AI assistant response:", error);
