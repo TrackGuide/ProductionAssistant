@@ -49,6 +49,7 @@ export const PatchGuide: React.FC = () => {
   const [adsrVCF, setAdsrVCF] = useState({ attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 });
   const [adsrVCA, setAdsrVCA] = useState({ attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.6 });
   const [synthConfig, setSynthConfig] = useState<any>(null);
+  const [summary, setSummary] = useState<string>('');
 
   // Loading / error
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ export const PatchGuide: React.FC = () => {
     setLoading(true);
     setError('');
     setGuide(null);
+    setSummary('');
     try {
       const res = await generateSynthPatchGuide({
         description: `${inputs.characterMood.join(', ')} ${inputs.movementDynamics.join(', ')}`,
@@ -68,7 +70,7 @@ export const PatchGuide: React.FC = () => {
         voiceType: inputs.voiceType.join(', ')
       });
       setGuide(res.text || '');
-
+      setSummary(res.summary || '');
       if (res.oscSettings) {
         setSynthConfig(res.synthConfig);
         if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
@@ -116,13 +118,17 @@ export const PatchGuide: React.FC = () => {
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
                 <option value="" disabled>Select genre</option>
-                {(PATCH_INPUT_CATEGORIES[0].examples as { group: string; examples: string[] }[]).filter(group => typeof group === 'object' && group.group && Array.isArray(group.examples)).map(group => (
-                  <optgroup key={group.group} label={group.group}>
-                    {group.examples.filter((g: string) => typeof g === 'string').map((g: string) => (
-                      <option key={g} value={g}>{g}</option>
-                    ))}
-                  </optgroup>
-                ))}
+                {Array.isArray(PATCH_INPUT_CATEGORIES[0].examples)
+                  ? (PATCH_INPUT_CATEGORIES[0].examples as any[]).filter(group => group && typeof group === 'object' && group.group && Array.isArray(group.examples)).map(group => (
+                      <optgroup key={group.group} label={group.group}>
+                        {Array.isArray(group.examples)
+                          ? group.examples.filter((g: string) => typeof g === 'string').map((g: string) => (
+                              <option key={g} value={g}>{g}</option>
+                            ))
+                          : null}
+                      </optgroup>
+                    ))
+                  : null}
               </select>
             </div>
             {/* Synth dropdown */}
@@ -148,7 +154,7 @@ export const PatchGuide: React.FC = () => {
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
               >
                 <option value="" disabled>Select voice type</option>
-                {PATCH_INPUT_CATEGORIES.find(cat => cat.key === 'voiceType')?.examples.map(v => (
+                {PATCH_INPUT_CATEGORIES.find(cat => cat.key === 'voiceType')?.examples.filter((v: any) => typeof v === 'string').map((v: string) => (
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
@@ -173,7 +179,7 @@ export const PatchGuide: React.FC = () => {
                   </div>
                   {!collapsed[cat.key] && (
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {cat.examples.map((ex: any) => (
+                      {Array.isArray(cat.examples) && cat.examples.filter((ex: any) => typeof ex === 'string').map((ex: string) => (
                         <button
                           type="button"
                           key={ex}
@@ -229,12 +235,12 @@ export const PatchGuide: React.FC = () => {
             {/* 1. Oscillators */}
             <Card>
               <h3 className="text-lg font-semibold text-white">1. Oscillators</h3>
-              {synthConfig && synthConfig.oscillators ? (
+              {Array.isArray(synthConfig?.oscillators) && synthConfig.oscillators.length > 0 ? (
                 <table className="w-full text-gray-200 border-collapse">
                   <thead>
                     <tr className="bg-gray-800">
                       <th className="p-2">Source</th>
-                      {synthConfig.oscillators[0]?.params?.map((param: string) => (
+                      {Array.isArray(synthConfig.oscillators[0]?.params) && synthConfig.oscillators[0].params.map((param: string) => (
                         <th key={param} className="p-2">{param}</th>
                       ))}
                     </tr>
@@ -243,8 +249,8 @@ export const PatchGuide: React.FC = () => {
                     {synthConfig.oscillators.map((osc: any, idx: number) => (
                       <tr key={osc.id || idx} className="border-t border-gray-700">
                         <td className="p-2">{osc.name}</td>
-                        {osc.params.map((param: string) => (
-                          <td key={param} className="p-2">{/* TODO: Show actual value if available */}—</td>
+                        {Array.isArray(osc.params) && osc.params.map((param: string) => (
+                          <td key={param} className="p-2">{osc.values && osc.values[param] !== undefined ? osc.values[param] : '—'}</td>
                         ))}
                       </tr>
                     ))}
@@ -256,7 +262,7 @@ export const PatchGuide: React.FC = () => {
             {/* 3. Effects */}
             <Card>
               <h3 className="text-lg font-semibold text-white">3. Effects</h3>
-              {synthConfig && synthConfig.effects && synthConfig.effects.length > 0 ? (
+              {Array.isArray(synthConfig?.effects) && synthConfig.effects.length > 0 ? (
                 <table className="w-full text-gray-200 border-collapse mb-3">
                   <thead>
                     <tr className="bg-gray-800">
@@ -280,14 +286,20 @@ export const PatchGuide: React.FC = () => {
             <Card>
               <h3 className="text-lg font-semibold text-white">3. Envelope & Filter Settings</h3>
               <div className="flex flex-wrap gap-8">
-                {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
+                {Array.isArray(synthConfig?.filters) && synthConfig.filters.map((filter: any, idx: number) => (
                   <div key={filter.name || idx} className="flex flex-col">
                     <div className="font-medium text-gray-200">{filter.name}</div>
-                    <div className="text-gray-300">Types: {filter.types?.join(', ')}</div>
-                    <div className="text-gray-300">Relevant Params: {filter.relevantParams?.join(', ')}</div>
+                    <div className="text-gray-300">
+                      Selected Type: <span className="font-bold text-orange-400">{filter.selectedType || (Array.isArray(filter.types) && filter.types[0]) || 'Lowpass'}</span>
+                    </div>
+                    <div className="text-gray-300">
+                      Cutoff: <span className="font-mono">{typeof filter.cutoff === 'number' ? filter.cutoff.toFixed(2) : '—'}</span>
+                      , Resonance: <span className="font-mono">{typeof filter.resonance === 'number' ? filter.resonance.toFixed(2) : '—'}</span>
+                      , Slope: <span className="font-mono">{typeof filter.slope === 'number' ? filter.slope + ' dB/oct' : '—'}</span>
+                    </div>
                   </div>
                 ))}
-                {synthConfig && synthConfig.envelopes && synthConfig.envelopes.labels && synthConfig.envelopes.labels.map((label: string, idx: number) => (
+                {synthConfig && synthConfig.envelopes && Array.isArray(synthConfig.envelopes.labels) && synthConfig.envelopes.labels.map((label: string, idx: number) => (
                   <div key={label} className="flex flex-col items-center">
                     <div className="font-medium text-gray-200">{label}</div>
                     <EnvelopeChart {...(idx === 0 ? adsrVCF : adsrVCA)} width={200} height={100} />
@@ -299,31 +311,51 @@ export const PatchGuide: React.FC = () => {
             {/* 4. Modulation Matrix */}
             <Card>
               <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
-              {synthConfig && synthConfig.modSources && synthConfig.modDestinations ? (
+              {Array.isArray(synthConfig?.modSources) && Array.isArray(synthConfig?.modDestinations) && synthConfig.modSources.length > 0 && synthConfig.modDestinations.length > 0 ? (
                 <table className="w-full text-gray-200 border-collapse mb-3">
                   <thead>
                     <tr className="bg-gray-800">
                       <th className="p-2">Source</th>
                       <th className="p-2">Target</th>
                       <th className="p-2">Parameter</th>
+                      <th className="p-2">Amount</th>
+                      <th className="p-2">LFO Shape</th>
+                      <th className="p-2">LFO Waveform</th>
+                      <th className="p-2">LFO Freq</th>
+                      <th className="p-2">LFO Rate</th>
+                      <th className="p-2">LFO Depth</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {synthConfig.modSources.map((source: string) => (
-                      Object.entries(synthConfig.modDestinations).map(([target, params]: [string, any]) => (
-                        (params as string[]).map((param: string) => (
-                          <tr key={source + target + param} className="border-t border-gray-700">
-                            <td className="p-2">{source}</td>
-                            <td className="p-2">{target}</td>
-                            <td className="p-2">{param}</td>
+                    {Array.isArray(synthConfig.modMatrix)
+                      ? synthConfig.modMatrix.map((row: any, idx: number) => (
+                          <tr key={row.source + row.target + row.parameter + idx} className="border-t border-gray-700">
+                            <td className="p-2">{row.source}</td>
+                            <td className="p-2">{row.target}</td>
+                            <td className="p-2">{row.parameter}</td>
+                            <td className="p-2">{typeof row.amount === 'number' ? `${Math.round(row.amount * 100)}%` : '—'}</td>
+                            <td className="p-2">{row.lfoShape || '—'}</td>
+                            <td className="p-2">{row.lfoWaveform || '—'}</td>
+                            <td className="p-2">{typeof row.lfoFrequency === 'number' ? row.lfoFrequency.toFixed(2) : '—'}</td>
+                            <td className="p-2">{typeof row.lfoRate === 'number' ? row.lfoRate.toFixed(2) : '—'}</td>
+                            <td className="p-2">{typeof row.lfoDepth === 'number' ? row.lfoDepth.toFixed(2) : '—'}</td>
                           </tr>
                         ))
-                      ))
-                    ))}
+                      : <tr><td colSpan={9} className="text-gray-400">No modulation matrix available for this synth.</td></tr>}
                   </tbody>
                 </table>
               ) : <div className="text-gray-400">No modulation matrix available for this synth.</div>}
             </Card>
+
+            {/* Summary paragraph from AI */}
+            {typeof summary === 'string' && summary && (
+              <Card>
+                <h3 className="text-lg font-semibold text-white">Creative Tips & Considerations</h3>
+                <div className="prose prose-invert p-4 bg-gray-800 rounded">
+                  {summary}
+                </div>
+              </Card>
+            )}
           </ErrorBoundary>
         </>
       )}
@@ -332,17 +364,22 @@ export const PatchGuide: React.FC = () => {
 };
 
 // ErrorBoundary component for robust error handling
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [hasError, setHasError] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState('');
-  React.useEffect(() => {
-    setHasError(false);
-    setErrorMsg('');
-  }, [children]);
-  try {
-    if (hasError) throw new Error(errorMsg);
-    return <>{children}</>;
-  } catch (err: any) {
-    return <div className="text-red-500 bg-gray-900 p-4 rounded">Error rendering patch guide: {err.message || String(err)}</div>;
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; errorMsg: string }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, errorMsg: '' };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, errorMsg: error?.message || String(error) };
+  }
+  componentDidCatch(error: any, info: any) {
+    // Optionally log error
+    // console.error('ErrorBoundary caught:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-red-500 bg-gray-900 p-4 rounded">Error rendering patch guide: {this.state.errorMsg}</div>;
+    }
+    return this.props.children;
   }
 }
