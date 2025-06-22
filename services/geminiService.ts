@@ -998,3 +998,12 @@ export const generateSynthPatchGuide = async (
   if (!res.ok) throw new Error("Failed to generate patch guide");
   return await res.json();
 };
+
+// --- Restored generateMixComparison ---
+export async function generateMixComparison(inputs: any): Promise<any> {
+  // This is a placeholder implementation. Replace with your actual logic or API call.
+  // For now, just return a dummy response.
+  return {
+    text: 'Mix comparison feature is temporarily unavailable. Please update this function with your backend/API logic.'
+  };
+}
