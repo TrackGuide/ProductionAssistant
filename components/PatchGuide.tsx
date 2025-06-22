@@ -302,6 +302,19 @@ export const PatchGuide: React.FC = () => {
                 </thead>
                 <tbody>
                   {synthConfig.effects.map((fx: any, idx: number) => (
+                    <tr key={fx.name || idx} className="border-t border-gray-700">
+                      <td className="p-2 font-bold text-green-300">{fx.name}</td>
+                      <td className="p-2">{fx.defaultSetting || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
+          </Card>
+
+          {/* 3. Envelope & Filter Settings */}
+          <Card>
+            <h3 className="text-lg font-semibold text-white">3. Envelope & Filter Settings</h3>
             <div className="flex flex-wrap gap-8">
               {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
                 <div key={filter.name || idx} className="flex flex-col">
