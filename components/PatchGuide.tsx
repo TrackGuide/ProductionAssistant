@@ -6,7 +6,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
-import { ModulationMatrix, ModRouting } from './ModulationMatrix';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
 
 const SYNTH_OPTIONS = [
@@ -61,7 +60,7 @@ export const PatchGuide: React.FC = () => {
     ChorusRate: 0.15,
     MasterTune: 0
   });
-  const [mods, setMods] = useState<ModRouting[]>([]);
+  const [modMatrixMarkdown, setModMatrixMarkdown] = useState<string | null>(null);
 
   // Loading / error
   const [loading, setLoading] = useState(false);
@@ -102,7 +101,7 @@ export const PatchGuide: React.FC = () => {
       if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
       if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
       if (res.knobs) setKnobs(res.knobs);
-      // modMatrix omitted per last request
+      if (res.modMatrixMarkdown) setModMatrixMarkdown(res.modMatrixMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error generating guide');
     } finally {
@@ -135,6 +134,7 @@ export const PatchGuide: React.FC = () => {
       ChorusRate: 0.15,
       MasterTune: 0
     });
+    setModMatrixMarkdown(null);
   };
 
   return (
@@ -234,12 +234,13 @@ export const PatchGuide: React.FC = () => {
           {/* Instructions */}
           <Card>
             <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              className="prose prose-invert p-4 bg-gray-800 rounded"
-            >
-              {guide}
-            </ReactMarkdown>
+            <div className="prose prose-invert p-4 bg-gray-800 rounded">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+              >
+                {guide}
+              </ReactMarkdown>
+            </div>
           </Card>
 
           {/* 1. Oscillators */}
@@ -344,22 +345,16 @@ export const PatchGuide: React.FC = () => {
           {/* 4. Modulation Matrix */}
           <Card>
             <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
-            {mods.length > 0 ? (
-              <ModulationMatrix routings={mods} />
-            ) : (
-              <div className="text-gray-200">
-                <p>No visual available. Here’s your routing list:</p>
-                <ul className="list-disc ml-5">
-                  {mods.map((m, i) => (
-                    <li key={i}>
-                      <strong>Modulator:</strong> {m.source} → 
-                      <strong> Carrier:</strong> {m.target} = 
-                      <strong> {Math.round(m.amount * 100)}%</strong>
-                    </li>
-                  ))}
-                  {mods.length === 0 && <li>(none)</li>}
-                </ul>
+            {modMatrixMarkdown ? (
+              <div className="prose prose-invert p-4 bg-gray-800 rounded">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                >
+                  {modMatrixMarkdown}
+                </ReactMarkdown>
               </div>
+            ) : (
+              <div className="text-gray-200">No modulation matrix available.</div>
             )}
           </Card>
 
@@ -369,11 +364,11 @@ export const PatchGuide: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-8 mt-4">
               <div>
                 <h4 className="font-medium text-gray-200">VCF (Voltage Controlled Filter)</h4>
-                <EnvelopeChart {...adsrVCF} width={300} height={150} label="VCF Env" />
+                <EnvelopeChart {...adsrVCF} width={300} height={150} />
               </div>
               <div>
                 <h4 className="font-medium text-gray-200">VCA (Voltage Controlled Amp)</h4>
-                <EnvelopeChart {...adsrVCA} width={300} height={150} label="VCA Env" />
+                <EnvelopeChart {...adsrVCA} width={300} height={150} />
               </div>
             </div>
           </Card>

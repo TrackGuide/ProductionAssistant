@@ -1,6 +1,8 @@
 // services/patchGuideService.ts
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { GEMINI_MODEL_NAME } from '../constants';
+import fs from 'fs/promises';
+import path from 'path';
 
 export interface OscSettings {
   o1Oct: number;
@@ -37,14 +39,15 @@ export interface PatchGuideResult {
   adsrVCA: ADSR;
   knobs: Record<string, number>;
   modMatrix: ModRouting[];
+  modMatrixMarkdown: string; // New field for markdown rendering
 }
 
 interface PatchGuideInputs {
   description: string;
   synth: string;
-  voiceType: string;
-  descriptor: string;
-  genre: string;
+  voiceType?: string;
+  descriptor?: string;
+  genre?: string;
   notes?: string;
 }
 
@@ -68,8 +71,25 @@ export async function generateSynthPatchGuide(
     throw new Error('Missing GEMINI_API_KEY or VITE_GEMINI_API_KEY');
   }
 
+  // Load synth config
+  let synthConfig: any = null;
+  try {
+    const synthConfigPath = path.join(__dirname, '../synthconfigs', `${inputs.synth}.json`);
+    const synthConfigRaw = await fs.readFile(synthConfigPath, 'utf-8');
+    synthConfig = JSON.parse(synthConfigRaw);
+  } catch (err) {
+    // If synth config not found, fallback to Generic.json
+    try {
+      const genericPath = path.join(__dirname, '../synthconfigs/Generic.json');
+      const genericRaw = await fs.readFile(genericPath, 'utf-8');
+      synthConfig = JSON.parse(genericRaw);
+    } catch (e) {
+      throw new Error('Could not load synth config for requested synth or generic fallback.');
+    }
+  }
+
   const prompt = `
-You are an expert sound designer. Given these inputs, return a JSON object with:
+You are an expert sound designer. Given these inputs and the following synth configuration, return a JSON object with:
 - text (string)
 - waveform (string)
 - oscSettings (object)
@@ -77,6 +97,9 @@ You are an expert sound designer. Given these inputs, return a JSON object with:
 - adsrVCA (object)
 - knobs (object)
 - modMatrix (array)
+
+Synth Configuration:
+${JSON.stringify(synthConfig, null, 2)}
 
 Use these exact knob keys with values between 0.0 and 1.0:
 Cutoff, Resonance, Drive, Mix, Reverb, DelayTime, DelayFB, ChorusDepth, ChorusRate, MasterTune
@@ -86,9 +109,9 @@ ADS R blocks must be numeric.
 Return JSON only.
 
 Inputs:
-- Voice Type: ${inputs.voiceType}
-- Descriptor: ${inputs.descriptor}
-- Genre: ${inputs.genre}
+- Voice Type: ${inputs.voiceType || 'None'}
+- Descriptor: ${inputs.descriptor || 'None'}
+- Genre: ${inputs.genre || 'None'}
 - Synth: ${inputs.synth}
 - Notes: ${inputs.notes || 'None'}
 `;
@@ -96,12 +119,10 @@ Inputs:
   const ai = new GoogleGenAI({ apiKey });
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: GEMINI_MODEL_NAME,
-    contents: prompt,
-    temperature: 0.7,
-    maxTokens: 800,
+    contents: prompt
   });
 
-  const raw = response.text.trim();
+  const raw = (response.text || '').trim();
   const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const jsonText = fenceMatch ? fenceMatch[1].trim() : raw;
 
@@ -109,7 +130,7 @@ Inputs:
   try {
     parsed = JSON.parse(jsonText);
   } catch (err) {
-    throw new Error('Invalid JSON from AI: ' + (err as Error).message);
+    throw new Error('Invalid JSON from AI: ' + (err as Error).message + '\nRaw output: ' + raw.slice(0, 300));
   }
 
   // Destructure with defaults
@@ -172,6 +193,30 @@ Inputs:
       }))
     : [];
 
+  // Generate a markdown table for the modulation matrix
+  let modMatrixMarkdown = '';
+  if (modMatrix.length > 0) {
+    modMatrixMarkdown = `| Source | Target | Parameter | Value |\n|--------|--------|-----------|-------|\n`;
+    modMatrix.forEach(row => {
+      // Show LFO Rate/Depth if present, otherwise show Amount
+      let param = '';
+      let value = '';
+      if (row.lfoRate !== undefined) {
+        param = 'LFO Rate';
+        value = row.lfoRate.toString();
+      } else if (row.lfoDepth !== undefined) {
+        param = 'LFO Depth';
+        value = row.lfoDepth.toString();
+      } else {
+        param = 'Amount';
+        value = row.amount.toString();
+      }
+      modMatrixMarkdown += `| ${row.source} | ${row.target} | ${param} | ${value} |\n`;
+    });
+  } else {
+    modMatrixMarkdown = 'No modulation matrix entries.';
+  }
+
   return {
     text,
     waveform,
@@ -180,5 +225,6 @@ Inputs:
     adsrVCA,
     knobs,
     modMatrix,
+    modMatrixMarkdown // <-- new field for markdown rendering
   };
 }
