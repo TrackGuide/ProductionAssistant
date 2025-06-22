@@ -8,7 +8,7 @@ import { EnvelopeChart } from './EnvelopeChart';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
 import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 
-const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'timbre', 'notes'];
+const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'characterMood', 'movementDynamics'];
 const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
 
 // Helper: Group synths by company, robust to string/object
@@ -38,11 +38,11 @@ export const PatchGuide: React.FC = () => {
   // Form inputs
   const [synth, setSynth] = useState('Generic');
   // New input state for robust form
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [inputs, setInputs] = useState<Record<string, string[]>>({
     genre: [],
     voiceType: [],
-    timbre: [],
+    characterMood: [],
+    movementDynamics: [],
     // advanced keys default to []
     ...Object.fromEntries(ADVANCED_INPUT_KEYS.map(k => [k, []]))
   });
@@ -52,26 +52,16 @@ export const PatchGuide: React.FC = () => {
     genre: boolean;
     synth: boolean;
     voiceType: boolean;
-    timbre: boolean;
-    notes: boolean;
-    movement: boolean;
-    mood: boolean;
-    era: boolean;
-    inspiration: boolean;
-    dynamics: boolean;
+    characterMood: boolean;
+    movementDynamics: boolean;
   };
 
   const [collapsed, setCollapsed] = useState<CollapsedState>({
     genre: false,
     synth: false,
-    voiceType: true,
-    timbre: true,
-    notes: true,
-    movement: true,
-    mood: true,
-    era: true,
-    inspiration: true,
-    dynamics: true,
+    voiceType: false, // Default as expanded
+    characterMood: true,
+    movementDynamics: true,
   });
 
   // AI results & parameters
@@ -92,8 +82,10 @@ export const PatchGuide: React.FC = () => {
     setGuide(null);
     try {
       const res = await generateSynthPatchGuide({
-        description: `${inputs.patchStyle}, ${inputs.timbre} ${inputs.movement} ${inputs.mood} ${inputs.era} ${inputs.inspiration} ${inputs.dynamics}. ${inputs.notes}`,
-        synth, ...inputs
+        description: `${inputs.characterMood.join(', ')} ${inputs.movementDynamics.join(', ')}`,
+        synth,
+        genre: inputs.genre.join(', '),
+        voiceType: inputs.voiceType.join(', ')
       });
       setGuide(res.text || '');
 
@@ -115,7 +107,8 @@ export const PatchGuide: React.FC = () => {
     setInputs({
       genre: [],
       voiceType: [],
-      timbre: [],
+      characterMood: [],
+      movementDynamics: [],
       // advanced keys default to []
       ...Object.fromEntries(ADVANCED_INPUT_KEYS.map(k => [k, []]))
     });
@@ -125,6 +118,9 @@ export const PatchGuide: React.FC = () => {
     setAdsrVCA({ attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.6 });
     setSynthConfig(null);
   };
+
+  // --- GENRE BUBBLE SELECTOR ---
+  const [selectedGenreCategory, setSelectedGenreCategory] = useState<string | null>(null);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
@@ -136,37 +132,57 @@ export const PatchGuide: React.FC = () => {
             {/* Genre selection grouped by category */}
             <div>
               <label className="block text-gray-200">Genre</label>
-              <select
-                multiple
-                value={inputs.genre as string[]}
-                onChange={e => setInputs({ ...inputs, genre: Array.from(e.target.selectedOptions, o => o.value) })}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
+              {/* Genre bubble selector */}
+              <div className="flex flex-wrap gap-2 mt-1">
                 {GENRE_CATEGORIES.map(cat => (
-                  <optgroup key={cat.subCategory} label={cat.subCategory}>
-                    {cat.examples.map(g => (
-                      <option key={g} value={g}>{g}</option>
-                    ))}
-                  </optgroup>
+                  <button
+                    type="button"
+                    key={cat.subCategory}
+                    className={`px-3 py-1 rounded-full border text-sm ${selectedGenreCategory === cat.subCategory ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                    onClick={() => setSelectedGenreCategory(cat.subCategory)}
+                  >
+                    {cat.subCategory}
+                  </button>
                 ))}
-              </select>
+              </div>
+              {selectedGenreCategory && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {GENRE_CATEGORIES.find(cat => cat.subCategory === selectedGenreCategory)?.examples.map(g => (
+                    <button
+                      type="button"
+                      key={g}
+                      className={`px-3 py-1 rounded-full border text-sm ${inputs.genre.includes(g) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                      onClick={() => {
+                        setInputs({ ...inputs, genre: inputs.genre.includes(g) ? inputs.genre.filter(v => v !== g) : [...inputs.genre, g] });
+                      }}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {/* Synth selection grouped by company */}
             <div>
               <label className="block text-gray-200">Synth</label>
-              <select
-                value={synth}
-                onChange={e => setSynth(e.target.value)}
-                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
-              >
-                {synthGroupList.map(([company, synths]) => (
-                  <optgroup key={company} label={company}>
+              {/* Synth bubble selector */}
+              {synthGroupList.map(([company, synths]) => (
+                <div key={company} className="mb-2">
+                  <div className="text-xs text-gray-400 mb-1">{company}</div>
+                  <div className="flex flex-wrap gap-2">
                     {synths.map(s => (
-                      <option key={s} value={s}>{s.replace(company + ' ', '')}</option>
+                      <button
+                        type="button"
+                        key={s}
+                        className={`px-3 py-1 rounded-full border text-sm ${synth === s ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                        onClick={() => setSynth(s)}
+                      >
+                        {s.replace(company + ' ', '')}
+                      </button>
                     ))}
-                  </optgroup>
-                ))}
-              </select>
+                  </div>
+                </div>
+              ))}
             </div>
             {/* Bubble selector for other categories */}
             {PATCH_INPUT_CATEGORIES.filter(cat => cat.key !== 'genre').map(cat => (
@@ -186,19 +202,18 @@ export const PatchGuide: React.FC = () => {
                     {cat.examples.map((ex: any) => (
                       <button
                         type="button"
-                        key={typeof ex === 'string' ? ex : ex.subCategory}
-                        className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(typeof ex === 'string' ? ex : ex.subCategory) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
+                        key={ex}
+                        className={`px-3 py-1 rounded-full border text-sm ${Array.isArray(inputs[cat.key]) && (inputs[cat.key] as string[]).includes(ex) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-700 text-gray-300 border-gray-500'}`}
                         onClick={() => {
-                          const val = typeof ex === 'string' ? ex : ex.subCategory;
                           const arr = Array.isArray(inputs[cat.key]) ? [...inputs[cat.key] as string[]] : [];
-                          if (arr.includes(val)) {
-                            setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== val) });
+                          if (arr.includes(ex)) {
+                            setInputs({ ...inputs, [cat.key]: arr.filter(v => v !== ex) });
                           } else {
-                            setInputs({ ...inputs, [cat.key]: [...arr, val] });
+                            setInputs({ ...inputs, [cat.key]: [...arr, ex] });
                           }
                         }}
                       >
-                        {typeof ex === 'string' ? ex : ex.subCategory}
+                        {ex}
                       </button>
                     ))}
                   </div>
@@ -206,9 +221,6 @@ export const PatchGuide: React.FC = () => {
               </div>
             ))}
           </div>
-          <Button type="button" onClick={() => setShowAdvanced(v => !v)}>
-            {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}
-          </Button>
         </Card>
         <div className="flex items-center space-x-4">
           <Button type="submit" disabled={loading}>

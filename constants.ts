@@ -203,12 +203,8 @@ export const PATCH_INPUT_CATEGORIES = [
     ]
   },
   { category: "Voice Type", key: "voiceType", examples: ["Lead", "Pad", "Bass", "Pluck", "Bell", "Arp", "FX", "Drone", "Wobble", "Stab", "Texture", "Atmosphere", "Riser", "Impact"] },
-  { category: "Timbre/Character", key: "timbre", examples: ["Glassy", "Warm", "Bright", "Dark", "Metallic", "Wooden", "Raspy", "Smooth", "Gritty", "Fuzzy", "Distorted", "Clean", "Hollow", "Resonant", "Breathy", "Digital", "Analog", "Noisy", "Sharp", "Dull", "Crisp"] },
-  { category: "Movement/Evolution", key: "movement", examples: ["Evolving", "Swells", "Pulsing", "Rhythmic", "Static", "Sweeping", "Morphing", "Glitchy", "Choppy", "Fluttering", "Driving", "Floating", "Warped", "Phasing"] },
-  { category: "Emotion/Mood", key: "mood", examples: ["Dreamy", "Aggressive", "Melancholic", "Uplifting", "Eerie", "Serene", "Tense", "Playful", "Mysterious", "Epic", "Dark", "Brooding", "Anxious", "Joyful", "Haunting", "Sacred"] },
-  { category: "Era/Style", key: "era", examples: ["Vintage", "Modern", "80s", "90s", "Futuristic", "Retro", "Old-School", "Contemporary", "Y2K", "Cyberpunk"] },
-  { category: "Inspiration/Concept", key: "inspiration", examples: ["Cosmic", "Underwater", "Robotic", "Alien", "Nature", "Industrial", "Organic", "Mechanical", "Spiritual", "Abstract", "Forest", "Cave", "Machine", "Ghost", "Desert", "Arctic", "Volcanic"] },
-  { category: "Dynamics/Envelope Shape", key: "dynamics", examples: ["Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] }
+  { category: "Character & Mood", key: "characterMood", examples: ["Glassy", "Warm", "Bright", "Dark", "Metallic", "Wooden", "Raspy", "Smooth", "Gritty", "Fuzzy", "Distorted", "Clean", "Hollow", "Resonant", "Breathy", "Digital", "Analog", "Noisy", "Sharp", "Dull", "Crisp", "Dreamy", "Aggressive", "Melancholic", "Uplifting", "Eerie", "Serene", "Tense", "Playful", "Mysterious", "Epic", "Dark", "Brooding", "Anxious", "Joyful", "Haunting", "Sacred"] },
+  { category: "Movement & Dynamics", key: "movementDynamics", examples: ["Evolving", "Swells", "Pulsing", "Rhythmic", "Static", "Sweeping", "Morphing", "Glitchy", "Choppy", "Fluttering", "Driving", "Floating", "Warped", "Phasing", "Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] }
 ];
 
 export const SYNTH_OPTIONS = [
