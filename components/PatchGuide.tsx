@@ -79,8 +79,8 @@ export const PatchGuide: React.FC = () => {
     setGuide(null);
     try {
       const res = await generateSynthPatchGuide({
-        description: `${voiceType}, ${descriptor} for ${genre}. ${notes}`,
-        synth, voiceType, descriptor, genre, notes
+        synth,
+        description: `${voiceType}, ${descriptor} for ${genre}. ${notes}`
       });
       setGuide(res.text || '');
 
@@ -234,12 +234,11 @@ export const PatchGuide: React.FC = () => {
           {/* Instructions */}
           <Card>
             <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              className="prose prose-invert p-4 bg-gray-800 rounded"
-            >
-              {guide}
-            </ReactMarkdown>
+            <div className="prose prose-invert p-4 bg-gray-800 rounded">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {guide}
+              </ReactMarkdown>
+            </div>
           </Card>
 
           {/* 1. Oscillators */}
@@ -369,11 +368,11 @@ export const PatchGuide: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-8 mt-4">
               <div>
                 <h4 className="font-medium text-gray-200">VCF (Voltage Controlled Filter)</h4>
-                <EnvelopeChart {...adsrVCF} width={300} height={150} label="VCF Env" />
+                <EnvelopeChart {...adsrVCF} width={300} height={150} />
               </div>
               <div>
                 <h4 className="font-medium text-gray-200">VCA (Voltage Controlled Amp)</h4>
-                <EnvelopeChart {...adsrVCA} width={300} height={150} label="VCA Env" />
+                <EnvelopeChart {...adsrVCA} width={300} height={150} />
               </div>
             </div>
           </Card>

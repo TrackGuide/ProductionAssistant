@@ -6,14 +6,11 @@ import {
   UserInputs,
   MidiSettings,
   MixFeedbackInputs,
-  MixComparisonInputs,
-  RemixGuideInputs,
   ChatMessage,
   GuidebookEntry
 } from "../types";
-import { loadSynthConfig } from "../config/loadSynthConfig";
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+export type GenerateContentResponse = any;
 
 /**
  * Helper function to build plugin-specific parameter suggestions
@@ -292,7 +289,7 @@ ${pluginSection}
 
 Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
-  const stream = await ai.models.generateContentStream({
+  const stream = await GoogleGenerativeAI.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
@@ -332,7 +329,7 @@ You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID J
 
 Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
 
-  const stream = await ai.models.generateContentStream({
+  const stream = await GoogleGenerativeAI.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
@@ -382,7 +379,7 @@ export const generateMixFeedback = async (
 
 Focus on practical improvements that can be implemented immediately.`;
 
-  const response = await ai.models.generateContent({
+  const response = await GoogleGenerativeAI.models.generateContent({
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
@@ -390,51 +387,7 @@ Focus on practical improvements that can be implemented immediately.`;
 };
 
 /**
- * 4. Generate mix comparison (one-shot)
- */
-export const generateMixComparison = async (
-  inputs: MixComparisonInputs
-): Promise<string> => {
-  const prompt = `
-You are an expert mixing & mastering AI. The user has uploaded two mixes:
-
-Mix A: "${inputs.mixAName}" — an earlier version  
-Mix B: "${inputs.mixBName}" — the current working version  
-
-🎧 Instructions:
-- Mix B is the active version — focus all actionable feedback on improving Mix B.
-- Mix A is an earlier version — if Mix A has strengths vs Mix B, point those out.
-- Acknowledge improvements made in Mix B compared to A.
-- Do NOT suggest changes to Mix A (it is not being revised).
-
-If "Request full mix analysis" is selected → add full technical breakdown of Mix B (like in your Mix Feedback function).
-
-Provide your analysis in clear Markdown format with the following sections:
-
-## 🎧 Overall Comparison
-
-## 🎛️ Frequency Balance
-
-## 🎚️ Stereo Image & Depth
-
-## 📈 Dynamics & Loudness
-
-## ⚙️ Technical Quality
-
-## 🏆 Strengths & Opportunities (for Mix B)
-
-## 🚀 Actionable Recommendations (for Mix B only)
-
-`;
-
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
-  return response.text;
-};
-/**
- * 5. Generate AI-assistant chat response (streaming)
+ * 4. Generate AI-assistant chat response (streaming)
  */
 export const generateAIAssistantResponse = async (
   conversation: ChatMessage[],
@@ -475,7 +428,7 @@ ${history}
 
 Respond as the helpful TrackGuideAI assistant.`;
 
-  const stream = await ai.models.generateContentStream({
+  const stream = await GoogleGenerativeAI.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
@@ -500,10 +453,6 @@ export async function generateRemixGuide(
   originalTempo?: number;
   originalChordProgression?: string;
 }> {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API for remix guide.");
-  }
-
   try {
     const tempoRange = genreInfo?.tempoRange ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : "120-130 BPM";
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
@@ -635,7 +584,7 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 
     const contents = [audioPart, textPart];
 
-    const response = await ai.models.generateContent({
+    const response = await GoogleGenerativeAI.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: { parts: contents },
     });
@@ -711,10 +660,6 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 export const generateMixFeedbackWithAudio = async (
   inputs: MixFeedbackInputs
 ): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API for mix feedback.");
-  }
-  
   if (!inputs.audioFile) {
     // Fallback to text-only feedback if no audio file
     return generateMixFeedback(inputs);
@@ -842,7 +787,7 @@ Provide actionable, specific feedback that can be implemented immediately to imp
 
     const contents = [audioPart, textPart];
 
-    const response = await ai.models.generateContent({
+    const response = await GoogleGenerativeAI.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: { parts: contents },
     });
@@ -877,12 +822,8 @@ Provide actionable, specific feedback that can be implemented immediately to imp
  * 8. Helper function for simple content generation
  */
 export async function generateContent(prompt: string): Promise<string> {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-
   try {
-    const response = await ai.models.generateContent({
+    const response = await GoogleGenerativeAI.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: prompt,
     });
@@ -918,10 +859,6 @@ export const generateAIAssistantResponseSimple = async (
     userInputs?: UserInputs;
   }
 ): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
-
   try {
     const contextInfo = context ? `
 **Current Project Context:**
@@ -946,7 +883,7 @@ ${contextInfo}
 
 Provide your expert guidance:`;
 
-    const response = await ai.models.generateContent({
+    const response = await GoogleGenerativeAI.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: prompt,
     });
@@ -1000,11 +937,6 @@ export interface PatchGuideResult {
   adsrVCA?: ADSR;
   knobs?: Record<string, number>;
   modMatrix?: ModRouting[];
-}
-
-interface PatchGuideInputs {
-  synth: string;
-  description: string;
 }
 
 export const generateSynthPatchGuide = async (

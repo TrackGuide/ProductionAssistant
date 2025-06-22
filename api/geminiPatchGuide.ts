@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/genai";
 import { GEMINI_MODEL_NAME } from "../constants";
 import { loadSynthConfig } from "../config/loadSynthConfig";
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -10,8 +10,8 @@ export default async function handler(req, res) {
   const { synth, description } = req.body;
   try {
     const synthConfig = await loadSynthConfig(synth);
-    const oscDescriptions = synthConfig?.oscillators?.map((o) => `- ${o.name} (${o.type})`) || [];
-    const filterDescriptions = synthConfig?.filters?.map((f) => `- ${f.name} (${f.types?.join(", ")})`) || [];
+    const oscDescriptions = synthConfig?.oscillators?.map((o: any) => `- ${o.name} (${o.type})`) || [];
+    const filterDescriptions = synthConfig?.filters?.map((f: any) => `- ${f.name} (${f.types?.join(", ")})`) || [];
     const prompt = `
 You are an expert sound designer. The user has selected the synth: "${synth}".
 
@@ -71,10 +71,10 @@ ${Object.keys(synthConfig?.modDestinations || {}).join(", ") || "Unknown"}
       const jsonString = text.substring(jsonStart, jsonEnd + 1);
       const parsed = JSON.parse(jsonString);
       res.status(200).json(parsed);
-    } catch (err) {
+    } catch (err: any) {
       res.status(200).json({ text });
     }
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error generating patch guide' });
   }
 }
