@@ -108,7 +108,8 @@ export async function generateSynthPatchGuide(
 
     // Debug: log normalized synth and config file
     console.log('Requested synth:', inputs.synth, 'Normalized:', normalized, 'Config file:', synthConfigFile);
-    const synthConfigPath = path.join(__dirname, '../synthconfigs', synthConfigFile);
+    // Use process.cwd() instead of __dirname for compatibility
+    const synthConfigPath = path.join(process.cwd(), 'synthconfigs', synthConfigFile);
     const synthConfigRaw = await fs.readFile(synthConfigPath, 'utf-8');
     synthConfig = JSON.parse(synthConfigRaw);
   } catch (err) {
@@ -116,7 +117,7 @@ export async function generateSynthPatchGuide(
     console.error('Failed to load synth config:', err);
     // If synth config not found, fallback to Generic.json
     try {
-      const genericPath = path.join(__dirname, '../synthconfigs/Generic.json');
+      const genericPath = path.join(process.cwd(), 'synthconfigs', 'Generic.json');
       const genericRaw = await fs.readFile(genericPath, 'utf-8');
       synthConfig = JSON.parse(genericRaw);
     } catch (e) {
