@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
 import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
+import { Knob } from './Knob';
 
 const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'characterMood', 'movementDynamics'];
 const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
@@ -71,11 +72,30 @@ export const PatchGuide: React.FC = () => {
       });
       setGuide(res.text || '');
       setSummary(res.summary || '');
-      if (res.oscSettings) {
-        setSynthConfig(res.synthConfig);
-        if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
-        if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
+      // Always set and normalize synthConfig, even if oscSettings is missing
+      if (res.synthConfig) {
+        const normalizedSynthConfig = {
+          ...res.synthConfig,
+          oscillators: Array.isArray(res.synthConfig?.oscillators) ? res.synthConfig.oscillators : [],
+          filters: Array.isArray(res.synthConfig?.filters) ? res.synthConfig.filters : [],
+          effects: Array.isArray(res.synthConfig?.effects) ? res.synthConfig.effects : [],
+          modSources: Array.isArray(res.synthConfig?.modSources) ? res.synthConfig.modSources : [],
+          modDestinations: Array.isArray(res.synthConfig?.modDestinations) ? res.synthConfig.modDestinations : [],
+          modMatrix: Array.isArray(res.synthConfig?.modMatrix) ? res.synthConfig.modMatrix : [],
+        };
+        setSynthConfig(normalizedSynthConfig);
+      } else {
+        setSynthConfig({
+          oscillators: [],
+          filters: [],
+          effects: [],
+          modSources: [],
+          modDestinations: [],
+          modMatrix: []
+        });
       }
+      if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
+      if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error generating guide');
     } finally {
@@ -205,7 +225,7 @@ export const PatchGuide: React.FC = () => {
         </Card>
         <div className="flex items-center space-x-4">
           <Button type="submit" disabled={loading}>
-            {loading ? 'Generating…' : 'Generate Patch Guide'}
+            {loading ? 'Generating…' : 'Generate PatchGuide'}
           </Button>
           {loading && <Spinner />}
           <Button type="button" variant="secondary" onClick={resetAll}>
@@ -232,86 +252,103 @@ export const PatchGuide: React.FC = () => {
               </div>
             </Card>
 
-            {/* 1. Oscillators */}
+            {/* Oscillators */}
             <Card>
-              <h3 className="text-lg font-semibold text-white">1. Oscillators</h3>
+              <h3 className="text-lg font-semibold text-white">Oscillators</h3>
               {Array.isArray(synthConfig?.oscillators) && synthConfig.oscillators.length > 0 ? (
-                <table className="w-full text-gray-200 border-collapse">
-                  <thead>
-                    <tr className="bg-gray-800">
-                      <th className="p-2">Source</th>
-                      {Array.isArray(synthConfig.oscillators[0]?.params) && synthConfig.oscillators[0].params.map((param: string) => (
-                        <th key={param} className="p-2">{param}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {synthConfig.oscillators.map((osc: any, idx: number) => (
-                      <tr key={osc.id || idx} className="border-t border-gray-700">
-                        <td className="p-2">{osc.name}</td>
-                        {Array.isArray(osc.params) && osc.params.map((param: string) => (
-                          <td key={param} className="p-2">{osc.values && osc.values[param] !== undefined ? osc.values[param] : '—'}</td>
+                <div className="flex flex-col gap-4">
+                  {synthConfig.oscillators.map((osc: any, idx: number) => (
+                    <div key={osc.id || osc.name || idx} className="bg-gray-800 rounded p-4">
+                      <div className="font-bold text-orange-300 mb-2">{osc.name || `Oscillator ${idx + 1}`}</div>
+                      <ul className="list-disc list-inside ml-4 mb-2">
+                        {Array.isArray(osc.params) && osc.params.filter((param: string) => !/oct/i.test(param)).map((param: string) => (
+                          <li key={param} className="flex items-center gap-2">
+                            <span className="font-semibold">{param}:</span> {osc.values && osc.values[param] !== undefined ? osc.values[param] : '—'}
+                          </li>
                         ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               ) : <div className="text-gray-400">No oscillator data.</div>}
             </Card>
 
-            {/* 3. Effects */}
+            {/* Effects */}
             <Card>
-              <h3 className="text-lg font-semibold text-white">3. Effects</h3>
+              <h3 className="text-lg font-semibold text-white">Effects</h3>
               {Array.isArray(synthConfig?.effects) && synthConfig.effects.length > 0 ? (
-                <table className="w-full text-gray-200 border-collapse mb-3">
-                  <thead>
-                    <tr className="bg-gray-800">
-                      <th className="p-2 text-left">Effect</th>
-                      <th className="p-2 text-left">Default Setting</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {synthConfig.effects.map((fx: any, idx: number) => (
-                      <tr key={fx.name || idx} className="border-t border-gray-700">
-                        <td className="p-2 font-bold text-green-300">{fx.name}</td>
-                        <td className="p-2">{fx.defaultSetting || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="space-y-4">
+                  {synthConfig.effects.map((fx: any, idx: number) => {
+                    const allParams = Array.isArray(fx.parameters) ? fx.parameters : [];
+                    return (
+                      <div key={fx.name || idx} className="mb-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                        {/* Left: effect name and all point-form notes (numeric and non-numeric params) */}
+                        <div>
+                          <div className="font-bold text-green-300 mb-1">{fx.name}</div>
+                          <ul className="list-disc list-inside ml-4">
+                            {allParams.length > 0 ? allParams.map((param: string) => (
+                              <li key={param} className="flex items-center gap-2">
+                                <span className="font-semibold">{param}:</span> {fx[param] !== undefined ? fx[param] : '—'}
+                              </li>
+                            )) : <li className="text-gray-400">No parameters</li>}
+                          </ul>
+                        </div>
+                        {/* Right: Knobs for numeric params only as visual aids */}
+                        <div className="flex flex-wrap gap-4">
+                          {allParams.filter((param: string) => typeof fx[param] === 'number').length > 0 ? allParams.filter((param: string) => typeof fx[param] === 'number').map((param: string) => (
+                            <div key={param} className="flex flex-col items-center">
+                              <Knob value={fx[param]} label={param} size={48} min={0} max={1} />
+                            </div>
+                          )) : <span className="text-gray-400">No numeric parameters</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
             </Card>
 
-            {/* 3. Envelope & Filter Settings */}
+            {/* Filter and Envelopes */}
             <Card>
-              <h3 className="text-lg font-semibold text-white">3. Envelope & Filter Settings</h3>
+              <h3 className="text-lg font-semibold text-white">Filter and Envelopes</h3>
               <div className="flex flex-wrap gap-8">
+                {/* Filter knobs row */}
                 {Array.isArray(synthConfig?.filters) && synthConfig.filters.map((filter: any, idx: number) => (
-                  <div key={filter.name || idx} className="flex flex-col">
-                    <div className="font-medium text-gray-200">{filter.name}</div>
-                    <div className="text-gray-300">
-                      Selected Type: <span className="font-bold text-orange-400">{filter.selectedType || (Array.isArray(filter.types) && filter.types[0]) || 'Lowpass'}</span>
+                  <div key={filter.name || idx} className="flex flex-col items-center">
+                    <div className="font-medium text-gray-200">Filter type: <span className="font-bold text-orange-400">{filter.selectedType || (Array.isArray(filter.types) && filter.types[0]) || 'Lowpass'}</span></div>
+                    <div className="flex flex-row gap-6 mt-2 mb-2">
+                      <Knob value={typeof filter.cutoff === 'number' ? filter.cutoff : 0.5} label="Cutoff" size={80} min={0} max={1} />
+                      <Knob value={typeof filter.resonance === 'number' ? filter.resonance : 0.3} label="Resonance" size={80} min={0} max={1} />
                     </div>
-                    <div className="text-gray-300">
-                      Cutoff: <span className="font-mono">{typeof filter.cutoff === 'number' ? filter.cutoff.toFixed(2) : '—'}</span>
-                      , Resonance: <span className="font-mono">{typeof filter.resonance === 'number' ? filter.resonance.toFixed(2) : '—'}</span>
-                      , Slope: <span className="font-mono">{typeof filter.slope === 'number' ? filter.slope + ' dB/oct' : '—'}</span>
-                    </div>
-                  </div>
-                ))}
-                {synthConfig && synthConfig.envelopes && Array.isArray(synthConfig.envelopes.labels) && synthConfig.envelopes.labels.map((label: string, idx: number) => (
-                  <div key={label} className="flex flex-col items-center">
-                    <div className="font-medium text-gray-200">{label}</div>
-                    <EnvelopeChart {...(idx === 0 ? adsrVCF : adsrVCA)} width={200} height={100} />
+                    {(typeof filter.cutoff === 'number' || typeof filter.resonance === 'number' || typeof filter.slope === 'number') && (
+                      <div className="text-gray-300">
+                        {typeof filter.cutoff === 'number' && (<span>Cutoff: <span className="font-mono">{(filter.cutoff * 20000).toFixed(0)} Hz</span></span>)}
+                        {typeof filter.resonance === 'number' && (<span>, Resonance: <span className="font-mono">{filter.resonance.toFixed(2)}</span></span>)}
+                        {typeof filter.slope === 'number' && (<span>, Slope: <span className="font-mono">{filter.slope} dB/oct</span></span>)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+              {/* Envelope row: always show filter and amp envelope side by side, below filter knobs */}
+              <div className="flex flex-row gap-8 mt-8 justify-center">
+                {/* Filter Envelope */}
+                <div className="flex flex-col items-center">
+                  <div className="font-medium text-gray-200">Filter Envelope</div>
+                  <EnvelopeChart {...(synthConfig?.envelopes?.values?.[0] || adsrVCF)} width={360} height={180} />
+                </div>
+                {/* Amp Envelope */}
+                <div className="flex flex-col items-center">
+                  <div className="font-medium text-gray-200">Amp Envelope</div>
+                  <EnvelopeChart {...(synthConfig?.envelopes?.values?.[1] || adsrVCA)} width={360} height={180} />
+                </div>
+              </div>
             </Card>
 
-            {/* 4. Modulation Matrix */}
-            <Card>
-              <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
-              {Array.isArray(synthConfig?.modSources) && Array.isArray(synthConfig?.modDestinations) && synthConfig.modSources.length > 0 && synthConfig.modDestinations.length > 0 ? (
+            {/* Modulation Matrix */}
+            {Array.isArray(synthConfig?.modSources) && Array.isArray(synthConfig?.modDestinations) && Array.isArray(synthConfig?.modMatrix) && synthConfig.modMatrix.length > 0 && (
+              <Card>
+                <h3 className="text-lg font-semibold text-white">Modulation Matrix</h3>
                 <table className="w-full text-gray-200 border-collapse mb-3">
                   <thead>
                     <tr className="bg-gray-800">
@@ -319,7 +356,7 @@ export const PatchGuide: React.FC = () => {
                       <th className="p-2">Target</th>
                       <th className="p-2">Parameter</th>
                       <th className="p-2">Amount</th>
-                      <th className="p-2">LFO Shape</th>
+                      {/* Removed LFO Shape column */}
                       <th className="p-2">LFO Waveform</th>
                       <th className="p-2">LFO Freq</th>
                       <th className="p-2">LFO Rate</th>
@@ -327,37 +364,39 @@ export const PatchGuide: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(synthConfig.modMatrix)
-                      ? synthConfig.modMatrix.map((row: any, idx: number) => (
-                          <tr key={row.source + row.target + row.parameter + idx} className="border-t border-gray-700">
-                            <td className="p-2">{row.source}</td>
-                            <td className="p-2">{row.target}</td>
-                            <td className="p-2">{row.parameter}</td>
-                            <td className="p-2">{typeof row.amount === 'number' ? `${Math.round(row.amount * 100)}%` : '—'}</td>
-                            <td className="p-2">{row.lfoShape || '—'}</td>
-                            <td className="p-2">{row.lfoWaveform || '—'}</td>
-                            <td className="p-2">{typeof row.lfoFrequency === 'number' ? row.lfoFrequency.toFixed(2) : '—'}</td>
-                            <td className="p-2">{typeof row.lfoRate === 'number' ? row.lfoRate.toFixed(2) : '—'}</td>
-                            <td className="p-2">{typeof row.lfoDepth === 'number' ? row.lfoDepth.toFixed(2) : '—'}</td>
-                          </tr>
-                        ))
-                      : <tr><td colSpan={9} className="text-gray-400">No modulation matrix available for this synth.</td></tr>}
+                    {synthConfig.modMatrix.map((row: any, idx: number) => (
+                        <tr key={(row?.source || '') + (row?.target || '') + (row?.parameter || '') + idx} className="border-t border-gray-700">
+                          <td className="p-2">{row?.source || '—'}</td>
+                          <td className="p-2">{row?.target || '—'}</td>
+                          <td className="p-2">{row?.parameter || '—'}</td>
+                          <td className="p-2">{typeof row?.amount === 'number' ? `${Math.round(row.amount * 100)}%` : '—'}</td>
+                          {/* Removed LFO Shape cell */}
+                          <td className="p-2">{row?.lfoWaveform || '—'}</td>
+                          <td className="p-2">{typeof row?.lfoFrequency === 'number' ? row.lfoFrequency.toFixed(2) : '—'}</td>
+                          <td className="p-2">{typeof row?.lfoRate === 'number' ? row.lfoRate.toFixed(2) : '—'}</td>
+                          <td className="p-2">{typeof row?.lfoDepth === 'number' ? row.lfoDepth.toFixed(2) : '—'}</td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
-              ) : <div className="text-gray-400">No modulation matrix available for this synth.</div>}
-            </Card>
-
-            {/* Summary paragraph from AI */}
-            {typeof summary === 'string' && summary && (
-              <Card>
-                <h3 className="text-lg font-semibold text-white">Creative Tips & Considerations</h3>
-                <div className="prose prose-invert p-4 bg-gray-800 rounded">
-                  {summary}
-                </div>
               </Card>
             )}
           </ErrorBoundary>
         </>
+      )}
+
+      {/* Creative Suggestions (Summary) */}
+      {typeof summary === 'string' && summary && (
+        <Card>
+          <h3 className="text-lg font-semibold text-white">Creative Tips & Suggestions</h3>
+          <div className="prose prose-invert p-4 bg-gray-800 rounded">
+            <ul className="list-disc list-inside ml-4">
+              {summary.split(/\n|\n- |\n\n|\r\n|\r/).filter(Boolean).map((tip, idx) => (
+                <li key={idx}>{tip.trim()}</li>
+              ))}
+            </ul>
+          </div>
+        </Card>
       )}
     </div>
   );
