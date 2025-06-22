@@ -118,14 +118,14 @@ export async function generateSynthPatchGuide(
     const synthKey = (inputs.synth || 'Generic').replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
     // Use company-prefixed name for lookup
     const synthName = SYNTH_KEY_MAP[synthKey] || inputs.synth || 'Generic Synth';
-    synthConfig = synthConfigs[synthName] || synthConfigs['Generic Synth'];
+    synthConfig = synthConfigs[synthName] || synthConfigs['Generic'] || synthConfigs['Generic Synth'];
     if (!synthConfig) throw new Error('Could not load synth config for requested synth or generic fallback.');
   } catch (err) {
     // Debug: log error
     console.error('Failed to load synth config:', err);
-    // If synth config not found, fallback to Generic.json
+    // If synth config not found, fallback to Generic or Generic Synth
     try {
-      synthConfig = synthConfigs['Generic'];
+      synthConfig = synthConfigs['Generic'] || synthConfigs['Generic Synth'];
     } catch (e) {
       throw new Error('Could not load synth config for requested synth or generic fallback.');
     }

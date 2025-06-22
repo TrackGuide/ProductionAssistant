@@ -194,13 +194,13 @@ export const PATCH_INPUT_CATEGORIES = [
     key: "genre",
     examples: [
       { group: "Electronic", examples: [
-        "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "IDM", "Breakbeat", "Jungle", "Hardstyle", "Gabber", "Psytrance", "Progressive House", "Deep House", "Tech House", "Afro House", "Electro", "Future Bass", "Trap (EDM)", "Minimal Techno", "Acid House", "UK Garage", "Grime", "Footwork", "Synthwave", "Lofi", "Ambient", "Downtempo", "Chillout", "Vaporwave", "New Age", "Berlin School", "Glitch", "EBM", "Industrial", "Darkwave", "Noise"
+        "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "IDM", "Breakbeat", "Jungle", "Hardstyle", "Gabber", "Psytrance", "Progressive House", "Deep House", "Tech House", "Afro House", "Electro", "Future Bass", "Trap (EDM)", "Minimal Techno", "Acid House", "UK Garage", "Grime", "Footwork", "Synthwave", "Lofi", "Ambient", "Downtempo", "Chillout", "Vaporwave", "New Age", "Berlin School", "Glitch", "EBM", "Industrial", "Darkwave"
       ]},
-      { group: "Non-Electronic", examples: [
+      { group: "Band, Pop, and World", examples: [
         "Rock", "Post-Punk", "Shoegaze", "Krautrock", "Goth", "Space Rock", "Drone Metal", "Funk", "Pop", "Soul", "R&B", "New Wave", "Synth-Pop", "Disco", "Hyperpop", "Hip Hop", "Reggae", "Dub", "Jazz Fusion", "Smooth Jazz", "Folk-Tronic", "World Music", "Afrobeat"
       ]},
-      { group: "Cinematic, Scores & Abstract", examples: [
-        "Cinematic", "Experimental", "Video Game Score", "Chiptune", "SFX for Film"
+      { group: "Cinematic, Scoring and Abstract", examples: [
+        "Cinematic", "Experimental", "Video Game Score", "Chiptune", "SFX for Film", "Noise"
       ]}
     ]
   },
@@ -242,5 +242,5 @@ export const SYNTH_OPTIONS = [
   'Vital',
   'Xfer Serum',
   'Zebra2',
-  'Generic Synth'
+  'Generic'
 ].sort();

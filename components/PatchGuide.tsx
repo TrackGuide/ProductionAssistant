@@ -33,12 +33,15 @@ export const PatchGuide: React.FC = () => {
     movementDynamics: boolean;
   };
 
+  // Set all collapsible categories except dropdowns to default collapsed
   const [collapsed, setCollapsed] = useState<CollapsedState>({
     genre: false,
     synth: false,
-    voiceType: false, // Default as expanded
+    voiceType: false,
     characterMood: true,
     movementDynamics: true,
+    era: true,
+    concept: true,
   });
 
   // AI results & parameters
@@ -115,7 +118,7 @@ export const PatchGuide: React.FC = () => {
                 <option value="" disabled>Select genre</option>
                 {(PATCH_INPUT_CATEGORIES[0].examples as { group: string; examples: string[] }[]).filter(group => typeof group === 'object' && group.group && Array.isArray(group.examples)).map(group => (
                   <optgroup key={group.group} label={group.group}>
-                    {group.examples.map((g: string) => (
+                    {group.examples.filter((g: string) => typeof g === 'string').map((g: string) => (
                       <option key={g} value={g}>{g}</option>
                     ))}
                   </optgroup>
@@ -209,118 +212,137 @@ export const PatchGuide: React.FC = () => {
       {/* RESULTS */}
       {guide && (
         <>
-          {/* Instructions */}
-          <Card>
-            <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
-            <div className="prose prose-invert p-4 bg-gray-800 rounded">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-              >
-                {guide}
-              </ReactMarkdown>
-            </div>
-          </Card>
+          {/* Error boundary for AI result rendering */}
+          <ErrorBoundary>
+            {/* Instructions */}
+            <Card>
+              <h2 className="text-xl font-semibold text-white">Patch Instructions</h2>
+              <div className="prose prose-invert p-4 bg-gray-800 rounded">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                >
+                  {guide}
+                </ReactMarkdown>
+              </div>
+            </Card>
 
-          {/* 1. Oscillators */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">1. Oscillators</h3>
-            {synthConfig && synthConfig.oscillators ? (
-              <table className="w-full text-gray-200 border-collapse">
-                <thead>
-                  <tr className="bg-gray-800">
-                    <th className="p-2">Source</th>
-                    {synthConfig.oscillators[0]?.params?.map((param: string) => (
-                      <th key={param} className="p-2">{param}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {synthConfig.oscillators.map((osc: any, idx: number) => (
-                    <tr key={osc.id || idx} className="border-t border-gray-700">
-                      <td className="p-2">{osc.name}</td>
-                      {osc.params.map((param: string) => (
-                        <td key={param} className="p-2">{/* TODO: Show actual value if available */}—</td>
+            {/* 1. Oscillators */}
+            <Card>
+              <h3 className="text-lg font-semibold text-white">1. Oscillators</h3>
+              {synthConfig && synthConfig.oscillators ? (
+                <table className="w-full text-gray-200 border-collapse">
+                  <thead>
+                    <tr className="bg-gray-800">
+                      <th className="p-2">Source</th>
+                      {synthConfig.oscillators[0]?.params?.map((param: string) => (
+                        <th key={param} className="p-2">{param}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <div className="text-gray-400">No oscillator data.</div>}
-          </Card>
+                  </thead>
+                  <tbody>
+                    {synthConfig.oscillators.map((osc: any, idx: number) => (
+                      <tr key={osc.id || idx} className="border-t border-gray-700">
+                        <td className="p-2">{osc.name}</td>
+                        {osc.params.map((param: string) => (
+                          <td key={param} className="p-2">{/* TODO: Show actual value if available */}—</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="text-gray-400">No oscillator data.</div>}
+            </Card>
 
-          {/* 3. Effects */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">3. Effects</h3>
-            {synthConfig && synthConfig.effects && synthConfig.effects.length > 0 ? (
-              <table className="w-full text-gray-200 border-collapse mb-3">
-                <thead>
-                  <tr className="bg-gray-800">
-                    <th className="p-2 text-left">Effect</th>
-                    <th className="p-2 text-left">Default Setting</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {synthConfig.effects.map((fx: any, idx: number) => (
-                    <tr key={fx.name || idx} className="border-t border-gray-700">
-                      <td className="p-2 font-bold text-green-300">{fx.name}</td>
-                      <td className="p-2">{fx.defaultSetting || '—'}</td>
+            {/* 3. Effects */}
+            <Card>
+              <h3 className="text-lg font-semibold text-white">3. Effects</h3>
+              {synthConfig && synthConfig.effects && synthConfig.effects.length > 0 ? (
+                <table className="w-full text-gray-200 border-collapse mb-3">
+                  <thead>
+                    <tr className="bg-gray-800">
+                      <th className="p-2 text-left">Effect</th>
+                      <th className="p-2 text-left">Default Setting</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
-          </Card>
+                  </thead>
+                  <tbody>
+                    {synthConfig.effects.map((fx: any, idx: number) => (
+                      <tr key={fx.name || idx} className="border-t border-gray-700">
+                        <td className="p-2 font-bold text-green-300">{fx.name}</td>
+                        <td className="p-2">{fx.defaultSetting || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
+            </Card>
 
-          {/* 3. Envelope & Filter Settings */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">3. Envelope & Filter Settings</h3>
-            <div className="flex flex-wrap gap-8">
-              {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
-                <div key={filter.name || idx} className="flex flex-col">
-                  <div className="font-medium text-gray-200">{filter.name}</div>
-                  <div className="text-gray-300">Types: {filter.types?.join(', ')}</div>
-                  <div className="text-gray-300">Relevant Params: {filter.relevantParams?.join(', ')}</div>
-                </div>
-              ))}
-              {synthConfig && synthConfig.envelopes && synthConfig.envelopes.labels && synthConfig.envelopes.labels.map((label: string, idx: number) => (
-                <div key={label} className="flex flex-col items-center">
-                  <div className="font-medium text-gray-200">{label}</div>
-                  <EnvelopeChart {...(idx === 0 ? adsrVCF : adsrVCA)} width={200} height={100} />
-                </div>
-              ))}
-            </div>
-          </Card>
+            {/* 3. Envelope & Filter Settings */}
+            <Card>
+              <h3 className="text-lg font-semibold text-white">3. Envelope & Filter Settings</h3>
+              <div className="flex flex-wrap gap-8">
+                {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
+                  <div key={filter.name || idx} className="flex flex-col">
+                    <div className="font-medium text-gray-200">{filter.name}</div>
+                    <div className="text-gray-300">Types: {filter.types?.join(', ')}</div>
+                    <div className="text-gray-300">Relevant Params: {filter.relevantParams?.join(', ')}</div>
+                  </div>
+                ))}
+                {synthConfig && synthConfig.envelopes && synthConfig.envelopes.labels && synthConfig.envelopes.labels.map((label: string, idx: number) => (
+                  <div key={label} className="flex flex-col items-center">
+                    <div className="font-medium text-gray-200">{label}</div>
+                    <EnvelopeChart {...(idx === 0 ? adsrVCF : adsrVCA)} width={200} height={100} />
+                  </div>
+                ))}
+              </div>
+            </Card>
 
-          {/* 4. Modulation Matrix */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
-            {synthConfig && synthConfig.modSources && synthConfig.modDestinations ? (
-              <table className="w-full text-gray-200 border-collapse mb-3">
-                <thead>
-                  <tr className="bg-gray-800">
-                    <th className="p-2">Source</th>
-                    <th className="p-2">Target</th>
-                    <th className="p-2">Parameter</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {synthConfig.modSources.map((source: string) => (
-                    Object.entries(synthConfig.modDestinations).map(([target, params]: [string, any]) => (
-                      (params as string[]).map((param: string) => (
-                        <tr key={source + target + param} className="border-t border-gray-700">
-                          <td className="p-2">{source}</td>
-                          <td className="p-2">{target}</td>
-                          <td className="p-2">{param}</td>
-                        </tr>
+            {/* 4. Modulation Matrix */}
+            <Card>
+              <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
+              {synthConfig && synthConfig.modSources && synthConfig.modDestinations ? (
+                <table className="w-full text-gray-200 border-collapse mb-3">
+                  <thead>
+                    <tr className="bg-gray-800">
+                      <th className="p-2">Source</th>
+                      <th className="p-2">Target</th>
+                      <th className="p-2">Parameter</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {synthConfig.modSources.map((source: string) => (
+                      Object.entries(synthConfig.modDestinations).map(([target, params]: [string, any]) => (
+                        (params as string[]).map((param: string) => (
+                          <tr key={source + target + param} className="border-t border-gray-700">
+                            <td className="p-2">{source}</td>
+                            <td className="p-2">{target}</td>
+                            <td className="p-2">{param}</td>
+                          </tr>
+                        ))
                       ))
-                    ))
-                  ))}
-                </tbody>
-              </table>
-            ) : <div className="text-gray-400">No modulation matrix available for this synth.</div>}
-          </Card>
+                    ))}
+                  </tbody>
+                </table>
+              ) : <div className="text-gray-400">No modulation matrix available for this synth.</div>}
+            </Card>
+          </ErrorBoundary>
         </>
       )}
     </div>
   );
 };
+
+// ErrorBoundary component for robust error handling
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState('');
+  React.useEffect(() => {
+    setHasError(false);
+    setErrorMsg('');
+  }, [children]);
+  try {
+    if (hasError) throw new Error(errorMsg);
+    return <>{children}</>;
+  } catch (err: any) {
+    return <div className="text-red-500 bg-gray-900 p-4 rounded">Error rendering patch guide: {err.message || String(err)}</div>;
+  }
+}

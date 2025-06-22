@@ -262,39 +262,26 @@
   },
   "Generic": {
     "name": "Generic Synth",
-    "company": "General",
-    "type": "Virtual Analog",
     "oscillators": [
-      {
-        "type": "Saw, Square, Sine, Triangle",
-        "features": ["Blend/Mix", "Detune", "Unison"]
-      }
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Level"]}
     ],
     "filters": [
-      {
-        "type": "Lowpass, Highpass, Bandpass",
-        "features": ["Resonance", "Drive"]
-      }
+      {"name": "Filter", "types": ["Lowpass", "Highpass"], "defaultType": "Lowpass", "parameters": ["Cutoff", "Resonance"]}
     ],
-    "envelopes": [
-      {
-        "type": "ADSR",
-        "features": ["Assignable to Amp, Filter, Pitch"]
-      }
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"}
     ],
-    "lfos": [
-      {
-        "type": "LFO 1, LFO 2",
-        "features": ["Assignable to most parameters", "Sync to tempo"]
-      }
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance"]},
+      {"section": "Amp", "params": ["Level"]}
     ],
     "effects": [
-      "Chorus", "Delay", "Reverb", "Distortion"
-    ],
-    "modulation": [
-      "Matrix routing", "Macro controls"
-    ],
-    "description": "A generic synthesizer with common subtractive synthesis features. Use this if your synth is not listed."
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay"]}
+    ]
   },
   "Alchemy": {
     "name": "Apple Alchemy",
