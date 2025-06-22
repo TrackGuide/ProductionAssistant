@@ -39,6 +39,9 @@ export interface PatchGuideResult {
   knobs: Record<string, number>;
   modMatrix: ModRouting[];
   modMatrixMarkdown: string; // New field for markdown rendering
+  synthConfig: any; // Add synthConfig for dynamic frontend rendering
+  relevantEffects: any[]; // Add relevantEffects for contextual UI rendering
+  relevantFilterParams: string[]; // Add relevantFilterParams for contextual UI rendering
 }
 
 interface PatchGuideInputs {
@@ -221,6 +224,49 @@ Inputs:
     modMatrixMarkdown = 'No modulation matrix entries.';
   }
 
+  // --- Refinement: Contextual parameter selection and suggestions ---
+  // Use keywords from the patch description and genre to select relevant parameters and effects
+  function getRelevantParamsAndEffects(desc: string, genre: string, config: any) {
+    const keywords = (desc + ' ' + genre).toLowerCase();
+    const effectMap: Record<string, string[]> = {
+      'ambient': ['Reverb', 'Delay'],
+      'spacious': ['Reverb', 'Delay'],
+      'pad': ['Reverb', 'Chorus', 'Delay'],
+      'pluck': ['Filter', 'Envelope', 'Attack', 'Decay'],
+      'bass': ['Drive', 'Filter', 'Envelope'],
+      'lead': ['Reverb', 'Delay', 'Chorus'],
+      'distorted': ['Drive'],
+      'aggressive': ['Drive', 'Resonance'],
+      'smooth': ['Chorus', 'Reverb'],
+      'vintage': ['Chorus', 'Reverb'],
+      'modern': ['Delay', 'Reverb'],
+      'fx': ['Reverb', 'Delay', 'Chorus'],
+      'subtle': ['Envelope', 'Filter'],
+      'bright': ['Filter', 'Resonance'],
+      'warm': ['Drive', 'Filter'],
+    };
+    let relevant: string[] = [];
+    Object.entries(effectMap).forEach(([k, params]) => {
+      if (keywords.includes(k)) relevant.push(...params);
+    });
+    // Always include Cutoff/Resonance if present
+    if (config.filters?.[0]?.params) {
+      if (!relevant.includes('Cutoff')) relevant.push('Cutoff');
+      if (!relevant.includes('Resonance')) relevant.push('Resonance');
+    }
+    // Only keep unique
+    relevant = [...new Set(relevant)];
+    // Filter effects
+    const relevantEffects = config.effects?.filter((fx: any) => relevant.includes(fx.name)) || config.effects;
+    // Filter filter params
+    const relevantFilterParams = config.filters?.[0]?.params?.filter((p: string) => relevant.includes(p)) || config.filters?.[0]?.params;
+    return { relevantEffects, relevantFilterParams };
+  }
+
+  const desc = inputs.description || '';
+  const genre = inputs.genre || '';
+  const { relevantEffects, relevantFilterParams } = getRelevantParamsAndEffects(desc, genre, synthConfig);
+
   return {
     text,
     waveform,
@@ -229,6 +275,9 @@ Inputs:
     adsrVCA,
     knobs,
     modMatrix,
-    modMatrixMarkdown // <-- new field for markdown rendering
+    modMatrixMarkdown,
+    synthConfig,
+    relevantEffects,
+    relevantFilterParams
   };
 }

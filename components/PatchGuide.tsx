@@ -61,6 +61,7 @@ export const PatchGuide: React.FC = () => {
     MasterTune: 0
   });
   const [modMatrixMarkdown, setModMatrixMarkdown] = useState<string | null>(null);
+  const [synthConfig, setSynthConfig] = useState<any>(null);
 
   // Loading / error
   const [loading, setLoading] = useState(false);
@@ -98,6 +99,7 @@ export const PatchGuide: React.FC = () => {
           f3: res.oscSettings.o3Fine || 0
         });
       }
+      if (res.synthConfig) setSynthConfig(res.synthConfig);
       if (res.adsrVCF) setAdsrVCF(res.adsrVCF);
       if (res.adsrVCA) setAdsrVCA(res.adsrVCA);
       if (res.knobs) setKnobs(res.knobs);
@@ -246,98 +248,69 @@ export const PatchGuide: React.FC = () => {
           {/* 1. Oscillators */}
           <Card>
             <h3 className="text-lg font-semibold text-white">1. Oscillators</h3>
-            <table className="w-full text-gray-200 border-collapse">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="p-2">Source</th>
-                  <th className="p-2">Wave</th>
-                  <th className="p-2">Oct</th>
-                  <th className="p-2">Coarse</th>
-                  <th className="p-2">Fine</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Up to 3 oscillators */}
-                {[1, 2, 3].map(i => {
-                  const o = oscOct[`o${i}` as keyof typeof oscOct];
-                  if (o === 0 && i > 1) return null;
-                  return (
-                    <tr key={i} className="border-t border-gray-700">
-                      <td className="p-2">{`Osc ${i}`}</td>
-                      <td className="p-2">Sawtooth</td>
-                      <td className="p-2">{o}</td>
-                      <td className="p-2">{tunings[`c${i}` as keyof typeof tunings]}</td>
-                      <td className="p-2">{tunings[`f${i}` as keyof typeof tunings]}</td>
+            {synthConfig && synthConfig.oscillators ? (
+              <table className="w-full text-gray-200 border-collapse">
+                <thead>
+                  <tr className="bg-gray-800">
+                    <th className="p-2">Source</th>
+                    {synthConfig.oscillators[0]?.params?.map((param: string) => (
+                      <th key={param} className="p-2">{param}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {synthConfig.oscillators.map((osc: any, idx: number) => (
+                    <tr key={osc.id || idx} className="border-t border-gray-700">
+                      <td className="p-2">{osc.name}</td>
+                      {osc.params.map((param: string) => (
+                        <td key={param} className="p-2">{/* TODO: Show actual value if available */}—</td>
+                      ))}
                     </tr>
-                  );
-                })}
-                {/* Sub + Noise */}
-                <tr className="border-t border-gray-700">
-                  <td className="p-2">Sub Osc</td>
-                  <td className="p-2">Square</td>
-                  <td className="p-2">—</td>
-                  <td className="p-2">—</td>
-                  <td className="p-2">—12 dB</td>
-                </tr>
-                <tr className="border-t border-gray-700">
-                  <td className="p-2">Noise</td>
-                  <td className="p-2">White Noise</td>
-                  <td className="p-2">—</td>
-                  <td className="p-2">—</td>
-                  <td className="p-2">—</td>
-                </tr>
-              </tbody>
-            </table>
-          </Card>
-
-          {/* 2. Filter */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">2. Filter</h3>
-            <div className="space-y-1 text-gray-200">
-              <div><strong>Type:</strong> Lowpass</div>
-              <div><strong>Slope:</strong> 12 dB/oct</div>
-            </div>
-            <div className="flex flex-wrap gap-6 mt-3">
-              <Knob label="Cutoff (Hz)" value={getKnob('Cutoff')} />
-              <Knob label="Resonance (%)" value={getKnob('Resonance')} />
-            </div>
-            <div className="mt-1 text-gray-200">
-              {knobToHz(getKnob('Cutoff'))} Hz &nbsp;|&nbsp; {Math.round(getKnob('Resonance') * 100)}%
-            </div>
+                  ))}
+                </tbody>
+              </table>
+            ) : <div className="text-gray-400">No oscillator data.</div>}
           </Card>
 
           {/* 3. Effects */}
           <Card>
             <h3 className="text-lg font-semibold text-white">3. Effects</h3>
-            {/* Table of params */}
-            <table className="w-full text-gray-200 border-collapse mb-3">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="p-2 text-left">Parameter</th>
-                  <th className="p-2 text-left">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  'Drive', 'Mix', 'Reverb',
-                  'DelayTime', 'DelayFB', 'ChorusDepth',
-                  'ChorusRate', 'MasterTune'
-                ].map(key => (
-                  <tr key={key} className="border-t border-gray-700">
-                    <td className="p-2">{key.replace(/([A-Z])/g, ' $1').trim()}</td>
-                    <td className="p-2">{Math.round(getKnob(key) * 100)}%</td>
+            {synthConfig && synthConfig.effects && synthConfig.effects.length > 0 ? (
+              <table className="w-full text-gray-200 border-collapse mb-3">
+                <thead>
+                  <tr className="bg-gray-800">
+                    <th className="p-2 text-left">Effect</th>
+                    <th className="p-2 text-left">Default Setting</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {/* Knobs */}
-            <div className="flex flex-wrap gap-6">
-              {[
-                'Drive', 'Mix', 'Reverb',
-                'DelayTime', 'DelayFB', 'ChorusDepth',
-                'ChorusRate', 'MasterTune'
-              ].map(key => (
-                <Knob key={key} label={key.replace(/([A-Z])/g, ' $1').trim()} value={getKnob(key)} />
+                </thead>
+                <tbody>
+                  {synthConfig.effects.map((fx: any, idx: number) => (
+                    <tr key={fx.name || idx} className="border-t border-gray-700">
+                      <td className="p-2 font-bold text-green-300">{fx.name}</td>
+                      <td className="p-2">{fx.defaultSetting || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <div className="text-gray-400">No relevant effects for this patch.</div>}
+          </Card>
+
+          {/* 2. Filters and Envelopes */}
+          <Card>
+            <h3 className="text-lg font-semibold text-white">2. Filters and Envelopes</h3>
+            <div className="flex flex-wrap gap-8">
+              {synthConfig && synthConfig.filters && synthConfig.filters.map((filter: any, idx: number) => (
+                <div key={filter.name || idx} className="flex flex-col">
+                  <div className="font-medium text-gray-200">{filter.name}</div>
+                  <div className="text-gray-300">Types: {filter.types?.join(', ')}</div>
+                  <div className="text-gray-300">Relevant Params: {filter.relevantParams?.join(', ')}</div>
+                </div>
+              ))}
+              {synthConfig && synthConfig.envelopes && synthConfig.envelopes.labels && synthConfig.envelopes.labels.map((label: string, idx: number) => (
+                <div key={label} className="flex flex-col items-center">
+                  <div className="font-medium text-gray-200">{label}</div>
+                  <EnvelopeChart {...(idx === 0 ? adsrVCF : adsrVCA)} width={200} height={100} />
+                </div>
               ))}
             </div>
           </Card>
@@ -345,32 +318,30 @@ export const PatchGuide: React.FC = () => {
           {/* 4. Modulation Matrix */}
           <Card>
             <h3 className="text-lg font-semibold text-white">4. Modulation Matrix</h3>
-            {modMatrixMarkdown ? (
-              <div className="prose prose-invert p-4 bg-gray-800 rounded">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                >
-                  {modMatrixMarkdown}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <div className="text-gray-200">No modulation matrix available.</div>
-            )}
-          </Card>
-
-          {/* 5. Envelopes */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white">5. Envelopes</h3>
-            <div className="flex flex-col md:flex-row gap-8 mt-4">
-              <div>
-                <h4 className="font-medium text-gray-200">VCF (Voltage Controlled Filter)</h4>
-                <EnvelopeChart {...adsrVCF} width={300} height={150} />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-200">VCA (Voltage Controlled Amp)</h4>
-                <EnvelopeChart {...adsrVCA} width={300} height={150} />
-              </div>
-            </div>
+            {synthConfig && synthConfig.modSources && synthConfig.modDestinations ? (
+              <table className="w-full text-gray-200 border-collapse mb-3">
+                <thead>
+                  <tr className="bg-gray-800">
+                    <th className="p-2">Source</th>
+                    <th className="p-2">Target</th>
+                    <th className="p-2">Parameter</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {synthConfig.modSources.map((source: string) => (
+                    Object.entries(synthConfig.modDestinations).map(([target, params]: [string, any]) => (
+                      (params as string[]).map((param: string) => (
+                        <tr key={source + target + param} className="border-t border-gray-700">
+                          <td className="p-2">{source}</td>
+                          <td className="p-2">{target}</td>
+                          <td className="p-2">{param}</td>
+                        </tr>
+                      ))
+                    ))
+                  ))}
+                </tbody>
+              </table>
+            ) : <div className="text-gray-400">No modulation matrix available for this synth.</div>}
           </Card>
         </>
       )}
