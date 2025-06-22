@@ -25,11 +25,10 @@ export interface ADSR {
 export interface ModRouting {
   source: string;
   target: string;
-  amount: number;
   parameter?: string;
+  amount: number;
   lfoRate?: number;
   lfoDepth?: number;
-  lfoShape?: string;
   lfoWaveform?: string;
   lfoFrequency?: number;
 }
@@ -42,26 +41,21 @@ export interface PatchGuideResult {
   adsrVCA: ADSR;
   knobs: Record<string, number>;
   modMatrix: ModRouting[];
-  synthConfig: any; // Add synthConfig for dynamic frontend rendering
-  summary?: string; // Add summary for creative tips
-  envelopes?: any; // Add envelope visuals for frontend
+  synthConfig: any;
+  summary?: string;
+  envelopes?: any;
 }
 
 interface PatchGuideInputs {
   description: string;
   synth: string;
   voiceType?: string;
-  descriptor?: string;
   genre?: string;
   notes?: string;
-  era?: string;
-  concept?: string;
 }
 
-// Use type assertion for imported JSON to allow string indexing
 const synthConfigs = synthConfigsJson as Record<string, any>;
 
-// Map of normalized synth keys to company-prefixed names for robust lookup
 const SYNTH_KEY_MAP: Record<string, string> = {
   'serum': 'Xfer Serum',
   'vital': 'Vital',
@@ -96,15 +90,6 @@ const SYNTH_KEY_MAP: Record<string, string> = {
   'ms20': 'Korg MS-20'
 };
 
-/**
- * Clamp a value to a numeric range, defaulting to min on invalid input.
- */
-function clamp(value: any, min: number, max: number): number {
-  const n = parseFloat(value);
-  if (!Number.isFinite(n)) return min;
-  return Math.min(Math.max(n, min), max);
-}
-
 export async function generateSynthPatchGuide(
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
@@ -116,63 +101,41 @@ export async function generateSynthPatchGuide(
     throw new Error('Missing GEMINI_API_KEY or VITE_GEMINI_API_KEY');
   }
 
-  // Load synth config
   let synthConfig: any = null;
   try {
-    // Normalize synth name for lookup
     const synthKey = (inputs.synth || 'Generic').replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
-    // Use company-prefixed name for lookup
     let synthName = SYNTH_KEY_MAP[synthKey] || inputs.synth || 'Generic Synth';
-    // Try direct match, then fallback to 'Generic', then 'Generic Synth'
     synthConfig = synthConfigs[synthName] || synthConfigs['Generic'] || synthConfigs['Generic Synth'];
-    if (!synthConfig) {
-      // Try alternate fallback keys
-      if (synthConfigs['Generic Synth']) synthConfig = synthConfigs['Generic Synth'];
-      else if (synthConfigs['Generic']) synthConfig = synthConfigs['Generic'];
-    }
-    if (!synthConfig) throw new Error(`Could not load synth config for requested synth (${inputs.synth}) or generic fallback. Checked keys: ${synthName}, Generic, Generic Synth`);
+    if (!synthConfig) throw new Error(`Could not load synth config for requested synth.`);
   } catch (err) {
-    // Debug: log error
     console.error('Failed to load synth config:', err);
-    throw new Error('Could not load synth config for requested synth or generic fallback.');
+    throw new Error('Could not load synth config.');
   }
 
-  // --- Ensure synthConfig arrays for robust frontend rendering ---
-  if (!Array.isArray(synthConfig.oscillators)) synthConfig.oscillators = [];
-  if (!Array.isArray(synthConfig.filters)) synthConfig.filters = [];
-  if (!Array.isArray(synthConfig.effects)) synthConfig.effects = [];
-  if (!Array.isArray(synthConfig.modSources)) synthConfig.modSources = [];
-  if (!Array.isArray(synthConfig.modDestinations)) synthConfig.modDestinations = [];
-
-  // --- Strengthen the AI prompt for musically useful values ---
   const prompt = `
-You are an expert sound designer. Given the following user inputs and synth configuration, return a JSON object with:
-- text (string): A concise, genre- and voice-type-specific patch description.
-- oscillators (array): For each oscillator in the synthConfig.oscillators array, return an object with 'name' and 'values', where 'values' is an object mapping each param in the 'params' array to a musically appropriate value. Use the exact param names from the synthConfig. Always include 1–3 oscillators with different waveforms, and where appropriate, include a sub oscillator and a noise generator if available in the synthConfig. Set musically useful values for coarse and fine tuning (e.g., Coarse: -12 to +12, Fine: -0.5 to +0.5), and Level (main oscillators: 0.7–1, sub/noise: 0.3–0.7). Do not set Level to 0. Do not leave any value blank or generic.
-- filter (object): Select ONE filter type from the synth config (from filter.types), and provide cutoff, resonance, and slope values, all musically appropriate for the patch. Do NOT leave any value blank or generic.
-- adsrVCF (object): Envelope settings for the filter, tailored to the patch style.
-- adsrVCA (object): Envelope settings for the amp, tailored to the patch style.
-- knobs (object): All knob values (Cutoff, Resonance, Drive, Mix, Reverb, DelayTime, DelayFB, ChorusDepth, ChorusRate, MasterTune) between 0.0 and 1.0, set to musically useful defaults for the genre and description. Include these for knob visuals.
-- envelopes (object): Provide envelope data for visuals (labels, values) for both VCF and VCA envelopes.
-- effects (array): List ONLY the 1–3 most musically relevant effects for this patch. For each effect, use only effects that exist in the synthConfig.effects array. For each effect, provide an object with the effect name and a value for EVERY parameter listed in that effect's 'parameters' array in synthConfig. Do NOT use generic or default settings. For time-based parameters (such as 'Time' or 'Delay Time'), if the effect is synced to the global BPM, use a note value (e.g., '1/4 note', '1/8 dotted'). If not synced, use a value in Hz or ms as appropriate. All effect parameters must be contextually filled and musically appropriate for the patch and synth.
-- modMatrix (array): If the synth supports modulation (has modSources and modDestinations), return 2–5 musically relevant routings, using only valid sources (from modSources), targets/params (from modDestinations), and parameter names from the synthConfig. Each routing must be an object with source, target, parameter, amount, lfoWaveform (if LFO is used), lfoRate, lfoDepth, lfoFrequency. If suggesting to apply an LFO to a target parameter, always specify the lfoWaveform, lfoRate (in Hz), lfoDepth (0–1), and lfoFrequency (in Hz) with musically appropriate values. Do NOT include lfoShape. Do NOT list every possible combination. Each routing should be justified by the genre, voice type, or description, and parameter names/values should match the synthConfig and the style of the creative tips section.
-IMPORTANT: If the synth has one or more LFOs in modSources, you MUST include at least one musically relevant LFO-based modulation routing in the modMatrix, with a specific target parameter (such as filter cutoff, oscillator pitch, or amplitude), and provide musically useful values for all LFO-related fields. Do NOT leave the modMatrix empty for synths with LFOs.
-- summary (string): A robust, actionable, and inspiring list of 5–7 creative tips and considerations for this patch, as a newline-separated bullet list (not a paragraph). Each tip should be musically relevant, detailed, and practical for a producer. Include specific advice for performance, modulation, automation, genre conventions, sound design tricks, and how to further tweak the patch for creative results. If you have any LFO or modulation suggestions that would otherwise be in the mod matrix, include them as tips here as well. Do NOT include a generic summary paragraph—return only a bullet list of tips. Always provide this field.
+You are an expert sound designer. Given the user description and synthConfig, return JSON with:
+
+- text (string): a creative patch description
+- oscillators (array): for each oscillator: name, Waveform, Coarse or Octave (if Sub), Fine, Level in dB
+- filter: cutoff in Hz, resonance (0–1), slope dB/oct
+- adsrVCF & adsrVCA: attack, decay, sustain, release — in ms or % where relevant
+- envelopes: for UI display
+- knobs: Cutoff, Resonance, Drive, Mix, Reverb, DelayTime, DelayFB, ChorusDepth, ChorusRate, MasterTune (0–1)
+- effects: select 2–4 musically useful effects with full parameter set (Hz, ms, %, or note values if tempo-synced)
+- modMatrix: 3–5 musically useful routings — skip "Env → Cutoff" — source, target, parameter, amount, LFO details if relevant
+- summary: 5–7 creative tips
 
 Synth Configuration:
 ${JSON.stringify(synthConfig, null, 2)}
 
 User Inputs:
-- Voice Type: ${inputs.voiceType || 'None'}
-- Descriptor: ${inputs.descriptor || 'None'}
 - Genre: ${inputs.genre || 'None'}
-- Synth: ${inputs.synth}
-- Era: ${inputs.era || 'None'}
-- Concept: ${inputs.concept || 'None'}
-- Character/Mood: ${inputs.description || 'None'}
+- Voice Type: ${inputs.voiceType || 'None'}
+- Description: ${inputs.description || 'None'}
 - Notes: ${inputs.notes || 'None'}
 
-Return JSON only. Do NOT include markdown or explanations. All fields must be present and filled with contextually relevant values. Do NOT list all possible routings or effects—only those that are musically relevant for the patch described. Do NOT include a synthConfig field in your response.`;
+ONLY RETURN JSON — do not return markdown or prose.
+  `.trim();
 
   const ai = new GoogleGenAI({ apiKey });
   const response: GenerateContentResponse = await ai.models.generateContent({
@@ -191,313 +154,34 @@ Return JSON only. Do NOT include markdown or explanations. All fields must be pr
     throw new Error('Invalid JSON from AI: ' + (err as Error).message + '\nRaw output: ' + raw.slice(0, 300));
   }
 
-  // Destructure with defaults
-  const {
-    text = '',
-    waveform = '',
-    oscSettings: rawOsc = {},
-    adsrVCF: rawVCF = {},
-    adsrVCA: rawVCA = {},
-    knobs: rawKnobs = {},
-  } = parsed;
-
-  // Build cleaned knobs
-  const knobKeys = [
-    'Cutoff', 'Resonance', 'Drive', 'Mix',
-    'Reverb', 'DelayTime', 'DelayFB',
-    'ChorusDepth', 'ChorusRate', 'MasterTune'
-  ];
-  const knobs: Record<string, number> = {};
-  knobKeys.forEach(key => {
-    knobs[key] = clamp(rawKnobs[key], 0, 1);
-  });
-
-  // Clean oscSettings
-  const oscSettings: OscSettings = {
-    o1Oct: clamp(rawOsc.o1Oct, -4, 4),
-    o2Oct: clamp(rawOsc.o2Oct, -4, 4),
-    o3Oct: clamp(rawOsc.o3Oct, -4, 4),
-    o1Coarse: clamp(rawOsc.o1Coarse, -12, 12),
-    o2Coarse: clamp(rawOsc.o2Coarse, -12, 12),
-    o3Coarse: clamp(rawOsc.o3Coarse, -12, 12),
-    o1Fine: clamp(rawOsc.o1Fine, -1, 1),
-    o2Fine: clamp(rawOsc.o2Fine, -1, 1),
-    o3Fine: clamp(rawOsc.o3Fine, -1, 1),
-  };
-
-  // --- Clean and validate all fields ONCE ---
-  // (Keep only one set of getMusicalADSR, isValidADSR, adsrVCF, adsrVCA, oscillator, modMatrix, and requiredFields logic)
-
-  // --- Improved ADSR fallback logic based on patch type ---
-  function getMusicalADSR(type: 'VCF' | 'VCA' = 'VCA'): ADSR {
-    const genre = (inputs.genre || '').toLowerCase();
-    const voiceType = (inputs.voiceType || '').toLowerCase();
-    if (voiceType.includes('lead') || genre.includes('lead') || genre.includes('pluck')) {
-      return type === 'VCF'
-        ? { attack: 0.01, decay: 0.12, sustain: 0.5, release: 0.15 }
-        : { attack: 0.01, decay: 0.15, sustain: 0.7, release: 0.2 };
-    } else if (voiceType.includes('pad') || genre.includes('pad') || genre.includes('ambient')) {
-      return type === 'VCF'
-        ? { attack: 0.7, decay: 1.5, sustain: 0.7, release: 2.0 }
-        : { attack: 1.0, decay: 2.0, sustain: 0.8, release: 2.5 };
-    } else if (voiceType.includes('bass') || genre.includes('bass')) {
-      return type === 'VCF'
-        ? { attack: 0.01, decay: 0.1, sustain: 0.4, release: 0.1 }
-        : { attack: 0.02, decay: 0.18, sustain: 0.6, release: 0.15 };
-    } else {
-      // General musical default
-      return type === 'VCF'
-        ? { attack: 0.1, decay: 0.4, sustain: 0.7, release: 0.8 }
-        : { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 };
-    }
-  }
-  function isValidADSR(a: ADSR) {
-    return (
-      typeof a.attack === 'number' && a.attack > 0 &&
-      typeof a.decay === 'number' && a.decay > 0 &&
-      typeof a.sustain === 'number' && a.sustain >= 0 && a.sustain <= 1 &&
-      typeof a.release === 'number' && a.release > 0
-    );
-  }
-  let adsrVCF: ADSR = {
-    attack: clamp(rawVCF.attack, 0, 10),
-    decay: clamp(rawVCF.decay, 0, 10),
-    sustain: clamp(rawVCF.sustain, 0, 1),
-    release: clamp(rawVCF.release, 0, 10),
-  };
-  let adsrVCA: ADSR = {
-    attack: clamp(rawVCA.attack, 0, 10),
-    decay: clamp(rawVCA.decay, 0, 10),
-    sustain: clamp(rawVCA.sustain, 0, 1),
-    release: clamp(rawVCA.release, 0, 10),
-  };
-  if (!isValidADSR(adsrVCF)) adsrVCF = getMusicalADSR('VCF');
-  if (!isValidADSR(adsrVCA)) adsrVCA = getMusicalADSR('VCA');
-
-  // --- Prefer AI's oscillators array if present, else fallback to oscSettings mapping ---
-  if (Array.isArray(parsed.oscillators) && parsed.oscillators.length > 0) {
-    synthConfig.oscillators = synthConfig.oscillators.map((osc: any, idx: number) => {
-      const aiOsc = parsed.oscillators[idx] || {};
-      const values: Record<string, any> = {};
-      if (Array.isArray(osc.params)) {
-        osc.params.forEach((param: string) => {
-          if (param === 'Coarse') {
-            let v = aiOsc.values && aiOsc.values[param];
-            if (typeof v !== 'number' || v < -24 || v > 24) v = 0;
-            values[param] = v;
-          } else if (param === 'Fine') {
-            let v = aiOsc.values && aiOsc.values[param];
-            if (typeof v !== 'number' || v < -1 || v > 1) v = 0;
-            values[param] = v;
-          } else if (param === 'Level') {
-            let v = aiOsc.values && aiOsc.values[param];
-            if (typeof v !== 'number' || v === 0) v = 1;
-            values[param] = v;
-          } else if (param === 'Waveform') {
-            let v = aiOsc.values && aiOsc.values[param];
-            if (!v || typeof v !== 'string') v = 'Saw';
-            values[param] = v;
-          } else {
-            values[param] = aiOsc.values && aiOsc.values[param] !== undefined ? aiOsc.values[param] : '—';
-          }
-        });
-      }
-      return { ...osc, values };
-    });
-  } else if (synthConfig.oscillators && synthConfig.oscillators.length > 0 && parsed.oscSettings) {
-    synthConfig.oscillators = synthConfig.oscillators.map((osc: any, idx: number) => {
-      const values: Record<string, any> = {};
-      if (Array.isArray(osc.params)) {
-        osc.params.forEach((param: string) => {
-          const key = `o${idx + 1}${param}`.replace(/\s+/g, '');
-          let v = parsed.oscSettings[key];
-          if (param === 'Coarse') {
-            if (typeof v !== 'number' || v < -24 || v > 24) v = 0;
-          } else if (param === 'Fine') {
-            if (typeof v !== 'number' || v < -1 || v > 1) v = 0;
-          } else if (param === 'Level') {
-            if (typeof v !== 'number' || v === 0) v = 1;
-          } else if (param === 'Waveform') {
-            if (!v || typeof v !== 'string') v = 'Saw';
-          }
-          if (v === undefined || v === null) v = '—';
-          values[param] = v;
-        });
-      }
-      return { ...osc, values };
-    });
-  }
-
-  // --- Filter: ensure cutoff is available as normalized and Hz, and always musically useful ---
-  function getMusicalFilterDefaults() {
-    const genre = (inputs.genre || '').toLowerCase();
-    const voiceType = (inputs.voiceType || '').toLowerCase();
-    // Lead/pluck: bright, fast
-    if (voiceType.includes('lead') || genre.includes('lead') || genre.includes('pluck')) {
-      return { cutoff: 0.7, resonance: 0.18 };
-    } else if (voiceType.includes('pad') || genre.includes('pad') || genre.includes('ambient')) {
-      return { cutoff: 0.4, resonance: 0.35 };
-    } else if (voiceType.includes('bass') || genre.includes('bass')) {
-      return { cutoff: 0.25, resonance: 0.28 };
-    } else {
-      // General musical default
-      return { cutoff: 0.5, resonance: 0.3 };
-    }
-  }
-  if (!parsed.filter || typeof parsed.filter !== 'object') parsed.filter = {};
-  const filterDefaults = getMusicalFilterDefaults();
-  parsed.filter.cutoff = clamp(parsed.filter.cutoff, 0, 1);
-  if (typeof parsed.filter.cutoff !== 'number' || isNaN(parsed.filter.cutoff)) parsed.filter.cutoff = filterDefaults.cutoff;
-  parsed.filter.resonance = clamp(parsed.filter.resonance, 0, 1);
-  if (typeof parsed.filter.resonance !== 'number' || isNaN(parsed.filter.resonance)) parsed.filter.resonance = filterDefaults.resonance;
-  parsed.filter.cutoffHz = Math.round(20 + (parsed.filter.cutoff * (20000 - 20)));
-
-  // --- Modulation Matrix: filter out Env -> Filter Cutoff and set default LFO values ---
-  if (Array.isArray(parsed.modMatrix)) {
-    parsed.modMatrix = parsed.modMatrix.filter((row: any) => {
-      const isEnvToCutoff =
-        (row.source && /env(el)?/i.test(row.source)) &&
-        (row.target && /filter/i.test(row.target)) &&
-        (row.parameter && /cutoff/i.test(row.parameter));
-      return !isEnvToCutoff;
-    }).map((row: any) => {
-      if (row.source && /lfo/i.test(row.source)) {
-        if (typeof row.lfoRate !== 'number') row.lfoRate = 2.0;
-        if (typeof row.lfoDepth !== 'number') row.lfoDepth = 0.5;
-        if (!row.lfoWaveform) row.lfoWaveform = 'Sine';
-        if (typeof row.lfoFrequency !== 'number') row.lfoFrequency = 2.0;
-      }
-      return row;
-    });
-  }
-
-  // --- Effects: use only AI-generated effect values, matching synthConfig.effects parameters ---
-  if (synthConfig.effects && synthConfig.effects.length > 0 && Array.isArray(parsed.effects)) {
-    synthConfig.effects = parsed.effects.map((fx: any) => {
-      const synthFx = synthConfig.effects.find((e: any) => e.name === fx.name);
-      if (!synthFx || !Array.isArray(synthFx.parameters)) return fx;
-      let paramObjs: any[] = [];
-      if (typeof synthFx.parameters[0] === 'object') {
-        paramObjs = synthFx.parameters;
-      } else if (typeof synthFx.parameters[0] === 'string') {
-        paramObjs = synthFx.parameters.map((p: string) => ({ name: p }));
-      }
-      const params: Record<string, any> = {};
-      paramObjs.forEach((param: any) => {
-        params[param.name] = fx[param.name] !== undefined ? fx[param.name] : '—';
-      });
-      return { ...fx, parameters: paramObjs, ...params };
-    });
-  }
-
-  // --- Ensure all fields are present in parsed result ---
-  const requiredFields = ['text', 'waveform', 'oscSettings', 'adsrVCF', 'adsrVCA', 'knobs', 'modMatrix', 'envelopes'];
+  const requiredFields = ['text', 'waveform', 'oscillators', 'filter', 'adsrVCF', 'adsrVCA', 'envelopes', 'knobs', 'effects', 'modMatrix', 'summary'];
   requiredFields.forEach(field => {
     if (!(field in parsed)) {
-      if (field === 'modMatrix') parsed.modMatrix = [];
-      else if (field === 'envelopes') parsed.envelopes = { labels: [], values: [] };
-      else if (field === 'oscSettings') parsed.oscSettings = {};
-      else if (field === 'adsrVCF' || field === 'adsrVCA') parsed[field] = { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.0 };
-      else if (field === 'knobs') parsed.knobs = {};
-      else parsed[field] = '';
+      parsed[field] =
+        field === 'oscillators' ? [] :
+        field === 'effects' ? [] :
+        field === 'modMatrix' ? [] :
+        field === 'knobs' ? {} :
+        field === 'summary' ? '' :
+        { attack: 50, decay: 100, sustain: 0.8, release: 200 };
     }
   });
 
-  // Always use local synthConfig for return value
-  const resultSynthConfig = synthConfig || {};
-
-  // --- Fallback: If synthConfig has LFOs in modSources and modMatrix is empty, add a musically relevant LFO routing based on creative tips ---
-  if (Array.isArray(resultSynthConfig.modSources) && resultSynthConfig.modSources.some((src: string) => /lfo/i.test(src)) && Array.isArray(parsed.modMatrix) && parsed.modMatrix.length === 0) {
-    const tips = (parsed.summary || '').toLowerCase();
-    const lfoSource = resultSynthConfig.modSources.find((src: string) => /lfo/i.test(src)) || 'LFO 1';
-    let added = false;
-    // LFO → Pitch
-    if (tips.match(/(pitch|detune|drift|osc(illator)? pitch|subtle drift|vintage drift)/)) {
-      let pitchTarget = 'Oscillator Pitch';
-      if (Array.isArray(resultSynthConfig.modDestinations)) {
-        pitchTarget = resultSynthConfig.modDestinations.find((dst: string) => /pitch|detune/i.test(dst)) || pitchTarget;
-      }
-      parsed.modMatrix.push({
-        source: lfoSource,
-        target: pitchTarget,
-        parameter: 'Pitch',
-        amount: 0.3,
-        lfoWaveform: 'Sine',
-        lfoRate: 0.2,
-        lfoDepth: 0.2,
-        lfoFrequency: 0.2
-      });
-      added = true;
-    }
-    // LFO → Amp (Tremolo)
-    if (tips.match(/(tremolo|amp|amplitude|volume|fade|fade in|fade out)/)) {
-      let ampTarget = 'Amp';
-      if (Array.isArray(resultSynthConfig.modDestinations)) {
-        ampTarget = resultSynthConfig.modDestinations.find((dst: string) => /amp|amplitude|vca|volume/i.test(dst)) || ampTarget;
-      }
-      parsed.modMatrix.push({
-        source: lfoSource,
-        target: ampTarget,
-        parameter: 'Amplitude',
-        amount: 0.4,
-        lfoWaveform: 'Sine',
-        lfoRate: 4.0,
-        lfoDepth: 0.5,
-        lfoFrequency: 4.0
-      });
-      added = true;
-    }
-    // LFO → Filter (Wobble)
-    if (tips.match(/(wobble|filter|sweep|sweeping|wah|auto-wah|movement|modulate filter)/)) {
-      let cutoffTarget = 'Filter';
-      if (Array.isArray(resultSynthConfig.modDestinations)) {
-        cutoffTarget = resultSynthConfig.modDestinations.find((dst: string) => /cutoff|filter/i.test(dst)) || cutoffTarget;
-      }
-      parsed.modMatrix.push({
-        source: lfoSource,
-        target: cutoffTarget,
-        parameter: 'Cutoff',
-        amount: 0.5,
-        lfoWaveform: 'Sine',
-        lfoRate: 2.0,
-        lfoDepth: 0.5,
-        lfoFrequency: 2.0
-      });
-      added = true;
-    }
-    // If none matched, fallback to cutoff
-    if (!added) {
-      let cutoffTarget = 'Filter';
-      if (Array.isArray(resultSynthConfig.modDestinations)) {
-        cutoffTarget = resultSynthConfig.modDestinations.find((dst: string) => /cutoff|filter/i.test(dst)) || cutoffTarget;
-      }
-      parsed.modMatrix.push({
-        source: lfoSource,
-        target: cutoffTarget,
-        parameter: 'Cutoff',
-        amount: 0.5,
-        lfoWaveform: 'Sine',
-        lfoRate: 2.0,
-        lfoDepth: 0.5,
-        lfoFrequency: 2.0
-      });
-    }
-  }
-
-  // --- Always ensure summary is present and non-empty ---
-  if (!parsed.summary || typeof parsed.summary !== 'string' || parsed.summary.trim().length < 3) {
-    parsed.summary = '- Try modulating the filter cutoff with a slow LFO for movement.\n- Experiment with oscillator waveforms and detune for width.\n- Use subtle effects like chorus or delay for space.';
-  }
+  parsed.modMatrix = Array.isArray(parsed.modMatrix)
+    ? parsed.modMatrix.filter((row: any) =>
+        !(row.source === 'Env' && row.parameter && row.parameter.toLowerCase().includes('cutoff'))
+      )
+    : [];
 
   return {
-    text,
-    waveform,
-    oscSettings,
-    adsrVCF,
-    adsrVCA,
-    knobs,
+    text: parsed.text,
+    waveform: parsed.waveform,
+    oscSettings: {}, // legacy fallback — using oscillators now
+    adsrVCF: parsed.adsrVCF,
+    adsrVCA: parsed.adsrVCA,
+    knobs: parsed.knobs,
     modMatrix: parsed.modMatrix,
-    synthConfig: resultSynthConfig,
+    synthConfig: synthConfig,
     summary: parsed.summary,
     envelopes: parsed.envelopes
   };
