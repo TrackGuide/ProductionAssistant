@@ -404,8 +404,12 @@ export const PatchGuide: React.FC = () => {
             </Card>
 
             {/* Modulation Matrix */}
-            {Array.isArray(synthConfig?.modMatrix) ? (
-              synthConfig.modMatrix.length > 0 ? (
+            {(() => {
+              // Prefer top-level modMatrix from backend result if present, else fallback to synthConfig.modMatrix
+              const modMatrix = Array.isArray((guide as any)?.modMatrix) && (guide as any).modMatrix.length > 0
+                ? (guide as any).modMatrix
+                : Array.isArray(synthConfig?.modMatrix) ? synthConfig.modMatrix : [];
+              return modMatrix.length > 0 ? (
                 <Card>
                   <h3 className="text-lg font-semibold text-white">Modulation Matrix</h3>
                   <table className="w-full text-gray-200 border-collapse mb-3">
@@ -422,7 +426,7 @@ export const PatchGuide: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {synthConfig.modMatrix.filter((row: any) => !(row.source === 'Env' && row.parameter && row.parameter.toLowerCase().includes('cutoff'))).map((row: any, idx: number) => (
+                      {modMatrix.filter((row: any) => !(row.source === 'Env' && row.parameter && row.parameter.toLowerCase().includes('cutoff'))).map((row: any, idx: number) => (
                         <tr key={(row?.source || '') + (row?.target || '') + (row?.parameter || '') + idx} className="border-t border-gray-700">
                           <td className="p-2">{row?.source || '—'}</td>
                           <td className="p-2">{row?.target || '—'}</td>
@@ -439,8 +443,8 @@ export const PatchGuide: React.FC = () => {
                 </Card>
               ) : (
                 <div className="text-gray-400">This patch does not use explicit mod matrix routings — try adding more modulation to bring it to life!</div>
-              )
-            ) : <div className="text-gray-400">This patch does not use explicit mod matrix routings — try adding more modulation to bring it to life!</div>}
+              );
+            })()}
           </ErrorBoundary>
         </>
       )}
