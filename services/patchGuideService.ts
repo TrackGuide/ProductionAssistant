@@ -1,12 +1,13 @@
+// services/patchGuideService.ts
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GEMINI_MODEL_NAME } from "../constants";
-import { SynthConfig } from "../config/synthConfigs";
-import loadSynthConfig from "../config/loadSynthConfig";
+import { GoogleGenAI } from "@google/genai";
+import { GEMINI_MODEL_NAME } from "../constants"; 
+import { loadSynthConfig } from "../config/loadSynthConfig";  
 
 const apiKey = process.env.API_KEY!;
-if (!apiKey) throw new Error("API Key not configured. Cannot connect to Gemini API.");
-const ai = new GoogleGenerativeAI({ apiKey });
+if (!apiKey) throw new Error("API_KEY is not set. Cannot connect to Gemini API.");
+
+const genAI = new GoogleGenAI({ apiKey });
 
 export interface OscSettings {
   [key: string]: number;
@@ -36,64 +37,79 @@ export interface PatchGuideResult {
 
 interface PatchGuideInputs {
   synth: string;
+  description: string;
 }
 
-export const generateSynthPatchGuide = async (inputs: PatchGuideInputs): Promise<PatchGuideResult> => {
-  const config: SynthConfig = await loadSynthConfig(inputs.synth);
+export const generateSynthPatchGuide = async (
+  inputs: PatchGuideInputs
+): Promise<PatchGuideResult> => {
+  const synthConfig = await loadSynthConfig(inputs.synth);
+  const oscDescriptions = synthConfig?.oscillators?.map((o: any) => `- ${o.name} (${o.type})`) || [];
+  const filterDescriptions = synthConfig?.filters?.map((f: any) => `- ${f.name} (${f.types?.join(", ")})`) || [];
 
-  const synthSummary = `
-Selected Synth: **${inputs.synth}**
-- Oscillators: ${config.oscillators.map(o => o.name).join(", ")}
-- Filters: ${config.filters.map(f => f.name).join(", ")}
-- Envelopes: ${config.envelopes.count} ${config.envelopes.labels ? config.envelopes.labels.join(", ") : ""}
-- LFOs: ${config.LFOs?.count || 0} ${config.LFOs?.labels?.join(", ") || ""}
-- Mod Sources: ${config.modSources.join(", ")}
-- Mod Destinations: ${Object.keys(config.modDestinations).join(", ")}
-`;
+  const prompt = `
+You are an expert sound designer. The user has selected the synth: "${inputs.synth}".
 
-  const prompt = `You are an expert sound designer creating a synth patch guide.
+**Synth Description:** ${inputs.description}
 
-${synthSummary}
+**Synth Capabilities:**
 
-Generate a patch guide that includes:
-1. Detailed written patch instructions (Markdown format)
-2. Oscillator settings (return oscSettings object)
-3. Filter knobs (return knobs object)
-4. ADSR envelopes (return adsrVCF and adsrVCA)
-5. Modulation Matrix (return modMatrix array)
+### Oscillators:
+${oscDescriptions.length ? oscDescriptions.join("\n") : "- No details provided"}
 
-Respond in valid JSON only:
+### Filters:
+${filterDescriptions.length ? filterDescriptions.join("\n") : "- No details provided"}
+
+### Envelopes:
+${synthConfig?.envelopes?.count || 2} envelopes available.
+
+### Modulation Sources:
+${synthConfig?.modSources?.join(", ") || "Unknown"}
+
+### Modulation Destinations:
+${Object.keys(synthConfig?.modDestinations || {}).join(", ") || "Unknown"}
+
+---
+
+**Your task: Generate a patch guide that includes:**
+
+1️⃣ Detailed written patch instructions in Markdown  
+2️⃣ Oscillator settings → "oscSettings" object  
+3️⃣ Filter knobs → "knobs" object  
+4️⃣ ADSR envelopes → "adsrVCF" and "adsrVCA"  
+5️⃣ Modulation matrix → "modMatrix" array  
+
+**REQUIRED JSON STRUCTURE:**
+
 {
-  "text": "### Your patch instructions in Markdown",
-  "oscSettings": { "osc0_paramName": value, ... },
-  "knobs": { "paramName": value, ... },
-  "adsrVCF": { "attack": ..., "decay": ..., "sustain": ..., "release": ... },
-  "adsrVCA": { "attack": ..., "decay": ..., "sustain": ..., "release": ... },
+  "text": "### PATCH INSTRUCTIONS IN MARKDOWN",
+  "oscSettings": { "osc1_param": value, ... },
+  "knobs": { "filter_cutoff": value, ... },
+  "adsrVCF": { "attack": X, "decay": X, "sustain": X, "release": X },
+  "adsrVCA": { "attack": X, "decay": X, "sustain": X, "release": X },
   "modMatrix": [
     { "source": "sourceName", "target": "targetName", "amount": number },
     ...
   ]
 }
-Respond only with the JSON object.`;
 
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
+⚠️ Respond ONLY with this JSON object. Do not include explanations or extra text.`;
 
-  const text = response.text;
-  if (typeof text !== "string") {
-    throw new Error("Unexpected response format from Gemini API");
-  }
+    const response = await genAI.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: prompt,
+    });
 
-  try {
-    const jsonStart = text.indexOf("{");
-    const jsonEnd = text.lastIndexOf("}");
-    const jsonString = text.substring(jsonStart, jsonEnd + 1);
-    const parsed = JSON.parse(jsonString);
-    return parsed;
-  } catch (err) {
-    console.error("Failed to parse synth patch guide JSON:", err);
-    return { text };
-  }
+    const text = response.text || '';
+
+    try {
+      const jsonStart = text.indexOf('{');
+      const jsonEnd = text.lastIndexOf('}');
+      const jsonString = text.substring(jsonStart, jsonEnd + 1);
+      const parsed = JSON.parse(jsonString);
+      return parsed;
+    } catch (err) {
+      console.error("Failed to parse synth patch guide JSON:", err);
+      return { text };
+    }
 };
