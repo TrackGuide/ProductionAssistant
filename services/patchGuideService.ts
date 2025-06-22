@@ -60,6 +60,11 @@ function clamp(value: any, min: number, max: number): number {
   return Math.min(Math.max(n, min), max);
 }
 
+function synthNameToFilename(synth: string): string {
+  // Remove spaces, hyphens, make case-insensitive, and handle common variants
+  return synth.replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
+}
+
 export async function generateSynthPatchGuide(
   inputs: PatchGuideInputs
 ): Promise<PatchGuideResult> {
@@ -74,7 +79,34 @@ export async function generateSynthPatchGuide(
   // Load synth config
   let synthConfig: any = null;
   try {
-    const synthConfigPath = path.join(__dirname, '../synthconfigs', `${inputs.synth}.json`);
+    // Normalize synth name to match config filenames
+    const synthFileMap: Record<string, string> = {
+      serum: 'Serum.json',
+      vital: 'Vital.json',
+      pigments: 'Pigments.json',
+      massive: 'Massive.json',
+      massivex: 'MassiveX.json',
+      diva: 'Diva.json',
+      hive2: 'Hive2.json',
+      sylenth1: 'Sylenth1.json',
+      wavestate: 'Wavestate.json',
+      jupiter8: 'Jupiter8.json',
+      juno106: 'Juno106.json',
+      sh101: 'SH101.json',
+      operator: 'Operator.json',
+      wavetable: 'Wavetable.json',
+      retrosynth: 'RetroSynth.json',
+      alchemy: 'Alchemy.json',
+      fm8: 'FM8.json',
+      phaseplant: 'PhasePlant.json',
+      omnisphere: 'Omnisphere.json',
+      analoglab: 'AnalogLab.json',
+      generic: 'Generic.json',
+    };
+    const normalized = synthNameToFilename(inputs.synth || 'Generic');
+    const synthConfigFile = synthFileMap[normalized] || 'Generic.json';
+
+    const synthConfigPath = path.join(__dirname, '../synthconfigs', synthConfigFile);
     const synthConfigRaw = await fs.readFile(synthConfigPath, 'utf-8');
     synthConfig = JSON.parse(synthConfigRaw);
   } catch (err) {
