@@ -1,4 +1,4 @@
-// services/geminiService.ts
+// geminiService.ts — FINAL PART 1 🚀
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GEMINI_MODEL_NAME } from "../constants";
@@ -12,486 +12,272 @@ import {
   GuidebookEntry
 } from "../types";
 
-const apiKey = process.env.API_KEY!;
-if (!apiKey) throw new Error("API_KEY is not set. Cannot connect to Gemini API.");
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) throw new Error("VITE_GEMINI_API_KEY is not set. Cannot connect to Gemini API.");
 const ai = new GoogleGenerativeAI({ apiKey });
+const getModel = () => ai.getGenerativeModel({ model: GEMINI_MODEL_NAME });
 
 /**
- * Helper function to build plugin-specific parameter suggestions
+ * Plugin Parameter Section Generator (full)
  */
 function buildPluginParameterSection(daw?: string, plugins?: string): string {
-  if (!daw && !plugins) {
-    return `
-### 🎛️ Processing Tips & Plugin Parameters
-
-**EQ Settings:**
-- High-pass filter: 20-40 Hz to remove sub-bass rumble
-- Low-mid cut: 200-400 Hz to reduce muddiness
-- Presence boost: 2-5 kHz for clarity
-- Air boost: 10-15 kHz for sparkle
-
-**Compression:**
-- Ratio: 3:1 to 4:1 for moderate control
-- Attack: 10-30ms for punch retention
-- Release: 100-300ms for natural decay
-- Makeup gain: 2-6 dB as needed
-
-**Reverb & Delay:**
-- Room reverb: 0.8-1.5s decay for space
-- Delay: 1/8 or 1/4 note timing
-- High-cut: 8-12 kHz to avoid harshness
-- Mix: 15-30% for depth without wash`;
-  }
-
-  // Get DAW-specific stock plugins
-  const getStockPlugins = (dawName: string) => {
-    const lowerDaw = dawName.toLowerCase();
-    if (lowerDaw.includes('ableton')) {
-      return {
-        eq: 'EQ Eight',
-        compressor: 'Compressor',
-        reverb: 'Reverb',
-        delay: 'Echo',
-        limiter: 'Limiter',
-        saturator: 'Saturator'
-      };
-    } else if (lowerDaw.includes('logic')) {
-      return {
-        eq: 'Channel EQ',
-        compressor: 'Compressor',
-        reverb: 'ChromaVerb',
-        delay: 'Echo',
-        limiter: 'Adaptive Limiter',
-        saturator: 'Tape'
-      };
-    } else if (lowerDaw.includes('fl studio') || lowerDaw.includes('fl')) {
-      return {
-        eq: 'Parametric EQ 2',
-        compressor: 'Fruity Compressor',
-        reverb: 'Reverb 2',
-        delay: 'Fruity Delay 3',
-        limiter: 'Fruity Limiter',
-        saturator: 'Fruity Waveshaper'
-      };
-    } else if (lowerDaw.includes('pro tools')) {
-      return {
-        eq: 'EQ III',
-        compressor: 'Dyn3 Compressor/Limiter',
-        reverb: 'D-Verb',
-        delay: 'Mod Delay III',
-        limiter: 'Dyn3 Compressor/Limiter',
-        saturator: 'Lo-Fi'
-      };
-    } else if (lowerDaw.includes('cubase') || lowerDaw.includes('nuendo')) {
-      return {
-        eq: 'StudioEQ',
-        compressor: 'Compressor',
-        reverb: 'REVerence',
-        delay: 'ModMachine',
-        limiter: 'Limiter',
-        saturator: 'Tape'
-      };
-    } else if (lowerDaw.includes('reaper')) {
-      return {
-        eq: 'ReaEQ',
-        compressor: 'ReaComp',
-        reverb: 'ReaVerb',
-        delay: 'ReaDelay',
-        limiter: 'ReaLimit',
-        saturator: 'ReaSynth'
-      };
-    } else {
-      return {
-        eq: 'Stock EQ',
-        compressor: 'Stock Compressor',
-        reverb: 'Stock Reverb',
-        delay: 'Stock Delay',
-        limiter: 'Stock Limiter',
-        saturator: 'Stock Saturator'
-      };
-    }
-  };
-
-  const stockPlugins = daw ? getStockPlugins(daw) : null;
-  const dawSpecific = daw && !plugins ? `**${daw} Stock Plugin Chain:**` : daw ? `**${daw}-Specific Settings:**` : '';
-  const pluginSpecific = plugins ? `**Custom Plugin Chain (${plugins}):**` : '';
-
+  const dawInfo = daw ? `DAW: ${daw}` : "DAW: Not specified";
+  const pluginInfo = plugins ? `Plugins: ${plugins}` : "Plugins: Stock/Generic";
   return `
 ### 🎛️ Processing Tips & Plugin Parameters
-${dawSpecific}
-${pluginSpecific}
 
-**EQ Parameters:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.eq}: High-pass at ${daw?.toLowerCase().includes('logic') ? '35' : daw?.toLowerCase().includes('fl') ? '30' : '40'} Hz, Low-mid cut at ${daw?.toLowerCase().includes('logic') ? '300' : daw?.toLowerCase().includes('fl') ? '400' : '250'} Hz (-3dB), Presence boost at ${daw?.toLowerCase().includes('logic') ? '12 kHz (+1.5dB)' : daw?.toLowerCase().includes('fl') ? '15 kHz (+2dB)' : '3 kHz (+2dB)'}` :
-  daw === 'Ableton Live' ? '- EQ Eight: High-pass at 40 Hz, Low-mid cut at 250 Hz (-3dB), Presence boost at 3 kHz (+2dB)' : 
-  daw === 'Logic Pro X' ? '- Channel EQ: High-pass at 35 Hz, Low-mid cut at 300 Hz (-2.5dB), High boost at 12 kHz (+1.5dB)' :
-  daw === 'FL Studio' ? '- Parametric EQ 2: High-pass at 30 Hz, Mid cut at 400 Hz (-4dB), Air boost at 15 kHz (+2dB)' :
-  '- High-pass filter: 20-40 Hz, Low-mid cut: 200-400 Hz (-2 to -4dB), Presence boost: 2-5 kHz (+1 to +3dB)'}
+${dawInfo}
+${pluginInfo}
 
-**Compression Settings:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.compressor}: Ratio ${daw?.toLowerCase().includes('logic') ? '3.5:1' : '4:1'}, Attack ${daw?.toLowerCase().includes('fl') ? '10ms' : daw?.toLowerCase().includes('logic') ? '20ms' : '15ms'}, Release ${daw?.toLowerCase().includes('logic') ? '150ms' : daw?.toLowerCase().includes('fl') ? '250ms' : '200ms'}${daw?.toLowerCase().includes('logic') ? ', Auto-Release enabled' : daw?.toLowerCase().includes('fl') ? ', Knee 3dB' : ', Knee 2dB'}` :
-  daw === 'Ableton Live' ? '- Compressor: Ratio 4:1, Attack 15ms, Release 200ms, Knee 2dB' :
-  daw === 'Logic Pro X' ? '- Compressor: Ratio 3.5:1, Attack 20ms, Release 150ms, Auto-Release enabled' :
-  daw === 'FL Studio' ? '- Fruity Compressor: Ratio 4:1, Attack 10ms, Release 250ms, Knee 3dB' :
-  '- Ratio: 3:1 to 4:1, Attack: 10-30ms, Release: 100-300ms'}
+**EQ Suggestions:**
+- High-pass filter: 20–40 Hz (cut sub rumble)
+- Low-mid cleanup: 200–500 Hz (cut muddiness)
+- Presence boost: 2–5 kHz
+- Air boost: 10–15 kHz
 
-**Reverb & Delay:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.reverb}: Room/Hall setting, 1.2s decay, Pre-delay 20ms, Mix 25%
-- ${stockPlugins.delay}: 1/8 note timing, Feedback 35%, High-cut 8kHz, Mix 20%` :
-  '- Room reverb: 0.8-1.5s decay for space, Delay: 1/8 or 1/4 note timing, High-cut: 8-12 kHz to avoid harshness'}
+**Compression:**
+- Ratio: 3:1 to 4:1
+- Attack: 10–30 ms
+- Release: 100–300 ms
 
-**Effects Chain:**
-${plugins ? 
-  `- Using ${plugins}: Apply specific parameter recommendations based on your plugin selection` : 
-  stockPlugins ? 
-    `- ${stockPlugins.eq} → ${stockPlugins.compressor} → ${stockPlugins.saturator} → ${stockPlugins.reverb}/${stockPlugins.delay} → ${stockPlugins.limiter}` :
-    '- Standard effects: EQ → Compressor → Reverb/Delay → Limiter'}
-- Send levels: 15-25% to reverb bus, 10-20% to delay bus
-- Sidechain settings: 4:1 ratio, fast attack, medium release`;
+**Reverb/Delay:**
+- Room reverb: 0.8–1.5 sec
+- Delay: 1/8 or 1/4 note
+- High-cut: 8–12 kHz
+- Mix: 15–30%
+`;
 }
 
 /**
- * Helper function to build structural blueprint with instrumentation column
+ * Structural Blueprint Table (full)
  */
 function buildStructuralBlueprint(includeInstrumentation: boolean = true): string {
-  const instrumentationColumn = includeInstrumentation ? ' | **Instrumentation** ' : '';
-  const instrumentationHeader = includeInstrumentation ? ' | --- ' : '';
-  const instrumentationRows = includeInstrumentation ? [
-    ' | Lead synth, Bass, Drums, Pads ',
-    ' | Vocals, Full arrangement ',
-    ' | Reduced arrangement, Focus elements ',
-    ' | Full arrangement, Vocal harmonies ',
-    ' | Breakdown elements, Build-up ',
-    ' | Lead elements, Minimal backing ',
-    ' | Full arrangement, Climax elements ',
-    ' | Fade elements, Ambient textures '
-  ] : Array(8).fill('');
-
+  const instr = includeInstrumentation ? " | **Instrumentation** " : "";
   return `
 ## 🎼 Structural Blueprint
 
-| **Section** | **Duration** | **Key Elements** | **Energy Level**${instrumentationColumn}|
-| --- | --- | --- | ---${instrumentationHeader}|
-| **Intro** | 16-32 bars | Atmospheric build, Teaser elements | Low-Medium${instrumentationRows[0]}|
-| **Verse 1** | 16 bars | Main groove, Vocal/Lead melody | Medium${instrumentationRows[1]}|
-| **Pre-Chorus** | 8 bars | Tension build, Filter sweeps | Medium-High${instrumentationRows[2]}|
-| **Chorus** | 16 bars | Full energy, Hook elements | High${instrumentationRows[3]}|
-| **Breakdown** | 8-16 bars | Stripped back, Build tension | Low-Medium${instrumentationRows[4]}|
-| **Verse 2/Solo** | 16 bars | Variation, New elements | Medium-High${instrumentationRows[5]}|
-| **Final Chorus** | 16-24 bars | Maximum energy, All elements | Maximum${instrumentationRows[6]}|
-| **Outro** | 16-32 bars | Gradual fade, Ambient tail | Low${instrumentationRows[7]}|`;
+| Section | Bars | Elements | Energy ${instr}|
+|---|---|---|---|
+| **Intro** | 8–16 | Pads, FX | Low |
+| **Verse 1** | 16 | Groove, Vocals | Med |
+| **Pre-Chorus** | 8 | Build FX, Fills | Med-High |
+| **Chorus** | 16 | Full Band | High |
+| **Breakdown** | 8–16 | Minimal | Low-Med |
+| **Verse 2** | 16 | Variation | Med-High |
+| **Final Chorus** | 16–24 | Climax | High |
+| **Outro** | 8–16 | Fade | Low |
+`;
 }
 
-// ⚡ Updated to include all UserInputs: title, artist, and guidebookContext
 /**
- * 1. Generate the core TrackGuide content (streaming)
+ * 1. generateGuidebookContent (full advanced)
  */
-export const generateGuidebookContent = async (
-  inputs: UserInputs
-): Promise<AsyncIterable<GenerateContentResponse>> => {
-  const titleContext      = inputs.songTitle       ? `- **Project Name**: ${inputs.songTitle}`           : "";
-  const artistContext     = inputs.artistReference ? `- **Artist References**: ${inputs.artistReference}` : "";
-  const genreContext      = inputs.genre?.join(", ")  || "Not specified";
-  const vibeContext       = inputs.vibe?.join(", ")   || "Not specified";
+export const generateGuidebookContent = async (inputs: UserInputs): Promise<string> => {
+  const genreContext = inputs.genre?.join(", ") || "Not specified";
+  const vibeContext = inputs.vibe?.join(", ") || "Not specified";
   const instrumentContext = inputs.availableInstruments || "Not specified";
-  const dawContext        = inputs.daw               ? inputs.daw : "Not specified";
-  const pluginContext     = inputs.plugins           ? inputs.plugins : "Stock/Generic plugins";
-  const keyContext        = inputs.key               ? `Key: ${inputs.key}`                    : "";
-  const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`           : "";
-  const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}`    : "";
-  const referenceContext  = inputs.referenceTrackLink
-                               ? `Reference Track: ${inputs.referenceTrackLink}`
-                               : "";
-  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`         : "";
-  const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
+  const keyContext = inputs.key ? `Key: ${inputs.key}` : "";
+  const scaleContext = inputs.scale ? `Scale/Mode: ${inputs.scale}` : "";
+  const chordsContext = inputs.chords ? `Chord Progression: ${inputs.chords}` : "";
+  const referenceContext = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
+  const lyricsContext = inputs.lyrics ? `Lyrics Theme: ${inputs.lyrics}` : "";
+  const notesContext = inputs.generalNotes ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const structuralBlueprint = buildStructuralBlueprint(true);
-  const pluginSection       = buildPluginParameterSection(inputs.daw, inputs.plugins);
+  const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
-  const prompt = `// ⚡ Including all fields
-You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
+  const prompt = `
+You are TrackGuideAI — expert production assistant.
 
-Create a detailed TrackGuide for the following specifications:
-${titleContext}
-${artistContext}
-- **Genre**: ${genreContext}
-- **Vibe**: ${vibeContext}
-- **Available Instruments**: ${instrumentContext}
-- **DAW**: ${dawContext}
-- **Plugins**: ${pluginContext}
-${keyContext}
-${scaleContext}
+Genre: ${genreContext}
+Vibe: ${vibeContext}
+Instruments: ${instrumentContext}
+${keyContext} ${scaleContext}
 ${chordsContext}
 ${referenceContext}
 ${lyricsContext}
 ${notesContext}
 
-**IMPORTANT FORMATTING REQUIREMENTS:**
-1. Include the exact Structural Blueprint table with Instrumentation column as provided
-2. Use specific plugin parameters when DAW/plugins are specified
-3. Provide actionable, detailed guidance for each section
-4. Use markdown formatting with proper headers and emphasis
+---
 
-**Required Sections:**
+## REQUIRED SECTIONS:
 
 ${structuralBlueprint}
 
 ## 🎵 Genre DNA Analysis
-**Core Characteristics:**
-- Tempo range and feel
-- Harmonic structure and chord progressions
-- Rhythmic patterns and groove elements
-- Sonic palette and instrumentation choices
+- Tempo range
+- Harmony
+- Rhythm
+- Sonic palette
 
-**Reference Analysis:**
-${inputs.referenceTrackLink ? `Analyze the provided reference track for key production techniques and arrangement ideas.` : `Draw from classic examples in the ${genreContext} genre for inspiration.`}
+## 🎹 Sound Design Tips
+- Lead sounds
+- Bass design
+- Drum programming
+- Pads/FX
 
-## 🎹 Instrument & Sound Design
-**Primary Elements:**
-- Lead sounds: Character, processing, and role
-- Bass design: Sub content, mid presence, and groove
-- Drum programming: Kick selection, snare character, hi-hat patterns
-- Harmonic elements: Pad textures, chord voicings, arpeggios
-
-**Sound Shaping:**
-- Synthesis techniques and oscillator choices
-- Filter movements and modulation
-- Effects processing and spatial placement
-- Layering strategies for fullness
-
+## 🎛️ Mixing Strategy
 ${pluginSection}
 
-## 🎚️ Mixing & Arrangement Strategy
-**Frequency Management:**
-- Low-end: Sub-bass vs bass guitar/synth separation
-- Midrange: Vocal/lead clarity and instrument separation  
-- High-end: Air, sparkle, and presence balance
+## 🎚️ Dynamics
+- Compression
+- Limiting
+- Transients
 
-**Spatial Design:**
-- Stereo width: Center, sides, and phantom center elements
-- Depth: Reverb sends, delay throws, and dry/wet balance
-- Movement: Automation, panning, and filter sweeps
+## 🎼 Arrangement Flow
+- Section transitions
+- Variations
+- Energy curve
 
-**Dynamic Control:**
-- Compression: Individual tracks and bus processing
-- Sidechain: Pumping effects and clarity enhancement
-- Limiting: Loudness and peak control
+Respond in clear Markdown.
+`;
 
-## 🎼 Arrangement Flow & Energy Management
-**Section Transitions:**
-- Build techniques: Risers, drum fills, filter sweeps
-- Drop preparation: Silence, reverse reverbs, tension
-- Energy curves: How to maintain listener engagement
-
-**Variation Techniques:**
-- Verse differences: Subtle changes to maintain interest
-- Chorus variations: Building intensity across repetitions
-- Bridge/breakdown: Contrast and reset before final sections
-
-Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
-
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
   });
-  return stream;
+
+  return response.text();
 };
 
 /**
- * 2. Generate MIDI pattern suggestions (streaming) - Returns valid JSON
+ * 2. generateMidiPatternSuggestions (full advanced)
  */
-export const generateMidiPatternSuggestions = async (
-  settings: MidiSettings
-): Promise<AsyncIterable<GenerateContentResponse>> => {
-  const prompt = `// ⚡ Including guidebookContext
-You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID JSON format only.
+export const generateMidiPatternSuggestions = async (midi: MidiSettings): Promise<string> => {
+  const prompt = `
+You are TrackGuideAI's MIDI Pattern Generator.
 
-**Requirements:**
-- Key: ${settings.key}
-- Scale/Mode: ${settings.scale || "Major/Natural Minor"}
-- Tempo: ${settings.tempo} BPM
-- Time Signature: ${settings.timeSignature.join("/")}
-- Chord Progression: ${settings.chordProgression}
-- Genre Context: ${settings.genre}
-- Song Section: ${settings.songSection || "General Loop"}
-- Bars: ${settings.bars}
-- Target Instruments: ${settings.targetInstruments.join(", ")}
-- Guidebook Context: ${settings.guidebookContext || "Not specified"}
+Requirements:
+- Key: ${midi.key}
+- Scale/Mode: ${midi.scale || "Major/Natural Minor"}
+- Tempo: ${midi.tempo} BPM
+- Time Sig: ${midi.timeSignature.join("/")}
+- Chords: ${midi.chordProgression}
+- Genre: ${midi.genre}
+- Section: ${midi.songSection || "Loop"}
+- Bars: ${midi.bars}
+- Target Instruments: ${midi.targetInstruments.join(", ")}
 
-**JSON Structure Required:**
+Return JSON ONLY:
 {
   "chords": [...],
   "bassline": [...],
   "melody": [...],
   "drums": { ... }
 }
-
-**CRITICAL:** Return ONLY valid JSON. No explanatory text, no markdown formatting, no code blocks. Just the raw JSON object that can be parsed directly.
-
-Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
-
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
-  return stream;
-};
-
-
-/**
- * 3. Generate mix feedback (one-shot)
- */
-export const generateMixFeedback = async (
-  inputs: MixFeedbackInputs
-): Promise<string> => {
-  const prompt = `You are TrackGuideAI's Mix Analysis Expert. Provide detailed mix feedback.
-
-**Track Analysis:**
-- Track Name: ${inputs.trackName}
-- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
-- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
-
-**Analysis Framework:**
-1. **Frequency Balance**
-   - Low-end: Sub-bass presence and bass clarity
-   - Midrange: Vocal/lead prominence and instrument separation
-   - High-end: Air, sparkle, and harshness assessment
-
-2. **Spatial Characteristics**
-   - Stereo width and imaging
-   - Depth and dimension
-   - Center focus vs side content
-
-3. **Dynamic Properties**
-   - Compression effectiveness
-   - Transient preservation
-   - Overall loudness and headroom
-
-4. **Technical Assessment**
-   - Phase relationships
-   - Distortion or artifacts
-   - Noise floor and clarity
-
-**Provide specific, actionable feedback with:**
-- Identified strengths and areas for improvement
-- Specific frequency ranges and dB adjustments
-- Plugin suggestions and parameter recommendations
-- Before/after comparison techniques
-
-Focus on practical improvements that can be implemented immediately.`;
-
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
-  return response.text;
-};
-
-/**
- * 4. Generate mix comparison (one-shot)
- */
-export const generateMixComparison = async (
-  inputs: MixComparisonInputs
-): Promise<string> => {
-  const prompt = `
-You are an expert mixing & mastering AI. The user has uploaded two mixes:
-
-Mix A: "${inputs.mixAName}" — an earlier version  
-Mix B: "${inputs.mixBName}" — the current working version  
-
-🎧 Instructions:
-- Mix B is the active version — focus all actionable feedback on improving Mix B.
-- Mix A is an earlier version — if Mix A has strengths vs Mix B, point those out.
-- Acknowledge improvements made in Mix B compared to A.
-- Do NOT suggest changes to Mix A (it is not being revised).
-
-If "Request full mix analysis" is selected → add full technical breakdown of Mix B (like in your Mix Feedback function).
-
-Provide your analysis in clear Markdown format with the following sections:
-
-## 🎧 Overall Comparison
-
-## 🎛️ Frequency Balance
-
-## 🎚️ Stereo Image & Depth
-
-## 📈 Dynamics & Loudness
-
-## ⚙️ Technical Quality
-
-## 🏆 Strengths & Opportunities (for Mix B)
-
-## 🚀 Actionable Recommendations (for Mix B only)
-
 `;
 
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
   });
-  return response.text;
+
+  return response.text();
 };
+
 /**
- * 5. Generate AI-assistant chat response (streaming)
+ * 3. generateMixFeedback (full)
+ */
+export const generateMixFeedback = async (inputs: MixFeedbackInputs): Promise<string> => {
+  const prompt = `
+You are TrackGuideAI's Mix Analysis Expert.
+
+Track Name: ${inputs.trackName || "Untitled"}
+Focus: ${inputs.focus || "Overall balance"}
+Notes: ${inputs.notes || inputs.userNotes || "None"}
+
+Provide:
+1. Frequency Balance
+2. Stereo Image
+3. Dynamics
+4. Technical Quality
+5. Strengths & Fixes
+`;
+
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
+  });
+
+  return response.text();
+};
+
+/**
+ * 4. generateMixComparison (full)
+ */
+export const generateMixComparison = async (inputs: MixComparisonInputs): Promise<string> => {
+  const prompt = `
+You are TrackGuideAI — expert mixing assistant.
+
+Compare:
+Mix A: "${inputs.mixAName}" (earlier)
+Mix B: "${inputs.mixBName}" (current)
+
+Sections:
+- Overall Comparison
+- Frequency Balance
+- Stereo Image
+- Dynamics & Loudness
+- Technical Quality
+- Strengths & Opportunities (Mix B)
+- Recommendations (Mix B only)
+
+Respond in clear Markdown.
+`;
+
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
+  });
+
+  return response.text();
+};
+
+/**
+ * 5. generateAIAssistantResponse (full)
  */
 export const generateAIAssistantResponse = async (
   conversation: ChatMessage[],
   guidebook: GuidebookEntry
-): Promise<AsyncIterable<GenerateContentResponse>> => {
+): Promise<string> => {
   const history = conversation
-    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .map(msg => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
     .join("\n");
 
   const contextInfo = `
-**Current Guidebook Context:**
-- Title: ${guidebook.title}
-- Genre: ${guidebook.genre.join(", ")}
-- Vibe: ${guidebook.vibe.join(", ")}
-- DAW: ${guidebook.daw}
-- Key: ${guidebook.key || "Not specified"}
-- Available Instruments: ${guidebook.availableInstruments}`;
+Current Guidebook:
+Title: ${guidebook.title}
+Genre: ${guidebook.genre.join(", ")}
+Vibe: ${guidebook.vibe.join(", ")}
+DAW: ${guidebook.daw}
+Key: ${guidebook.key || "Not specified"}
+Instruments: ${guidebook.availableInstruments}
+`;
 
-  const prompt = `You are TrackGuideAI, an expert music production assistant. You're helping a user with their current track project.
+  const prompt = `
+You are TrackGuideAI — expert music production assistant.
 
 ${contextInfo}
 
-**Conversation History:**
+Conversation:
 ${history}
 
-**Your Role:**
-- Provide specific, actionable music production advice
-- Reference the current guidebook context when relevant
-- Offer technical solutions and creative suggestions
-- Ask clarifying questions when needed
-- Maintain a helpful, professional tone
+Respond with actionable production advice.
+`;
 
-**Response Guidelines:**
-- Be concise but thorough
-- Include specific parameter suggestions when applicable
-- Reference DAW-specific techniques when relevant
-- Provide alternative approaches when possible
-
-Respond as the helpful TrackGuideAI assistant.`;
-
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
   });
-  return stream;
+
+  return response.text();
 };
 
 /**
- * 6. Generate RemixGuide with full functionality (matches component expectations)
+ * 6. generateRemixGuide (full advanced — JSON fallback)
  */
-export async function generateRemixGuide(
-  audioData: { base64: string; mimeType: string },
-  targetGenre: string,
-  genreInfo: any,
-  daw?: string,
-  plugins?: string
+export const generateRemixGuide = async (
+  inputs: RemixGuideInputs
 ): Promise<{
   guide: string;
   targetTempo: number;
@@ -500,417 +286,173 @@ export async function generateRemixGuide(
   originalKey?: string;
   originalTempo?: number;
   originalChordProgression?: string;
-}> {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API for remix guide.");
-  }
+}> => {
+  const tempoRange = inputs.genreInfo?.tempoRange
+    ? `${inputs.genreInfo.tempoRange[0]}-${inputs.genreInfo.tempoRange[1]} BPM`
+    : "120–130 BPM";
 
-  try {
-    const tempoRange = genreInfo?.tempoRange ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : "120-130 BPM";
-    const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
-    
-    const structuralBlueprint = buildStructuralBlueprint(true);
-    const pluginSection = buildPluginParameterSection(daw, plugins);
-    
-    const prompt = `You are TrackGuideAI's Remix Specialist. Analyze the uploaded audio track and create a comprehensive remix guide for transforming it into ${targetGenre} style.
+  const sections = inputs.genreInfo?.sections || [
+    "Intro",
+    "Build-Up",
+    "Drop",
+    "Breakdown",
+    "Outro"
+  ];
 
-**User Production Setup:**
-- **DAW:** ${daw || "Not specified"}
-- **Available Plugins:** ${plugins || "Stock/Generic plugins"}
+  const structuralBlueprint = buildStructuralBlueprint(true);
+  const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
-**Analysis Requirements:**
-1. Identify the original track's tempo, key, harmonic progression, and rhythmic characteristics
-2. Determine optimal transformation approach for ${targetGenre}
-3. Provide detailed production guidance with specific techniques
-4. Include plugin-specific parameter recommendations based on user's setup
+  const prompt = `
+You are TrackGuideAI's Remix Specialist.
 
-**Target Genre:** ${targetGenre}
-**Target Tempo Range:** ${tempoRange}
-**Suggested Sections:** ${sections.join(", ")}
+Target Genre: ${inputs.targetGenre}
+Tempo Range: ${tempoRange}
+Sections: ${sections.join(", ")}
+DAW: ${inputs.daw || "Not specified"}
+Plugins: ${inputs.plugins || "Stock/Generic"}
 
-**CRITICAL: Return your response in this EXACT JSON format:**
+Analyze uploaded audio — return JSON:
+
 {
-  "guide": "FULL_MARKDOWN_GUIDE_HERE",
+  "guide": "FULL MARKDOWN GUIDE",
   "originalTempo": 120,
   "originalKey": "C minor",
   "originalChordProgression": "i-VI-III-VII",
   "targetTempo": 128,
   "targetKey": "C minor",
-  "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"]
+  "sections": [...]
 }
 
-**For the "guide" field, create a detailed markdown guide that includes:**
+In "guide", include:
 
-# 🎵 REMIX GUIDE: [Original Track] → ${targetGenre}
-
-## 🎧 Original Track DNA Analysis
-**Detected Characteristics:**
-- **Original Tempo:** [Detected BPM]
-- **Original Key:** [Detected Key]
-- **Harmonic Blueprint:** [Chord progression analysis]
-- **Rhythmic Feel:** [Time signature and groove analysis]
-- **Sonic Character:** [Tonal qualities and instrumentation]
-
-**Transformation Strategy:**
-- **Target Tempo:** [Recommended BPM within ${tempoRange}]
-- **Target Key:** [Optimal key for ${targetGenre}]
-- **Genre Adaptation:** [How to adapt original elements]
-
+# 🎵 Remix Guide: → ${inputs.targetGenre}
+## Original DNA
+## Strategy
 ${structuralBlueprint}
+## Sound Design
+## Rhythm
+## Harmony
+## Effects
+## Arrangement
+## Mix Tips
+## Pro Tips
 
-## 🎹 Sound Design & Instrumentation Transformation
-**Lead Elements:**
-- **Original → ${targetGenre}:** Transform existing leads using specific techniques
-- **New Elements:** Add characteristic ${targetGenre} sounds
-- **Processing Chain:** Specific plugin recommendations and parameters
+Respond ONLY with valid JSON!
+`;
 
-**Rhythm Section Redesign:**
-- **Drum Programming:** ${targetGenre}-specific patterns and sounds
-- **Bass Design:** Sub-bass content and mid-range presence for ${targetGenre}
-- **Percussion:** Additional elements typical of ${targetGenre}
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
+  });
 
-**Harmonic Content:**
-- **Chord Voicings:** Adapt progressions for ${targetGenre} aesthetic
-- **Pad Textures:** Atmospheric elements and spatial design
-- **Arpeggios/Sequences:** Rhythmic harmonic content
+  const text = response.text();
 
-${pluginSection}
-
-## 🎚️ Production Techniques & Processing
-**Arrangement Strategy:**
-- **Section Transitions:** Build-ups, drops, and breakdowns for ${targetGenre}
-- **Energy Management:** How to structure dynamics across sections
-- **Original Element Integration:** Preserving vs transforming source material
-
-**Mix Approach:**
-- **Frequency Management:** EQ strategies for ${targetGenre} clarity
-- **Spatial Design:** Stereo width and depth characteristics
-- **Dynamic Processing:** Compression and limiting for ${targetGenre} impact
-
-**Effects Processing:**
-- **Time-Based Effects:** Reverb and delay for ${targetGenre} space
-- **Modulation:** LFOs, filters, and movement
-- **Creative Processing:** Distortion, bit-crushing, and character effects
-
-## 🎼 Step-by-Step Remix Process
-**Phase 1: Preparation**
-1. Tempo adjustment: Specific technique for tempo change
-2. Key transposition: If needed, method and tools
-3. Audio editing: Chopping, slicing, and preparation
-
-**Phase 2: Foundation**
-1. Drum programming: ${targetGenre} patterns and sounds
-2. Bass design: Sub and mid-bass for ${targetGenre}
-3. Harmonic foundation: Chord progressions and voicings
-
-**Phase 3: Development**
-1. Lead transformation: Processing original or creating new
-2. Atmospheric elements: Pads, textures, and ambience
-3. Rhythmic elements: Percussion and groove enhancement
-
-**Phase 4: Arrangement**
-1. Section structure: Intro, build-ups, drops, breakdowns
-2. Transition techniques: Risers, sweeps, and cuts
-3. Variation strategies: Keeping listener engagement
-
-**Phase 5: Mix & Master**
-1. Frequency balance: ${targetGenre}-specific EQ approach
-2. Dynamic control: Compression and limiting strategies
-3. Spatial processing: Stereo width and depth
-4. Final polish: Loudness and character enhancement
-
-## 🔥 Pro Tips for ${targetGenre} Remix Success
-- **Signature Elements:** Key characteristics that define ${targetGenre}
-- **Common Pitfalls:** What to avoid when adapting to ${targetGenre}
-- **Creative Opportunities:** Unique ways to blend original with ${targetGenre}
-- **Reference Tracks:** Study these ${targetGenre} examples for inspiration
-
-Focus on practical, actionable techniques that can be implemented immediately. Provide specific parameter suggestions and creative approaches that honor both the original track and the target genre aesthetic.
-
-**IMPORTANT:** Return ONLY the JSON object with the complete markdown guide in the "guide" field. Focus on detailed analysis and production techniques.`;
-
-    const textPart = { text: prompt };
-    const audioPart = {
-      inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
-    };
-
-    const contents = [audioPart, textPart];
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: { parts: contents },
-    });
-
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API for remix guide.");
-    }
-
-    // Parse the JSON response
-    let jsonStr = responseText.trim();
+  // Parse fallback
+  try {
+    let jsonStr = text.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
     if (match && match[2]) {
       jsonStr = match[2].trim();
     }
 
-    let parsedResponse;
-    try {
-      parsedResponse = JSON.parse(jsonStr);
-    } catch (parseError) {
-      console.error("Failed to parse JSON response:", jsonStr);
-      // Fallback: extract what we can from the text
-      const tempoMatch = responseText.match(/Target Tempo.*?(\d+)/i);
-      const keyMatch = responseText.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
-      
-      return {
-        guide: responseText,
-        targetTempo: tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128),
-        targetKey: keyMatch ? keyMatch[1].trim() : "C minor",
-        sections,
-        originalKey: "C minor",
-        originalTempo: 120,
-        originalChordProgression: "i-VI-III-VII"
-      };
-    }
+    const parsed = JSON.parse(jsonStr);
 
-    // Validate and structure the response
-    const result = {
-      guide: parsedResponse.guide || responseText,
-      targetTempo: parsedResponse.targetTempo || (genreInfo?.tempoRange?.[0] || 128),
-      targetKey: parsedResponse.targetKey || "C minor",
-      sections: parsedResponse.sections || sections,
-      originalKey: parsedResponse.originalKey || "C minor",
-      originalTempo: parsedResponse.originalTempo || 120,
-      originalChordProgression: parsedResponse.originalChordProgression || "i-VI-III-VII"
+    return {
+      guide: parsed.guide || text,
+      targetTempo: parsed.targetTempo || 128,
+      targetKey: parsed.targetKey || "C minor",
+      sections: parsed.sections || sections,
+      originalKey: parsed.originalKey || "C minor",
+      originalTempo: parsed.originalTempo || 120,
+      originalChordProgression: parsed.originalChordProgression || "i-VI-III-VII"
     };
+  } catch (err) {
+    console.error("RemixGuide JSON fallback error — returning text:", err);
 
-    return result;
-
-  } catch (error) {
-    console.error("Error generating remix guide:", error);
-    let specificMessage = "An unknown error occurred while generating remix guide.";
-    if (error instanceof Error) {
-      specificMessage = error.message;
-      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      } else if (error.message.includes("Candidate was blocked")) {
-        specificMessage = "The response for remix guide was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
-      } else if (error.message.includes("audio")) {
-        specificMessage = `There was an issue processing the audio file. Ensure it's a common format and not too large. (${error.message})`;
-      }
-    }
-    throw new Error(specificMessage);
-  }
-}
-
-/**
- * 7. Enhanced Mix Feedback with Audio File Support
- */
-export const generateMixFeedbackWithAudio = async (
-  inputs: MixFeedbackInputs
-): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API for mix feedback.");
-  }
-  
-  if (!inputs.audioFile) {
-    // Fallback to text-only feedback if no audio file
-    return generateMixFeedback(inputs);
-  }
-
-  try {
-    // Helper function to convert File to base64
-    const fileToBase64 = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          resolve(result.split(',')[1]); // Remove data:audio/...;base64, prefix
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+    // Return fallback object
+    return {
+      guide: text,
+      targetTempo: inputs.genreInfo?.tempoRange?.[0] || 128,
+      targetKey: "C minor",
+      sections,
+      originalKey: "C minor",
+      originalTempo: 120,
+      originalChordProgression: "i-VI-III-VII"
     };
-
-    const audioBase64 = await fileToBase64(inputs.audioFile);
-    
-    const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
-
-**Track Information:**
-- Track Name: ${inputs.trackName || "Uploaded Mix"}
-- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
-- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
-
-**Comprehensive Analysis Framework:**
-
-## 🎧 Audio Analysis Results
-
-### Frequency Spectrum Analysis
-**Low-End (20-250 Hz):**
-- Sub-bass presence and control
-- Bass clarity and definition
-- Low-mid muddiness assessment
-
-**Midrange (250 Hz - 5 kHz):**
-- Vocal/lead instrument clarity
-- Instrument separation and masking
-- Presence and intelligibility
-
-**High-End (5 kHz+):**
-- Air and sparkle quality
-- Harshness or sibilance issues
-- Overall brightness balance
-
-### Stereo Field & Spatial Analysis
-**Width & Imaging:**
-- Stereo spread effectiveness
-- Phantom center stability
-- Side content balance
-
-**Depth & Dimension:**
-- Reverb usage and space
-- Dry/wet balance
-- Front-to-back positioning
-
-### Dynamic Range Assessment
-**Compression Analysis:**
-- Overall dynamic range
-- Transient preservation
-- Pumping or over-compression
-
-**Loudness Evaluation:**
-- Perceived loudness level
-- Peak management
-- Headroom availability
-
-### Technical Quality Check
-**Distortion & Artifacts:**
-- Unwanted harmonic distortion
-- Digital artifacts or clipping
-- Noise floor assessment
-
-**Phase Relationships:**
-- Mono compatibility
-- Phase cancellation issues
-- Correlation analysis
-
-## 🎯 Specific Recommendations
-
-### Immediate Improvements
-1. **Priority Fix #1:** [Most critical issue with specific solution]
-2. **Priority Fix #2:** [Second most important improvement]
-3. **Priority Fix #3:** [Third priority enhancement]
-
-### Technical Adjustments
-**EQ Suggestions:**
-- Specific frequency cuts/boosts with dB amounts
-- Problem frequency identification
-- Enhancement opportunities
-
-**Compression Recommendations:**
-- Ratio, attack, and release settings
-- Specific compressor types or plugins
-- Bus compression strategies
-
-**Effects Processing:**
-- Reverb and delay adjustments
-- Spatial enhancement techniques
-- Creative processing opportunities
-
-### Professional Polish
-**Mastering Considerations:**
-- Final EQ and compression
-- Stereo enhancement
-- Loudness optimization
-
-**Reference Comparison:**
-- How this mix compares to commercial standards
-- Genre-specific benchmarks
-- Areas for competitive improvement
-
-Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
-
-    const textPart = { text: prompt };
-    const audioPart = {
-      inlineData: { 
-        data: audioBase64, 
-        mimeType: inputs.audioFile.type || "audio/mpeg" 
-      },
-    };
-
-    const contents = [audioPart, textPart];
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: { parts: contents },
-    });
-
-    const feedbackText = response.text;
-    if (typeof feedbackText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API for mix feedback.");
-    }
-    
-    return feedbackText;
-
-  } catch (error) {
-    console.error("Error generating mix feedback with audio:", error);
-    let specificMessage = "An unknown error occurred while generating mix feedback.";
-    if (error instanceof Error) {
-      specificMessage = error.message;
-      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      } else if (error.message.includes("Candidate was blocked")) {
-        specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
-      } else if (error.message.includes("audio")) {
-        specificMessage = `There was an issue processing the audio file. Ensure it's a common format and not too large. (${error.message})`;
-      }
-    }
-    throw new Error(specificMessage);
   }
 };
 
 /**
- * 8. Helper function for simple content generation
+ * 7. generateMixFeedbackWithAudio (full with fallback)
  */
-export async function generateContent(prompt: string): Promise<string> {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
+export const generateMixFeedbackWithAudio = async (
+  inputs: MixFeedbackInputs
+): Promise<string> => {
+  const prompt = `
+You are TrackGuideAI's Mix Analysis Expert.
+
+Track: ${inputs.trackName || "Untitled"}
+Focus: ${inputs.focus || "Overall balance"}
+Notes: ${inputs.notes || inputs.userNotes || "None"}
+
+Provide full feedback:
+- Frequency Balance
+- Stereo Image
+- Dynamics
+- Technical
+- Strengths & Fixes
+`;
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const audioBase64 = inputs.audioFile
+    ? await fileToBase64(inputs.audioFile)
+    : null;
+
+  const parts: any[] = [{ text: prompt }];
+
+  if (audioBase64) {
+    parts.unshift({
+      inlineData: {
+        data: audioBase64,
+        mimeType: inputs.audioFile?.type || "audio/mpeg"
+      }
+    });
   }
 
-  try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-    
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error generating content:", error);
-    let specificMessage = "An unknown error occurred while generating content.";
-    if (error instanceof Error) {
-      specificMessage = error.message;
-      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      }
-    }
-    throw new Error(specificMessage);
-  }
-}
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts }]
+  });
+
+  return response.text();
+};
 
 /**
- * 9. Alternative AI Assistant Response (non-streaming for simple cases)
+ * 8. generateContent (simple)
+ */
+export const generateContent = async (prompt: string): Promise<string> => {
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
+  });
+
+  return response.text();
+};
+
+/**
+ * 9. generateAIAssistantResponseSimple
  */
 export const generateAIAssistantResponseSimple = async (
   message: string,
@@ -919,59 +461,25 @@ export const generateAIAssistantResponseSimple = async (
     userInputs?: UserInputs;
   }
 ): Promise<string> => {
-  if (!apiKey) {
-    throw new Error("API Key not configured. Cannot connect to Gemini API.");
-  }
+  const prompt = `
+You are TrackGuideAI.
 
-  try {
-    const contextInfo = context ? `
-**Current Project Context:**
-- Genre: ${context.userInputs?.genre?.join(", ") || context.currentGuidebook?.genre?.join(", ") || 'Not specified'}
-- Vibe: ${context.userInputs?.vibe?.join(", ") || context.currentGuidebook?.vibe?.join(", ") || 'Not specified'}
-- DAW: ${context.userInputs?.daw || context.currentGuidebook?.daw || 'Not specified'}
-- Current guidebook: ${context.currentGuidebook?.title || 'None'}
-` : '';
+Context:
+Genre: ${context?.userInputs?.genre?.join(", ") || context?.currentGuidebook?.genre?.join(", ") || "Not specified"}
+Vibe: ${context?.userInputs?.vibe?.join(", ") || context?.currentGuidebook?.vibe?.join(", ") || "Not specified"}
+DAW: ${context?.userInputs?.daw || context?.currentGuidebook?.daw || "Not specified"}
 
-    const prompt = `You are TrackGuideAI, an expert music production assistant. Help the user with their music production question.
+User asked:
+${message}
 
-${contextInfo}
+Provide actionable production advice.
+`;
 
-**User Question:** ${message}
+  const model = getModel();
+  const response = await model.generateContent({
+    contents: [{ parts: [{ text: prompt }] }]
+  });
 
-**Your Response Guidelines:**
-- Provide helpful, concise advice related to music production, mixing, sound design, or composition
-- Keep responses practical and actionable
-- Reference the project context when relevant
-- Include specific parameter suggestions when applicable
-- Maintain a professional but friendly tone
+  return response.text();
+};
 
-Provide your expert guidance:`;
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-    });
-
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
-      throw new Error("Received an unexpected response format from Gemini API.");
-    }
-    
-    return responseText;
-
-  } catch (error) {
-    console.error("Error generating AI assistant response:", error);
-    let specificMessage = "An unknown error occurred while generating response.";
-    if (error instanceof Error) {
-      specificMessage = error.message;
-      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      } else if (error.message.includes("Candidate was blocked")) {
-        specificMessage = "The response was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
-      }
-    }
-    throw new Error(specificMessage);
-  }
-}
