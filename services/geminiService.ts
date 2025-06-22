@@ -1008,75 +1008,13 @@ interface PatchGuideInputs {
 }
 
 export const generateSynthPatchGuide = async (
-  inputs: PatchGuideInputs
-): Promise<PatchGuideResult> => {
-  const synthConfig = await loadSynthConfig(inputs.synth);
-  const oscDescriptions = synthConfig?.oscillators?.map((o: any) => `- ${o.name} (${o.type})`) || [];
-  const filterDescriptions = synthConfig?.filters?.map((f: any) => `- ${f.name} (${f.types?.join(", ")})`) || [];
-
-  const prompt = `
-You are an expert sound designer. The user has selected the synth: "${inputs.synth}".
-
-**Synth Description:** ${inputs.description}
-
-**Synth Capabilities:**
-
-### Oscillators:
-${oscDescriptions.length ? oscDescriptions.join("\n") : "- No details provided"}
-
-### Filters:
-${filterDescriptions.length ? filterDescriptions.join("\n") : "- No details provided"}
-
-### Envelopes:
-${synthConfig?.envelopes?.count || 2} envelopes available.
-
-### Modulation Sources:
-${synthConfig?.modSources?.join(", ") || "Unknown"}
-
-### Modulation Destinations:
-${Object.keys(synthConfig?.modDestinations || {}).join(", ") || "Unknown"}
-
----
-
-**Your task: Generate a patch guide that includes:**
-
-1️⃣ Detailed written patch instructions in Markdown  
-2️⃣ Oscillator settings → "oscSettings" object  
-3️⃣ Filter knobs → "knobs" object  
-4️⃣ ADSR envelopes → "adsrVCF" and "adsrVCA"  
-5️⃣ Modulation matrix → "modMatrix" array  
-
-**REQUIRED JSON STRUCTURE:**
-
-{
-  "text": "### PATCH INSTRUCTIONS IN MARKDOWN",
-  "oscSettings": { "osc1_param": value, ... },
-  "knobs": { "filter_cutoff": value, ... },
-  "adsrVCF": { "attack": X, "decay": X, "sustain": X, "release": X },
-  "adsrVCA": { "attack": X, "decay": X, "sustain": X, "release": X },
-  "modMatrix": [
-    { "source": "sourceName", "target": "targetName", "amount": number },
-    ...
-  ]
-}
-
-⚠️ Respond ONLY with this JSON object. Do not include explanations or extra text.`;
-
-  const result = await genAI.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
+  inputs: { synth: string; description: string }
+): Promise<any> => {
+  const res = await fetch("/api/geminiPatchGuide", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(inputs),
   });
-
-  const text = result.text() || '';
-
-  try {
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}');
-    const jsonString = text.substring(jsonStart, jsonEnd + 1);
-    const parsed = JSON.parse(jsonString);
-    return parsed;
-  } catch (err) {
-    console.error("Failed to parse synth patch guide JSON:", err);
-    return { text };
-  }
+  if (!res.ok) throw new Error("Failed to generate patch guide");
+  return await res.json();
 };
