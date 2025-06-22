@@ -210,3 +210,37 @@ export const PATCH_INPUT_CATEGORIES = [
   { category: "Inspiration/Concept", key: "inspiration", examples: ["Cosmic", "Underwater", "Robotic", "Alien", "Nature", "Industrial", "Organic", "Mechanical", "Spiritual", "Abstract", "Forest", "Cave", "Machine", "Ghost", "Desert", "Arctic", "Volcanic"] },
   { category: "Dynamics/Envelope Shape", key: "dynamics", examples: ["Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] }
 ];
+
+export const SYNTH_OPTIONS = [
+  'Xfer Serum',
+  'Vital',
+  'Pigments',
+  'Native Instruments Massive',
+  'Native Instruments Massive X',
+  'Diva',
+  'Hive 2',
+  'Sylenth1',
+  'Korg Wavestate',
+  'Roland Jupiter-8',
+  'Roland Juno-106',
+  'Roland SH-101',
+  'Ableton Operator',
+  'Ableton Wavetable',
+  'Apple Retro Synth',
+  'Apple Alchemy',
+  'Native Instruments FM8',
+  'Kilohearts Phase Plant',
+  'Omnisphere',
+  'Arturia Analog Lab',
+  'Generic Synth',
+  'TAL TAL-U-No-LX',
+  'u-he Repro-5',
+  'u-he Repro-1',
+  'Native Instruments Monark',
+  'Bazille',
+  'Zebra2',
+  'Arturia PolyBrute',
+  'Moog Minimoog',
+  'DiscoDSP OB-Xd',
+  'Korg MS-20'
+];

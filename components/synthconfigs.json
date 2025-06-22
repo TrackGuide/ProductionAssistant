@@ -1,6 +1,6 @@
 {
   "Serum": {
-    "name": "Serum",
+    "name": "Xfer Serum",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
@@ -150,7 +150,7 @@
     ],
     "modDestinations": [
       {"section": "Oscillator", "params": ["Wavetable Position", "Analog Shape", "Sample Start", "Level", "Pan", "FM Amount"]},
-      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Blend", "Mode"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Blend"]},
       {"section": "Envelope", "params": ["Attack", "Decay", "Sustain", "Release"]},
       {"section": "LFO", "params": ["Rate", "Shape", "Fade In"]},
       {"section": "FX", "params": ["Mix", "Feedback", "Time", "Tone"]},
@@ -199,7 +199,7 @@
     "effects": []
   },
   "Juno106": {
-    "name": "Juno106",
+    "name": "Roland Juno-106",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
@@ -229,7 +229,7 @@
     ]
   },
   "AnalogLab": {
-    "name": "AnalogLab",
+    "name": "Arturia Analog Lab",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
@@ -261,7 +261,7 @@
     ]
   },
   "Generic": {
-    "name": "Generic",
+    "name": "Generic Synth",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
@@ -293,7 +293,7 @@
     ]
   },
   "Alchemy": {
-    "name": "Alchemy",
+    "name": "Apple Alchemy",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
@@ -341,7 +341,7 @@
     ]
   },
   "Operator": {
-    "name": "Operator",
+    "name": "Ableton Operator",
     "oscillators": [
       {"id": "A", "name": "Osc A", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]},
       {"id": "B", "name": "Osc B", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]},
@@ -380,7 +380,7 @@
     ]
   },
   "FM8": {
-    "name": "FM8",
+    "name": "Native Instruments FM8",
     "operators": [
       {"id": "A", "name": "Operator A", "params": ["Ratio", "Offset", "Level", "Waveform"]},
       {"id": "B", "name": "Operator B", "params": ["Ratio", "Offset", "Level", "Waveform"]},
@@ -428,7 +428,7 @@
     ]
   },
   "Hive2": {
-    "name": "Hive2",
+    "name": "Hive 2",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Waveform", "Octave", "Semitone", "Detune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Waveform", "Octave", "Semitone", "Detune", "Level"]},
@@ -480,7 +480,7 @@
     ]
   },
   "MassiveX": {
-    "name": "Massive X",
+    "name": "Native Instruments Massive X",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Warp", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Warp", "Level"]}
@@ -574,7 +574,7 @@
     ]
   },
   "PhasePlant": {
-    "name": "Phase Plant",
+    "name": "Kilohearts Phase Plant",
     "oscillators": [
       {"id": "1", "name": "Generator 1", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
       {"id": "2", "name": "Generator 2", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
@@ -628,7 +628,7 @@
     ]
   },
   "RetroSynth": {
-    "name": "Retro Synth",
+    "name": "Apple Retro Synth",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog/Digital/FM/Wave", "params": ["Type", "Waveform", "Octave", "Detune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog/Digital/FM/Wave", "params": ["Type", "Waveform", "Octave", "Detune", "Level"]}
@@ -667,7 +667,7 @@
     ]
   },
   "SH101": {
-    "name": "SH-101",
+    "name": "Roland SH-101",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Sub Level", "Pulse Width", "Level"]}
     ],
@@ -743,7 +743,7 @@
     ]
   },
   "Wavetable": {
-    "name": "Wavetable",
+    "name": "Ableton Wavetable",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]}
@@ -793,7 +793,7 @@
     ]
   },
   "Jupiter8": {
-    "name": "Jupiter-8",
+    "name": "Roland Jupiter-8",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
@@ -824,7 +824,7 @@
     ]
   },
   "TAL-U-No-LX": {
-    "name": "TAL-U-No-LX",
+    "name": "TAL TAL-U-No-LX",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Level"]},
       {"id": "Sub", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
@@ -853,7 +853,7 @@
     ]
   },
   "Repro-5": {
-    "name": "Repro-5",
+    "name": "u-he Repro-5",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
@@ -884,7 +884,7 @@
     ]
   },
   "Repro-1": {
-    "name": "Repro-1",
+    "name": "u-he Repro-1",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
     ],
@@ -913,7 +913,7 @@
     ]
   },
   "Monark": {
-    "name": "Monark",
+    "name": "Native Instruments Monark",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
@@ -1046,7 +1046,7 @@
     ]
   },
   "PolyBrute": {
-    "name": "PolyBrute",
+    "name": "Arturia PolyBrute",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]}
@@ -1096,7 +1096,7 @@
     ]
   },
   "Minimoog": {
-    "name": "Minimoog",
+    "name": "Moog Minimoog",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
@@ -1127,7 +1127,7 @@
     ]
   },
   "OB-Xd": {
-    "name": "OB-Xd",
+    "name": "DiscoDSP OB-Xd",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
@@ -1158,7 +1158,7 @@
     ]
   },
   "MS-20": {
-    "name": "MS-20",
+    "name": "Korg MS-20",
     "oscillators": [
       {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
       {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}

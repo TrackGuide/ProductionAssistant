@@ -7,21 +7,48 @@ import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import { Knob } from './Knob';
 import { generateSynthPatchGuide } from '../services/patchGuideService';
-import { PATCH_INPUT_CATEGORIES } from '../constants';
+import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 
-const SYNTH_OPTIONS = [
-  'Serum','Vital','Pigments','Massive','Massive X',
-  'Diva','Hive 2','Sylenth1','Wavestate','Jupiter-8',
-  'Juno-106','SH-101','Operator','Wavetable','Retro Synth',
-  'Alchemy','FM8','Phase Plant','Omnisphere','Analog Lab','Generic'
-];
-
-// Map knob [0-1] to frequency [20-20000] Hz
 const knobToHz = (v: number) =>
   Math.round(Math.max(20, Math.min(20000, 20 + v * (20000 - 20))));
 
 const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'timbre', 'notes'];
 const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
+
+// Use SYNTH_OPTIONS_LIST for synth selection
+const SYNTH_OPTIONS_LIST = [
+  'Xfer Serum',
+  'Vital',
+  'Pigments',
+  'Native Instruments Massive',
+  'Native Instruments Massive X',
+  'Diva',
+  'Hive 2',
+  'Sylenth1',
+  'Korg Wavestate',
+  'Roland Jupiter-8',
+  'Roland Juno-106',
+  'Roland SH-101',
+  'Ableton Operator',
+  'Ableton Wavetable',
+  'Apple Retro Synth',
+  'Apple Alchemy',
+  'Native Instruments FM8',
+  'Kilohearts Phase Plant',
+  'Omnisphere',
+  'Arturia Analog Lab',
+  'Generic Synth',
+  'TAL TAL-U-No-LX',
+  'u-he Repro-5',
+  'u-he Repro-1',
+  'Native Instruments Monark',
+  'Bazille',
+  'Zebra2',
+  'Arturia PolyBrute',
+  'Moog Minimoog',
+  'DiscoDSP OB-Xd',
+  'Korg MS-20'
+];
 
 export const PatchGuide: React.FC = () => {
   // Form inputs
@@ -189,6 +216,18 @@ export const PatchGuide: React.FC = () => {
                 className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
                 rows={2}
               />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-gray-200">Synth</label>
+              <select
+                value={synth}
+                onChange={e => setSynth(e.target.value)}
+                className="mt-1 block w-full bg-gray-700 text-white p-2 rounded"
+              >
+                {SYNTH_OPTIONS_LIST.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </div>
           </div>
           <Button type="button" onClick={() => setShowAdvanced(v => !v)}>

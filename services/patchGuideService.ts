@@ -56,6 +56,41 @@ interface PatchGuideInputs {
 // Use type assertion for imported JSON to allow string indexing
 const synthConfigs = synthConfigsJson as Record<string, any>;
 
+// Map of normalized synth keys to company-prefixed names for robust lookup
+const SYNTH_KEY_MAP: Record<string, string> = {
+  'serum': 'Xfer Serum',
+  'vital': 'Vital',
+  'pigments': 'Pigments',
+  'massive': 'Native Instruments Massive',
+  'massivex': 'Native Instruments Massive X',
+  'diva': 'Diva',
+  'hive2': 'Hive 2',
+  'sylenth1': 'Sylenth1',
+  'wavestate': 'Korg Wavestate',
+  'jupiter8': 'Roland Jupiter-8',
+  'juno106': 'Roland Juno-106',
+  'sh101': 'Roland SH-101',
+  'operator': 'Ableton Operator',
+  'wavetable': 'Ableton Wavetable',
+  'retrosynth': 'Apple Retro Synth',
+  'alchemy': 'Apple Alchemy',
+  'fm8': 'Native Instruments FM8',
+  'phaseplant': 'Kilohearts Phase Plant',
+  'omnisphere': 'Omnisphere',
+  'analoglab': 'Arturia Analog Lab',
+  'generic': 'Generic Synth',
+  'tal-u-no-lx': 'TAL TAL-U-No-LX',
+  'repro5': 'u-he Repro-5',
+  'repro1': 'u-he Repro-1',
+  'monark': 'Native Instruments Monark',
+  'bazille': 'Bazille',
+  'zebra2': 'Zebra2',
+  'polybrute': 'Arturia PolyBrute',
+  'minimoog': 'Moog Minimoog',
+  'ob-xd': 'DiscoDSP OB-Xd',
+  'ms20': 'Korg MS-20'
+};
+
 /**
  * Clamp a value to a numeric range, defaulting to min on invalid input.
  */
@@ -81,8 +116,9 @@ export async function generateSynthPatchGuide(
   try {
     // Normalize synth name for lookup
     const synthKey = (inputs.synth || 'Generic').replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
-    // Try to find a matching config (case-insensitive, fallback to Generic)
-    synthConfig = synthConfigs[inputs.synth] || synthConfigs[synthKey.charAt(0).toUpperCase() + synthKey.slice(1)] || synthConfigs[synthKey] || synthConfigs['Generic'];
+    // Use company-prefixed name for lookup
+    const synthName = SYNTH_KEY_MAP[synthKey] || inputs.synth || 'Generic Synth';
+    synthConfig = synthConfigs[synthName] || synthConfigs['Generic Synth'];
     if (!synthConfig) throw new Error('Could not load synth config for requested synth or generic fallback.');
   } catch (err) {
     // Debug: log error
