@@ -186,25 +186,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </p>
             </div>
 
-            {/* Mix Feedback */}
+            {/* PatchGuide AI */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🎚</span>
+                <span className="text-white font-bold">🔬</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
+              <h3 className="text-xl font-bold text-white mb-3">PatchGuide AI</h3>
               <p className="text-gray-300">
-                Upload a track for full-spectrum mix feedback — AI analyzes your audio and returns actionable improvements.
+                Instantly generate detailed synth patch recipes for any genre, mood, or instrument. Select your synth, describe your sound, and get step-by-step settings, modulation, and creative tips — tailored to your hardware or software.
               </p>
             </div>
 
-            {/* Mix Compare */}
+            {/* Mix Feedback */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">⚖</span>
+                <span className="text-white font-bold">🎚⚖</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Mix Compare</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
               <p className="text-gray-300">
-                Upload Mix A and Mix B — AI compares revisions and identifies strengths, weaknesses, and next steps for your current version.
+                Upload your mix (or two versions) for instant, actionable feedback. AI analyzes your audio, highlights strengths and weaknesses, and suggests improvements — helping you refine your sound with every revision.
               </p>
             </div>
 

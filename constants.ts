@@ -186,3 +186,61 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
   'bass_drum': 36,
   'snare_drum': 38
 };
+
+// --- Patch Guide input categories for robust UI ---
+export const PATCH_INPUT_CATEGORIES = [
+  {
+    category: "Genre",
+    key: "genre",
+    examples: [
+      { group: "Electronic", examples: [
+        "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "IDM", "Breakbeat", "Jungle", "Hardstyle", "Gabber", "Psytrance", "Progressive House", "Deep House", "Tech House", "Afro House", "Electro", "Future Bass", "Trap (EDM)", "Minimal Techno", "Acid House", "UK Garage", "Grime", "Footwork", "Synthwave", "Lofi", "Ambient", "Downtempo", "Chillout", "Vaporwave", "New Age", "Berlin School", "Glitch", "EBM", "Industrial", "Darkwave"
+      ]},
+      { group: "Band, Pop, and World", examples: [
+        "Rock", "Post-Punk", "Shoegaze", "Krautrock", "Goth", "Space Rock", "Drone Metal", "Funk", "Pop", "Soul", "R&B", "New Wave", "Synth-Pop", "Disco", "Hyperpop", "Hip Hop", "Reggae", "Dub", "Jazz Fusion", "Smooth Jazz", "Folk-Tronic", "World Music", "Afrobeat"
+      ]},
+      { group: "Cinematic, Scoring and Abstract", examples: [
+        "Cinematic", "Experimental", "Video Game Score", "Chiptune", "SFX for Film", "Noise"
+      ]}
+    ]
+  },
+  { category: "Voice Type", key: "voiceType", examples: ["Lead", "Pad", "Bass", "Pluck", "Bell", "Arp", "FX", "Drone", "Wobble", "Stab", "Texture", "Atmosphere", "Riser", "Impact"] },
+  { category: "Character & Mood", key: "characterMood", examples: ["Glassy", "Warm", "Bright", "Dark", "Metallic", "Wooden", "Raspy", "Smooth", "Gritty", "Fuzzy", "Distorted", "Clean", "Hollow", "Resonant", "Breathy", "Digital", "Analog", "Noisy", "Sharp", "Dull", "Crisp", "Dreamy", "Aggressive", "Melancholic", "Uplifting", "Eerie", "Serene", "Tense", "Playful", "Mysterious", "Epic", "Brooding", "Anxious", "Joyful", "Haunting", "Sacred"] },
+  { category: "Movement & Dynamics", key: "movementDynamics", examples: ["Evolving", "Swells", "Pulsing", "Rhythmic", "Static", "Sweeping", "Morphing", "Glitchy", "Choppy", "Fluttering", "Driving", "Floating", "Warped", "Phasing", "Short", "Long", "Percussive", "Sustained", "Slow Attack", "Fast Release", "Gated", "Punchy", "Clicky", "Decaying"] },
+  { category: "Era/Style", key: "era", examples: ["Vintage", "Modern", "80s", "90s", "Futuristic", "Retro", "Old-School", "Contemporary", "Y2K", "Cyberpunk"] },
+  { category: "Inspiration/Concept", key: "concept", examples: ["Cosmic", "Underwater", "Robotic", "Alien", "Nature", "Industrial", "Organic", "Mechanical", "Spiritual", "Abstract", "Forest", "Cave", "Machine", "Ghost", "Desert", "Arctic", "Volcanic"] }
+];
+
+export const SYNTH_OPTIONS = [
+  'Ableton Operator',
+  'Ableton Wavetable',
+  'Apple Alchemy',
+  'Apple Retro Synth',
+  'Arturia Analog Lab',
+  'Arturia PolyBrute',
+  'Bazille',
+  'DiscoDSP OB-Xd',
+  'Diva',
+  'Hive 2',
+  'Kilohearts Phase Plant',
+  'Korg MS-20',
+  'Korg Wavestate',
+  'Moog Minimoog',
+  'Native Instruments FM8',
+  'Native Instruments Massive',
+  'Native Instruments Massive X',
+  'Native Instruments Monark',
+  'Omnisphere',
+  'Pigments',
+  'Roland Jupiter-8',
+  'Roland Juno-106',
+  'Roland SH-101',
+  'Sylenth1',
+  'TAL TAL-U-No-LX',
+  'u-he Repro-1',
+  'u-he Repro-5',
+  'Vital',
+  'Xfer Serum',
+  'Zebra2',
+  'Generic'
+].sort();

@@ -1,0 +1,1188 @@
+{
+  "Serum": {
+    "name": "Xfer Serum",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Comb", "Notch", "Peak", "Formant", "Phaser"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Pan", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Macro 1", "type": "Macro"},
+      {"name": "Macro 2", "type": "Macro"},
+      {"name": "Macro 3", "type": "Macro"},
+      {"name": "Macro 4", "type": "Macro"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"},
+      {"name": "Chaos 1", "type": "Random"},
+      {"name": "Chaos 2", "type": "Random"},
+      {"name": "Noise OSC", "type": "Audio"},
+      {"name": "Fixed", "type": "Constant"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Wavetable Position", "Warp Depth", "Coarse", "Fine", "Level", "Pan"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Pan", "Mix"]},
+      {"section": "Envelope", "params": ["Attack", "Decay", "Sustain", "Release"]},
+      {"section": "LFO", "params": ["Rate", "Shape", "Delay"]},
+      {"section": "FX", "params": ["Mix", "Depth", "Feedback", "Time", "Tone"]},
+      {"section": "Global", "params": ["Master Tune", "Master Level"]}
+    ],
+    "effects": [
+      {"name": "Hyper/Dimension", "modulatable": true, "parameters": ["Mix", "Size", "Detune"]},
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
+    ]
+  },
+  "Vital": {
+    "name": "Vital",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Ladder", "Analog", "Digital", "Formant", "Comb", "Phaser"],
+        "defaultType": "Ladder",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Blend", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Random 1", "type": "Random"},
+      {"name": "Random 2", "type": "Random"},
+      {"name": "Random 3", "type": "Random"},
+      {"name": "Random 4", "type": "Random"},
+      {"name": "Macro 1", "type": "Macro"},
+      {"name": "Macro 2", "type": "Macro"},
+      {"name": "Macro 3", "type": "Macro"},
+      {"name": "Macro 4", "type": "Macro"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"},
+      {"name": "MPE Slide", "type": "MPE"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Wavetable Position", "Spectral Warp", "Level", "Pan", "Phase", "Detune", "Unison"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Blend"]},
+      {"section": "Envelope", "params": ["Attack", "Decay", "Sustain", "Release"]},
+      {"section": "LFO", "params": ["Rate", "Shape", "Phase"]},
+      {"section": "FX", "params": ["Mix", "Feedback", "Time", "Tone"]},
+      {"section": "Global", "params": ["Master Tune", "Master Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]}
+    ]
+  },
+  "Pigments": {
+    "name": "Pigments",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Ladder", "SEM", "Jupiter", "Formant", "Comb", "Phaser", "Notch"],
+        "defaultType": "Ladder",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Blend", "Mode", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1 (Amp)", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "Function 1", "type": "Function"},
+      {"name": "Function 2", "type": "Function"},
+      {"name": "Function 3", "type": "Function"},
+      {"name": "Macro 1", "type": "Macro"},
+      {"name": "Macro 2", "type": "Macro"},
+      {"name": "Macro 3", "type": "Macro"},
+      {"name": "Macro 4", "type": "Macro"},
+      {"name": "Random", "type": "Random"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"},
+      {"name": "Keytrack", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Wavetable Position", "Analog Shape", "Sample Start", "Level", "Pan", "FM Amount"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Blend"]},
+      {"section": "Envelope", "params": ["Attack", "Decay", "Sustain", "Release"]},
+      {"section": "LFO", "params": ["Rate", "Shape", "Fade In"]},
+      {"section": "FX", "params": ["Mix", "Feedback", "Time", "Tone"]},
+      {"section": "Global", "params": ["Master Tune", "Master Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]}
+    ]
+  },
+  "Diva": {
+    "name": "Diva",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Moog Ladder", "Roland", "Korg MS20", "HP", "BP"],
+        "defaultType": "Moog Ladder",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1 (Amp)", "type": "Envelope"},
+      {"name": "Env 2 (Filter)", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Keytrack", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Pulse Width"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": []
+  },
+  "Juno106": {
+    "name": "Roland Juno-106",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "ENV Amount", "LFO Amount", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "ADSR Envelope", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Mod Lever", "type": "Performance"},
+      {"name": "Keytrack", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Pulse Width"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "parameters": ["On/Off", "Mode"]}
+    ]
+  },
+  "AnalogLab": {
+    "name": "Arturia Analog Lab",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance"]
+      }
+    ],
+    "modSources": [
+      {"name": "Macro 1 (Brightness)", "type": "Macro"},
+      {"name": "Macro 2 (Timbre)", "type": "Macro"},
+      {"name": "Macro 3 (Time)", "type": "Macro"},
+      {"name": "Macro 4 (Movement)", "type": "Macro"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Macros", "params": ["Brightness", "Timbre", "Time", "Movement"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance"]}
+    ],
+    "effects": [
+      {"name": "Macros (Brightness, Timbre, Time, Movement)"},
+      {"name": "Preset-dependent FX (varies by underlying synth)"}
+    ]
+  },
+  "Generic": {
+    "name": "Generic Synth",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass"], "defaultType": "Lowpass", "parameters": ["Cutoff", "Resonance"]}
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay"]}
+    ]
+  },
+  "Alchemy": {
+    "name": "Apple Alchemy",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Pan", "Wave Shape"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Mix", "Type"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Bitcrusher", "modulatable": true, "parameters": ["Amount", "Mix"]},
+      {"name": "Filter (FX)", "modulatable": true, "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]}
+    ]
+  },
+  "Operator": {
+    "name": "Ableton Operator",
+    "oscillators": [
+      {"id": "A", "name": "Osc A", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]},
+      {"id": "B", "name": "Osc B", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]},
+      {"id": "C", "name": "Osc C", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]},
+      {"id": "D", "name": "Osc D", "type": "FM", "params": ["Coarse", "Fine", "Level", "Waveform"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Coarse", "Fine", "Level", "Waveform"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "FM8": {
+    "name": "Native Instruments FM8",
+    "operators": [
+      {"id": "A", "name": "Operator A", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "B", "name": "Operator B", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "C", "name": "Operator C", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "D", "name": "Operator D", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "E", "name": "Operator E", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "F", "name": "Operator F", "params": ["Ratio", "Offset", "Level", "Waveform"]},
+      {"id": "X", "name": "Noise/Saturation", "params": ["Level", "Color"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Operator", "params": ["Level", "Ratio", "Offset", "Waveform"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus/Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Rate", "Depth"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Tremolo", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]}
+    ]
+  },
+  "Hive2": {
+    "name": "Hive 2",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Waveform", "Octave", "Semitone", "Detune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Waveform", "Octave", "Semitone", "Detune", "Level"]},
+      {"id": "Sub", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter 1",
+        "types": ["Lowpass 12dB", "Lowpass 24dB", "Highpass 12dB", "Highpass 24dB", "Bandpass 12dB", "Bandpass 24dB", "Notch", "Peak", "Comb+", "Comb-", "Allpass"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Filter 2",
+        "types": ["Lowpass 12dB", "Lowpass 24dB", "Highpass 12dB", "Highpass 24dB", "Bandpass 12dB", "Bandpass 24dB", "Notch", "Peak", "Comb+", "Comb-", "Allpass"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Seq/Arp", "type": "Sequencer"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Pan", "Wave Shape"]},
+      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Type", "Mix"]},
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]}
+    ]
+  },
+  "MassiveX": {
+    "name": "Native Instruments Massive X",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Warp", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Warp", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["SVF", "Ladder", "Comb", "Scanner", "Groian", "Blue Monark", "Creak", "Crusher"],
+        "defaultType": "SVF",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Mix", "Type"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "Performer 1", "type": "Performer"},
+      {"name": "Performer 2", "type": "Performer"},
+      {"name": "Random", "type": "Random"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Warp", "Level"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix", "Type"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Insert FX 1", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "Insert FX 2", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "Insert FX 3", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "Stereo FX 1", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "Stereo FX 2", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "Stereo FX 3", "modulatable": true, "parameters": ["Type", "Mix", "Param 1", "Param 2"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Shelf", "Boost", "Freq", "High Shelf"]}
+    ]
+  },
+  "Omnisphere": {
+    "name": "Omnisphere",
+    "oscillators": [
+      {"id": "A", "name": "Layer A", "type": "Sample/Synth", "params": ["Sample/Waveform", "Pitch", "Level", "Pan"]},
+      {"id": "B", "name": "Layer B", "type": "Sample/Synth", "params": ["Sample/Waveform", "Pitch", "Level", "Pan"]},
+      {"id": "C", "name": "Layer C", "type": "Sample/Synth", "params": ["Sample/Waveform", "Pitch", "Level", "Pan"]},
+      {"id": "D", "name": "Layer D", "type": "Sample/Synth", "params": ["Sample/Waveform", "Pitch", "Level", "Pan"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Resonator", "Formant", "Power Filter"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Pan"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Wah", "modulatable": true, "parameters": ["Type", "Mix", "Frequency"]},
+      {"name": "Tape Saturation", "modulatable": true, "parameters": ["Amount", "Mix"]}
+    ]
+  },
+  "PhasePlant": {
+    "name": "Kilohearts Phase Plant",
+    "oscillators": [
+      {"id": "1", "name": "Generator 1", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
+      {"id": "2", "name": "Generator 2", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]},
+      {"id": "3", "name": "Generator 3", "type": "Wavetable/Analog/Noise/Sampler", "params": ["Type", "Waveform/Sample", "Pitch", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter 1",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Filter 2",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Random", "type": "Random"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Generator", "params": ["Pitch", "Level", "Type"]},
+      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Distortion", "modulatable": true, "parameters": ["Type", "Drive", "Mix"]},
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Compressor", "modulatable": true, "parameters": ["Threshold", "Ratio", "Attack", "Release", "Mix"]}
+    ]
+  },
+  "RetroSynth": {
+    "name": "Apple Retro Synth",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog/Digital/FM/Wave", "params": ["Type", "Waveform", "Octave", "Detune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog/Digital/FM/Wave", "params": ["Type", "Waveform", "Octave", "Detune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Type", "Waveform"]},
+      {"section": "Filter", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "SH101": {
+    "name": "Roland SH-101",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Sub Level", "Pulse Width", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Pulse Width", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]}
+    ]
+  },
+  "Sylenth1": {
+    "name": "Sylenth1",
+    "oscillators": [
+      {"id": "A1", "name": "Osc A1", "type": "Analog", "params": ["Waveform", "Voices", "Detune", "Stereo", "Phase", "Volume"]},
+      {"id": "A2", "name": "Osc A2", "type": "Analog", "params": ["Waveform", "Voices", "Detune", "Stereo", "Phase", "Volume"]},
+      {"id": "B1", "name": "Osc B1", "type": "Analog", "params": ["Waveform", "Voices", "Detune", "Stereo", "Phase", "Volume"]},
+      {"id": "B2", "name": "Osc B2", "type": "Analog", "params": ["Waveform", "Voices", "Detune", "Stereo", "Phase", "Volume"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter A",
+        "types": ["Lowpass", "Highpass", "Bandpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack"]
+      },
+      {
+        "name": "Filter B",
+        "types": ["Lowpass", "Highpass", "Bandpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Keytrack", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Detune", "Volume"]},
+      {"section": "Filter A", "params": ["Cutoff", "Resonance", "Drive"]},
+      {"section": "Filter B", "params": ["Cutoff", "Resonance", "Drive"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Distortion", "modulatable": true, "parameters": ["Drive", "Type", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]}
+    ]
+  },
+  "Wavetable": {
+    "name": "Ableton Wavetable",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Wavetable", "Pitch", "Position", "Warp", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter 1",
+        "types": ["Clean", "OSR", "MS2", "SMP", "PRD", "Classic", "Bandpass", "Notch", "Highpass", "Lowpass"],
+        "defaultType": "Clean",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Morph", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Filter 2",
+        "types": ["Clean", "OSR", "MS2", "SMP", "PRD", "Classic", "Bandpass", "Notch", "Highpass", "Lowpass"],
+        "defaultType": "Clean",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Morph", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Random", "type": "Random"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Position", "Warp", "Level"]},
+      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Morph", "Mix"]},
+      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Morph", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "Jupiter8": {
+    "name": "Roland Jupiter-8",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 12dB", "Lowpass 24dB", "Highpass"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]}
+    ]
+  },
+  "TAL-U-No-LX": {
+    "name": "TAL TAL-U-No-LX",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Level"]},
+      {"id": "Sub", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass", "Highpass"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["On/Off", "Mode"]}
+    ]
+  },
+  "Repro-5": {
+    "name": "u-he Repro-5",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
+    ]
+  },
+  "Repro-1": {
+    "name": "u-he Repro-1",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
+    ]
+  },
+  "Monark": {
+    "name": "Native Instruments Monark",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "3", "name": "Osc 3", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
+    ]
+  },
+  "Bazille": {
+    "name": "Bazille",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
+      {"id": "3", "name": "Osc 3", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]},
+      {"id": "4", "name": "Osc 4", "type": "Digital Modular", "params": ["Waveform", "Tune", "Phase", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter 1",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Filter 2",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Phase"]},
+      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "Zebra2": {
+    "name": "Zebra2",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Wavetable", "params": ["Waveform", "Tune", "Detune", "Phase", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Wavetable", "params": ["Waveform", "Tune", "Detune", "Phase", "Level"]},
+      {"id": "3", "name": "Osc 3", "type": "Wavetable", "params": ["Waveform", "Tune", "Detune", "Phase", "Level"]},
+      {"id": "4", "name": "Osc 4", "type": "Wavetable", "params": ["Waveform", "Tune", "Detune", "Phase", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Filter 1",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Filter 2",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch", "Comb", "Formant"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "Env 4", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "LFO 4", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level", "Detune", "Phase"]},
+      {"section": "Filter 1", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Filter 2", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "PolyBrute": {
+    "name": "Arturia PolyBrute",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Fine", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "Steiner-Parker",
+        "types": ["Lowpass", "Highpass", "Bandpass", "Notch"],
+        "defaultType": "Lowpass",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      },
+      {
+        "name": "Ladder",
+        "types": ["Lowpass 12dB", "Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Drive", "Keytrack", "Mix"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "Env 3", "type": "Envelope"},
+      {"name": "LFO 1", "type": "LFO"},
+      {"name": "LFO 2", "type": "LFO"},
+      {"name": "LFO 3", "type": "LFO"},
+      {"name": "Morph", "type": "Macro"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Velocity", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"},
+      {"name": "Aftertouch", "type": "MIDI"},
+      {"name": "Pitch Bend", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "Steiner-Parker", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Ladder", "params": ["Cutoff", "Resonance", "Drive", "Mix"]},
+      {"section": "Amp", "params": ["Level"]},
+      {"section": "Morph", "params": ["Morph Amount"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": true, "parameters": ["Mix", "Time", "Feedback", "Sync"]},
+      {"name": "Reverb", "modulatable": true, "parameters": ["Mix", "Decay", "Pre-Delay", "Damping"]},
+      {"name": "Phaser", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Flanger", "modulatable": true, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "EQ", "modulatable": true, "parameters": ["Low Gain", "Mid Freq", "Mid Gain", "High Gain"]}
+    ]
+  },
+  "Minimoog": {
+    "name": "Moog Minimoog",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "3", "name": "Osc 3", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
+    ]
+  },
+  "OB-Xd": {
+    "name": "DiscoDSP OB-Xd",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "VCF",
+        "types": ["Lowpass 12dB", "Lowpass 24dB"],
+        "defaultType": "Lowpass 24dB",
+        "parameters": ["Cutoff", "Resonance", "Env Mod", "Keytrack"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "VCF", "params": ["Cutoff", "Resonance", "Env Mod"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Chorus", "modulatable": false, "parameters": ["Rate", "Depth", "Mix"]},
+      {"name": "Delay", "modulatable": false, "parameters": ["Time", "Feedback", "Mix"]}
+    ]
+  },
+  "MS-20": {
+    "name": "Korg MS-20",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Tune", "Level"]}
+    ],
+    "filters": [
+      {
+        "name": "HPF",
+        "types": ["Highpass 12dB"],
+        "defaultType": "Highpass 12dB",
+        "parameters": ["Cutoff", "Resonance"]
+      },
+      {
+        "name": "LPF",
+        "types": ["Lowpass 12dB"],
+        "defaultType": "Lowpass 12dB",
+        "parameters": ["Cutoff", "Resonance"]
+      }
+    ],
+    "modSources": [
+      {"name": "Env 1", "type": "Envelope"},
+      {"name": "Env 2", "type": "Envelope"},
+      {"name": "LFO", "type": "LFO"},
+      {"name": "Keytrack", "type": "MIDI"},
+      {"name": "Mod Wheel", "type": "MIDI"}
+    ],
+    "modDestinations": [
+      {"section": "Oscillator", "params": ["Pitch", "Level"]},
+      {"section": "HPF", "params": ["Cutoff", "Resonance"]},
+      {"section": "LPF", "params": ["Cutoff", "Resonance"]},
+      {"section": "Amp", "params": ["Level"]}
+    ],
+    "effects": [
+      {"name": "Distortion", "modulatable": false, "parameters": ["Amount", "Mix"]}
+    ]
+  }
+}
