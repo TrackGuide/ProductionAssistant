@@ -11,12 +11,20 @@ import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 const DEFAULT_INPUT_KEYS = ['genre', 'voiceType', 'timbre', 'notes'];
 const ADVANCED_INPUT_KEYS = PATCH_INPUT_CATEGORIES.map(c => c.key).filter(k => !DEFAULT_INPUT_KEYS.includes(k));
 
-// Helper: Group synths by company
+// Helper: Group synths by company, robust to string/object
 const synthGroups: Record<string, string[]> = {};
 SYNTH_OPTIONS.forEach(synth => {
-  const [company] = synth.split(' ');
-  if (!synthGroups[company]) synthGroups[company] = [];
-  synthGroups[company].push(synth);
+  if (typeof synth === 'string') {
+    const [company] = synth.split(' ');
+    if (!synthGroups[company]) synthGroups[company] = [];
+    synthGroups[company].push(synth);
+  } else if (synth && typeof synth === 'object' && synth.label && Array.isArray(synth.options)) {
+    // For grouped options like Generic Synth
+    synth.options.forEach(opt => {
+      if (!synthGroups[synth.label]) synthGroups[synth.label] = [];
+      synthGroups[synth.label].push(opt.value);
+    });
+  }
 });
 Object.keys(synthGroups).forEach(company => {
   synthGroups[company].sort();
