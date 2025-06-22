@@ -1,8 +1,7 @@
 // services/patchGuideService.ts
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { GEMINI_MODEL_NAME } from '../constants';
-import fs from 'fs/promises';
-import path from 'path';
+import synthConfigsJson from '../components/synthconfigs.json';
 
 export interface OscSettings {
   o1Oct: number;
@@ -51,6 +50,9 @@ interface PatchGuideInputs {
   notes?: string;
 }
 
+// Use type assertion for imported JSON to allow string indexing
+const synthConfigs = synthConfigsJson as Record<string, any>;
+
 /**
  * Clamp a value to a numeric range, defaulting to min on invalid input.
  */
@@ -58,11 +60,6 @@ function clamp(value: any, min: number, max: number): number {
   const n = parseFloat(value);
   if (!Number.isFinite(n)) return min;
   return Math.min(Math.max(n, min), max);
-}
-
-function synthNameToFilename(synth: string): string {
-  // Remove spaces, hyphens, make case-insensitive, and handle common variants
-  return synth.replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
 }
 
 export async function generateSynthPatchGuide(
@@ -79,47 +76,17 @@ export async function generateSynthPatchGuide(
   // Load synth config
   let synthConfig: any = null;
   try {
-    // Normalize synth name to match config filenames
-    const synthFileMap: Record<string, string> = {
-      serum: 'Serum.json',
-      vital: 'Vital.json',
-      pigments: 'Pigments.json',
-      massive: 'Massive.json',
-      massivex: 'MassiveX.json',
-      diva: 'Diva.json',
-      hive2: 'Hive2.json',
-      sylenth1: 'Sylenth1.json',
-      wavestate: 'Wavestate.json',
-      jupiter8: 'Jupiter8.json',
-      juno106: 'Juno106.json',
-      sh101: 'SH101.json',
-      operator: 'Operator.json',
-      wavetable: 'Wavetable.json',
-      retrosynth: 'RetroSynth.json',
-      alchemy: 'Alchemy.json',
-      fm8: 'FM8.json',
-      phaseplant: 'PhasePlant.json',
-      omnisphere: 'Omnisphere.json',
-      analoglab: 'AnalogLab.json',
-      generic: 'Generic.json',
-    };
-    const normalized = synthNameToFilename(inputs.synth || 'Generic');
-    const synthConfigFile = synthFileMap[normalized] || 'Generic.json';
-
-    // Debug: log normalized synth and config file
-    console.log('Requested synth:', inputs.synth, 'Normalized:', normalized, 'Config file:', synthConfigFile);
-    // Use process.cwd() instead of __dirname for compatibility
-    const synthConfigPath = path.join(process.cwd(), 'synthconfigs', synthConfigFile);
-    const synthConfigRaw = await fs.readFile(synthConfigPath, 'utf-8');
-    synthConfig = JSON.parse(synthConfigRaw);
+    // Normalize synth name for lookup
+    const synthKey = (inputs.synth || 'Generic').replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '').toLowerCase();
+    // Try to find a matching config (case-insensitive, fallback to Generic)
+    synthConfig = synthConfigs[inputs.synth] || synthConfigs[synthKey.charAt(0).toUpperCase() + synthKey.slice(1)] || synthConfigs[synthKey] || synthConfigs['Generic'];
+    if (!synthConfig) throw new Error('Could not load synth config for requested synth or generic fallback.');
   } catch (err) {
     // Debug: log error
     console.error('Failed to load synth config:', err);
     // If synth config not found, fallback to Generic.json
     try {
-      const genericPath = path.join(process.cwd(), 'synthconfigs', 'Generic.json');
-      const genericRaw = await fs.readFile(genericPath, 'utf-8');
-      synthConfig = JSON.parse(genericRaw);
+      synthConfig = synthConfigs['Generic'];
     } catch (e) {
       throw new Error('Could not load synth config for requested synth or generic fallback.');
     }

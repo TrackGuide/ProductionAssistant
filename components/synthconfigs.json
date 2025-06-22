@@ -1,0 +1,401 @@
+{
+  "Serum": {
+    "name": "Serum",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Vital": {
+    "name": "Vital",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Generic": {
+    "name": "Generic",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Alchemy": {
+    "name": "Alchemy",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "AnalogLab": {
+    "name": "AnalogLab",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Diva": {
+    "name": "Diva",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "FM8": {
+    "name": "FM8",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Hive2": {
+    "name": "Hive2",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Juno106": {
+    "name": "Juno106",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Jupiter8": {
+    "name": "Jupiter8",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Massive": {
+    "name": "Massive",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "MassiveX": {
+    "name": "MassiveX",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Omnisphere": {
+    "name": "Omnisphere",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Operator": {
+    "name": "Operator",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "PhasePlant": {
+    "name": "PhasePlant",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Pigments": {
+    "name": "Pigments",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "RetroSynth": {
+    "name": "RetroSynth",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "SH101": {
+    "name": "SH101",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Sylenth1": {
+    "name": "Sylenth1",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Wavestate": {
+    "name": "Wavestate",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  },
+  "Wavetable": {
+    "name": "Wavetable",
+    "oscillators": [
+      {"id": "1", "name": "Osc 1", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "2", "name": "Osc 2", "type": "Analog", "params": ["Waveform", "Octave", "Coarse", "Fine", "Level"]},
+      {"id": "3", "name": "Sub Osc", "type": "Analog", "params": ["Octave", "Level"]}
+    ],
+    "filters": [
+      {"name": "Filter", "types": ["Lowpass", "Highpass", "Bandpass"], "params": ["Cutoff", "Resonance", "Drive"]}
+    ],
+    "envelopes": {"count": 2, "labels": ["Env 1", "Env 2"]},
+    "LFOs": {"count": 2, "labels": ["LFO 1", "LFO 2"]},
+    "modSources": ["Env 1", "Env 2", "LFO 1", "LFO 2", "Velocity", "Mod Wheel", "Aftertouch"],
+    "modDestinations": {"Osc": ["Osc Pitch", "Osc PW"], "Filter": ["Filter Cutoff", "Filter Reso"], "FX": ["FX Mix", "FX Depth"]},
+    "effects": [
+      {"name": "Reverb", "defaultSetting": "Hall, 3s decay, 40% mix"},
+      {"name": "Delay", "defaultSetting": "1/4 note, 20% feedback"}
+    ]
+  }
+}
