@@ -393,7 +393,7 @@ Too Many Tools. <span className="text-orange-500 block">Not Enough Direction.</s
             </p>
             <div className="grid gap-6">
               <div className="border-l-4 border-orange-500 pl-6">
-                <h3 className="text-lg font-bold text-white mb-2">Avoiding “One-Click” solutions/h3>
+                <h3 className="text-lg font-bold text-white mb-2">Avoiding “One-Click” solutions</h3>
                 <p className="text-gray-400">Our AI augments the creative process — producers stay in control.</p>
               </div>
               <div className="border-l-4 border-orange-500 pl-6">
