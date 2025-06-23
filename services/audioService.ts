@@ -102,7 +102,12 @@ const scheduleNote = (
   let oscillator: AudioScheduledSourceNode;
 
   if (isDrum) {
-    if (drumTypeKey === 'kick') {
+    // Enhanced drum synthesis with more robust pattern matching
+    const drumKey = drumTypeKey || '';
+    console.log(`🥁 Synthesizing drum: "${drumKey}" (MIDI: ${noteNumber})`);
+    
+    // Kick drum synthesis (MIDI 36)
+    if (drumKey.includes('kick') || drumKey.includes('bass_drum') || noteNumber === 36) {
       const kickOsc = context.createOscillator();
       kickOsc.type = 'sine';
       kickOsc.frequency.setValueAtTime(150, absoluteScheduleTime);
@@ -117,8 +122,10 @@ const scheduleNote = (
       kickOsc.stop(absoluteScheduleTime + durationSeconds);
       activeSources.push({ node: kickOsc, controlGainNode, trackType, intendedVolume, scheduledStopTime: absoluteScheduleTime + durationSeconds, isDrum: true });
       return; 
-    } else if (drumTypeKey === 'snare' || drumTypeKey === 'clap') {
-      // Noise-based snare/clap
+    }
+    
+    // Snare drum synthesis (MIDI 38)
+    else if (drumKey.includes('snare') || noteNumber === 38) {
       oscillator = context.createBufferSource(); 
       const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
       const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
@@ -128,42 +135,93 @@ const scheduleNote = (
         data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.05)); 
       }
       (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
-    } else if (drumTypeKey && (drumTypeKey.includes('hat') || drumTypeKey === 'hihat_closed' || drumTypeKey === 'open_hihat')) {
-      // Hi-hat synthesis
+    }
+    
+    // Clap synthesis (MIDI 39)
+    else if (drumKey.includes('clap') || drumKey.includes('hand_clap') || noteNumber === 39) {
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      // Create a sharper, more percussive clap sound
+      for (let i = 0; i < frameCount; i++) { 
+        const envelope = Math.exp(-i / (context.sampleRate * 0.03));
+        const noise = (Math.random() * 2 - 1);
+        // Add multiple bursts for realistic clap
+        const burstPattern = Math.sin(i * 0.01) > 0.5 ? 1 : 0.3;
+        data[i] = noise * envelope * burstPattern;
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    }
+    
+    // Hi-hat synthesis (MIDI 42 closed, 46 open)
+    else if (drumKey.includes('hat') || drumKey.includes('hihat') || noteNumber === 42 || noteNumber === 46) {
       oscillator = context.createBufferSource(); 
       const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
       const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
       const data = drumBuffer.getChannelData(0);
       
       const fundamental = 5000;
-      const decayFactor = drumTypeKey === 'open_hihat' ? 0.15 : 0.03;
+      const isOpen = drumKey.includes('open') || noteNumber === 46;
+      const decayFactor = isOpen ? 0.15 : 0.03;
+      
       for (let i = 0; i < frameCount; i++) { 
         data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * decayFactor)) * 
                   Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate) * (1 + Math.random()*0.3));
       }
       (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
-    } else if (drumTypeKey && (drumTypeKey.includes('cymbal') || drumTypeKey === 'crash_cymbal_1' || drumTypeKey === 'ride_cymbal_1')) {
-      // Cymbal synthesis
+    }
+    
+    // Crash cymbal synthesis (MIDI 49)
+    else if (drumKey.includes('crash') || drumKey.includes('cymbal') || noteNumber === 49) {
       oscillator = context.createBufferSource(); 
       const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
       const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
       const data = drumBuffer.getChannelData(0);
       
-      const fundamental = drumTypeKey === 'ride_cymbal_1' ? 3000 : 4000;
-      const decayFactor = drumTypeKey === 'crash_cymbal_1' ? 0.25 : 0.15;
+      const fundamental = 4000;
+      const decayFactor = 0.25; // Longer decay for crash
+      
       for (let i = 0; i < frameCount; i++) { 
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * decayFactor)) * 
-                  Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate) * (1 + Math.random()*0.5));
+        const envelope = Math.exp(-i / (context.sampleRate * decayFactor));
+        const harmonic1 = Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate));
+        const harmonic2 = Math.sin(2 * Math.PI * fundamental * 1.5 * (i/context.sampleRate));
+        const noise = (Math.random() * 2 - 1) * 0.3;
+        data[i] = (harmonic1 + harmonic2 * 0.7 + noise) * envelope;
       }
       (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
-    } else if (drumTypeKey && drumTypeKey.includes('tom')) {
-      // Tom synthesis
+    }
+    
+    // Ride cymbal synthesis (MIDI 51)
+    else if (drumKey.includes('ride') || noteNumber === 51) {
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      const fundamental = 3000;
+      const decayFactor = 0.15;
+      
+      for (let i = 0; i < frameCount; i++) { 
+        const envelope = Math.exp(-i / (context.sampleRate * decayFactor));
+        const bell = Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate));
+        const ping = Math.sin(2 * Math.PI * fundamental * 2.5 * (i/context.sampleRate)) * 0.3;
+        data[i] = (bell + ping) * envelope;
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    }
+    
+    // Tom synthesis (MIDI 41, 47, 50)
+    else if (drumKey.includes('tom') || noteNumber === 41 || noteNumber === 47 || noteNumber === 50) {
       const tomOsc = context.createOscillator();
       tomOsc.type = 'sine'; 
+      
+      // Determine frequency based on tom type or MIDI note
       let startFreq = 200;
-      if (drumTypeKey === 'tom_high') startFreq = 300;
-      else if (drumTypeKey === 'tom_mid') startFreq = 200;
-      else if (drumTypeKey === 'tom_low') startFreq = 120;
+      if (drumKey.includes('high') || noteNumber === 50) startFreq = 300;
+      else if (drumKey.includes('mid') || noteNumber === 47) startFreq = 200;
+      else if (drumKey.includes('low') || noteNumber === 41) startFreq = 120;
       
       tomOsc.frequency.setValueAtTime(startFreq, absoluteScheduleTime);
       tomOsc.frequency.exponentialRampToValueAtTime(startFreq * 0.5, absoluteScheduleTime + durationSeconds * 0.8);
@@ -177,14 +235,46 @@ const scheduleNote = (
       tomOsc.stop(absoluteScheduleTime + durationSeconds);
       activeSources.push({ node: tomOsc, controlGainNode, trackType, intendedVolume, scheduledStopTime: absoluteScheduleTime + durationSeconds, isDrum: true });
       return;
-    } else { 
-        // Generic percussion fallback
-        oscillator = context.createBufferSource(); 
-        const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
-        const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
-        const data = drumBuffer.getChannelData(0);
-        for (let i = 0; i < frameCount; i++) { data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.1)); }
-        (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    }
+    
+    // Other percussion (shaker, tambourine, cowbell, etc.)
+    else if (drumKey.includes('shaker') || drumKey.includes('tambourine') || drumKey.includes('cowbell') || 
+             noteNumber === 70 || noteNumber === 54 || noteNumber === 56) {
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      // High frequency percussion with controlled decay
+      const fundamental = drumKey.includes('cowbell') ? 800 : 6000;
+      const decayFactor = 0.1;
+      
+      for (let i = 0; i < frameCount; i++) { 
+        const envelope = Math.exp(-i / (context.sampleRate * decayFactor));
+        if (drumKey.includes('cowbell')) {
+          // Metallic cowbell tone
+          data[i] = Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate)) * envelope;
+        } else {
+          // Shaker/tambourine noise
+          data[i] = (Math.random() * 2 - 1) * envelope;
+        }
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    }
+    
+    // Generic percussion fallback for any other drum sounds
+    else { 
+      console.log(`🥁 Using generic percussion for: "${drumKey}" (MIDI: ${noteNumber})`);
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      // Generic percussion with moderate decay
+      for (let i = 0; i < frameCount; i++) { 
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.1)); 
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
     }
   } else {
       // Non-drum notes (Chords, Bassline, Melody)
@@ -275,19 +365,70 @@ export const playMidiPatterns = (
 
       if (trackKey === 'drums' && typeof data === 'object' && !Array.isArray(data)) {
         Object.entries(data as DrumPatternData).forEach(([drumElementName, hits]) => {
-          // Normalize drum element name for mapping (e.g., 'closed hi-hat' -> 'closed_hihat')
-          const drumKeyClean = drumElementName.toLowerCase().replace(/\s+/g, '_');
-          const midiPitch = MIDI_DRUM_MAP[drumKeyClean] || MIDI_DRUM_MAP[drumElementName]; // Try cleaned key first
+          // Enhanced drum key mapping with more robust pattern matching
+          let midiPitch: number | undefined;
+          let normalizedDrumKey: string;
           
-          console.log(`🥁 Processing drum element: ${drumElementName} -> ${drumKeyClean}, MIDI: ${midiPitch}, hits:`, hits);
+          console.log(`🥁 Processing drum element: "${drumElementName}"`);
+          
+          // First try direct lookup
+          midiPitch = MIDI_DRUM_MAP[drumElementName];
+          normalizedDrumKey = drumElementName;
+          
+          if (!midiPitch) {
+            // Try normalized key (lowercase, replace spaces with underscores)
+            const drumKeyClean = drumElementName.toLowerCase().replace(/\s+/g, '_');
+            midiPitch = MIDI_DRUM_MAP[drumKeyClean];
+            normalizedDrumKey = drumKeyClean;
+          }
+          
+          if (!midiPitch) {
+            // Try comprehensive aliases and variations
+            const aliases: { [key: string]: { midi: string, key: string } } = {
+              'kick_drum': { midi: 'kick', key: 'kick' },
+              'bass_drum': { midi: 'kick', key: 'kick' },
+              'acoustic_bass_drum': { midi: 'kick', key: 'kick' },
+              'snare_drum': { midi: 'snare', key: 'snare' },
+              'acoustic_snare': { midi: 'snare', key: 'snare' },
+              'hi_hat_closed': { midi: 'hihat_closed', key: 'hihat_closed' },
+              'hi_hat_open': { midi: 'open_hihat', key: 'open_hihat' },
+              'hihat_open': { midi: 'open_hihat', key: 'open_hihat' },
+              'closed_hi_hat': { midi: 'hihat_closed', key: 'hihat_closed' },
+              'open_hi_hat': { midi: 'open_hihat', key: 'open_hihat' },
+              'crash_cymbal': { midi: 'crash_cymbal_1', key: 'crash_cymbal_1' },
+              'crash': { midi: 'crash', key: 'crash_cymbal_1' },
+              'ride_cymbal': { midi: 'ride_cymbal_1', key: 'ride_cymbal_1' },
+              'ride': { midi: 'ride', key: 'ride_cymbal_1' },
+              'hand_clap': { midi: 'clap', key: 'clap' },
+              'handclap': { midi: 'clap', key: 'clap' },
+              'tom_hi': { midi: 'tom_high', key: 'tom_high' },
+              'tom_lo': { midi: 'tom_low', key: 'tom_low' },
+              'high_tom': { midi: 'tom_high', key: 'tom_high' },
+              'mid_tom': { midi: 'tom_mid', key: 'tom_mid' },
+              'low_tom': { midi: 'tom_low', key: 'tom_low' },
+              'low_floor_tom': { midi: 'tom_low', key: 'tom_low' },
+              'high_floor_tom': { midi: 'tom_high', key: 'tom_high' }
+            };
+            
+            const searchKey = drumElementName.toLowerCase().replace(/\s+/g, '_');
+            const aliasMatch = aliases[searchKey];
+            if (aliasMatch) {
+              midiPitch = MIDI_DRUM_MAP[aliasMatch.midi];
+              normalizedDrumKey = aliasMatch.key;
+            }
+          }
+          
+          console.log(`🥁 Final mapping: "${drumElementName}" -> "${normalizedDrumKey}" -> MIDI: ${midiPitch}`);
           
           if (typeof midiPitch !== 'number' || !hits) {
-            console.warn(`🚨 Invalid drum mapping for ${drumElementName}:`, midiPitch);
+            console.warn(`🚨 No MIDI mapping found for drum element: "${drumElementName}"`);
+            console.warn('🚨 Available drum mappings:', Object.keys(MIDI_DRUM_MAP));
             return;
           }
+          
           hits.forEach((hit: DrumHit) => {
-            console.log(`🥁 Scheduling drum hit:`, hit);
-            scheduleNote(midiPitch, beatsToSeconds(hit.time, tempo), beatsToSeconds(hit.duration, tempo), hit.velocity, true, drumKeyClean, trackKey);
+            console.log(`🥁 Scheduling ${normalizedDrumKey} hit:`, hit);
+            scheduleNote(midiPitch!, beatsToSeconds(hit.time, tempo), beatsToSeconds(hit.duration, tempo), hit.velocity, true, normalizedDrumKey, trackKey);
           });
         });
       } else if (Array.isArray(data)) {
