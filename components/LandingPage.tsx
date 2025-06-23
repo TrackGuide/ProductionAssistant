@@ -333,29 +333,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: text content */}
             <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Too Many Tools, Not Enough Direction
-              </h2>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                As AI floods the market and tools fragment, producers lack clarity. TrackGuide focuses on keeping the human in the loop.
-              </p>
-
+             <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+Too Many Tools. <span className="text-orange-500 block">Not Enough Direction.</span>
+</h2>
               <div className="grid gap-6">
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    <strong>Without clear structure,</strong> inspiration stalls — many creators fail to finish tracks.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    <strong>Clickbait content lacks depth —</strong> TrackGuide teaches transferable skills while speeding workflows.
-                  </p>
-                </div>
-                <div className="border-l-4 border-orange-500 pl-6">
-                  <p className="text-gray-300">
-                    <strong>AI hype distracts —</strong> we focus on complementing creativity, not replacing it.
-                  </p>
-                </div>
+               <div className="border-l-4 border-orange-500 pl-6">
+  <p className="text-gray-300">
+    <strong>Clickbait content lacks depth —</strong> TrackGuide guides creativity with real-world skills — not more noise.
+  </p>
+</div>
+<div className="border-l-4 border-orange-500 pl-6">
+  <p className="text-gray-300">
+    <strong>Clarity over clutter —</strong> Cuts through “plugin paralysis” and endless tutorial-hopping.
+  </p>
+</div>
+<div className="border-l-4 border-orange-500 pl-6">
+  <p className="text-gray-300">
+    <strong>Skills that scale —</strong> Builds lasting production knowledge across tools & styles.
+  </p>
+</div>
               </div>
             </div>
 
@@ -388,19 +384,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           {/* Right: Text */}
           <div className="space-y-8">
             <h2 className="text-5xl font-bold text-white leading-tight">
-              Navigating the <span className="text-orange-500 block">AI Challenge</span>
+              AI That Teaches. <span className="text-orange-500 block">Not Just Automates.</span>
             </h2>
             <p className="text-xl text-gray-300 leading-relaxed">
               A human-first approach — empowering the artist, respecting the craft.
             </p>
             <div className="grid gap-6">
               <div className="border-l-4 border-orange-500 pl-6">
-                <h3 className="text-lg font-bold text-white mb-2">Avoiding “One-Click” fatigue</h3>
-                <p className="text-gray-400">Our AI augments the creative process, not bypasses it — musicians stay in control.</p>
+                <h3 className="text-lg font-bold text-white mb-2">Avoiding “One-Click” solutions/h3>
+                <p className="text-gray-400">Our AI augments the creative process — producers stay in control.</p>
               </div>
               <div className="border-l-4 border-orange-500 pl-6">
-                <h3 className="text-lg font-bold text-white mb-2">Forward-facing, not retro</h3>
-                <p className="text-gray-400">Avoids regurgitating “old hit” formulas — helps creators define new sounds.</p>
+                <h3 className="text-lg font-bold text-white mb-2">Encouraging Innovation</h3>
+                <p className="text-gray-400">Current AI tools focus on regurgitating “old hit” formulas — ours help creators define new sounds.</p>
               </div>
               <div className="border-l-4 border-orange-500 pl-6">
                 <h3 className="text-lg font-bold text-white mb-2">Clear IP & ethical AI</h3>
