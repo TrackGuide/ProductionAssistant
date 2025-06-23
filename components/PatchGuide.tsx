@@ -370,8 +370,9 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
           <h3 className="text-lg font-semibold text-white mb-4">Filter Settings</h3>
           <div className="flex flex-col items-center space-y-4">
             {result.synthConfig.filters.map((filter: any, idx: number) => {
-              const cutoff = filter.cutoff || 0.5;
-              const resonance = filter.resonance || 0.3;
+              // ✅ Robust value parsing with proper type checking
+              const cutoff = Math.max(0, Math.min(1, Number(filter.cutoff) || 0.5));
+              const resonance = Math.max(0, Math.min(1, Number(filter.resonance) || 0.3));
               const cutoffHz = cutoff * 20000;
               
               return (
@@ -384,8 +385,8 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
                     <Knob value={resonance} label="Resonance" size={80} min={0} max={1} />
                   </div>
                   <div className="text-gray-300 space-x-6">
-                    <span>Cutoff: <span className="font-mono text-white">{cutoffHz.toFixed(0)} Hz</span></span>
-                    <span>Resonance: <span className="font-mono text-white">{resonance.toFixed(2)}</span></span>
+                    <span>Cutoff: <span className="font-mono text-white">{Number.isFinite(cutoffHz) ? cutoffHz.toFixed(0) : '0'} Hz</span></span>
+                    <span>Resonance: <span className="font-mono text-white">{Number.isFinite(resonance) ? resonance.toFixed(2) : '0.00'}</span></span>
                   </div>
                 </div>
               );
