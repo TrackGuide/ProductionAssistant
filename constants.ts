@@ -230,17 +230,32 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
 
 // --- Patch Guide input categories for robust UI ---
 export const PATCH_INPUT_CATEGORIES = [
-  { category: "Genre", key: "genre", examples: [
-    "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "Synthwave", "Ambient", "Industrial", "Rock", "Pop", "Hip Hop", "R&B", "Jazz", "Experimental", "Cinematic", "Video Game Score", "Chiptune", "Noise"
-  ]},
-  { category: "Voice Type", key: "voiceType", examples: [
-    "Lead", "Pad", "Bass", "Pluck", "Arp", "FX", "Drone", "Texture", "Atmosphere", "Riser", "Impact", "Chord", "Stab"
-  ]},
-  { category: "Style & Mood", key: "styleMood", examples: [
-    "Glassy", "Warm", "Bright", "Dark", "Metallic", "Raspy", "Analog", "Digital", "Dreamy", "Aggressive", "Mysterious", "Epic", "Brooding", "Punchy", "Floating", "Gritty", "Distorted", "Clean", "Organic", "Mechanical",
-    "Futuristic", "Retro", "Cyberpunk", "Space", "Underwater", "Industrial", "Forest", "Ghost", "Machine", "Sacred", "Alien", "Abstract"
-  ]},
-  { category: "Reference Notes", key: "notes", type: "text", placeholder: "Reference artist, track, sound design concept, or extra notes..." }
+  { 
+    category: "Genre", 
+    key: "genre", 
+    examples: [
+      "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "Synthwave", "Ambient", 
+      "Industrial", "Rock", "Pop", "Hip Hop", "R&B", "Jazz", "Experimental", 
+      "Cinematic", "Video Game Score", "Chiptune"
+    ]
+  },
+  { 
+    category: "Voice Type", 
+    key: "voiceType", 
+    examples: [
+      "Lead", "Pad", "Bass", "Pluck", "Arp", "FX", "Drone", "Texture", 
+      "Atmosphere", "Riser", "Impact", "Chord", "Stab"
+    ]
+  },
+  { 
+    category: "Style & Mood", 
+    key: "styleMood", 
+    examples: [
+      "Warm", "Bright", "Dark", "Metallic", "Analog", "Digital", "Dreamy", 
+      "Aggressive", "Mysterious", "Epic", "Punchy", "Floating", "Gritty", 
+      "Clean", "Organic", "Mechanical", "Futuristic", "Retro", "Cyberpunk"
+    ]
+  }
 ];
 
 export const SYNTH_OPTIONS = [
