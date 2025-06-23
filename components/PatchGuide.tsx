@@ -15,6 +15,7 @@ interface PatchGuideInputs {
   genre: string;
   voiceType: string;
   styleMood: string[];
+  dynamicsMovement: string[];
   notes: string;
 }
 
@@ -63,6 +64,7 @@ export const PatchGuide: React.FC = () => {
     genre: '',
     voiceType: '',
     styleMood: [],
+    dynamicsMovement: [],
     notes: ''
   });
 
@@ -83,6 +85,10 @@ export const PatchGuide: React.FC = () => {
     PATCH_INPUT_CATEGORIES.find(c => c.key === 'styleMood')?.examples || []
   , []);
 
+  const dynamicsMovementOptions = useMemo(() => 
+    PATCH_INPUT_CATEGORIES.find(c => c.key === 'dynamicsMovement')?.examples || []
+  , []);
+
   // ✅ Optimized input handlers with useCallback
   const updateInput = useCallback((key: keyof PatchGuideInputs, value: any) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -94,6 +100,15 @@ export const PatchGuide: React.FC = () => {
       styleMood: prev.styleMood.includes(mood)
         ? prev.styleMood.filter(m => m !== mood)
         : [...prev.styleMood, mood]
+    }));
+  }, []);
+
+  const toggleDynamicsMovement = useCallback((movement: string) => {
+    setInputs(prev => ({
+      ...prev,
+      dynamicsMovement: prev.dynamicsMovement.includes(movement)
+        ? prev.dynamicsMovement.filter(m => m !== movement)
+        : [...prev.dynamicsMovement, movement]
     }));
   }, []);
 
@@ -113,7 +128,10 @@ export const PatchGuide: React.FC = () => {
 
     try {
       const response = await generateSynthPatchGuide({
-        description: inputs.styleMood.join(', '),
+        description: [
+          ...inputs.styleMood,
+          ...inputs.dynamicsMovement
+        ].join(', '),
         synth: inputs.synth,
         genre: inputs.genre,
         voiceType: inputs.voiceType,
@@ -141,6 +159,7 @@ export const PatchGuide: React.FC = () => {
       genre: '',
       voiceType: '',
       styleMood: [],
+      dynamicsMovement: [],
       notes: ''
     });
     setResult(null);
@@ -225,6 +244,29 @@ export const PatchGuide: React.FC = () => {
                   } border`}
                 >
                   {mood}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamics & Movement Selection */}
+          <div>
+            <label className="block text-gray-200 mb-3 font-medium">
+              Dynamics & Movement <span className="text-gray-400 text-sm">(optional)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {dynamicsMovementOptions.slice(0, 15).map(movement => (
+                <button
+                  key={movement}
+                  type="button"
+                  onClick={() => toggleDynamicsMovement(movement)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    inputs.dynamicsMovement.includes(movement)
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                  } border`}
+                >
+                  {movement}
                 </button>
               ))}
             </div>

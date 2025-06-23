@@ -255,6 +255,15 @@ export const PATCH_INPUT_CATEGORIES = [
       "Aggressive", "Mysterious", "Epic", "Punchy", "Floating", "Gritty", 
       "Clean", "Organic", "Mechanical", "Futuristic", "Retro", "Cyberpunk"
     ]
+  },
+  { 
+    category: "Dynamics & Movement", 
+    key: "dynamicsMovement", 
+    examples: [
+      "Evolving", "Pulsating", "Static", "Rhythmic", "Flowing", "Choppy", 
+      "Breathing", "Morphing", "Swelling", "Pounding", "Cascading", "Trembling",
+      "Wobbling", "Shifting", "Undulating", "Building", "Fading", "Stuttering"
+    ]
   }
 ];
 

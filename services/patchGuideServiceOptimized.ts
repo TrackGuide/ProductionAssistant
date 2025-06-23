@@ -1,4 +1,4 @@
-// services/patchGuideServiceOptimized.ts
+// services/patchGuideServiceFixed.ts
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_MODEL_NAME } from '../constants';
 import synthConfigsJson from '../components/synthconfigs.json';
@@ -77,7 +77,7 @@ const getSynthConfig = (synthName: string): any => {
   };
 };
 
-// ✅ Concise, focused prompt generation
+// ✅ Structured markdown prompt generation
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
   const { description, synth, genre, voiceType, notes } = inputs;
   
@@ -90,81 +90,132 @@ const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
 - Description: ${description}
 ${notes ? `- Additional Notes: ${notes}` : ''}
 
-**Required JSON Response Format:**
-{
-  "text": "Step-by-step patch instructions in markdown format",
-  "oscillators": [
-    {
-      "name": "Osc 1",
-      "values": {
-        "Waveform": "Sawtooth",
-        "Coarse": 0,
-        "Fine": 0,
-        "Level": 0.8
-      }
-    }
-  ],
-  "filter": {
-    "selectedType": "Lowpass",
-    "cutoff": 0.6,
-    "resonance": 0.3
-  },
-  "adsrVCF": {
-    "attack": 0.1,
-    "decay": 0.5,
-    "sustain": 0.7,
-    "release": 1.2
-  },
-  "adsrVCA": {
-    "attack": 0.05,
-    "decay": 0.3,
-    "sustain": 0.9,
-    "release": 0.8
-  },
-  "summary": "• Bullet point creative tips\\n• Performance suggestions\\n• Modulation ideas"
-}
+**IMPORTANT:** You must respond with EXACTLY this structured markdown format:
+
+## Oscillators:
+- Osc 1: Waveform: [type], Coarse: [value], Fine: [value], Level (dB): [value]
+- Osc 2: Waveform: [type], Coarse: [value], Fine: [value], Level (dB): [value]
+- Sub Osc: Waveform: [type], Octave: [value], Level (dB): [value]
+
+## Filter:
+- Type: [filter type]
+- Cutoff: [frequency] Hz
+- Resonance: [percentage]%
+
+## ADSR Envelopes:
+- Filter Envelope: Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
+- Amp Envelope: Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
+
+## Effects:
+- Chorus: Rate: [rate] Hz, Depth: [percentage]%, Delay: [time] ms, Feedback: [percentage]%, Mix: [percentage]%
+- Delay: Time: [time] ms, Feedback: [percentage]%, Mix: [percentage]%, Tone: [frequency] Hz
+- Reverb: Decay: [time] s, PreDelay: [time] ms, Damping: [percentage]%, Size: [percentage]%, HighCut: [frequency] Hz, LowCut: [frequency] Hz, Mix: [percentage]%, Type: [type]
+
+## Modulation Suggestions:
+- LFO 1 → Filter Cutoff, Amount: [percentage]%, Rate: [rate] Hz, Waveform: [type]
+- Envelope → Oscillator Pitch, Amount: [percentage]%
+- Modwheel → Vibrato Depth, Amount: [percentage]%
+
+## Creative Suggestions & Tips:
+- [Tip about envelope settings]
+- [Tip about LFO modulation]
+- [Tip about effect automation]
+- [Tip about performance techniques]
+- [Tip about layering or doubling]
+- [Tip about register-specific adjustments]
+- [Tip about dynamic modulation]
 
 **Guidelines:**
-- Use only parameters available in the synth config
-- Set musically appropriate values for the genre and voice type
-- Provide 5-7 creative tips in bullet format
-- Include specific parameter values and ranges
-- Focus on practical, actionable advice
+- Use specific numeric values (frequencies in Hz, times in ms/s, percentages with %)
+- Include 2-3 oscillators appropriate for the sound type
+- Suggest realistic modulation amounts and rates
+- Provide 6-8 actionable creative tips
+- Focus on the ${genre} genre and ${voiceType} voice type characteristics
+- Make all parameter values musically appropriate
 
-**Synth Configuration:**
+**Available Synth Parameters:**
 ${JSON.stringify(synthConfig, null, 2)}
 
-Return only valid JSON without code blocks or explanations.`;
+Respond ONLY with the structured markdown format above. Do not include JSON, code blocks, or explanatory text.`;
 };
 
-// ✅ Robust JSON parsing with better error handling
-const parseAIResponse = (responseText: string): any => {
+// ✅ Parse markdown response and extract structured data
+const parseMarkdownResponse = (responseText: string): any => {
   if (!responseText?.trim()) {
     throw new Error('Empty response from AI');
   }
 
-  let jsonText = responseText.trim();
+  const cleanText = responseText.trim();
   
-  // Remove code blocks if present
-  const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (codeBlockMatch) {
-    jsonText = codeBlockMatch[1].trim();
-  }
-
-  try {
-    const parsed = JSON.parse(jsonText);
+  // Parse ADSR values from the text
+  const parseADSR = (section: string, label: string): ADSR => {
+    const regex = new RegExp(`${label}[^:]*: Attack: (\\d+(?:\\.\\d+)?)\\s*ms, Decay: (\\d+(?:\\.\\d+)?)\\s*ms, Sustain: (\\d+(?:\\.\\d+)?)%, Release: (\\d+(?:\\.\\d+)?)\\s*ms`);
+    const match = section.match(regex);
     
-    // Basic validation
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('Response is not a valid object');
+    if (match) {
+      return {
+        attack: parseFloat(match[1]) / 1000, // Convert ms to seconds
+        decay: parseFloat(match[2]) / 1000,
+        sustain: parseFloat(match[3]) / 100, // Convert percentage to decimal
+        release: parseFloat(match[4]) / 1000
+      };
     }
+    
+    // Fallback defaults
+    return label === 'Amp Envelope' 
+      ? { attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.8 }
+      : { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.2 };
+  };
 
-    return parsed;
-  } catch (error) {
-    console.error('JSON Parse Error:', error);
-    console.error('Raw Response:', responseText.slice(0, 500));
-    throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
+  // Extract oscillator data
+  const extractOscillators = (): any[] => {
+    const oscSection = cleanText.match(/## Oscillators:(.*?)## Filter:/s);
+    if (!oscSection) return [];
+    
+    const oscLines = oscSection[1].split('\n').filter(line => line.trim().startsWith('-'));
+    return oscLines.map((line, idx) => {
+      const name = line.match(/- (.*?):/)?.[1] || `Oscillator ${idx + 1}`;
+      
+      // Extract parameter values using regex
+      const waveform = line.match(/Waveform: ([^,]+)/)?.[1]?.trim() || 'Sawtooth';
+      const coarse = line.match(/Coarse: ([^,]+)/)?.[1]?.trim() || '0';
+      const fine = line.match(/Fine: ([^,]+)/)?.[1]?.trim() || '0';
+      const level = line.match(/Level[^:]*: ([^,\n]+)/)?.[1]?.trim() || '0';
+      
+      return {
+        name,
+        id: String(idx + 1),
+        values: { Waveform: waveform, Coarse: coarse, Fine: fine, Level: level }
+      };
+    });
+  };
+
+  // Extract filter data
+  const extractFilter = (): any => {
+    const filterSection = cleanText.match(/## Filter:(.*?)## ADSR Envelopes:/s);
+    if (!filterSection) return { selectedType: 'Lowpass', cutoff: '5000 Hz', resonance: '30%' };
+    
+    const typeMatch = filterSection[1].match(/Type: ([^\n]+)/);
+    const cutoffMatch = filterSection[1].match(/Cutoff: ([^\n]+)/);
+    const resonanceMatch = filterSection[1].match(/Resonance: ([^\n]+)/);
+    
+    return {
+      selectedType: typeMatch?.[1]?.trim() || 'Lowpass',
+      cutoff: cutoffMatch?.[1]?.trim() || '5000 Hz',
+      resonance: resonanceMatch?.[1]?.trim() || '30%'
+    };
+  };
+
+  return {
+    text: cleanText,
+    oscillators: extractOscillators(),
+    filter: extractFilter(),
+    adsrVCF: parseADSR(cleanText, 'Filter Envelope'),
+    adsrVCA: parseADSR(cleanText, 'Amp Envelope'),
+    summary: cleanText.includes('## Creative Suggestions & Tips:') 
+      ? cleanText.split('## Creative Suggestions & Tips:')[1].trim()
+      : 'No creative tips provided'
+  };
 };
 
 // ✅ Safe value extraction with defaults
@@ -198,8 +249,8 @@ const extractPatchData = (parsed: any, synthConfig: any): PatchGuideResult => {
     return {
       name: "Filter",
       selectedType: filter.selectedType || "Lowpass",
-      cutoff: typeof filter.cutoff === 'number' ? Math.max(0, Math.min(1, filter.cutoff)) : 0.5,
-      resonance: typeof filter.resonance === 'number' ? Math.max(0, Math.min(1, filter.resonance)) : 0.3
+      cutoff: filter.cutoff || "5000 Hz",
+      resonance: filter.resonance || "30%"
     };
   };
 
@@ -239,7 +290,7 @@ export const generateSynthPatchGuideOptimized = async (inputs: PatchGuideInputs)
       throw new Error('No response received from AI');
     }
 
-    const parsed = parseAIResponse(responseText);
+    const parsed = parseMarkdownResponse(responseText);
     const result = extractPatchData(parsed, synthConfig);
     
     return result;
