@@ -24,8 +24,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
       {/* Navigation */}
       <nav className="relative z-10 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          {/* Logo section - moved to absolute position */}
+          <div className="absolute left-6 flex items-center space-x-3">
             <div className="w-8 h-8 bg-orange-500 transform rotate-45 flex items-center justify-center">
               <div className="w-4 h-4 bg-white transform -rotate-45"></div>
             </div>
@@ -35,11 +36,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-          {/* NAV LINKS */}
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#how-it-works" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">How It Works</a>
-            <a href="#problems-we-solve" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Problems We Solve</a>
-            <a href="#investment-levels" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Investment Levels</a>
+          {/* NAV LINKS - Centered prominently */}
+          <div className="hidden md:flex items-center justify-center space-x-12">
+            <a href="#how-it-works" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">How It Works</a>
+            <a href="#problems-we-solve" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">Problems We Solve</a>
+            <a href="#investment-levels" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">Investment Levels</a>
           </div>
         </div>
       </nav>
@@ -64,10 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="flex flex-col sm:flex-row gap-6 mt-8 lg:justify-start">
           <button
             onClick={onGetStarted}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-orange-400"
+            className="bg-black hover:bg-gray-900 text-white px-16 py-6 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-orange-400 hover:border-orange-300"
           >
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-white/20 blur-sm"></div>
+              <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-sm"></div>
               <TrackGuideLogo className="h-8 w-8 relative z-10" />
             </div>
             <span>Launch App</span>
@@ -256,7 +257,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Too Many Tools, Not Enough Direction
               </h2>
               <p className="text-xl text-gray-300 leading-relaxed">
-                As AI floods the market and tools fragment, producers lack clarity. TrackGuide is building the “smartest studio assistant” — keeping the human in the loop.
+                As AI floods the market and tools fragment, producers lack clarity. TrackGuide focuses on keeping the human in the loop.
               </p>
 
               <div className="grid gap-6">
