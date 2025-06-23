@@ -128,11 +128,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <section className="px-6 py-20">
         <div className="max-w-7xl mx-auto text-center">
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-8">
-            <span className="text-orange-500">AI Studio Assistant:</span><br/>
-            A Complement to Creativity,<br/>
-            Not a Substitute.
-          </h1>
+         <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-8">
+  <span className="text-orange-500">AI Studio Assistant:</span><br/>
+  <span className="block text-3xl md:text-5xl">
+    A Complement to Creativity,<br/>
+    Not a Substitute.
+  </span>
+</h1>
 
           {/* Subtext */}
           <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto mb-12">
