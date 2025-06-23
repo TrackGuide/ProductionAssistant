@@ -246,7 +246,7 @@ What would you like to work on today?`,
                     onClick={clearConversation} 
                     variant="outline" 
                     size="sm" 
-                    className="bg-orange-500 text-white border-orange-400 hover:bg-orange-600 font-medium"
+                    className="bg-orange-500 text-black border-orange-400 hover:bg-orange-600 font-medium"
                   >
                     Clear Chat
                   </Button>
@@ -254,7 +254,7 @@ What would you like to work on today?`,
                     onClick={onToggle} 
                     variant="outline" 
                     size="sm" 
-                    className="bg-red-500 text-white border-red-400 hover:bg-red-600 flex-shrink-0 font-bold"
+                    className="bg-red-500 text-black border-red-400 hover:bg-red-600 flex-shrink-0 font-bold"
                   >
                     <span className="text-lg">×</span>
                   </Button>

@@ -41,21 +41,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <a href="#problems-we-solve" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Problems We Solve</a>
             <a href="#investment-levels" className="text-gray-300 hover:text-orange-400 font-medium transition-colors">Investment Levels</a>
           </div>
-
-          {/* Get Started Button */}
-          <button
-            onClick={onGetStarted}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center space-x-3 border-2 border-orange-400"
-          >
-            <div className="relative">
-              {/* Add subtle white ring behind logo for contrast */}
-              <div className="absolute inset-0 rounded-full bg-white/20 blur-sm"></div>
-              <div className="relative w-6 h-6 bg-orange-500 transform rotate-45 flex items-center justify-center">
-                <div className="w-3 h-3 bg-white transform -rotate-45"></div>
-              </div>
-            </div>
-            <span>Get Started</span>
-          </button>
         </div>
       </nav>
 
@@ -85,7 +70,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <div className="absolute inset-0 rounded-full bg-white/20 blur-sm"></div>
               <TrackGuideLogo className="h-8 w-8 relative z-10" />
             </div>
-            <span>Start Creating Now</span>
+            <span>Launch App</span>
           </button>
         </div>
       </div>
@@ -268,8 +253,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {/* Left: text content */}
             <div className="space-y-8">
               <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                Too Many Tools:
-                <span className="block text-orange-500">Not Enough Direction</span>
+                Too Many Tools, Not Enough Direction
               </h2>
               <p className="text-xl text-gray-300 leading-relaxed">
                 As AI floods the market and tools fragment, producers lack clarity. TrackGuide is building the “smartest studio assistant” — keeping the human in the loop.
