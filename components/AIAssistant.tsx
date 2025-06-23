@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card } from './Card.tsx';
 import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
 import { Spinner } from './Spinner.tsx';
-import { SparklesIcon, CloseIcon } from './icons.tsx';
+import { SparklesIcon } from './icons.tsx';
 import { generateAIAssistantResponse } from '../services/geminiService.ts';
-import { UserInputs, GuidebookEntry } from '../types.ts';
+import { UserInputs, GuidebookEntry, ChatMessage } from '../types.ts';
 
 interface Message {
   id: string;
@@ -27,7 +26,6 @@ interface AIAssistantProps {
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
   isOpen,
-  onClose,
   currentGuidebook,
   userInputs,
   isCollapsed = false,
@@ -108,22 +106,64 @@ What would you like to work on today?`,
     setIsLoading(true);
 
     try {
-      const context = {
-        currentGuidebook: currentGuidebook?.content || '',
-        userInputs: userInputs || {},
-        conversationHistory: messages.slice(-6) // Last 6 messages for context
+      // Convert our Message format to ChatMessage format
+      const conversationHistory: ChatMessage[] = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Add the new user message to conversation
+      conversationHistory.push({
+        role: 'user',
+        content: userMessage.content
+      });
+
+      // Ensure we have a current guidebook, create a default one if needed
+      const guidebook: GuidebookEntry = currentGuidebook || {
+        id: 'temp-' + Date.now(),
+        title: 'Current Project',
+        genre: userInputs?.genre || ['General'],
+        artistReference: userInputs?.artistReference || 'Not specified',
+        vibe: userInputs?.vibe || ['Creative'],
+        daw: userInputs?.daw || 'Not specified',
+        plugins: userInputs?.plugins || 'Not specified',
+        availableInstruments: userInputs?.availableInstruments || 'Not specified',
+        content: 'Working on current project',
+        createdAt: new Date().toISOString(),
+        key: userInputs?.key,
+        scale: userInputs?.scale,
+        chords: userInputs?.chords
       };
 
-      const assistantContent = await generateAIAssistantResponse(userMessage.content, context);
-
+      // Get streaming response
+      const responseStream = await generateAIAssistantResponse(conversationHistory, guidebook);
+      
+      // Create assistant message with initial empty content
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: assistantContent,
+        content: '',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Stream the response
+      let fullContent = '';
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          fullContent += chunk.text;
+          // Update the assistant message content
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === assistantMessage.id 
+                ? { ...msg, content: fullContent }
+                : msg
+            )
+          );
+        }
+      }
+
     } catch (error) {
       console.error('AI Assistant Error:', error);
       const errorMessage: Message = {

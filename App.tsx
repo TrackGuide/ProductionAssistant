@@ -11,9 +11,17 @@ import { Textarea } from './components/Textarea.tsx';
 import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
-import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, CopyIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
+import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
 import { AIAssistant } from './components/AIAssistant.tsx';
 import { EQGuide } from './components/EQGuide';
+import { LandingPage } from './components/LandingPage.tsx';
+import { RemixGuideAI } from './components/RemixGuideAI.tsx';
+import { PatchGuide } from './components/PatchGuide';
+import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
+import { LibraryModal } from './components/LibraryModal.tsx';
+import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
+import { stopPlayback } from './services/audioService.ts';
+import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -21,18 +29,6 @@ const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
     <div className="w-1/2 h-1/2 bg-white transform -rotate-45"></div>
   </div>
 );
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
-import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
-import { LibraryModal } from './components/LibraryModal.tsx';
-import { AIAssistant } from './components/AIAssistant.tsx';
-
-
-import { LandingPage } from './components/LandingPage.tsx';
-import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { EQGuide } from './components/EQGuide';
-import { PatchGuide } from './components/PatchGuide';
-import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
-import { stopPlayback } from './services/audioService.ts';
 
 
 const initialInputsState: UserInputs = {
@@ -218,20 +214,6 @@ const App: React.FC = () => {
   
   // Production Coach chat state
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
-
-// AI Assistant (integrated version)
-const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
-const [aiContextLabel, setAIContextLabel] = useState<string | undefined>();
-
-const openAIAssistant = (label?: string) => {
-  setAIContextLabel(label);
-  setIsAIAssistantOpen(true);
-};
-
-const closeAIAssistant = () => {
-  setIsAIAssistantOpen(false);
-  setAIContextLabel(undefined);
-};
 
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
@@ -1784,9 +1766,15 @@ const closeAIAssistant = () => {
         />
       )}
 
-
-
-
+      {/* AI Assistant - Floating Component */}
+      <AIAssistant
+        isOpen={!isProductionCoachCollapsed}
+        onClose={() => setIsProductionCoachCollapsed(true)}
+        currentGuidebook={activeGuidebookDetails || undefined}
+        userInputs={inputs}
+        isCollapsed={isProductionCoachCollapsed}
+        onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
+      />
 
        <footer className="text-center mt-16 py-8 border-t border-gray-700/60">
         <p className="text-sm text-gray-500">{APP_TITLE} - AI Production Assistant</p>
