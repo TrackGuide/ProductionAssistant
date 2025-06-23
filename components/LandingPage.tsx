@@ -130,10 +130,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           {/* Headline */}
          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-8">
   <span className="text-orange-500">AI Studio Assistant:</span><br/>
-  <span className="block text-3xl md:text-5xl">
+  <span className="block text-4xl md:text-7xl">
     A Complement to Creativity,<br/>
     Not a Substitute.
   </span>
+</h1>
 </h1>
 
           {/* Subtext */}
