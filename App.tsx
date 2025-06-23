@@ -4,7 +4,8 @@ import {
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
   generateMixFeedbackWithAudio as generateMixFeedback,
-  generateMixComparison
+  generateMixFeedbackWithAudioStream,
+  generateMixComparisonStream
 } from './services/geminiService';
 import { Input } from './components/Input.tsx';
 import { Textarea } from './components/Textarea.tsx';
@@ -219,6 +220,7 @@ const App: React.FC = () => {
   // Mix Feedback State
   const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
   const [mixFeedbackResult, setMixFeedbackResult] = useState<string | null>(null);
+  const [streamingMixFeedback, setStreamingMixFeedback] = useState<string>('');
   const [isGeneratingMixFeedback, setIsGeneratingMixFeedback] = useState<boolean>(false);
   const [mixFeedbackError, setMixFeedbackError] = useState<string | null>(null);
   const [mixFeedbackTab, setMixFeedbackTab] = useState<'single' | 'compare'>('single');
@@ -236,6 +238,7 @@ const App: React.FC = () => {
     includeMixBFeedback: false
   });
   const [mixCompareResult, setMixCompareResult] = useState<string | null>(null);
+  const [streamingMixComparison, setStreamingMixComparison] = useState<string>('');
   const [isGeneratingMixComparison, setIsGeneratingMixComparison] = useState<boolean>(false);
   const [mixCompareError, setMixCompareError] = useState<string | null>(null);
   const audioFileInputRef = useRef<HTMLInputElement>(null);
@@ -943,6 +946,16 @@ const App: React.FC = () => {
     setMixFeedbackInputs(prev => ({ ...prev, userNotes: e.target.value }));
   };
 
+  // Filter out lyrics or unwanted text before the first heading
+  const filterLyricsFromAIResponse = (content: string): string => {
+    let filtered = content.trim();
+    const headingMatch = filtered.match(/(^|\n)(##? |🎧|Audio Analysis Results)/);
+    if (headingMatch && headingMatch.index !== undefined) {
+      filtered = filtered.slice(headingMatch.index).trim();
+    }
+    return filtered;
+  };
+
   const handleGetMixFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mixFeedbackInputs.audioFile) {
@@ -952,17 +965,32 @@ const App: React.FC = () => {
     setIsGeneratingMixFeedback(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixFeedbackResult(null);
+    setStreamingMixFeedback('');
     setMixFeedbackError(null);
+    
     try {
-      // Mix feedback generation is not streamed for now as it involves audio processing by AI first
-      const feedback = await generateMixFeedback(mixFeedbackInputs);
-      setMixFeedbackResult(feedback);
+      // Use streaming mix feedback for real-time updates
+      let fullFeedback = '';
+      const feedbackStream = generateMixFeedbackWithAudioStream(mixFeedbackInputs);
+      
+      for await (const chunk of feedbackStream) {
+        if (chunk.text) {
+          fullFeedback += chunk.text;
+          setStreamingMixFeedback(fullFeedback);
+        }
+      }
+      
+      // Apply lyrics filtering like other features
+      const filteredFeedback = filterLyricsFromAIResponse(fullFeedback);
+      setMixFeedbackResult(filteredFeedback);
+      setStreamingMixFeedback('');
+      
     } catch (err: any) {
       setMixFeedbackError(err.message || "An unknown error occurred while generating mix feedback.");
+      setStreamingMixFeedback('');
     } finally {
       setIsGeneratingMixFeedback(false);
     }
-    
   };
   
   const resetMixFeedbackForm = () => {
@@ -996,13 +1024,15 @@ const App: React.FC = () => {
     setIsGeneratingMixComparison(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setMixCompareResult(null);
+    setStreamingMixComparison('');
     setMixCompareError(null);
+    
     try {
-      // Convert files to base64 for the AI service
+      // Convert files to base64 for the streaming AI service
       const mixABase64 = await fileToBase64(mixCompareInputs.mixA);
       const mixBBase64 = await fileToBase64(mixCompareInputs.mixB);
 
-      // Call the dedicated mix comparison service
+      // Use streaming mix comparison for real-time updates
       const comparisonInput = {
         mixAFile: mixABase64,
         mixBFile: mixBBase64,
@@ -1012,10 +1042,24 @@ const App: React.FC = () => {
         userNotes: mixCompareInputs.userNotes
       };
 
-      const feedback = await generateMixComparison(comparisonInput);
-      setMixCompareResult(feedback);
+      let fullComparison = '';
+      const comparisonStream = generateMixComparisonStream(comparisonInput);
+      
+      for await (const chunk of comparisonStream) {
+        if (chunk.text) {
+          fullComparison += chunk.text;
+          setStreamingMixComparison(fullComparison);
+        }
+      }
+      
+      // Apply lyrics filtering like other features
+      const filteredComparison = filterLyricsFromAIResponse(fullComparison);
+      setMixCompareResult(filteredComparison);
+      setStreamingMixComparison('');
+      
     } catch (err: any) {
       setMixCompareError(err.message || "An unknown error occurred while comparing mixes.");
+      setStreamingMixComparison('');
     } finally {
       setIsGeneratingMixComparison(false);
     }
@@ -1650,7 +1694,35 @@ const App: React.FC = () => {
             )}
           </div>
           <div className="md:col-span-9 space-y-6">
-            {(isGeneratingMixFeedback || isGeneratingMixComparison) && (
+            {/* Show streaming content for Mix Feedback */}
+            {isGeneratingMixFeedback && streamingMixFeedback && mixFeedbackTab === 'single' && (
+              <Card 
+                title="AI Mix Feedback Report (Generating...)" 
+                className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
+                titleClassName="border-b border-gray-700 text-xl !text-orange-300"
+              >
+                <div className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                  <MarkdownRenderer content={streamingMixFeedback} />
+                </div>
+              </Card>
+            )}
+            
+            {/* Show streaming content for Mix Comparison */}
+            {isGeneratingMixComparison && streamingMixComparison && mixFeedbackTab === 'compare' && (
+              <Card 
+                title="AI Mix Comparison Report (Generating...)" 
+                className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
+                titleClassName="border-b border-gray-700 text-xl !text-orange-300"
+              >
+                <div className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
+                  <MarkdownRenderer content={streamingMixComparison} />
+                </div>
+              </Card>
+            )}
+            
+            {/* Show spinner only when no streaming content yet */}
+            {((isGeneratingMixFeedback && !streamingMixFeedback && mixFeedbackTab === 'single') || 
+              (isGeneratingMixComparison && !streamingMixComparison && mixFeedbackTab === 'compare')) && (
               <div className="flex justify-center items-center h-full min-h-[500px]">
                 <Spinner size="lg" color="text-orange-500" text={
                   mixFeedbackTab === 'single' 
@@ -1679,9 +1751,15 @@ const App: React.FC = () => {
               >
 
                 <div id="mix-feedback-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
-                  <MarkdownRenderer content={mixFeedbackResult} />
-            
-
+                  {/* Filter out lyrics or non-analysis text before first heading */}
+                  <MarkdownRenderer content={(function() {
+                    let filtered = (mixFeedbackResult || '').trim();
+                    const headingMatch = filtered.match(/(^|\n)(##? |🎧|Audio Analysis Results)/);
+                    if (headingMatch && headingMatch.index !== undefined) {
+                      filtered = filtered.slice(headingMatch.index).trim();
+                    }
+                    return filtered;
+                  })()} />
                 </div>
               </Card>
             )}

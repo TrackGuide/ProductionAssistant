@@ -54,6 +54,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
   const [daw, setDaw] = useState<string>('');
   const [plugins, setPlugins] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isGeneratingMidi, setIsGeneratingMidi] = useState<boolean>(false);
   const [remixGuide, setRemixGuide] = useState<RemixGuideData | null>(null);
   const [streamingContent, setStreamingContent] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -129,6 +130,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       // Step 2: Generate MIDI patterns with dynamic defaults from remix guide
       console.log('Remix guide generated, now generating MIDI patterns...');
+      setIsGeneratingMidi(true);
       
       const originalChordProgression = extractOriginalChordProgression(fullGuideContent);
       
@@ -137,6 +139,20 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       const targetKey = extractedMetadata?.targetKey || 'C minor';
       const detectedChordProg = extractedMetadata?.originalChordProgression || originalChordProgression;
       const sections = extractedMetadata?.sections || ['Intro', 'Build-Up', 'Drop', 'Breakdown', 'Outro'];
+
+      // Set the guide content first so it shows while MIDI is generating
+      const initialResult: RemixGuideData = {
+        guide: fullGuideContent,
+        targetTempo,
+        targetKey,
+        sections,
+        originalKey: extractedMetadata?.originalKey,
+        originalTempo: extractedMetadata?.originalTempo,
+        originalChordProgression: detectedChordProg
+      };
+
+      setRemixGuide(initialResult);
+      setStreamingContent(''); // Clear streaming content since we now have the final guide
 
       const midiSettings: MidiSettings = {
         key: targetKey,
@@ -184,14 +200,8 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       // Create final result with extracted metadata
       const finalResult: RemixGuideData = {
-        guide: fullGuideContent,
-        targetTempo,
-        targetKey,
-        sections,
-        generatedMidiPatterns,
-        originalKey: extractedMetadata?.originalKey,
-        originalTempo: extractedMetadata?.originalTempo,
-        originalChordProgression: detectedChordProg
+        ...initialResult,
+        generatedMidiPatterns
       };
 
       setRemixGuide(finalResult);
@@ -203,6 +213,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       setError(error instanceof Error ? error.message : 'Failed to generate remix guide');
     } finally {
       setIsGenerating(false);
+      setIsGeneratingMidi(false);
     }
   };
 
@@ -214,7 +225,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
   const regenerateMidi = async () => {
     if (!remixGuide) return;
 
-    setIsGenerating(true);
+    setIsGeneratingMidi(true);
     setError('');
 
     try {
@@ -278,7 +289,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       console.error('Error regenerating MIDI patterns:', midiError);
       setError(`Failed to regenerate MIDI patterns: ${midiError instanceof Error ? midiError.message : 'Unknown error'}`);
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingMidi(false);
     }
   };
 
@@ -438,6 +449,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
         </Button>
       </div>
 
+      {/* Show streaming content during generation OR show the final guide */}
       {(isGenerating && streamingContent) && (
         <Card className="p-6">
           <h3 className="text-xl font-bold text-white mb-4">
@@ -449,7 +461,22 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
         </Card>
       )}
 
-      {remixGuide && (
+      {/* Show MIDI Generation Card when generating MIDI but guide is complete */}
+      {isGeneratingMidi && remixGuide && !isGenerating && (
+        <Card className="p-6">
+          <div className="text-center py-8">
+            <Spinner size="lg" />
+            <h3 className="text-xl font-bold text-white mt-4">
+              🎹 Generating MIDI Patterns...
+            </h3>
+            <p className="text-gray-400 mt-2">
+              Creating {selectedGenre}-specific patterns based on your remix guide
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {remixGuide && !isGenerating && (
         <div className="space-y-6">
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -472,11 +499,11 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
               </h3>
               <Button
                 onClick={regenerateMidi}
-                disabled={isGenerating}
+                disabled={isGeneratingMidi}
                 variant="outline"
                 className="text-sm"
               >
-                {isGenerating ? (
+                {isGeneratingMidi ? (
                   <>
                     <Spinner size="sm" /> Regenerating...
                   </>
@@ -509,7 +536,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
             ) : (
               <div className="text-center py-8">
                 <div className="text-gray-400 mb-4">
-                  {isGenerating ? (
+                  {isGeneratingMidi ? (
                     <>
                       <Spinner size="lg" />
                       <p className="mt-4">Generating MIDI patterns...</p>

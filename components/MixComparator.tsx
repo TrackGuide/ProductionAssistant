@@ -35,10 +35,15 @@ export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorPro
         mixBName: mixB ? mixB.name : ''
       });
 
-      // Remove unnecessary AI prompt text
-      const filtered = (analysisContent || '')
+      // Remove unnecessary AI prompt text and lyrics/leading lines before first heading
+      let filtered = (analysisContent || '')
         .replace(/Okay, I understand[\s\S]*?Let's proceed with the analysis\.?/gi, '')
         .trim();
+      // Remove any leading lines before the first heading (##, #, or 🎧 Audio Analysis Results)
+      const headingMatch = filtered.match(/(^|\n)(##? |🎧|Audio Analysis Results)/);
+      if (headingMatch && headingMatch.index !== undefined) {
+        filtered = filtered.slice(headingMatch.index).trim();
+      }
       setAnalysis(filtered);
     } catch (error) {
       console.error('Error analyzing mixes:', error);
