@@ -8,26 +8,16 @@ import { generateMixComparison } from '../services/geminiService';
 interface MixComparatorProps {
   isOpen: boolean;
   onClose: () => void;
-  onAnalyze: (mixA: File | null, mixB: File | null, options?: {
-    requestMixAAnalysis?: boolean;
-    requestMixBAnalysis?: boolean;
-  }) => void;
 }
 
-export default function MixComparator({ isOpen, onClose, onAnalyze }: MixComparatorProps) {
+export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorProps, 'onAnalyze'>) {
   const [mixA, setMixA] = useState<File | null>(null);
   const [mixB, setMixB] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [copyStatus, setCopyStatus] = useState<string>('');
-  const [requestMixBAnalysis, setRequestMixBAnalysis] = useState(false);
 
   if (!isOpen) return null;
-
-  const handleFileUpload = (file: File, type: 'A' | 'B') => {
-    if (type === 'A') setMixA(file);
-    else setMixB(file);
-  };
 
   const handleAnalyze = async () => {
     if (!mixA) return;
@@ -35,17 +25,21 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
     setIsAnalyzing(true);
     try {
       const mixABase64 = await fileToBase64(mixA);
-      const mixBBase64 = mixB ? await fileToBase64(mixB) : undefined;
+      const mixBBase64 = mixB ? await fileToBase64(mixB) : '';
 
+      // Always request focused Mix B analysis
       const analysisContent = await generateMixComparison({
         mixAFile: mixABase64,
         mixBFile: mixBBase64,
         mixAName: mixA.name,
-        mixBName: mixB?.name,
-        requestMixBAnalysis
+        mixBName: mixB ? mixB.name : ''
       });
 
-      setAnalysis(analysisContent);
+      // Remove unnecessary AI prompt text
+      const filtered = (analysisContent || '')
+        .replace(/Okay, I understand[\s\S]*?Let's proceed with the analysis\.?/gi, '')
+        .trim();
+      setAnalysis(filtered);
     } catch (error) {
       console.error('Error analyzing mixes:', error);
       setAnalysis('Error analyzing mixes. Please try again.');
@@ -71,7 +65,6 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
     setMixB(null);
     setAnalysis('');
     setCopyStatus('');
-    setRequestMixBAnalysis(false);
   };
 
   const handleCopyAnalysis = async () => {
@@ -99,8 +92,8 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <MixUploadBox type="A" file={mixA} setFile={setMixA} showFullAnalysisCheckbox={false} />
-          <MixUploadBox type="B" file={mixB} setFile={setMixB} showFullAnalysisCheckbox={true} requestFullAnalysis={requestMixBAnalysis} setRequestFullAnalysis={setRequestMixBAnalysis} />
+          <MixUploadBox type="A" file={mixA} setFile={setMixA} />
+          <MixUploadBox type="B" file={mixB} setFile={setMixB} />
         </div>
 
         <div className="flex gap-4 mb-6">
@@ -121,7 +114,9 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
               </button>
               {copyStatus && <span className="text-sm text-green-400">{copyStatus}</span>}
             </div>
-            <ReactMarkdown className="prose prose-invert">{analysis}</ReactMarkdown>
+            <div className="prose prose-invert">
+              <ReactMarkdown>{analysis}</ReactMarkdown>
+            </div>
           </div>
         )}
       </div>
@@ -129,7 +124,7 @@ export default function MixComparator({ isOpen, onClose, onAnalyze }: MixCompara
   );
 }
 
-function MixUploadBox({ type, file, setFile, showFullAnalysisCheckbox, requestFullAnalysis, setRequestFullAnalysis }) {
+function MixUploadBox({ type, file, setFile }: { type: 'A' | 'B'; file: File | null; setFile: (f: File | null) => void }) {
   const label = type === 'A' ? 'Mix A (Original)' : 'Mix B (Revised)';
   return (
     <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
@@ -146,14 +141,6 @@ function MixUploadBox({ type, file, setFile, showFullAnalysisCheckbox, requestFu
           <p className="text-gray-400 mb-2">Upload audio file</p>
           <input type="file" accept="audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} />
         </label>
-      )}
-      {showFullAnalysisCheckbox && file && (
-        <div className="mt-4 pt-4 border-t border-gray-600">
-          <label className="flex items-center justify-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input type="checkbox" checked={requestFullAnalysis} onChange={(e) => setRequestFullAnalysis(e.target.checked)} className="rounded border-gray-500 text-blue-600" />
-            Request full mix analysis
-          </label>
-        </div>
       )}
     </div>
   );
