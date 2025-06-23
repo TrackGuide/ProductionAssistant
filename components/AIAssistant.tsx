@@ -22,6 +22,12 @@ interface AIAssistantProps {
   onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
   isCollapsed?: boolean;
   onToggle?: () => void;
+  // Additional context from other guides
+  remixGuideContent?: string;
+  mixFeedbackContent?: string;
+  mixComparisonContent?: string;
+  patchGuideContent?: string;
+  activeView?: string;
 }
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
@@ -29,7 +35,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   currentGuidebook,
   userInputs,
   isCollapsed = false,
-  onToggle
+  onToggle,
+  remixGuideContent,
+  mixFeedbackContent,
+  mixComparisonContent,
+  patchGuideContent,
+  activeView
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -47,7 +58,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         content: `Hi! I'm your AI music production assistant. I can help you:
 
 • Refine your TrackGuide with specific questions
-• Suggest improvements to your current project
+• Provide insights on your RemixGuide and remix techniques
+• Analyze and discuss your Mix Feedback reports
+• Offer suggestions for your Mix Comparisons
+• Help with PatchGuide synth programming advice
 • Answer production techniques questions
 • Help adjust your genre, vibe, or arrangement ideas
 • Provide detailed explanations about any aspect of your track
@@ -81,7 +95,10 @@ What would you like to work on today?`,
       content: `Hi! I'm your AI music production assistant. I can help you:
 
 • Refine your TrackGuide with specific questions
-• Suggest improvements to your current project
+• Provide insights on your RemixGuide and remix techniques
+• Analyze and discuss your Mix Feedback reports
+• Offer suggestions for your Mix Comparisons
+• Help with PatchGuide synth programming advice
 • Answer production techniques questions
 • Help adjust your genre, vibe, or arrangement ideas
 • Provide detailed explanations about any aspect of your track
@@ -135,8 +152,18 @@ What would you like to work on today?`,
         chords: userInputs?.chords
       };
 
-      // Get streaming response
-      const responseStream = await generateAIAssistantResponse(conversationHistory, guidebook);
+      // Get streaming response with additional context
+      const responseStream = await generateAIAssistantResponse(
+        conversationHistory, 
+        guidebook,
+        {
+          remixGuideContent,
+          mixFeedbackContent,
+          mixComparisonContent,
+          patchGuideContent,
+          activeView
+        }
+      );
       
       // Create assistant message with initial empty content
       const assistantMessage: Message = {

@@ -97,9 +97,12 @@ export interface MixFeedbackInputs {
 }
 
 export interface MixComparisonInputs {
-  mixAUrl: string;
-  mixBUrl: string;
-  focus?: string;
+  mixAFile: string;
+  mixBFile: string;
+  mixAName: string;
+  mixBName: string;
+  includeMixBFeedback?: boolean;
+  userNotes: string;
 }
 
 export interface RemixGuideInputs {

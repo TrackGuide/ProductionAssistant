@@ -57,7 +57,7 @@ class ErrorBoundary extends React.Component<
 }
 
 // ✅ Optimized component with better state management
-export const PatchGuide: React.FC = () => {
+export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
   // ✅ Clean, consistent state structure
   const [inputs, setInputs] = useState<PatchGuideInputs>({
     synth: 'Generic',
@@ -138,13 +138,17 @@ export const PatchGuide: React.FC = () => {
         notes: inputs.notes
       });
 
-      setResult({
+      const patchResult = {
         text: response.text || '',
         synthConfig: response.synthConfig || {},
         adsrVCF: response.adsrVCF || { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 },
         adsrVCA: response.adsrVCA || { attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.6 },
         summary: response.summary || ''
-      });
+      };
+
+      setResult(patchResult);
+      // Notify parent component of content update
+      onContentUpdate?.(patchResult.text);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate patch guide');
     } finally {
@@ -164,7 +168,9 @@ export const PatchGuide: React.FC = () => {
     });
     setResult(null);
     setError('');
-  }, []);
+    // Clear content from parent as well
+    onContentUpdate?.('');
+  }, [onContentUpdate]);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">

@@ -50,6 +50,7 @@ const initialInputsState: UserInputs = {
 const initialMixFeedbackInputsState: MixFeedbackInputs = {
   audioFile: null,
   userNotes: '',
+  trackName: '',
 };
 
 const MAX_AUDIO_FILE_SIZE_MB = 100;
@@ -239,6 +240,9 @@ const App: React.FC = () => {
   const [mixCompareError, setMixCompareError] = useState<string | null>(null);
   const audioFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Additional guide content state for AI Assistant context
+  const [remixGuideContent, setRemixGuideContent] = useState<string>('');
+  const [patchGuideContent, setPatchGuideContent] = useState<string>('');
 
   const genreInputRef = useRef<HTMLInputElement>(null);
   const vibeInputRef = useRef<HTMLInputElement>(null);
@@ -280,6 +284,16 @@ const App: React.FC = () => {
       console.error("Failed to save library to local storage:", e);
     }
   }, [library]);
+
+  // Clear guide content when switching views
+  useEffect(() => {
+    if (activeView !== 'remixGuide') {
+      setRemixGuideContent('');
+    }
+    if (activeView !== 'patchGuide') {
+      setPatchGuideContent('');
+    }
+  }, [activeView]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -1692,12 +1706,14 @@ const App: React.FC = () => {
                      setMixFeedbackError(null);
                      setMixFeedbackInputs({
                        audioFile: mixCompareInputs.mixB,
-                       userNotes: mixCompareInputs.userNotes
+                       userNotes: mixCompareInputs.userNotes,
+                       trackName: mixCompareInputs.mixB?.name || 'Mix B'
                      });
                      try {
                        const result = await generateMixFeedback({
                          audioFile: mixCompareInputs.mixB,
-                         userNotes: mixCompareInputs.userNotes
+                         userNotes: mixCompareInputs.userNotes,
+                         trackName: mixCompareInputs.mixB?.name || 'Mix B'
                        });
                        setMixFeedbackResult(result);
                      } catch (err: any) {
@@ -1738,7 +1754,7 @@ const App: React.FC = () => {
 
       {activeView === 'remixGuide' && (
         <div className="max-w-7xl mx-auto">
-          <RemixGuideAI />
+          <RemixGuideAI onContentUpdate={setRemixGuideContent} />
         </div>
       )}
 
@@ -1752,7 +1768,7 @@ const App: React.FC = () => {
 
       {activeView === 'patchGuide' && (
         <div className="max-w-7xl mx-auto">
-          <PatchGuide />
+          <PatchGuide onContentUpdate={setPatchGuideContent} />
         </div>
       )}
 
@@ -1774,6 +1790,11 @@ const App: React.FC = () => {
         userInputs={inputs}
         isCollapsed={isProductionCoachCollapsed}
         onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
+        remixGuideContent={remixGuideContent}
+        mixFeedbackContent={mixFeedbackResult || undefined}
+        mixComparisonContent={mixCompareResult || undefined}
+        patchGuideContent={patchGuideContent}
+        activeView={activeView}
       />
 
        <footer className="text-center mt-16 py-8 border-t border-gray-700/60">

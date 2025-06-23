@@ -47,7 +47,7 @@ const extractOriginalChordProgression = (guideContent: string): string | null =>
   return null;
 };
 
-export const RemixGuideAI: React.FC = () => {
+export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
@@ -119,6 +119,8 @@ export const RemixGuideAI: React.FC = () => {
         if (chunk.text) {
           fullGuideContent += chunk.text;
           setStreamingContent(fullGuideContent);
+          // Notify parent component of content update
+          onContentUpdate?.(fullGuideContent);
         }
         if (chunk.metadata) {
           extractedMetadata = chunk.metadata;
@@ -193,6 +195,7 @@ export const RemixGuideAI: React.FC = () => {
       };
 
       setRemixGuide(finalResult);
+      onContentUpdate?.(fullGuideContent);
       console.log('RemixGuide completed successfully with streaming and dynamic MIDI defaults');
 
     } catch (error) {

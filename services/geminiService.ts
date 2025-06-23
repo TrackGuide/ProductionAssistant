@@ -521,7 +521,14 @@ Provide your analysis in clear Markdown format with the following sections:
  */
 export const generateAIAssistantResponse = async (
   conversation: ChatMessage[],
-  guidebook: GuidebookEntry
+  guidebook: GuidebookEntry,
+  additionalContext?: {
+    remixGuideContent?: string;
+    mixFeedbackContent?: string;
+    mixComparisonContent?: string;
+    patchGuideContent?: string;
+    activeView?: string;
+  }
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
   const history = conversation
     .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
@@ -536,9 +543,35 @@ export const generateAIAssistantResponse = async (
 - Key: ${guidebook.key || "Not specified"}
 - Available Instruments: ${guidebook.availableInstruments}`;
 
+  // Build additional context from other guides
+  let additionalGuideContext = '';
+  if (additionalContext) {
+    const { remixGuideContent, mixFeedbackContent, mixComparisonContent, patchGuideContent, activeView } = additionalContext;
+    
+    if (activeView) {
+      additionalGuideContext += `\n**Current View:** ${activeView}`;
+    }
+    
+    if (remixGuideContent) {
+      additionalGuideContext += `\n\n**Active RemixGuide:**\n${remixGuideContent.substring(0, 2000)}${remixGuideContent.length > 2000 ? '...' : ''}`;
+    }
+    
+    if (mixFeedbackContent) {
+      additionalGuideContext += `\n\n**Active Mix Feedback:**\n${mixFeedbackContent.substring(0, 2000)}${mixFeedbackContent.length > 2000 ? '...' : ''}`;
+    }
+    
+    if (mixComparisonContent) {
+      additionalGuideContext += `\n\n**Active Mix Comparison:**\n${mixComparisonContent.substring(0, 2000)}${mixComparisonContent.length > 2000 ? '...' : ''}`;
+    }
+    
+    if (patchGuideContent) {
+      additionalGuideContext += `\n\n**Active PatchGuide:**\n${patchGuideContent.substring(0, 2000)}${patchGuideContent.length > 2000 ? '...' : ''}`;
+    }
+  }
+
   const prompt = `You are TrackGuideAI, an expert music production assistant. You're helping a user with their current track project.
 
-${contextInfo}
+${contextInfo}${additionalGuideContext}
 
 **Conversation History:**
 ${history}
@@ -546,7 +579,8 @@ ${history}
 **Your Role:**
 - Provide specific, actionable music production advice
 - Reference the current guidebook context when relevant
-- Offer technical solutions and creative suggestions
+- Integrate insights from any active guides (RemixGuide, Mix Feedback, Mix Comparison, PatchGuide)
+- Offer technical solutions and creative suggestions based on all available context
 - Ask clarifying questions when needed
 - Maintain a helpful, professional tone
 
@@ -555,8 +589,10 @@ ${history}
 - Include specific parameter suggestions when applicable
 - Reference DAW-specific techniques when relevant
 - Provide alternative approaches when possible
+- When relevant guides are active, reference their content and insights
+- Help users understand connections between different aspects of their project
 
-Respond as the helpful TrackGuideAI assistant.`;
+Respond as the helpful TrackGuideAI assistant with full awareness of the user's current project context.`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
