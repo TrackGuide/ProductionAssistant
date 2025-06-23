@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
-import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
+import * as PatchGuideService from '../services/patchGuideServiceOptimized';
 import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 import { Knob } from './Knob';
 
@@ -127,7 +127,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
     setResult(null);
 
     try {
-      const response = await generateSynthPatchGuide({
+      const response = await PatchGuideService.generateSynthPatchGuide({
         description: [
           ...inputs.styleMood,
           ...inputs.dynamicsMovement

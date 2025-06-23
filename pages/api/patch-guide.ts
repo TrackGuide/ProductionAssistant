@@ -1,4 +1,4 @@
-import { generateSynthPatchGuide } from '../../services/patchGuideService';
+import { generateSynthPatchGuide } from '../../services/patchGuideServiceOptimized';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { description, synth, voiceType, descriptor, genre, notes } = req.body || {};
+  const { description, synth, voiceType, genre, notes } = req.body || {};
 
   if (!description || !synth) {
     return res.status(400).json({ error: 'Missing required fields: description and synth' });
@@ -17,7 +17,6 @@ export default async function handler(req: any, res: any) {
       description,
       synth,
       voiceType,
-      descriptor,
       genre,
       notes
     });
