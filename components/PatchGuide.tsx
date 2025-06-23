@@ -8,6 +8,7 @@ import { EnvelopeChart } from './EnvelopeChart';
 import * as PatchGuideService from '../services/patchGuideServiceOptimized';
 import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 import { Knob } from './Knob';
+import { copyToClipboard } from '../utils/copyUtils';
 
 // ✅ Simplified, consistent state structure
 interface PatchGuideInputs {
@@ -338,11 +339,38 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
   );
 };
 
+// Utility: Map normalized value to Hz (logarithmic for audio, linear for LFO)
+function normalizedToHz(value: number, type: 'audio' | 'lfo' = 'audio') {
+  if (type === 'lfo') {
+    // 0-20 Hz linear
+    return (value * 20).toFixed(2);
+  } else {
+    // 20-20,000 Hz logarithmic
+    const min = 20, max = 20000;
+    const hz = min * Math.pow(max / min, value);
+    return hz.toFixed(0);
+  }
+}
+
 // ✅ Integrated Results Component with visual controls embedded
 const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) => {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    copyToClipboard(result.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-6">Complete Patch Guide</h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-white">Complete Patch Guide</h3>
+        <button
+          onClick={handleCopy}
+          className="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-200 border border-gray-600 hover:bg-purple-600 hover:text-white transition-colors text-sm font-medium flex items-center gap-2"
+        >
+          {copied ? 'Copied!' : 'Copy Text'}
+        </button>
+      </div>
       {/* Main Instructions with integrated visual controls */}
       {result.text && (
         <div className="space-y-8">
@@ -434,7 +462,8 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
                   {result.synthConfig.filters.map((filter: any, idx: number) => {
                     const cutoff = Math.max(0, Math.min(1, Number(filter.cutoff) || 0.5));
                     const resonance = Math.max(0, Math.min(1, Number(filter.resonance) || 0.3));
-                    const cutoffHz = cutoff * 20000;
+                    // Use logarithmic mapping for cutoff
+                    const cutoffHz = normalizedToHz(cutoff, 'audio');
                     return (
                       <div key={idx} className="text-center mb-8">
                         <div className="font-medium text-gray-200 mb-4">
@@ -445,7 +474,7 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
                           <Knob value={resonance} label="Resonance" size={80} min={0} max={1} />
                         </div>
                         <div className="text-gray-300 space-x-6 text-sm">
-                          <span>Cutoff: <span className="font-mono text-white">{Number.isFinite(cutoffHz) ? cutoffHz.toFixed(0) : '0'} Hz</span></span>
+                          <span>Cutoff: <span className="font-mono text-white">{cutoffHz} Hz</span></span>
                           <span>Resonance: <span className="font-mono text-white">{Number.isFinite(resonance) ? resonance.toFixed(2) : '0.00'}</span></span>
                         </div>
                       </div>
@@ -520,7 +549,13 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Responsive columns: 1 on mobile, 3-5 on desktop depending on count */}
+                <div
+                  className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${Math.min(
+                    5,
+                    Math.max(3, result.synthConfig.oscillators.length)
+                  )} gap-4`}
+                >
                   {result.synthConfig.oscillators.map((osc: any, idx: number) => (
                     <div key={idx} className="bg-gray-700 rounded-lg p-4">
                       <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
