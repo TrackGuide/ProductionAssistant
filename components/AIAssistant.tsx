@@ -2,9 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button.tsx';
 import { Input } from './Input.tsx';
 import { Spinner } from './Spinner.tsx';
-import { SparklesIcon } from './icons.tsx';
 import { generateAIAssistantResponse } from '../services/geminiService.ts';
 import { UserInputs, GuidebookEntry, ChatMessage } from '../types.ts';
+
+// TrackGuide Logo Component
+const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <div className={`${className} bg-orange-500 transform rotate-45 flex items-center justify-center`}>
+    <div className="w-1/2 h-1/2 bg-white transform -rotate-45"></div>
+  </div>
+);
 
 interface Message {
   id: string;
@@ -215,119 +221,124 @@ What would you like to work on today?`,
 
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999]">
-      {isCollapsed ? (
-        // Collapsed state - floating button
+    <>
+      {/* Backdrop overlay when chat is open */}
+      {!isCollapsed && (
         <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
           onClick={onToggle}
-          className="w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-white/20"
-        >
-          <img 
-            src="/production-coach-icon.svg" 
-            alt="Production Coach" 
-            className="w-8 h-8"
-          />
-        </div>
-      ) : (
-        // Expanded state - full chat window
-        <div className="w-96 h-[600px] max-h-[80vh] max-w-[calc(100vw-2rem)] md:max-w-96">
-          <div className="h-full bg-gray-800 shadow-2xl border border-gray-700 rounded-lg flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-purple-600 to-blue-600 flex-shrink-0">
-              <div className="flex items-center min-w-0 flex-1">
-                <SparklesIcon className="w-5 h-5 text-white mr-2 flex-shrink-0" />
-                <h2 className="text-lg font-bold text-white truncate">Production Coach</h2>
-              </div>
-              <div className="flex gap-1 flex-shrink-0 ml-2">
-                <Button 
-                  onClick={clearConversation} 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-white border-white/30 hover:bg-white/10 hidden sm:inline-flex"
-                >
-                  Clear
-                </Button>
-                <Button 
-                  onClick={onToggle} 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
-                >
-                  <span className="text-sm">−</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Messages Container */}
-            <div 
-              ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-900/50"
-              style={{
-                scrollBehavior: 'smooth',
-                overflowAnchor: 'auto'
-              }}
-            >
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] p-3 rounded-lg text-sm shadow-lg ${
-                      message.role === 'user'
-                        ? 'bg-purple-600 text-white rounded-br-sm'
-                        : 'bg-gray-700 text-gray-100 rounded-bl-sm'
-                    }`}
+        />
+      )}
+      
+      <div className="fixed bottom-4 right-4 z-[9999]">
+        {isCollapsed ? (
+          // Collapsed state - floating button with TrackGuide logo
+          <div 
+            onClick={onToggle}
+            className="w-14 h-14 bg-orange-500 hover:bg-orange-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-white/20"
+          >
+            <TrackGuideLogo className="w-8 h-8" />
+          </div>
+        ) : (
+          // Expanded state - large popup window
+          <div className="fixed inset-4 md:inset-8 lg:inset-16 z-[9999] flex items-center justify-center pointer-events-none">
+            <div className="w-full max-w-4xl h-full max-h-[800px] bg-gray-800 shadow-2xl border border-gray-700 rounded-lg flex flex-col overflow-hidden pointer-events-auto">
+              {/* Header */}
+              <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-orange-600 to-orange-500 flex-shrink-0">
+                <div className="flex items-center min-w-0 flex-1">
+                  <TrackGuideLogo className="w-6 h-6 text-white mr-3 flex-shrink-0" />
+                  <h2 className="text-xl font-bold text-white truncate">Production Coach</h2>
+                </div>
+                <div className="flex gap-2 flex-shrink-0 ml-4">
+                  <Button 
+                    onClick={clearConversation} 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-white border-white/30 hover:bg-white/10"
                   >
-                    <div className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</div>
-                    <div className="text-xs opacity-70 mt-2">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    Clear Chat
+                  </Button>
+                  <Button 
+                    onClick={onToggle} 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
+                  >
+                    <span className="text-lg">×</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Messages Container */}
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-900/50"
+                style={{
+                  scrollBehavior: 'smooth',
+                  overflowAnchor: 'auto'
+                }}
+              >
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-4 rounded-lg shadow-lg ${
+                        message.role === 'user'
+                          ? 'bg-orange-600 text-white rounded-br-sm'
+                          : 'bg-gray-700 text-gray-100 rounded-bl-sm'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap break-words leading-relaxed text-base">{message.content}</div>
+                      <div className="text-xs opacity-70 mt-3">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-700 text-gray-100 p-3 rounded-lg text-sm shadow-lg rounded-bl-sm">
-                    <Spinner text="AI is thinking..." />
+                ))}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-700 text-gray-100 p-4 rounded-lg shadow-lg rounded-bl-sm">
+                      <Spinner text="AI is thinking..." />
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area */}
-            <div className="p-3 border-t border-gray-700 bg-gray-800 flex-shrink-0">
-              <div className="flex gap-2 mb-2">
-                <Input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Ask about production techniques..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="flex-1 text-sm bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                  disabled={isLoading}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
-                  variant="primary"
-                  size="sm"
-                  className="px-4"
-                >
-                  {isLoading ? '...' : 'Send'}
-                </Button>
+                )}
+                
+                <div ref={messagesEndRef} />
               </div>
-              <div className="text-xs text-gray-400 text-center">
-                Press Enter to send • Clear resets conversation
+
+              {/* Input Area */}
+              <div className="p-4 border-t border-gray-700 bg-gray-800 flex-shrink-0">
+                <div className="flex gap-3 mb-3">
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Ask about production techniques, guides, or get help with your current project..."
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="flex-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isLoading}
+                    variant="primary"
+                    className="px-6 bg-orange-600 hover:bg-orange-700"
+                  >
+                    {isLoading ? '...' : 'Send'}
+                  </Button>
+                </div>
+                <div className="text-xs text-gray-400 text-center">
+                  Press Enter to send • Clear Chat resets conversation • Click outside to close
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };

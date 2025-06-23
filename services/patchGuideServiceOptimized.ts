@@ -92,51 +92,60 @@ ${notes ? `- Additional Notes: ${notes}` : ''}
 
 **IMPORTANT:** You must respond with EXACTLY this structured markdown format:
 
-## Oscillators:
-- Osc 1: Waveform: [type], Coarse: [value], Fine: [value], Level (dB): [value]
-- Osc 2: Waveform: [type], Coarse: [value], Fine: [value], Level (dB): [value]
-- Sub Osc: Waveform: [type], Octave: [value], Level (dB): [value]
+## 📋 Patch Instructions
 
-## Filter:
-- Type: [filter type]
-- Cutoff: [frequency] Hz
-- Resonance: [percentage]%
+### Oscillators:
+- **Osc 1:** Waveform: [type], Coarse: [value], Fine: [value], Level: [value] dB
+- **Osc 2:** Waveform: [type], Coarse: [value], Fine: [value], Level: [value] dB  
+- **Sub Osc:** Waveform: [type], Octave: [value], Level: [value] dB
 
-## ADSR Envelopes:
-- Filter Envelope: Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
-- Amp Envelope: Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
+### Filter:
+- **Type:** [filter type]
+- **Cutoff:** [frequency] Hz
+- **Resonance:** [percentage]%
 
-## Effects:
-- Chorus: Rate: [rate] Hz, Depth: [percentage]%, Delay: [time] ms, Feedback: [percentage]%, Mix: [percentage]%
-- Delay: Time: [time] ms, Feedback: [percentage]%, Mix: [percentage]%, Tone: [frequency] Hz
-- Reverb: Decay: [time] s, PreDelay: [time] ms, Damping: [percentage]%, Size: [percentage]%, HighCut: [frequency] Hz, LowCut: [frequency] Hz, Mix: [percentage]%, Type: [type]
+### ADSR Envelopes:
+- **Filter Envelope:** Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
+- **Amp Envelope:** Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
 
-## Modulation Suggestions:
-- LFO 1 → Filter Cutoff, Amount: [percentage]%, Rate: [rate] Hz, Waveform: [type]
-- Envelope → Oscillator Pitch, Amount: [percentage]%
-- Modwheel → Vibrato Depth, Amount: [percentage]%
+### Effects Chain:
+- **Chorus:** Rate: [rate] Hz, Depth: [percentage]%, Mix: [percentage]%
+- **Delay:** Time: [time] ms, Feedback: [percentage]%, Mix: [percentage]%
+- **Reverb:** Decay: [time] s, Size: [percentage]%, Mix: [percentage]%
 
-## Creative Suggestions & Tips:
-- [Tip about envelope settings]
-- [Tip about LFO modulation]
-- [Tip about effect automation]
-- [Tip about performance techniques]
-- [Tip about layering or doubling]
-- [Tip about register-specific adjustments]
-- [Tip about dynamic modulation]
+### Modulation Matrix:
+- **LFO 1 → Filter Cutoff:** Amount: [percentage]%, Rate: [rate] Hz, Wave: [type]
+- **Env → Osc Pitch:** Amount: [percentage]%
+- **Mod Wheel → Vibrato:** Amount: [percentage]%
+
+## 🎨 Creative Tips
+
+### Performance Techniques:
+- [Specific playing technique for this sound]
+- [Expression control suggestion]
+
+### Sound Design Tips:
+- [Envelope shaping advice]
+- [Modulation depth guidance]
+- [Register-specific adjustments]
+
+### Mix Integration:
+- [EQ suggestions for this sound type]
+- [Compression approach]
+- [Spatial placement advice]
 
 **Guidelines:**
 - Use specific numeric values (frequencies in Hz, times in ms/s, percentages with %)
 - Include 2-3 oscillators appropriate for the sound type
 - Suggest realistic modulation amounts and rates
-- Provide 6-8 actionable creative tips
 - Focus on the ${genre} genre and ${voiceType} voice type characteristics
 - Make all parameter values musically appropriate
+- Avoid repeating information between sections
 
 **Available Synth Parameters:**
 ${JSON.stringify(synthConfig, null, 2)}
 
-Respond ONLY with the structured markdown format above. Do not include JSON, code blocks, or explanatory text.`;
+Respond ONLY with the structured markdown format above. Do not include JSON, code blocks, or explanatory text outside the format.`;
 };
 
 // ✅ Parse markdown response and extract structured data
@@ -169,18 +178,18 @@ const parseMarkdownResponse = (responseText: string): any => {
 
   // Extract oscillator data
   const extractOscillators = (): any[] => {
-    const oscSection = cleanText.match(/## Oscillators:(.*?)## Filter:/s);
+    const oscSection = cleanText.match(/### Oscillators:(.*?)### Filter:/s);
     if (!oscSection) return [];
     
     const oscLines = oscSection[1].split('\n').filter(line => line.trim().startsWith('-'));
     return oscLines.map((line, idx) => {
-      const name = line.match(/- (.*?):/)?.[1] || `Oscillator ${idx + 1}`;
+      const name = line.match(/- \*\*(.*?):\*\*/)?.[1] || `Oscillator ${idx + 1}`;
       
       // Extract parameter values using regex
       const waveform = line.match(/Waveform: ([^,]+)/)?.[1]?.trim() || 'Sawtooth';
       const coarse = line.match(/Coarse: ([^,]+)/)?.[1]?.trim() || '0';
       const fine = line.match(/Fine: ([^,]+)/)?.[1]?.trim() || '0';
-      const level = line.match(/Level[^:]*: ([^,\n]+)/)?.[1]?.trim() || '0';
+      const level = line.match(/Level: ([^,\n]+)/)?.[1]?.trim() || '0';
       
       return {
         name,
@@ -192,12 +201,12 @@ const parseMarkdownResponse = (responseText: string): any => {
 
   // Extract filter data
   const extractFilter = (): any => {
-    const filterSection = cleanText.match(/## Filter:(.*?)## ADSR Envelopes:/s);
+    const filterSection = cleanText.match(/### Filter:(.*?)### ADSR Envelopes:/s);
     if (!filterSection) return { selectedType: 'Lowpass', cutoff: '5000 Hz', resonance: '30%' };
     
-    const typeMatch = filterSection[1].match(/Type: ([^\n]+)/);
-    const cutoffMatch = filterSection[1].match(/Cutoff: ([^\n]+)/);
-    const resonanceMatch = filterSection[1].match(/Resonance: ([^\n]+)/);
+    const typeMatch = filterSection[1].match(/\*\*Type:\*\* ([^\n]+)/);
+    const cutoffMatch = filterSection[1].match(/\*\*Cutoff:\*\* ([^\n]+)/);
+    const resonanceMatch = filterSection[1].match(/\*\*Resonance:\*\* ([^\n]+)/);
     
     return {
       selectedType: typeMatch?.[1]?.trim() || 'Lowpass',
@@ -212,8 +221,8 @@ const parseMarkdownResponse = (responseText: string): any => {
     filter: extractFilter(),
     adsrVCF: parseADSR(cleanText, 'Filter Envelope'),
     adsrVCA: parseADSR(cleanText, 'Amp Envelope'),
-    summary: cleanText.includes('## Creative Suggestions & Tips:') 
-      ? cleanText.split('## Creative Suggestions & Tips:')[1].trim()
+    summary: cleanText.includes('## 🎨 Creative Tips') 
+      ? cleanText.split('## 🎨 Creative Tips')[1].trim()
       : 'No creative tips provided'
   };
 };
