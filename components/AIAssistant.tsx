@@ -63,14 +63,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         role: 'assistant',
         content: `Hi! I'm your AI music production assistant. I can help you:
 
-• Refine your TrackGuide with specific questions
-• Provide insights on your RemixGuide and remix techniques
-• Analyze and discuss your Mix Feedback reports
-• Offer suggestions for your Mix Comparisons
-• Help with PatchGuide synth programming advice
+• Refine guides (TrackGuide, RemixGuide, PatchGuide)
+• Analyze Mix Feedback and Comparison reports  
 • Answer production techniques questions
-• Help adjust your genre, vibe, or arrangement ideas
-• Provide detailed explanations about any aspect of your track
+• Provide creative suggestions and arrangement ideas
 
 What would you like to work on today?`,
         timestamp: new Date()
@@ -100,14 +96,10 @@ What would you like to work on today?`,
       role: 'assistant',
       content: `Hi! I'm your AI music production assistant. I can help you:
 
-• Refine your TrackGuide with specific questions
-• Provide insights on your RemixGuide and remix techniques
-• Analyze and discuss your Mix Feedback reports
-• Offer suggestions for your Mix Comparisons
-• Help with PatchGuide synth programming advice
+• Refine guides (TrackGuide, RemixGuide, PatchGuide)
+• Analyze Mix Feedback and Comparison reports  
 • Answer production techniques questions
-• Help adjust your genre, vibe, or arrangement ideas
-• Provide detailed explanations about any aspect of your track
+• Provide creative suggestions and arrangement ideas
 
 What would you like to work on today?`,
       timestamp: new Date()
@@ -235,7 +227,7 @@ What would you like to work on today?`,
           // Collapsed state - floating button with TrackGuide logo
           <div 
             onClick={onToggle}
-            className="w-14 h-14 bg-orange-500 hover:bg-orange-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-white/20"
+            className="w-14 h-14 bg-gray-700 hover:bg-gray-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-orange-400/60"
           >
             <TrackGuideLogo className="w-8 h-8" />
           </div>
@@ -244,7 +236,7 @@ What would you like to work on today?`,
           <div className="fixed inset-4 md:inset-8 lg:inset-16 z-[9999] flex items-center justify-center pointer-events-none">
             <div className="w-full max-w-4xl h-full max-h-[800px] bg-gray-800 shadow-2xl border border-gray-700 rounded-lg flex flex-col overflow-hidden pointer-events-auto">
               {/* Header */}
-              <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-orange-600 to-orange-500 flex-shrink-0">
+              <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-gray-700 to-gray-600 flex-shrink-0">
                 <div className="flex items-center min-w-0 flex-1">
                   <TrackGuideLogo className="w-6 h-6 text-white mr-3 flex-shrink-0" />
                   <h2 className="text-xl font-bold text-white truncate">Production Coach</h2>
@@ -254,7 +246,7 @@ What would you like to work on today?`,
                     onClick={clearConversation} 
                     variant="outline" 
                     size="sm" 
-                    className="text-white border-white/30 hover:bg-white/10"
+                    className="bg-orange-500 text-white border-orange-400 hover:bg-orange-600 font-medium"
                   >
                     Clear Chat
                   </Button>
@@ -262,7 +254,7 @@ What would you like to work on today?`,
                     onClick={onToggle} 
                     variant="outline" 
                     size="sm" 
-                    className="text-white border-white/30 hover:bg-white/10 flex-shrink-0"
+                    className="bg-red-500 text-white border-red-400 hover:bg-red-600 flex-shrink-0 font-bold"
                   >
                     <span className="text-lg">×</span>
                   </Button>
