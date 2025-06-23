@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -12,73 +12,153 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const links = [
+    { label: "How It Works", href: "#how-it-works" },
+    { label: "Problems We Solve", href: "#problems-we-solve" },
+    { label: "Investment Levels", href: "#investment-levels" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#2B2B2B] relative overflow-hidden scroll-smooth">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-40">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, #FF5722 1px, transparent 0)`,
-          backgroundSize: '30px 30px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, #FF5722 1px, transparent 0)`,
+            backgroundSize: '30px 30px',
+          }}
+        />
       </div>
 
-      {/* Navigation */}
-      <nav className="relative z-10 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-center">
-          {/* Logo section - moved to absolute position */}
-          <div className="absolute left-6 flex items-center space-x-3">
-            <div className="w-8 h-8 bg-orange-500 transform rotate-45 flex items-center justify-center">
-              <div className="w-4 h-4 bg-white transform -rotate-45"></div>
-            </div>
+      {/* Sticky Nav */}
+      <nav className="sticky top-0 z-20 bg-[#2B2B2B]/80 backdrop-blur-sm px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <TrackGuideLogo className="w-8 h-8" />
             <div>
               <div className="text-xl font-bold text-white">TrackGuide AI</div>
               <div className="text-xs text-gray-400">Your Smartest Studio Assistant</div>
             </div>
           </div>
 
-          {/* NAV LINKS - Centered prominently */}
-          <div className="hidden md:flex items-center justify-center space-x-12">
-            <a href="#how-it-works" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">How It Works</a>
-            <a href="#problems-we-solve" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">Problems We Solve</a>
-            <a href="#investment-levels" className="text-white hover:text-orange-400 font-semibold text-lg transition-colors border-b-2 border-transparent hover:border-orange-400 pb-1">Investment Levels</a>
+          {/* Centered Desktop Links */}
+          <div className="hidden md:flex items-center space-x-10 absolute left-1/2 transform -translate-x-1/2">
+            {links.map(({ label, href }) => (
+              <a
+                key={label}
+                href={href}
+                className="text-white hover:text-orange-400 font-semibold text-lg transition-colors pb-1 border-b-2 border-transparent hover:border-orange-400"
+              >
+                {label}
+              </a>
+            ))}
           </div>
+
+          {/* Desktop Launch Button */}
+          <div className="hidden md:block">
+            <button
+              onClick={onGetStarted}
+              className="bg-black hover:bg-gray-900 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-2xl border-2 border-orange-400 hover:border-orange-300"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-sm"></div>
+                <TrackGuideLogo className="h-6 w-6 relative z-10" />
+              </div>
+              <span>Launch App</span>
+            </button>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileNavOpen(open => !open)}
+            className="md:hidden text-gray-300 hover:text-white focus:outline-none"
+          >
+            {/* simple hamburger / close icon */}
+          {mobileNavOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
         </div>
       </nav>
 
-     {/* Hero Section */}
-<section className="relative px-6 py-16">
-  <div className="max-w-7xl mx-auto">
-    <div className="grid lg:grid-cols-2 gap-12 items-center">
-      <div className="space-y-8">
-        <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
-          <span className="text-orange-500">AI Studio Assistant:</span>
-          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
-            A Complement to Creativity,
-          </span>
-          <span className="block text-white mt-2 text-4xl md:text-5xl lg:text-6xl">
-            Not a Substitute.
-          </span>
-        </h1>
-        <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
-          Empowering modern producers with <span className="text-orange-500 font-semibold">structure</span>, <span className="text-orange-500 font-semibold">speed</span>, and <span className="text-orange-500 font-semibold">support</span> in their creative workflow.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-6 mt-8 lg:justify-start">
+      {/* Mobile Nav Panel */}
+      {mobileNavOpen && (
+        <div className="md:hidden bg-[#2B2B2B]/90 backdrop-blur-sm px-6 py-4 space-y-4">
+          {links.map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              onClick={() => setMobileNavOpen(false)}
+              className="block py-2 text-white font-medium hover:text-orange-400"
+            >
+              {label}
+            </a>
+          ))}
           <button
-            onClick={onGetStarted}
-            className="bg-black hover:bg-gray-900 text-white px-16 py-6 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-orange-400 hover:border-orange-300"
+            onClick={() => {
+              setMobileNavOpen(false);
+              onGetStarted();
+            }}
+            className="w-full bg-black hover:bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-2xl border-2 border-orange-400 hover:border-orange-300 mt-4"
           >
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-sm"></div>
-              <TrackGuideLogo className="h-8 w-8 relative z-10" />
+              <TrackGuideLogo className="h-6 w-6 relative z-10" />
             </div>
             <span>Launch App</span>
           </button>
         </div>
-      </div>
-      {/* Geometric Elements can remain as in your original */}
-    </div>
-  </div>
-</section>
+      )}
+
+      {/* Hero */}
+      <section className="px-6 py-20">
+        <div className="max-w-7xl mx-auto text-center">
+          {/* Headline */}
+          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-8">
+            <span className="text-orange-500">AI Studio Assistant:</span><br/>
+            A Complement to Creativity,<br/>
+            Not a Substitute.
+          </h1>
+
+          {/* Subtext */}
+          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto mb-12">
+            Empowering modern producers with
+            <span className="text-orange-500 font-semibold"> structure</span>,
+            <span className="text-orange-500 font-semibold"> speed</span>, and
+            <span className="text-orange-500 font-semibold"> support</span>.
+          </p>
+
+          {/* Mobile Launch Button (only shown when nav is closed) */}
+          <div className="md:hidden">
+            {!mobileNavOpen && (
+              <button
+                onClick={onGetStarted}
+                className="bg-black hover:bg-gray-900 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-4 shadow-2xl border-2 border-orange-400 hover:border-orange-300 mx-auto"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-orange-500/30 blur-sm"></div>
+                  <TrackGuideLogo className="h-7 w-7 relative z-10" />
+                </div>
+                <span>Launch App</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="relative px-6 py-20">
@@ -141,8 +221,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* TrackGuide AI */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">AI</span>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <TrackGuideLogo className="w-12 h-12" />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">TrackGuide AI</h3>
               <p className="text-gray-300">
@@ -175,22 +255,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {/* PatchGuide AI */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🔬</span>
+                <span className="text-white font-bold text-2xl">🎹</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-3">PatchGuide AI</h3>
               <p className="text-gray-300">
-                Instantly generate detailed synth patch recipes for any genre, mood, or instrument. Select your synth, describe your sound, and get step-by-step settings, modulation, and creative tips — tailored to your hardware or software.
+                Generate detailed synth patch blueprints — choose your synth, describe your sound, and get step-by-step parameter and modulation tips.
               </p>
             </div>
 
             {/* Mix Feedback */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-orange-500/20 hover:border-orange-500/40 transition-all">
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-white font-bold">🎚⚖</span>
+                <span className="text-white font-bold text-2xl">🎚</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Mix Feedback</h3>
               <p className="text-gray-300">
-                Upload your mix (or two versions) for instant, actionable feedback. AI analyzes your audio, highlights strengths and weaknesses, and suggests improvements — helping you refine your sound with every revision.
+                Get instant mix advice — AI analyzes one or two versions of your mix to highlight strengths, fix weaknesses, compare refinements, and guide your next steps.
               </p>
             </div>
 
