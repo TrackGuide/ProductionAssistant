@@ -135,7 +135,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     Not a Substitute.
   </span>
 </h1>
-</h1>
 
           {/* Subtext */}
           <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto mb-12">
