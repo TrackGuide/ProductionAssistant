@@ -1,0 +1,135 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { generatePatchGuidePrompt, generatePatchGuide } from '../services/patchGuideService';
+import * as geminiService from '../services/geminiService';
+
+// Mock the geminiService
+vi.mock('../services/geminiService', () => ({
+  generateContent: vi.fn()
+}));
+
+describe('PatchGuide Service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('generatePatchGuidePrompt', () => {
+    it('should generate correct prompt string with target sound and plugins', () => {
+      const targetSound = 'warm analog bass';
+      const pluginList = ['Serum', 'Massive X'];
+      
+      const prompt = generatePatchGuidePrompt(targetSound, pluginList);
+      
+      expect(prompt).toContain('warm analog bass');
+      expect(prompt).toContain('Serum, Massive X');
+      expect(prompt).toContain('Oscillator & waveform selection');
+      expect(prompt).toContain('Filter settings');
+      expect(prompt).toContain('Envelope settings');
+      expect(prompt).toContain('valid JSON');
+    });
+
+    it('should handle single plugin', () => {
+      const targetSound = 'plucky lead';
+      const pluginList = ['Sylenth1'];
+      
+      const prompt = generatePatchGuidePrompt(targetSound, pluginList);
+      
+      expect(prompt).toContain('Sylenth1');
+      expect(prompt).not.toContain(',');
+    });
+
+    it('should handle multiple plugins', () => {
+      const targetSound = 'atmospheric pad';
+      const pluginList = ['Omnisphere', 'Diva', 'Pigments'];
+      
+      const prompt = generatePatchGuidePrompt(targetSound, pluginList);
+      
+      expect(prompt).toContain('Omnisphere, Diva, Pigments');
+    });
+  });
+
+  describe('generatePatchGuide', () => {
+    it('should parse valid JSON response correctly', async () => {
+      const mockResponse = `{
+        "steps": [
+          {
+            "plugin": "Serum",
+            "parameters": {
+              "oscillator": "saw",
+              "filterCutoff": 0.7,
+              "attack": 0.1
+            },
+            "description": "Set up a saw wave",
+            "envelope": {
+              "attack": 0.1,
+              "decay": 0.2,
+              "sustain": 0.6,
+              "release": 0.4
+            }
+          }
+        ],
+        "notes": "Additional tips"
+      }`;
+
+      vi.mocked(geminiService.generateContent).mockResolvedValue(mockResponse);
+
+      const result = await generatePatchGuide('warm bass', ['Serum']);
+
+      expect(result.steps).toHaveLength(1);
+      expect(result.steps[0].plugin).toBe('Serum');
+      expect(result.steps[0].parameters.oscillator).toBe('saw');
+      expect(result.steps[0].envelope?.attack).toBe(0.1);
+      expect(result.notes).toBe('Additional tips');
+    });
+
+    it('should handle response without envelope data', async () => {
+      const mockResponse = `{
+        "steps": [
+          {
+            "plugin": "Massive X",
+            "parameters": {"filterCutoff": 0.5},
+            "description": "Basic setup"
+          }
+        ]
+      }`;
+
+      vi.mocked(geminiService.generateContent).mockResolvedValue(mockResponse);
+
+      const result = await generatePatchGuide('lead sound', ['Massive X']);
+
+      expect(result.steps[0].envelope).toEqual({
+        attack: 0.1,
+        decay: 0.2,
+        sustain: 0.6,
+        release: 0.4
+      });
+    });
+
+    it('should throw error for invalid JSON response', async () => {
+      vi.mocked(geminiService.generateContent).mockResolvedValue('Invalid response');
+
+      await expect(generatePatchGuide('test', ['Serum'])).rejects.toThrow(
+        'Failed to generate patch guide'
+      );
+    });
+
+    it('should throw error for response without steps array', async () => {
+      const mockResponse = `{"invalid": "structure"}`;
+
+      vi.mocked(geminiService.generateContent).mockResolvedValue(mockResponse);
+
+      await expect(generatePatchGuide('test', ['Serum'])).rejects.toThrow(
+        'Failed to generate patch guide'
+      );
+    });
+
+    it('should handle gemini service errors', async () => {
+      vi.mocked(geminiService.generateContent).mockRejectedValue(
+        new Error('API Error')
+      );
+
+      await expect(generatePatchGuide('test', ['Serum'])).rejects.toThrow(
+        'Failed to generate patch guide'
+      );
+    });
+  });
+});
