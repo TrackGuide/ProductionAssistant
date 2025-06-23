@@ -120,27 +120,64 @@ export const MIDI_DEFAULT_SETTINGS = {
 };
 
 export const MIDI_CHORD_PROGRESSIONS: { [genre: string]: string[] } = {
-  'Pop': ['I-V-vi-IV', 'vi-IV-I-V', 'I-IV-V-I', 'I-vi-IV-V', 'ii-V-I-IV'],
-  'Indie Pop': ['I-V-vi-IV', 'I-IV-vi-V', 'vi-IV-I-V', 'I-iii-IV-V'],
-  'Synth-Pop': ['i-VI-III-VII (minor)', 'I-V-vi-IV (major)', 'i-iv-v-VI (minor)', 'I-IV-ii-V (major)'],
-  'Rock': ['I-IV-V', 'vi-IV-I-V', 'I-bVII-IV-I', 'i-VI-III-VII (minor)', 'I-V-IV-I'],
-  'Alternative Rock': ['vi-IV-I-V', 'I-V-vi-IV', 'i-VI-III-VII', 'I-IV-ii-V'],
-  'House': ['Am-G-C-F', 'i-VI-III-VII (Am-F-C-G)', 'i-III-VI-VII', 'i-v-iv-i'],
-  'Deep House': ['i-VI-III-VII (e.g. Dm-Bb-F-C)', 'Am-G-C-F', 'i-iv-v-i'],
-  'Techno': ['i-VI-III-VII', 'i-iv-v-i (minor, repetitive)', 'Single chord drone with variations', 'Am-G-F-E'],
-  'Trance': ['vi-IV-I-V (Am-F-C-G)', 'i-VI-III-VII', 'i-VII-VI-V (minor descending)'],
-  'Ambient': ['Imaj7-IVmaj7 (long, evolving)', 'i-VI (slow changes)', 'Drone + suspended chords'],
-  'Synthwave': ['i-VI-III-VII (Am-F-C-G)', 'vi-IV-I-V', 'I-V-vi-IV', 'i-iv-v-i'],
-  'Drum and Bass': ['i-VI-III-VII', 'Am-F-C-G', 'Complex jazz voicings over two chords', 'i-iv-v-VI'],
-  'Dubstep': ['i-VI-III-VII', 'i-iv-v-i (minor)', 'Heavy focus on sound design over complex progression'],
-  'Trap (EDM)': ['i-VI-III-VII', 'i-iv-v-i (minor)', 'Simple 2 or 3 chord loops'],
-  'Hip Hop': ['i-VI-III-VII', 'Am-G-Em-F', 'ii-V-I (Jazz influenced)', 'i-iv-v-i', 'Sample-based loops'],
-  'Lo-fi Hip Hop': ['ii-V-I-IV (Jazz)', 'Imaj7-vi7-ii7-V7', 'Simple 2-4 chord loops'],
-  'R&B': ['Imaj7-IVmaj7', 'ii-V-I', 'i-VI-III-VII', 'vi-ii-V-I'],
-  'Folk': ['I-IV-V', 'I-V-vi-IV', 'G-C-D-G', 'C-G-Am-F'],
-  'Jazz': ['ii-V-I', 'I-vi-ii-V', 'iii-vi-ii-V', 'I-II7-V7-I (Rhythm Changes A section)', 'Imaj7-IIm7-IIIm7-IVmaj7 (Modal)'],
-  'Blues': ['I-I-I-I-IV-IV-I-I-V-IV-I-I (12-bar)', 'i-i-i-i-iv-iv-i-i-v-iv-i-i (minor 12-bar)'],
-  'Default': ['I-V-vi-IV', 'i-VI-III-VII', 'I-IV-V-I', 'ii-V-I']
+  'Pop': ['I-V-vi-IV', 'vi-IV-I-V', 'I-IV-V-I', 'I-vi-IV-V', 'ii-V-I-IV', 'vi-ii-V-I', 'I-iii-vi-V'],
+  'Indie Pop': ['I-V-vi-IV', 'I-IV-vi-V', 'vi-IV-I-V', 'I-iii-IV-V', 'vi-ii-V-I', 'I-vi-ii-V'],
+  'Synth-Pop': ['i-VI-III-VII', 'I-V-vi-IV', 'i-iv-v-VI', 'I-IV-ii-V', 'vi-IV-I-V', 'i-VII-VI-V'],
+  'Rock': ['I-IV-V', 'vi-IV-I-V', 'I-bVII-IV-I', 'i-VI-III-VII', 'I-V-IV-I', 'vi-ii-V-I', 'I-IV-V-vi'],
+  'Alternative Rock': ['vi-IV-I-V', 'I-V-vi-IV', 'i-VI-III-VII', 'I-IV-ii-V', 'I-bVII-IV-I', 'vi-ii-V-I'],
+  'Hard Rock': ['I-IV-V', 'i-VI-III-VII', 'I-bVII-IV-I', 'i-iv-v-i', 'vi-IV-I-V', 'I-V-IV-I'],
+  'Punk Rock': ['I-IV-V', 'vi-IV-I-V', 'I-V-vi-IV', 'I-bVII-IV-I', 'i-iv-v-i'],
+  'House': ['i-VI-III-VII', 'Am-G-C-F', 'i-III-VI-VII', 'i-v-iv-i', 'vi-IV-I-V', 'i-VII-VI-V'],
+  'Deep House': ['i-VI-III-VII', 'Am-G-C-F', 'i-iv-v-i', 'vi-ii-V-I', 'i-VII-VI-V', 'Dm-Bb-F-C'],
+  'Progressive House': ['i-VI-III-VII', 'vi-IV-I-V', 'i-iv-v-VI', 'Am-F-C-G', 'i-VII-VI-V'],
+  'Tech House': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'i-III-VI-VII', 'vi-IV-I-V'],
+  'Techno': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'i-III-VI-VII', 'i-VII-VI-V', 'Drone + variations'],
+  'Minimal Techno': ['i-iv-v-i', 'Am-G-F-E', 'i-VI-III-VII', 'Single chord drone', 'i-VII-VI-V'],
+  'Trance': ['i-VI-III-VII', 'vi-IV-I-V', 'i-VII-VI-V', 'Am-F-C-G', 'i-iv-v-VI', 'vi-ii-V-I'],
+  'Progressive Trance': ['i-VI-III-VII', 'vi-IV-I-V', 'i-iv-v-VI', 'Am-F-C-G', 'vi-ii-V-I'],
+  'Ambient': ['Imaj7-IVmaj7', 'i-VI', 'Drone + sus chords', 'vi-IV-I-V', 'Am-F-C-G', 'Cmaj7-Fmaj7-Am7-Dm7'],
+  'Dark Ambient': ['i-iv-v-i', 'Am-Dm-Em-Am', 'i-VI-III-VII', 'Drone + minor variations'],
+  'Synthwave': ['i-VI-III-VII', 'vi-IV-I-V', 'I-V-vi-IV', 'i-iv-v-i', 'Am-F-C-G', 'i-VII-VI-V'],
+  'Retrowave': ['i-VI-III-VII', 'vi-IV-I-V', 'I-V-vi-IV', 'Am-F-C-G', 'i-iv-v-VI'],
+  'Darksynth': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'i-VII-VI-V', 'vi-IV-I-V'],
+  'Vaporwave': ['Imaj7-IVmaj7', 'vi-IV-I-V', 'I-V-vi-IV', 'Cmaj7-Fmaj7-Am7-Dm7', 'ii-V-I-IV'],
+  'Drum and Bass': ['i-VI-III-VII', 'Am-F-C-G', 'ii-V-I-IV', 'i-iv-v-VI', 'Complex jazz voicings'],
+  'Liquid DnB': ['ii-V-I-IV', 'Imaj7-vi7-ii7-V7', 'i-VI-III-VII', 'Am-F-C-G', 'vi-ii-V-I'],
+  'Neurofunk': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'Complex chromatic progressions'],
+  'Breakcore': ['i-VI-III-VII', 'Complex atonal progressions', 'i-iv-v-i', 'Chaotic harmonic structures'],
+  'Dubstep': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'Simple 2-3 chord loops', 'vi-IV-I-V'],
+  'Riddim': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'Simple repetitive loops'],
+  'Future Bass': ['I-V-vi-IV', 'vi-IV-I-V', 'i-VI-III-VII', 'I-iii-vi-V', 'vi-ii-V-I'],
+  'Trap (EDM)': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'vi-IV-I-V', 'Simple 2-3 chord loops'],
+  'Hip Hop': ['i-VI-III-VII', 'Am-G-Em-F', 'ii-V-I', 'i-iv-v-i', 'Sample-based loops', 'vi-IV-I-V'],
+  'Boom Bap': ['ii-V-I', 'i-VI-III-VII', 'Am-G-Em-F', 'Sample-based progressions', 'i-iv-v-i'],
+  'Trap': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'vi-IV-I-V', 'Simple minor progressions'],
+  'Lo-fi Hip Hop': ['ii-V-I-IV', 'Imaj7-vi7-ii7-V7', 'I-V-vi-IV', 'vi-ii-V-I', 'Cmaj7-Am7-Dm7-G7'],
+  'Cloud Rap': ['i-VI-III-VII', 'vi-IV-I-V', 'I-V-vi-IV', 'Atmospheric progressions', 'Am-F-C-G'],
+  'Drill': ['i-VI-III-VII', 'i-iv-v-i', 'Am-G-F-E', 'Dark minor progressions', 'vi-IV-I-V'],
+  'R&B': ['Imaj7-IVmaj7', 'ii-V-I', 'i-VI-III-VII', 'vi-ii-V-I', 'I-iii-vi-V', 'Cmaj7-Fmaj7-Am7-Dm7'],
+  'Contemporary R&B': ['Imaj7-IVmaj7', 'vi-ii-V-I', 'I-iii-vi-V', 'ii-V-I-IV', 'I-V-vi-IV'],
+  'Neo-Soul': ['ii-V-I', 'Imaj7-vi7-ii7-V7', 'i-VI-III-VII', 'Complex jazz progressions', 'vi-ii-V-I'],
+  'Soul': ['I-IV-V', 'ii-V-I', 'I-vi-IV-V', 'vi-IV-I-V', 'I-V-vi-IV'],
+  'Folk': ['I-IV-V', 'I-V-vi-IV', 'G-C-D-G', 'C-G-Am-F', 'vi-IV-I-V', 'I-vi-IV-V'],
+  'Acoustic': ['I-V-vi-IV', 'I-IV-V', 'vi-IV-I-V', 'G-C-D-G', 'C-G-Am-F', 'I-vi-IV-V'],
+  'Jazz': ['ii-V-I', 'I-vi-ii-V', 'iii-vi-ii-V', 'I-II7-V7-I', 'Imaj7-IIm7-IIIm7-IVmaj7', 'vi-ii-V-I'],
+  'Smooth Jazz': ['ii-V-I', 'Imaj7-vi7-ii7-V7', 'I-vi-ii-V', 'vi-ii-V-I', 'iii-vi-ii-V'],
+  'Blues': ['I-I-I-I-IV-IV-I-I-V-IV-I-I', 'i-i-i-i-iv-iv-i-i-v-iv-i-i', 'I-IV-V', 'i-iv-v'],
+  'Funk': ['ii-V-I', 'I-IV-V', 'i-iv-v-i', 'vi-ii-V-I', 'I7-IV7-V7', 'Dominant 7th progressions'],
+  'Heavy Metal': ['i-VI-III-VII', 'i-iv-v-i', 'I-bVII-IV-I', 'vi-IV-I-V', 'i-VII-VI-V'],
+  'Thrash Metal': ['i-VI-III-VII', 'i-iv-v-i', 'I-bVII-IV-I', 'Fast chromatic progressions'],
+  'Death Metal': ['i-iv-v-i', 'i-VI-III-VII', 'Chromatic progressions', 'Complex atonal structures'],
+  'Black Metal': ['i-iv-v-i', 'i-VI-III-VII', 'i-VII-VI-V', 'Atmospheric minor progressions'],
+  'Doom Metal': ['i-iv-v-i', 'i-VI-III-VII', 'i-VII-VI-V', 'Slow minor progressions'],
+  'Metalcore': ['i-VI-III-VII', 'vi-IV-I-V', 'i-iv-v-i', 'I-bVII-IV-I', 'vi-ii-V-I'],
+  'Deathcore': ['i-iv-v-i', 'i-VI-III-VII', 'Chromatic breakdowns', 'Complex atonal progressions'],
+  'Experimental': ['Atonal progressions', 'Extended harmony', 'Microtonal scales', 'Non-traditional structures'],
+  'Noise': ['Atonal clusters', 'Non-harmonic structures', 'Dissonant progressions', 'Experimental harmony'],
+  'Industrial': ['i-iv-v-i', 'i-VI-III-VII', 'Power chord progressions', 'Mechanical repetition'],
+  'Chiptune': ['I-V-vi-IV', 'i-VI-III-VII', 'vi-IV-I-V', 'Classic video game progressions', 'I-iii-vi-V'],
+  'Video Game Music': ['I-V-vi-IV', 'i-VI-III-VII', 'vi-IV-I-V', 'Adventure progressions', 'I-iii-vi-V'],
+  'Default': ['I-V-vi-IV', 'i-VI-III-VII', 'I-IV-V-I', 'vi-IV-I-V', 'ii-V-I', 'I-iii-vi-V']
 };
 
 export const MIDI_TEMPO_RANGES: { [genre: string]: [number, number] } = {
@@ -182,9 +219,13 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
   'tambourine': 54,  // Tambourine
   'rim_shot': 37,    // Side Stick / Rim Shot
   'cowbell': 56,     // Cowbell
-  // Variants
+  // Variants and aliases
   'bass_drum': 36,
-  'snare_drum': 38
+  'snare_drum': 38,
+  'closed_hihat': 42,
+  'hihat': 42,
+  'crash': 49,
+  'ride': 51
 };
 
 // --- Patch Guide input categories for robust UI ---

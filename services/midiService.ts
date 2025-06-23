@@ -89,6 +89,10 @@ export const generateMidiFile = (
   settings: Pick<MidiSettings, 'tempo' | 'timeSignature' | 'key'>,
   trackNamePrefix: string = "TrackGuide"
 ): string | null => { 
+  console.log('🎼 Generating MIDI file with patterns:', patterns);
+  console.log('🎼 Settings:', settings);
+  console.log('🎼 Track name prefix:', trackNamePrefix);
+  
   if (!MidiWriter || !MidiWriter.Writer || !MidiWriter.Track || !MidiWriter.NoteEvent) {
     console.error("MidiWriterJS components (Writer, Track, NoteEvent) are not loaded. Cannot generate MIDI file.");
     return null;
@@ -156,6 +160,10 @@ export const generateMidiFile = (
 };
 
 export const downloadMidi = (midiDataUri: string, filename: string) => { 
+  console.log('💾 Downloading MIDI file:', filename);
+  console.log('💾 Data URI length:', midiDataUri.length);
+  console.log('💾 Data URI starts with:', midiDataUri.substring(0, 50));
+  
   if (!midiDataUri) {
     console.error("MIDI data URI is null or empty. Cannot download.");
     alert("Failed to generate MIDI data for download.");
@@ -167,4 +175,5 @@ export const downloadMidi = (midiDataUri: string, filename: string) => {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  console.log('💾 Download triggered successfully');
 };

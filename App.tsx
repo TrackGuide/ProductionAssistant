@@ -61,77 +61,100 @@ const MAX_AUDIO_FILE_SIZE_BYTES = MAX_AUDIO_FILE_SIZE_MB * 1024 * 1024;
 
 
 export const parseBpmFromGuidebook = (content: string): number | null => {
-  const bpmMatch = content.match(/Estimated BPM Range:\s*.*?(\d+)\s*(?:-|to)\s*(\d+)\s*BPM/i);
-  if (bpmMatch && bpmMatch[1] && bpmMatch[2]) {
-    return Math.round((parseInt(bpmMatch[1], 10) + parseInt(bpmMatch[2], 10)) / 2);
-  }
-  const singleBpmMatch = content.match(/Estimated BPM Range:\s*.*?(\d+)\s*BPM/i);
-  if (singleBpmMatch && singleBpmMatch[1]) {
-    return parseInt(singleBpmMatch[1], 10);
-  }
-  const bpmValueMatch = content.match(/BPM:\s*(\d+)/i); 
-    if (bpmValueMatch && bpmValueMatch[1]) {
-        return parseInt(bpmValueMatch[1], 10);
+  // Try multiple patterns for BPM detection
+  const patterns = [
+    /Tempo.*?(\d+)\s*(?:-|to)\s*(\d+)\s*BPM/i,
+    /BPM.*?(\d+)\s*(?:-|to)\s*(\d+)/i,
+    /(\d+)\s*(?:-|to)\s*(\d+)\s*BPM/i,
+    /Tempo.*?(\d+)\s*BPM/i,
+    /BPM.*?(\d+)/i,
+    /(\d+)\s*BPM/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match) {
+      if (match[2]) {
+        // Range found, return average
+        return Math.round((parseInt(match[1], 10) + parseInt(match[2], 10)) / 2);
+      } else if (match[1]) {
+        // Single BPM found
+        return parseInt(match[1], 10);
+      }
     }
+  }
   return null;
 };
 
 export const parseKeyFromGuidebook = (content: string): string | null => {
-  const keyMatch = content.match(/Suggested Key\(s\) \/ Scale\(s\):\s*([^(\n]+)/i);
-  if (keyMatch && keyMatch[1]) {
-    const keys = keyMatch[1].split(/,|\/| or /).map(k => k.trim().replace(/\.$/, ''));
-    for (const k of keys) {
-      const normalizedKey = k.includes(" Minor") ? k : k.replace("Major", "").trim() + " Major";
+  // Enhanced key detection patterns
+  const patterns = [
+    /Suggested Key\(s\) \/ Scale\(s\):\s*([^(\n]+)/i,
+    /Key.*?:\s*([A-G][#b]?\s*(?:Major|Minor|major|minor))/i,
+    /([A-G][#b]?\s*(?:Major|Minor|major|minor))/i
+  ];
+  
+  for (const pattern of patterns) {
+    const keyMatch = content.match(pattern);
+    if (keyMatch && keyMatch[1]) {
+      const keys = keyMatch[1].split(/,|\/| or /).map(k => k.trim().replace(/\.$/, ''));
+      for (const k of keys) {
+        const normalizedKey = k.includes(" Minor") || k.includes(" minor") ? 
+          k.replace(/minor/i, "Minor") : 
+          k.replace(/major/i, "Major").replace(/Major$/, "").trim() + " Major";
+        
         if (MIDI_SCALES.includes(k) || MIDI_SCALES.includes(normalizedKey)) {
-          if (MIDI_SCALES.includes(k)) return k;
-          return normalizedKey;
+          return MIDI_SCALES.includes(k) ? k : normalizedKey;
         }
-    }
-    const firstPotentialKey = keys[0];
-    if (firstPotentialKey) {
+      }
+      
+      // Fallback: try to match the first key
+      const firstKey = keys[0];
+      if (firstKey) {
         for (const scale of MIDI_SCALES) {
-            if (firstPotentialKey.toLowerCase().startsWith(scale.split(' ')[0].toLowerCase())) {
-                 if (firstPotentialKey.toLowerCase().includes('minor')) {
-                    if (scale.includes('Minor')) return scale;
-                 } else if (firstPotentialKey.toLowerCase().includes('major')) {
-                    if (scale.includes('Major')) return scale;
-                 } else { 
-                    return scale; 
-                 }
+          if (firstKey.toLowerCase().startsWith(scale.split(' ')[0].toLowerCase())) {
+            if (firstKey.toLowerCase().includes('minor')) {
+              if (scale.includes('Minor')) return scale;
+            } else {
+              if (scale.includes('Major')) return scale;
             }
+          }
         }
-        return firstPotentialKey; 
+        return firstKey; 
+      }
     }
   }
   return null;
 };
 
 export const parseChordProgressionFromGuidebook = (content: string): string | null => {
-  const sectionMatch = content.match(/## (?:3|4)\.(?:.*Harmony.*|.*Chord Progressions.*)\s*\n(?:[^\n]*\n)*?.*?Chord Progression\(s\)\s*(?:\([^)]+\))?:\s*([^\n]+)/im);
-
-  if (sectionMatch && sectionMatch[1]) {
-    const progressionsText = sectionMatch[1];
-    const firstProgMatch = progressionsText.match(/([ivclxmdIVCLXMDab#ø°dimaug\d\/sus-]+(?:\s*-\s*[ivclxmdIVCLXMDab#ø°dimaug\d\/sus-]+)*)/);
-    if (firstProgMatch && firstProgMatch[1]) {
+  // Enhanced chord progression detection patterns
+  const patterns = [
+    /Chord Progression\(s\)?\s*(?:\([^)]+\))?:\s*([^\n]+)/i,
+    /Progression\(s\)?:\s*([^\n]+)/i,
+    /Chords?:\s*([ivclxmdIVCLXMDab#ø°dimaug\d\/sus-][^\n]*)/i,
+    /([ivclxmdIVCLXMD]+(?:\s*-\s*[ivclxmdIVCLXMD]+){2,})/i // Roman numeral pattern
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      const progressionsText = match[1];
+      const firstProgMatch = progressionsText.match(/([ivclxmdIVCLXMDab#ø°dimaug\d\/sus-]+(?:\s*-\s*[ivclxmdIVCLXMDab#ø°dimaug\d\/sus-]+)*)/);
+      if (firstProgMatch && firstProgMatch[1]) {
         let progression = firstProgMatch[1].trim();
         if (progression.endsWith('.')) progression = progression.slice(0, -1);
+        
+        // Clean up common separators
         const commonSeparators = [', ', '. ', '; '];
         for (const sep of commonSeparators) {
-            if (progression.includes(sep)) {
-                progression = progression.split(sep)[0];
-                break;
-            }
+          if (progression.includes(sep)) {
+            progression = progression.split(sep)[0].trim();
+            break;
+          }
         }
-        if (/[IVXLCDMivxlcdm]/.test(progression)) {
-           return progression;
-        }
-    }
-  }
-  const simpleProgMatch = content.match(/Chord Progression\(s\).*?:\s*([IVXLCDMivxlcdm\d\s,-]+)/i);
-  if (simpleProgMatch && simpleProgMatch[1]) {
-    const found = simpleProgMatch[1].split(',')[0].trim();
-    if (/[IVXLCDMivxlcdm]/.test(found)) {
-        return found;
+        return progression;
+      }
     }
   }
   return null;

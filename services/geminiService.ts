@@ -12,8 +12,14 @@ import {
   GuidebookEntry
 } from "../types";
 
-const apiKey = process.env.API_KEY!;
-if (!apiKey) throw new Error("API_KEY is not set. Cannot connect to Gemini API.");
+const apiKey = 
+  process.env.API_KEY ||
+  process.env.GEMINI_API_KEY ||
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_API_KEY);
+
+if (!apiKey) {
+  throw new Error("API key not configured. Set GEMINI_API_KEY or VITE_GEMINI_API_KEY environment variable.");
+}
 const ai = new GoogleGenAI({ apiKey });
 
 /**
@@ -323,13 +329,89 @@ You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID J
 
 **JSON Structure Required:**
 {
-  "chords": [...],
-  "bassline": [...],
-  "melody": [...],
-  "drums": { ... }
+  "chords": [
+    {
+      "time": 0,
+      "name": "Cm",
+      "duration": 2,
+      "notes": [{"pitch": "C4", "midi": 60}, {"pitch": "Eb4", "midi": 63}, {"pitch": "G4", "midi": 67}],
+      "velocity": 90
+    }
+  ],
+  "bassline": [
+    {
+      "time": 0,
+      "midi": 36,
+      "duration": 0.5,
+      "velocity": 100,
+      "pitch": "C2"
+    }
+  ],
+  "melody": [
+    {
+      "time": 0,
+      "midi": 72,
+      "duration": 1,
+      "velocity": 95,
+      "pitch": "C5"
+    }
+  ],
+  "drums": {
+    "kick": [
+      {"time": 0, "duration": 0.25, "velocity": 120},
+      {"time": 2, "duration": 0.25, "velocity": 115}
+    ],
+    "snare": [
+      {"time": 1, "duration": 0.25, "velocity": 100},
+      {"time": 3, "duration": 0.25, "velocity": 105}
+    ],
+    "hihat_closed": [
+      {"time": 0.5, "duration": 0.125, "velocity": 80},
+      {"time": 1.5, "duration": 0.125, "velocity": 75}
+    ],
+    "open_hihat": [
+      {"time": 1.75, "duration": 0.5, "velocity": 85}
+    ],
+    "clap": [
+      {"time": 1, "duration": 0.25, "velocity": 95}
+    ],
+    "tom_high": [
+      {"time": 3.5, "duration": 0.25, "velocity": 90}
+    ],
+    "tom_mid": [
+      {"time": 3.75, "duration": 0.25, "velocity": 95}
+    ],
+    "tom_low": [
+      {"time": 4, "duration": 0.5, "velocity": 100}
+    ],
+    "crash_cymbal_1": [
+      {"time": 0, "duration": 2, "velocity": 110}
+    ],
+    "ride_cymbal_1": [
+      {"time": 0.5, "duration": 0.25, "velocity": 70}
+    ]
+  }
 }
 
-**CRITICAL:** Return ONLY valid JSON. No explanatory text, no markdown formatting, no code blocks. Just the raw JSON object that can be parsed directly.
+**CRITICAL REQUIREMENTS:**
+1. Return ONLY valid JSON. No explanatory text, no markdown formatting, no code blocks.
+2. All time values must be in beats (0 to ${settings.bars * 4})
+3. All MIDI numbers must be integers between 21-108
+4. All durations must be positive numbers
+5. All velocities must be integers between 1-127
+6. Use appropriate drum elements for ${settings.genre}:
+   - Essential: kick, snare, hihat_closed
+   - Groove: open_hihat, ride_cymbal_1
+   - Accents: clap, crash_cymbal_1
+   - Fills: tom_high, tom_mid, tom_low
+   - Choose elements that fit the genre and song section
+
+**Genre-Specific Drum Guidelines:**
+- Electronic/House/Techno: Focus on kick, hihat_closed, open_hihat, clap
+- Rock/Metal: Use kick, snare, hihat_closed, crash_cymbal_1, tom_high, tom_mid, tom_low
+- Hip Hop/Trap: Emphasize kick, snare, hihat_closed, clap
+- Jazz/Funk: Include ride_cymbal_1, hihat_closed, kick, snare
+- Pop: Balanced use of kick, snare, hihat_closed, crash_cymbal_1, clap
 
 Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
 

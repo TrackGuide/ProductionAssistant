@@ -35,7 +35,12 @@ const getAudioContext = (): AudioContext => {
 };
 
 const beatsToSeconds = (beats: number, tempo: number): number => {
-  return (beats / tempo) * 60;
+  const result = (beats / tempo) * 60;
+  if (!Number.isFinite(result)) {
+    console.error('🚨 beatsToSeconds produced non-finite result:', result, 'beats:', beats, 'tempo:', tempo);
+    return 0; // Fallback to 0
+  }
+  return result;
 };
 
 const scheduleNote = (
@@ -50,6 +55,21 @@ const scheduleNote = (
   const context = getAudioContext();
   if (!masterGain || !trackType) return;
 
+  // Validate all input values to prevent non-finite values
+  if (!Number.isFinite(noteNumber) || !Number.isFinite(startTimeInLoopSeconds) || 
+      !Number.isFinite(durationSeconds) || !Number.isFinite(velocity)) {
+    console.error('🚨 Invalid note values detected:', {
+      noteNumber,
+      startTimeInLoopSeconds,
+      durationSeconds,
+      velocity,
+      trackType,
+      isDrum,
+      drumTypeKey
+    });
+    return;
+  }
+
   const absoluteScheduleTime = overallPlaybackStartTime + (currentLoopIteration * getLoopDurationSeconds()) + startTimeInLoopSeconds;
   
   if (absoluteScheduleTime < context.currentTime - 0.05) { 
@@ -60,6 +80,12 @@ const scheduleNote = (
   const controlGainNode = context.createGain();
   const intendedVolume = (velocity / 127) * (isDrum ? 0.75 : 0.35); 
   let currentAppliedGain = intendedVolume;
+  
+  // Ensure gain values are finite
+  if (!Number.isFinite(currentAppliedGain) || currentAppliedGain < 0) {
+    console.error('🚨 Invalid gain value detected:', currentAppliedGain, 'for velocity:', velocity);
+    currentAppliedGain = 0.1; // Fallback to a safe value
+  }
   
   controlGainNode.gain.setValueAtTime(currentAppliedGain, absoluteScheduleTime);
   // Only schedule decay if it's audible. If currentAppliedGain is 0 (or very close), ramp won't work correctly.
@@ -91,35 +117,73 @@ const scheduleNote = (
       kickOsc.stop(absoluteScheduleTime + durationSeconds);
       activeSources.push({ node: kickOsc, controlGainNode, trackType, intendedVolume, scheduledStopTime: absoluteScheduleTime + durationSeconds, isDrum: true });
       return; 
+    } else if (drumTypeKey === 'snare' || drumTypeKey === 'clap') {
+      // Noise-based snare/clap
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      for (let i = 0; i < frameCount; i++) { 
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.05)); 
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    } else if (drumTypeKey && (drumTypeKey.includes('hat') || drumTypeKey === 'hihat_closed' || drumTypeKey === 'open_hihat')) {
+      // Hi-hat synthesis
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      const fundamental = 5000;
+      const decayFactor = drumTypeKey === 'open_hihat' ? 0.15 : 0.03;
+      for (let i = 0; i < frameCount; i++) { 
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * decayFactor)) * 
+                  Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate) * (1 + Math.random()*0.3));
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    } else if (drumTypeKey && (drumTypeKey.includes('cymbal') || drumTypeKey === 'crash_cymbal_1' || drumTypeKey === 'ride_cymbal_1')) {
+      // Cymbal synthesis
+      oscillator = context.createBufferSource(); 
+      const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
+      const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const data = drumBuffer.getChannelData(0);
+      
+      const fundamental = drumTypeKey === 'ride_cymbal_1' ? 3000 : 4000;
+      const decayFactor = drumTypeKey === 'crash_cymbal_1' ? 0.25 : 0.15;
+      for (let i = 0; i < frameCount; i++) { 
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * decayFactor)) * 
+                  Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate) * (1 + Math.random()*0.5));
+      }
+      (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
+    } else if (drumTypeKey && drumTypeKey.includes('tom')) {
+      // Tom synthesis
+      const tomOsc = context.createOscillator();
+      tomOsc.type = 'sine'; 
+      let startFreq = 200;
+      if (drumTypeKey === 'tom_high') startFreq = 300;
+      else if (drumTypeKey === 'tom_mid') startFreq = 200;
+      else if (drumTypeKey === 'tom_low') startFreq = 120;
+      
+      tomOsc.frequency.setValueAtTime(startFreq, absoluteScheduleTime);
+      tomOsc.frequency.exponentialRampToValueAtTime(startFreq * 0.5, absoluteScheduleTime + durationSeconds * 0.8);
+      
+      const tomEnvGain = context.createGain();
+      tomEnvGain.gain.setValueAtTime(0.9, absoluteScheduleTime);
+      tomEnvGain.gain.exponentialRampToValueAtTime(0.001, absoluteScheduleTime + durationSeconds);
+      
+      tomOsc.connect(tomEnvGain).connect(controlGainNode);
+      tomOsc.start(absoluteScheduleTime);
+      tomOsc.stop(absoluteScheduleTime + durationSeconds);
+      activeSources.push({ node: tomOsc, controlGainNode, trackType, intendedVolume, scheduledStopTime: absoluteScheduleTime + durationSeconds, isDrum: true });
+      return;
     } else { 
-        // Generic noise-based drums for other elements
+        // Generic percussion fallback
         oscillator = context.createBufferSource(); 
         const frameCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds));
         const drumBuffer = context.createBuffer(1, frameCount, context.sampleRate);
         const data = drumBuffer.getChannelData(0);
-
-        if (drumTypeKey === 'snare' || drumTypeKey === 'clap') {
-            for (let i = 0; i < frameCount; i++) { data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.05)); }
-        } else if (drumTypeKey && (drumTypeKey.includes('hat') || drumTypeKey.includes('cymbal') || drumTypeKey.includes('shaker'))) {
-            const fundamental = drumTypeKey.includes('hat') ? 5000 : (drumTypeKey.includes('shaker') ? 7000 : 3000);
-            const decayFactor = drumTypeKey.includes('hat') ? 0.03 : (drumTypeKey.includes('shaker') ? 0.02 : 0.25);
-            for (let i = 0; i < frameCount; i++) { data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * decayFactor)) * Math.sin(2 * Math.PI * fundamental * (i/context.sampleRate) * (1 + Math.random()*0.3));}
-        } else { // Toms or other percussion
-            const tomOsc = context.createOscillator();
-            tomOsc.type = 'sine'; 
-            tomOsc.frequency.setValueAtTime(200 + Math.random()*150, absoluteScheduleTime); // Slightly randomized tom pitch
-            tomOsc.frequency.exponentialRampToValueAtTime(100, absoluteScheduleTime + durationSeconds * 0.8);
-            
-            const tomEnvGain = context.createGain();
-            tomEnvGain.gain.setValueAtTime(0.9, absoluteScheduleTime);
-            tomEnvGain.gain.exponentialRampToValueAtTime(0.001, absoluteScheduleTime + durationSeconds);
-            
-            tomOsc.connect(tomEnvGain).connect(controlGainNode);
-            tomOsc.start(absoluteScheduleTime);
-            tomOsc.stop(absoluteScheduleTime + durationSeconds);
-            activeSources.push({ node: tomOsc, controlGainNode, trackType, intendedVolume, scheduledStopTime: absoluteScheduleTime + durationSeconds, isDrum: true });
-            return;
-        }
+        for (let i = 0; i < frameCount; i++) { data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.1)); }
         (oscillator as AudioBufferSourceNode).buffer = drumBuffer;
     }
   } else {
@@ -127,6 +191,13 @@ const scheduleNote = (
       oscillator = context.createOscillator(); 
       (oscillator as OscillatorNode).type = 'sawtooth'; // A reasonably bright waveform
       const freq = 440 * Math.pow(2, (noteNumber - 69) / 12);
+      
+      // Validate frequency
+      if (!Number.isFinite(freq) || freq <= 0) {
+        console.error('🚨 Invalid frequency calculated:', freq, 'for note number:', noteNumber);
+        return; // Skip this note
+      }
+      
       (oscillator as OscillatorNode).frequency.setValueAtTime(freq, absoluteScheduleTime);
   }
 
@@ -155,6 +226,10 @@ export const playMidiPatterns = (
   settings: Pick<MidiSettings, 'tempo' | 'bars' | 'timeSignature'>,
   trackToPlay?: KeyOfGeneratedMidiPatterns // Optional: if provided, only play this track
 ) => {
+  console.log('🎵 Starting playback with patterns:', patterns);
+  console.log('🎵 Settings:', settings);
+  console.log('🎵 Track to play:', trackToPlay);
+  
   stopPlaybackInternal(false); // Stop any existing playback but don't reset loop iteration fully yet
   
   isGloballyPlaying = true; 
@@ -168,6 +243,8 @@ export const playMidiPatterns = (
   activeSources = []; // Clear previously scheduled sources
 
   const loopDurationSec = getLoopDurationSeconds();
+  console.log('🎵 Loop duration:', loopDurationSec, 'seconds');
+  
   if (loopDurationSec <= 0) {
       console.error("Loop duration is zero or negative. Cannot play.");
       isGloballyPlaying = false;
@@ -189,32 +266,52 @@ export const playMidiPatterns = (
       trackKey: KeyOfGeneratedMidiPatterns,
       data?: MidiNote[] | ChordNoteEvent[] | DrumPatternData
     ) => {
-      if (!data) return;
+      if (!data) {
+        console.log(`🎵 No data for track: ${trackKey}`);
+        return;
+      }
+
+      console.log(`🎵 Scheduling track: ${trackKey}`, data);
 
       if (trackKey === 'drums' && typeof data === 'object' && !Array.isArray(data)) {
         Object.entries(data as DrumPatternData).forEach(([drumElementName, hits]) => {
           // Normalize drum element name for mapping (e.g., 'closed hi-hat' -> 'closed_hihat')
           const drumKeyClean = drumElementName.toLowerCase().replace(/\s+/g, '_');
           const midiPitch = MIDI_DRUM_MAP[drumKeyClean] || MIDI_DRUM_MAP[drumElementName]; // Try cleaned key first
-          if (typeof midiPitch !== 'number' || !hits) return;
+          
+          console.log(`🥁 Processing drum element: ${drumElementName} -> ${drumKeyClean}, MIDI: ${midiPitch}, hits:`, hits);
+          
+          if (typeof midiPitch !== 'number' || !hits) {
+            console.warn(`🚨 Invalid drum mapping for ${drumElementName}:`, midiPitch);
+            return;
+          }
           hits.forEach((hit: DrumHit) => {
+            console.log(`🥁 Scheduling drum hit:`, hit);
             scheduleNote(midiPitch, beatsToSeconds(hit.time, tempo), beatsToSeconds(hit.duration, tempo), hit.velocity, true, drumKeyClean, trackKey);
           });
         });
       } else if (Array.isArray(data)) {
-        (data as Array<MidiNote | ChordNoteEvent>).forEach(event => {
+        (data as Array<MidiNote | ChordNoteEvent>).forEach((event, index) => {
+          console.log(`🎹 Processing ${trackKey} event ${index}:`, event);
           const isChord = 'notes' in event; // Check if it's a ChordNoteEvent
           if (isChord) {
             // For chords, schedule each note within the chord
-            (event as ChordNoteEvent).notes.forEach(note => {
+            (event as ChordNoteEvent).notes.forEach((note, noteIndex) => {
+              console.log(`🎹 Chord note ${noteIndex}:`, note);
               if (typeof note.midi === 'number') {
                 scheduleNote(note.midi, beatsToSeconds(event.time, tempo), beatsToSeconds(event.duration, tempo), event.velocity, false, undefined, trackKey);
+              } else {
+                console.warn(`🚨 Invalid MIDI number in chord note:`, note);
               }
             });
           } else {
             // For single notes (melody, bassline)
-            if (typeof (event as MidiNote).midi === 'number') {
-              scheduleNote((event as MidiNote).midi, beatsToSeconds(event.time, tempo), beatsToSeconds(event.duration, tempo), event.velocity, false, undefined, trackKey);
+            const noteEvent = event as MidiNote;
+            console.log(`🎹 Single note:`, noteEvent);
+            if (typeof noteEvent.midi === 'number') {
+              scheduleNote(noteEvent.midi, beatsToSeconds(event.time, tempo), beatsToSeconds(event.duration, tempo), event.velocity, false, undefined, trackKey);
+            } else {
+              console.warn(`🚨 Invalid MIDI number in note:`, noteEvent);
             }
           }
         });

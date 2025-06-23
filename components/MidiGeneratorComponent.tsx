@@ -65,11 +65,6 @@ const getAvailableModesForKey = (keyScale: string): string[] => {
     return MIDI_MODES[keyCenter] || MIDI_MODES['C'];
 };
 
-const getTempoRangeText = (genre: string): string => {
-    const range = MIDI_TEMPO_RANGES[genre] || MIDI_TEMPO_RANGES.Default;
-    return `Typical: ${range[0]}-${range[1]} BPM`;
-};
-
 const getChordProgressionsForGenre = (genre: string): string[] => {
     return MIDI_CHORD_PROGRESSIONS[genre] || MIDI_CHORD_PROGRESSIONS.Default;
 };
@@ -305,15 +300,74 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           }
         }
 
+        console.log('Raw MIDI response:', jsonStr);
+
         // Clean up the JSON response
         jsonStr = jsonStr.trim();
+        
+        // Remove code blocks if present
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
         const match = jsonStr.match(fenceRegex);
         if (match && match[2]) {
+            console.log('Found code block, extracting JSON:', match[2]);
             jsonStr = match[2].trim();
         }
 
-        const patternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        // Try to parse JSON
+        let patternsData;
+        try {
+            patternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.error('Failed to parse:', jsonStr);
+            throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}. Response was: ${jsonStr.substring(0, 200)}...`);
+        }
+
+        console.log('Parsed MIDI patterns:', patternsData);
+
+        // Validate patterns before setting them
+        const validatePatterns = (patterns: GeneratedMidiPatterns) => {
+          console.log('🔍 Validating MIDI patterns...');
+          
+          // Validate chords
+          if (patterns.chords) {
+            patterns.chords.forEach((chord, i) => {
+              if (!Number.isFinite(chord.time) || !Number.isFinite(chord.duration)) {
+                console.error(`🚨 Invalid chord ${i}:`, chord);
+              }
+              chord.notes.forEach((note, j) => {
+                if (!Number.isFinite(note.midi)) {
+                  console.error(`🚨 Invalid chord ${i} note ${j}:`, note);
+                }
+              });
+            });
+          }
+          
+          // Validate bassline and melody
+          ['bassline', 'melody'].forEach(trackType => {
+            const track = patterns[trackType as keyof GeneratedMidiPatterns] as MidiNote[];
+            if (track) {
+              track.forEach((note, i) => {
+                if (!Number.isFinite(note.time) || !Number.isFinite(note.duration) || !Number.isFinite(note.midi)) {
+                  console.error(`🚨 Invalid ${trackType} note ${i}:`, note);
+                }
+              });
+            }
+          });
+          
+          // Validate drums
+          if (patterns.drums) {
+            Object.entries(patterns.drums).forEach(([drumName, hits]) => {
+              hits.forEach((hit, i) => {
+                if (!Number.isFinite(hit.time) || !Number.isFinite(hit.duration) || !Number.isFinite(hit.velocity || 100)) {
+                  console.error(`🚨 Invalid ${drumName} hit ${i}:`, hit);
+                }
+              });
+            });
+          }
+        };
+        
+        validatePatterns(patternsData);
 
         if (patternsData.drums) {
             const lowercasedDrums: any = {};
@@ -447,15 +501,27 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           }
         }
 
+        console.log(`Raw MIDI response for ${trackType}:`, jsonStr);
+
         // Clean up the JSON response
         jsonStr = jsonStr.trim();
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
         const match = jsonStr.match(fenceRegex);
         if (match && match[2]) {
+            console.log(`Found code block for ${trackType}, extracting JSON:`, match[2]);
             jsonStr = match[2].trim();
         }
 
-        const newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        let newPatternsData;
+        try {
+            newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        } catch (parseError) {
+            console.error(`JSON parse error for ${trackType}:`, parseError);
+            console.error('Failed to parse:', jsonStr);
+            throw new Error(`Invalid JSON response from AI for ${trackType}: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`);
+        }
+
+        console.log(`Parsed MIDI patterns for ${trackType}:`, newPatternsData);
 
         const updatedPatterns = {
             ...patterns,
@@ -555,7 +621,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
             <div>
               <label htmlFor="midi-key" className="block text-sm font-medium text-gray-300 mb-1">
-                Key <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookKey || "N/A"})</span>
+                Key
               </label>
               <select 
                 id="midi-key" 
@@ -582,7 +648,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
-                Tempo (BPM) <span className="text-xs text-gray-400">Guidebook: {parsedGuidebookBpm || "N/A"}</span>
+                Tempo (BPM)
               </label>
               <Input 
                 type="number" 
@@ -591,7 +657,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('tempo', parseInt(e.target.value,10))} 
                 min="30" max="300" 
               />
-              <p className="text-xs text-gray-400 mt-1">{getTempoRangeText(settings.genre)}</p>
             </div>
             <div>
               <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">Time Signature</label>
@@ -606,7 +671,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             </div>
             <div>
               <label htmlFor="midi-chords" className="block text-sm font-medium text-gray-300 mb-1">
-                Chord Progression <span className="text-xs text-gray-400">(Guidebook: {parsedGuidebookChordProg || "N/A"})</span>
+                Chord Progression
               </label>
               <select 
                 id="midi-chords" 
