@@ -127,18 +127,24 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
     setResult(null);
 
     try {
+      // Ensure description is never empty
+      let description = [
+        ...inputs.styleMood,
+        ...inputs.dynamicsMovement
+      ].join(', ');
+      if (!description.trim()) {
+        description = inputs.notes?.trim() || 'No specific style or movement provided';
+      }
+
       const response = await PatchGuideService.generateSynthPatchGuide({
-        description: [
-          ...inputs.styleMood,
-          ...inputs.dynamicsMovement
-        ].join(', '),
+        description,
         synth: inputs.synth,
         genre: inputs.genre,
         voiceType: inputs.voiceType,
         notes: inputs.notes
       });
 
-      const patchResult = {
+      const patchResult: PatchGuideResult = {
         text: response.text || '',
         synthConfig: response.synthConfig || {},
         adsrVCF: response.adsrVCF || { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 },
@@ -337,7 +343,6 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
   return (
     <Card>
       <h3 className="text-lg font-semibold text-white mb-6">Complete Patch Guide</h3>
-      
       {/* Main Instructions with integrated visual controls */}
       {result.text && (
         <div className="space-y-8">
@@ -395,23 +400,43 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
             </ReactMarkdown>
           </div>
 
-          {/* Interactive Visual Controls Section */}
-          <div className="border-t border-gray-600 pt-8 mt-8">
-            <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">🎛️ Interactive Controls</h2>
-            
-            {/* Filter Controls */}
-            {result.synthConfig?.filters && result.synthConfig.filters.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-purple-300 mb-4">Filter Visualization</h3>
-                <div className="bg-gray-800 rounded-lg p-6">
+          {/* Filter Configuration Section with Filter Visualization in second column */}
+          {result.synthConfig?.filters && result.synthConfig.filters.length > 0 && (
+            <div className="border-t border-gray-600 pt-8 mt-8">
+              <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">Filter Configuration</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left: Filter Table(s) */}
+                <div>
+                  {result.synthConfig.filters.map((filter: any, idx: number) => (
+                    <div key={idx} className="mb-6">
+                      <h3 className="font-semibold text-purple-300 mb-3 text-sm">{filter.name || `Filter ${idx + 1}`}</h3>
+                      <table className="w-full border-collapse border border-gray-600 text-sm mb-4">
+                        <thead>
+                          <tr>
+                            <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Type</th>
+                            <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Cutoff</th>
+                            <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Resonance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="border border-gray-600 py-2 px-3">{filter.selectedType || 'Lowpass'}</td>
+                            <td className="border border-gray-600 py-2 px-3">{Number.isFinite(Number(filter.cutoff)) ? Number(filter.cutoff).toFixed(2) : '0.50'}</td>
+                            <td className="border border-gray-600 py-2 px-3">{Number.isFinite(Number(filter.resonance)) ? Number(filter.resonance).toFixed(2) : '0.30'}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+                {/* Right: Filter Visualization */}
+                <div>
                   {result.synthConfig.filters.map((filter: any, idx: number) => {
-                    // ✅ Robust value parsing with proper type checking
                     const cutoff = Math.max(0, Math.min(1, Number(filter.cutoff) || 0.5));
                     const resonance = Math.max(0, Math.min(1, Number(filter.resonance) || 0.3));
                     const cutoffHz = cutoff * 20000;
-                    
                     return (
-                      <div key={idx} className="text-center">
+                      <div key={idx} className="text-center mb-8">
                         <div className="font-medium text-gray-200 mb-4">
                           Filter Type: <span className="font-bold text-purple-400">{filter.selectedType || 'Lowpass'}</span>
                         </div>
@@ -428,61 +453,91 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
                   })}
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Envelope Visualizations */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-purple-300 mb-4">Envelope Visualizations</h3>
-              <div className="bg-gray-800 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="text-center">
-                    <h4 className="font-medium text-gray-200 mb-3">Filter Envelope (VCF)</h4>
-                    <EnvelopeChart {...result.adsrVCF} width={300} height={150} />
-                    <div className="text-xs text-gray-400 mt-2 space-x-4">
-                      <span>A: {(result.adsrVCF.attack * 1000).toFixed(0)}ms</span>
-                      <span>D: {(result.adsrVCF.decay * 1000).toFixed(0)}ms</span>
-                      <span>S: {(result.adsrVCF.sustain * 100).toFixed(0)}%</span>
-                      <span>R: {(result.adsrVCF.release * 1000).toFixed(0)}ms</span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <h4 className="font-medium text-gray-200 mb-3">Amplitude Envelope (VCA)</h4>
-                    <EnvelopeChart {...result.adsrVCA} width={300} height={150} />
-                    <div className="text-xs text-gray-400 mt-2 space-x-4">
-                      <span>A: {(result.adsrVCA.attack * 1000).toFixed(0)}ms</span>
-                      <span>D: {(result.adsrVCA.decay * 1000).toFixed(0)}ms</span>
-                      <span>S: {(result.adsrVCA.sustain * 100).toFixed(0)}%</span>
-                      <span>R: {(result.adsrVCA.release * 1000).toFixed(0)}ms</span>
-                    </div>
-                  </div>
+          {/* Main Envelopes Section */}
+          <div className="border-t border-gray-600 pt-8 mt-8">
+            <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">Main Envelopes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* 📈 Filter Envelope (VCF) */}
+              <div>
+                <h3 className="font-semibold text-purple-300 mb-3 text-sm">📈 Filter Envelope (VCF)</h3>
+                <table className="w-full border-collapse border border-gray-600 text-sm mb-4">
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Attack</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Decay</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Sustain</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Release</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCF.attack * 1000).toFixed(0)}ms</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCF.decay * 1000).toFixed(0)}ms</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCF.sustain * 100).toFixed(0)}%</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCF.release * 1000).toFixed(0)}ms</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {/* EnvelopeChart beside the table */}
+                <div className="flex justify-center mt-4">
+                  <EnvelopeChart {...result.adsrVCF} width={300} height={150} />
+                </div>
+              </div>
+              {/* 🔊 Amplitude Envelope (VCA) */}
+              <div>
+                <h3 className="font-semibold text-purple-300 mb-3 text-sm">🔊 Amplitude Envelope (VCA)</h3>
+                <table className="w-full border-collapse border border-gray-600 text-sm mb-4">
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Attack</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Decay</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Sustain</th>
+                      <th className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">Release</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCA.attack * 1000).toFixed(0)}ms</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCA.decay * 1000).toFixed(0)}ms</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCA.sustain * 100).toFixed(0)}%</td>
+                      <td className="border border-gray-600 py-2 px-3">{(result.adsrVCA.release * 1000).toFixed(0)}ms</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {/* EnvelopeChart beside the table */}
+                <div className="flex justify-center mt-4">
+                  <EnvelopeChart {...result.adsrVCA} width={300} height={150} />
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Oscillator Settings Display */}
-            {result.synthConfig?.oscillators && result.synthConfig.oscillators.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
-                <div className="bg-gray-800 rounded-lg p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {result.synthConfig.oscillators.map((osc: any, idx: number) => (
-                      <div key={idx} className="bg-gray-700 rounded-lg p-4">
-                        <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
-                        <div className="space-y-1 text-xs">
-                          {Object.entries(osc.values || {}).map(([param, value]) => (
-                            <div key={param} className="flex justify-between">
-                              <span className="text-gray-300">{param}:</span>
-                              <span className="text-white font-mono">{String(value)}</span>
-                            </div>
-                          ))}
-                        </div>
+          {/* Oscillator Settings Display */}
+          {result.synthConfig?.oscillators && result.synthConfig.oscillators.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {result.synthConfig.oscillators.map((osc: any, idx: number) => (
+                    <div key={idx} className="bg-gray-700 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
+                      <div className="space-y-1 text-xs">
+                        {Object.entries(osc.values || {}).map(([param, value]) => (
+                          <div key={param} className="flex justify-between">
+                            <span className="text-gray-300">{param}:</span>
+                            <span className="text-white font-mono">{String(value)}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </Card>
