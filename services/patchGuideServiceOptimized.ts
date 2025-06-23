@@ -77,7 +77,7 @@ const getSynthConfig = (synthName: string): any => {
   };
 };
 
-// ✅ Structured markdown prompt generation
+// ✅ Structured markdown prompt generation with improved user-friendly layout
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
   const { description, synth, genre, voiceType, notes } = inputs;
   
@@ -90,65 +90,130 @@ const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
 - Description: ${description}
 ${notes ? `- Additional Notes: ${notes}` : ''}
 
-**IMPORTANT:** You must respond with EXACTLY this structured markdown format:
+**IMPORTANT:** You must respond with EXACTLY this structured markdown format with clear organization and readability:
 
-## 📋 Patch Instructions
+## 🎛️ Core Sound Engine
 
-### Oscillators:
-- **Osc 1:** Waveform: [type], Coarse: [value], Fine: [value], Level: [value] dB
-- **Osc 2:** Waveform: [type], Coarse: [value], Fine: [value], Level: [value] dB  
-- **Sub Osc:** Waveform: [type], Octave: [value], Level: [value] dB
+### 🌊 Oscillator Setup
+**Primary Oscillator (Osc 1)**
+- Waveform: [type] 
+- Coarse Tune: [value] semitones
+- Fine Tune: [value] cents
+- Level: [value] dB
 
-### Filter:
-- **Type:** [filter type]
-- **Cutoff:** [frequency] Hz
-- **Resonance:** [percentage]%
+**Secondary Oscillator (Osc 2)**  
+- Waveform: [type]
+- Coarse Tune: [value] semitones  
+- Fine Tune: [value] cents
+- Level: [value] dB
 
-### ADSR Envelopes:
-- **Filter Envelope:** Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
-- **Amp Envelope:** Attack: [time] ms, Decay: [time] ms, Sustain: [percentage]%, Release: [time] ms
+**Sub Oscillator**
+- Waveform: [type]
+- Octave: [value] 
+- Level: [value] dB
 
-### Effects Chain:
-- **Chorus:** Rate: [rate] Hz, Depth: [percentage]%, Mix: [percentage]%
-- **Delay:** Time: [time] ms, Feedback: [percentage]%, Mix: [percentage]%
-- **Reverb:** Decay: [time] s, Size: [percentage]%, Mix: [percentage]%
+### 🎚️ Filter Configuration
+**Filter Type:** [type] (Lowpass/Highpass/Bandpass)
+**Cutoff Frequency:** [frequency] Hz  
+**Resonance:** [percentage]%
+**Drive/Saturation:** [percentage]%
 
-### Modulation Matrix:
-- **LFO 1 → Filter Cutoff:** Amount: [percentage]%, Rate: [rate] Hz, Wave: [type]
-- **Env → Osc Pitch:** Amount: [percentage]%
-- **Mod Wheel → Vibrato:** Amount: [percentage]%
+## ⚡ Dynamic Response
 
-## 🎨 Creative Tips
+### 📈 Filter Envelope (VCF)
+| Parameter | Value | Purpose |
+|-----------|--------|---------|
+| **Attack** | [time] ms | [brief explanation] |
+| **Decay** | [time] ms | [brief explanation] |
+| **Sustain** | [percentage]% | [brief explanation] |
+| **Release** | [time] ms | [brief explanation] |
 
-### Performance Techniques:
-- [Specific playing technique for this sound]
-- [Expression control suggestion]
+### 🔊 Amplitude Envelope (VCA)
+| Parameter | Value | Purpose |
+|-----------|--------|---------|
+| **Attack** | [time] ms | [brief explanation] |
+| **Decay** | [time] ms | [brief explanation] |
+| **Sustain** | [percentage]% | [brief explanation] |
+| **Release** | [time] ms | [brief explanation] |
 
-### Sound Design Tips:
-- [Envelope shaping advice]
-- [Modulation depth guidance]
-- [Register-specific adjustments]
+## 🎭 Effects & Character
 
-### Mix Integration:
-- [EQ suggestions for this sound type]
-- [Compression approach]
-- [Spatial placement advice]
+### 🌀 Modulation Matrix
+**LFO 1 → Filter Cutoff**
+- Amount: [percentage]%
+- Rate: [rate] Hz  
+- Waveform: [type]
+- *Purpose:* [explanation]
+
+**Envelope → Oscillator Pitch**
+- Amount: [percentage]%
+- *Purpose:* [explanation]
+
+**Mod Wheel → Vibrato**
+- Amount: [percentage]%
+- *Purpose:* [explanation]
+
+### 🎧 Effects Chain
+**Chorus**
+- Rate: [rate] Hz | Depth: [percentage]% | Mix: [percentage]%
+
+**Delay**  
+- Time: [time] ms | Feedback: [percentage]% | Mix: [percentage]%
+
+**Reverb**
+- Decay: [time] s | Size: [percentage]% | Mix: [percentage]%
+
+## 🎯 Performance & Production
+
+### 🎹 Playing Techniques
+**Velocity Response:**
+- [Specific velocity technique advice]
+
+**Expression Control:**
+- [Mod wheel, aftertouch, or pedal suggestions]
+
+**Register Considerations:**
+- [Low/mid/high register playing advice]
+
+### �️ Mix Integration
+
+**EQ Approach:**
+- [Frequency range emphasis/cuts]
+- [Specific EQ curve suggestions]
+
+**Compression:**
+- [Attack/release settings]
+- [Ratio and threshold guidance]
+
+**Spatial Placement:**
+- [Stereo positioning advice]
+- [Reverb send levels]
+
+### 💡 Creative Variations
+
+**For Softer Passages:**
+- [Parameter adjustments for dynamics]
+
+**For Aggressive Sections:**
+- [Parameter adjustments for intensity]
+
+**Alternative Textures:**
+- [Quick parameter tweaks for variation]
 
 **Guidelines:**
-- Use specific numeric values (frequencies in Hz, times in ms/s, percentages with %)
-- Include 2-3 oscillators appropriate for the sound type
-- Suggest realistic modulation amounts and rates
-- Focus on the ${genre} genre and ${voiceType} voice type characteristics
-- Make all parameter values musically appropriate
-- Avoid repeating information between sections
+- Use specific numeric values with units (Hz, ms, %, dB)
+- Include brief explanations for parameter purposes  
+- Focus on ${genre} genre characteristics and ${voiceType} voice type
+- Make all values musically appropriate and realistic
+- Organize information for quick scanning and implementation
 
 **Available Synth Parameters:**
 ${JSON.stringify(synthConfig, null, 2)}
 
-Respond ONLY with the structured markdown format above. Do not include JSON, code blocks, or explanatory text outside the format.`;
+Respond ONLY with the structured markdown format above. Use tables, bullet points, and clear headings for maximum readability.`;
 };
 
-// ✅ Parse markdown response and extract structured data
+// ✅ Parse improved markdown response with tables and better structure
 const parseMarkdownResponse = (responseText: string): any => {
   if (!responseText?.trim()) {
     throw new Error('Empty response from AI');
@@ -156,10 +221,11 @@ const parseMarkdownResponse = (responseText: string): any => {
 
   const cleanText = responseText.trim();
   
-  // Parse ADSR values from the text
-  const parseADSR = (section: string, label: string): ADSR => {
-    const regex = new RegExp(`${label}[^:]*: Attack: (\\d+(?:\\.\\d+)?)\\s*ms, Decay: (\\d+(?:\\.\\d+)?)\\s*ms, Sustain: (\\d+(?:\\.\\d+)?)%, Release: (\\d+(?:\\.\\d+)?)\\s*ms`);
-    const match = section.match(regex);
+  // Parse ADSR values from table format
+  const parseADSRFromTable = (section: string, envelopeType: string): ADSR => {
+    // Look for table rows with envelope data
+    const tableRegex = new RegExp(`### ${envelopeType}[\\s\\S]*?\\| \\*\\*Attack\\*\\* \\| ([\\d.]+) ms[\\s\\S]*?\\| \\*\\*Decay\\*\\* \\| ([\\d.]+) ms[\\s\\S]*?\\| \\*\\*Sustain\\*\\* \\| ([\\d.]+)%[\\s\\S]*?\\| \\*\\*Release\\*\\* \\| ([\\d.]+) ms`, 'i');
+    const match = section.match(tableRegex);
     
     if (match) {
       return {
@@ -170,42 +236,66 @@ const parseMarkdownResponse = (responseText: string): any => {
       };
     }
     
-    // Fallback defaults
-    return label === 'Amp Envelope' 
+    // Fallback: try simpler format
+    const simpleRegex = new RegExp(`${envelopeType}[^:]*:.*?Attack: ([\\d.]+) ms.*?Decay: ([\\d.]+) ms.*?Sustain: ([\\d.]+)%.*?Release: ([\\d.]+) ms`, 'i');
+    const simpleMatch = section.match(simpleRegex);
+    
+    if (simpleMatch) {
+      return {
+        attack: parseFloat(simpleMatch[1]) / 1000,
+        decay: parseFloat(simpleMatch[2]) / 1000,
+        sustain: parseFloat(simpleMatch[3]) / 100,
+        release: parseFloat(simpleMatch[4]) / 1000
+      };
+    }
+    
+    // Fallback defaults based on envelope type
+    return envelopeType.includes('Amplitude') || envelopeType.includes('VCA')
       ? { attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.8 }
       : { attack: 0.1, decay: 0.5, sustain: 0.7, release: 1.2 };
   };
 
-  // Extract oscillator data
+  // Extract oscillator data from new format
   const extractOscillators = (): any[] => {
-    const oscSection = cleanText.match(/### Oscillators:(.*?)### Filter:/s);
+    const oscSection = cleanText.match(/### 🌊 Oscillator Setup(.*?)### 🎚️ Filter Configuration/s);
     if (!oscSection) return [];
     
-    const oscLines = oscSection[1].split('\n').filter(line => line.trim().startsWith('-'));
-    return oscLines.map((line, idx) => {
-      const name = line.match(/- \*\*(.*?):\*\*/)?.[1] || `Oscillator ${idx + 1}`;
-      
-      // Extract parameter values using regex
-      const waveform = line.match(/Waveform: ([^,]+)/)?.[1]?.trim() || 'Sawtooth';
-      const coarse = line.match(/Coarse: ([^,]+)/)?.[1]?.trim() || '0';
-      const fine = line.match(/Fine: ([^,]+)/)?.[1]?.trim() || '0';
-      const level = line.match(/Level: ([^,\n]+)/)?.[1]?.trim() || '0';
-      
-      return {
-        name,
-        id: String(idx + 1),
-        values: { Waveform: waveform, Coarse: coarse, Fine: fine, Level: level }
-      };
-    });
+    const oscillators = [];
+    
+    // Extract Primary Oscillator
+    const primaryMatch = oscSection[1].match(/\*\*Primary Oscillator.*?\*\*.*?- Waveform: ([^\n]+).*?- Coarse Tune: ([^\n]+).*?- Fine Tune: ([^\n]+).*?- Level: ([^\n]+)/s);
+    if (primaryMatch) {
+      oscillators.push({
+        name: 'Primary Oscillator',
+        waveform: primaryMatch[1].trim(),
+        coarse: primaryMatch[2].trim(),
+        fine: primaryMatch[3].trim(),
+        level: primaryMatch[4].trim()
+      });
+    }
+    
+    // Extract Secondary Oscillator
+    const secondaryMatch = oscSection[1].match(/\*\*Secondary Oscillator.*?\*\*.*?- Waveform: ([^\n]+).*?- Coarse Tune: ([^\n]+).*?- Fine Tune: ([^\n]+).*?- Level: ([^\n]+)/s);
+    if (secondaryMatch) {
+      oscillators.push({
+        name: 'Secondary Oscillator',
+        waveform: secondaryMatch[1].trim(),
+        coarse: secondaryMatch[2].trim(),
+        fine: secondaryMatch[3].trim(),
+        level: secondaryMatch[4].trim()
+      });
+    }
+    
+    return oscillators;
   };
 
-  // Extract filter data
+  // Extract filter data from new format
   const extractFilter = (): any => {
-    const filterSection = cleanText.match(/### Filter:(.*?)### ADSR Envelopes:/s);
+    const filterSection = cleanText.match(/### 🎚️ Filter Configuration(.*?)## ⚡ Dynamic Response/s);
     if (!filterSection) return { selectedType: 'Lowpass', cutoff: '5000 Hz', resonance: '30%' };
     
-    const typeMatch = filterSection[1].match(/\*\*Type:\*\* ([^\n]+)/);
-    const cutoffMatch = filterSection[1].match(/\*\*Cutoff:\*\* ([^\n]+)/);
+    const typeMatch = filterSection[1].match(/\*\*Filter Type:\*\* ([^\n]+)/);
+    const cutoffMatch = filterSection[1].match(/\*\*Cutoff Frequency:\*\* ([^\n]+)/);
     const resonanceMatch = filterSection[1].match(/\*\*Resonance:\*\* ([^\n]+)/);
     
     return {
@@ -215,14 +305,55 @@ const parseMarkdownResponse = (responseText: string): any => {
     };
   };
 
+  // Extract effects data from new format
+  const extractEffects = (): any => {
+    const effectsSection = cleanText.match(/### 🎧 Effects Chain(.*?)## 🎯 Performance & Production/s);
+    if (!effectsSection) return {};
+    
+    const effects: any = {};
+    
+    // Extract Chorus
+    const chorusMatch = effectsSection[1].match(/\*\*Chorus\*\*.*?Rate: ([^|]+) \| Depth: ([^|]+) \| Mix: ([^\n]+)/);
+    if (chorusMatch) {
+      effects.chorus = {
+        rate: chorusMatch[1].trim(),
+        depth: chorusMatch[2].trim(),
+        mix: chorusMatch[3].trim()
+      };
+    }
+    
+    // Extract Delay
+    const delayMatch = effectsSection[1].match(/\*\*Delay\*\*.*?Time: ([^|]+) \| Feedback: ([^|]+) \| Mix: ([^\n]+)/);
+    if (delayMatch) {
+      effects.delay = {
+        time: delayMatch[1].trim(),
+        feedback: delayMatch[2].trim(),
+        mix: delayMatch[3].trim()
+      };
+    }
+    
+    // Extract Reverb
+    const reverbMatch = effectsSection[1].match(/\*\*Reverb\*\*.*?Decay: ([^|]+) \| Size: ([^|]+) \| Mix: ([^\n]+)/);
+    if (reverbMatch) {
+      effects.reverb = {
+        decay: reverbMatch[1].trim(),
+        size: reverbMatch[2].trim(),
+        mix: reverbMatch[3].trim()
+      };
+    }
+    
+    return effects;
+  };
+
   return {
     text: cleanText,
-    oscillators: extractOscillators(),
-    filter: extractFilter(),
-    adsrVCF: parseADSR(cleanText, 'Filter Envelope'),
-    adsrVCA: parseADSR(cleanText, 'Amp Envelope'),
-    summary: cleanText.includes('## 🎨 Creative Tips') 
-      ? cleanText.split('## 🎨 Creative Tips')[1].trim()
+    synthConfig: { oscillators: extractOscillators(), filter: extractFilter(), effects: extractEffects() },
+    adsrVCF: parseADSRFromTable(cleanText, 'Filter Envelope'),
+    adsrVCA: parseADSRFromTable(cleanText, 'Amplitude Envelope'),
+    summary: cleanText.includes('## � Performance & Production') 
+      ? cleanText.split('## 🎯 Performance & Production')[1].trim()
+      : cleanText.includes('### 💡 Creative Variations')
+      ? cleanText.split('### 💡 Creative Variations')[1].trim()
       : 'No creative tips provided'
   };
 };
