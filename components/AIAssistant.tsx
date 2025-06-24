@@ -63,10 +63,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         role: 'assistant',
         content: `Hi! I'm your AI music production assistant. I can help you:
 
-• Refine guides (TrackGuide, RemixGuide, PatchGuide)
-• Analyze Mix Feedback and Comparison reports  
-• Answer production techniques questions
-• Provide creative suggestions and arrangement ideas
+1. Refine guides (TrackGuide, RemixGuide, PatchGuide)
+2. Analyze Mix Feedback and Comparison reports  
+3. Answer production techniques questions
+4. Provide creative suggestions and arrangement ideas
 
 What would you like to work on today?`,
         timestamp: new Date()
@@ -96,10 +96,10 @@ What would you like to work on today?`,
       role: 'assistant',
       content: `Hi! I'm your AI music production assistant. I can help you:
 
-• Refine guides (TrackGuide, RemixGuide, PatchGuide)
-• Analyze Mix Feedback and Comparison reports  
-• Answer production techniques questions
-• Provide creative suggestions and arrangement ideas
+1. Refine guides (TrackGuide, RemixGuide, PatchGuide)
+2. Analyze Mix Feedback and Comparison reports  
+3. Answer production techniques questions
+4. Provide creative suggestions and arrangement ideas
 
 What would you like to work on today?`,
       timestamp: new Date()
