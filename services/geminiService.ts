@@ -7,7 +7,6 @@ import {
   MidiSettings,
   MixFeedbackInputs,
   MixComparisonInputs,
-  RemixGuideInputs,
   ChatMessage,
   GuidebookEntry
 } from "../types";
@@ -460,7 +459,7 @@ Focus on practical improvements that can be implemented immediately.`;
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
-  return response.text;
+  return response.text || "Unable to generate mix feedback. Please try again.";
 };
 
 /**
@@ -505,7 +504,7 @@ Provide your analysis in clear Markdown format with the following sections:
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
-  return response.text;
+  return response.text || "Unable to generate mix comparison. Please try again.";
 };
 /**
  * 5. Generate AI-assistant chat response (streaming)
@@ -1101,7 +1100,7 @@ Provide actionable, specific feedback that can be implemented immediately to imp
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
-  return response.text;
+  return response.text || "Unable to generate analysis. Please try again.";
 };
 
 /**
