@@ -267,36 +267,5 @@ export const PATCH_INPUT_CATEGORIES = [
   }
 ];
 
-export const SYNTH_OPTIONS = [
-  'Ableton Operator',
-  'Ableton Wavetable',
-  'Apple Alchemy',
-  'Apple Retro Synth',
-  'Arturia Analog Lab',
-  'Arturia PolyBrute',
-  'Bazille',
-  'DiscoDSP OB-Xd',
-  'Diva',
-  'Hive 2',
-  'Kilohearts Phase Plant',
-  'Korg MS-20',
-  'Korg Wavestate',
-  'Moog Minimoog',
-  'Native Instruments FM8',
-  'Native Instruments Massive',
-  'Native Instruments Massive X',
-  'Native Instruments Monark',
-  'Omnisphere',
-  'Pigments',
-  'Roland Jupiter-8',
-  'Roland Juno-106',
-  'Roland SH-101',
-  'Sylenth1',
-  'TAL TAL-U-No-LX',
-  'u-he Repro-1',
-  'u-he Repro-5',
-  'Vital',
-  'Xfer Serum',
-  'Zebra2',
-  'Generic'
-].sort();
+// Synth options have been moved to synthesisTypes.ts
+// Use MODEL_OVERRIDES and getModelsByType() to get synth models

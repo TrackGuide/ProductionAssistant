@@ -1,11 +1,13 @@
 // services/patchGuideServiceOptimized.ts
 import { generateContent } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
+import { SYNTHESIS_SCHEMA, SynthesisType } from '../synthesisTypes';
 
 // ✅ Simplified, focused interfaces
 export interface PatchGuideInputs {
   description: string;
-  synth: string;
+  synthesisType: SynthesisType;
+  synthModel?: string;
   genre: string;
   voiceType: string;
   notes?: string;
@@ -64,16 +66,39 @@ const getSynthConfig = (synthName: string): any => {
 
 // ✅ Structured markdown prompt generation with improved user-friendly layout
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
-  const { description, synth, genre, voiceType, notes } = inputs;
+  const { description, synthesisType, synthModel, genre, voiceType, notes } = inputs;
   
-  return `You are a professional synthesizer programmer. Create a detailed patch guide for these specifications:
+  let prompt = `You are a professional synthesizer programmer. Create a detailed patch guide for these specifications:
 
 **Target Sound:**
-- Synth: ${synth}
+- Synthesis Type: ${synthesisType}
+${synthModel ? `- Synth Model: ${synthModel}` : ''}
 - Genre: ${genre}
 - Voice Type: ${voiceType}
 - Description: ${description}
-${notes ? `- Additional Notes: ${notes}` : ''}
+${notes ? `- Additional Notes: ${notes}` : ''}`;
+
+  // Add synthesis-type specific parameters if available
+  if (synthesisType && SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA]) {
+    prompt += `\n\nGenerate a patch using these ${synthesisType} synthesis parameters:`;
+    
+    // Get the schema for this synthesis type
+    const typeSchema = SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA];
+    Object.entries(typeSchema).forEach(([section, params]) => {
+      prompt += `\n\n### ${section.charAt(0).toUpperCase() + section.slice(1)} Parameters`;
+      Object.keys(params as object).forEach(param => {
+        prompt += `\n- ${param}`;
+      });
+    });
+  }
+
+  // Add model-specific guidance if provided
+  if (synthModel) {
+    prompt += `\n\nAlso use characteristics of ${synthModel} to further refine the sound.`;
+  }
+  
+  // Add standard response format
+  prompt += `
 
 **IMPORTANT:** You must respond with EXACTLY this structured markdown format with clear organization and excellent spacing:
 
@@ -95,7 +120,7 @@ ${notes ? `- Additional Notes: ${notes}` : ''}
 - Fine Tune: [value] cents
 - Level: [value] dB
 
-**Sub Oscillator**
+**Sub Oscillator** (if applicable)
 
 - Waveform: [type]
 - Octave: [value] 
@@ -220,7 +245,9 @@ ${notes ? `- Additional Notes: ${notes}` : ''}
 ${JSON.stringify(synthConfig, null, 2)}
 
 Respond ONLY with the structured markdown format above. Use tables, bullet points, and clear headings for maximum readability.`;
-};
+
+  return prompt;
+};;
 
 // ✅ Parse improved markdown response with tables and better structure
 const parseMarkdownResponse = (responseText: string): any => {
@@ -276,10 +303,12 @@ const parseMarkdownResponse = (responseText: string): any => {
     if (primaryMatch) {
       oscillators.push({
         name: 'Primary Oscillator',
-        waveform: primaryMatch[1].trim(),
-        coarse: primaryMatch[2].trim(),
-        fine: primaryMatch[3].trim(),
-        level: primaryMatch[4].trim()
+        values: {
+          Waveform: primaryMatch[1].trim(),
+          'Coarse Tune': primaryMatch[2].trim(),
+          'Fine Tune': primaryMatch[3].trim(),
+          Level: primaryMatch[4].trim()
+        }
       });
     }
     
@@ -288,10 +317,25 @@ const parseMarkdownResponse = (responseText: string): any => {
     if (secondaryMatch) {
       oscillators.push({
         name: 'Secondary Oscillator',
-        waveform: secondaryMatch[1].trim(),
-        coarse: secondaryMatch[2].trim(),
-        fine: secondaryMatch[3].trim(),
-        level: secondaryMatch[4].trim()
+        values: {
+          Waveform: secondaryMatch[1].trim(),
+          'Coarse Tune': secondaryMatch[2].trim(),
+          'Fine Tune': secondaryMatch[3].trim(),
+          Level: secondaryMatch[4].trim()
+        }
+      });
+    }
+    
+    // Extract Sub Oscillator if present
+    const subMatch = oscSection[1].match(/\*\*Sub Oscillator.*?\*\*.*?- Waveform: ([^\n]+).*?- Octave: ([^\n]+).*?- Level: ([^\n]+)/s);
+    if (subMatch) {
+      oscillators.push({
+        name: 'Sub Oscillator',
+        values: {
+          Waveform: subMatch[1].trim(),
+          Octave: subMatch[2].trim(),
+          Level: subMatch[3].trim()
+        }
       });
     }
     
@@ -418,12 +462,30 @@ const extractPatchData = (parsed: any, synthConfig: any): PatchGuideResult => {
 
 // ✅ Main optimized function
 export const generateSynthPatchGuideOptimized = async (inputs: PatchGuideInputs): Promise<PatchGuideResult> => {
-  if (!inputs.description || !inputs.synth || !inputs.genre || !inputs.voiceType) {
-    throw new Error('Missing required fields: description, synth, genre, and voiceType are required');
+  if (!inputs.description || !inputs.synthesisType || !inputs.genre || !inputs.voiceType) {
+    throw new Error('Missing required fields: description, synthesisType, genre, and voiceType are required');
   }
 
   try {
-    const synthConfig = getSynthConfig(inputs.synth);
+    // If a synthModel is provided, use that specific synth config
+    // Otherwise use a generic config based on synthesis type
+    const synthConfig = inputs.synthModel ? 
+      getSynthConfig(inputs.synthModel) : 
+      {
+        name: inputs.synthesisType,
+        type: inputs.synthesisType,
+        oscillators: [
+          { id: "1", name: "Osc 1", params: ["Waveform", "Coarse", "Fine", "Level"] },
+          { id: "2", name: "Osc 2", params: ["Waveform", "Coarse", "Fine", "Level"] }
+        ],
+        filters: [{
+          name: "Filter",
+          types: ["Lowpass", "Highpass", "Bandpass"],
+          parameters: ["Cutoff", "Resonance"]
+        }],
+        effects: []
+      };
+    
     const prompt = generatePrompt(inputs, synthConfig);
     
     const responseText = await generateContent(prompt);

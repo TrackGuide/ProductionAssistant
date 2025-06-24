@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Spinner } from './Spinner';
@@ -6,14 +6,17 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EnvelopeChart } from './EnvelopeChart';
 import * as PatchGuideService from '../services/patchGuideServiceOptimized';
-import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
+import { PATCH_INPUT_CATEGORIES } from '../constants';
+import { SYNTHESIS_TYPES, MODEL_OVERRIDES, SynthesisType } from '../synthesisTypes';
+import { getModelsByType } from '../utils/getModelOverrideMap';
 import { Knob } from './Knob';
 import { copyToClipboard } from '../utils/copyUtils';
 import { stripHtmlTags } from '../utils/stripHtmlTags';
 
 // ✅ Simplified, consistent state structure
 interface PatchGuideInputs {
-  synth: string;
+  synthesisType: string;
+  synthModel?: string;
   genre: string;
   voiceType: string;
   styleMood: string[];
@@ -62,7 +65,8 @@ class ErrorBoundary extends React.Component<
 export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
   // ✅ Clean, consistent state structure
   const [inputs, setInputs] = useState<PatchGuideInputs>({
-    synth: 'Generic',
+    synthesisType: '',
+    synthModel: undefined,
     genre: '',
     voiceType: '',
     styleMood: [],
@@ -116,8 +120,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
 
   // ✅ Simplified form validation
   const isValid = useMemo(() => 
-    inputs.synth && inputs.genre && inputs.voiceType
-  , [inputs.synth, inputs.genre, inputs.voiceType]);
+    inputs.synthesisType && inputs.genre && inputs.voiceType
+  , [inputs.synthesisType, inputs.genre, inputs.voiceType]);
 
   // ✅ Optimized submit handler
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -140,7 +144,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
 
       const response = await PatchGuideService.generateSynthPatchGuide({
         description,
-        synth: inputs.synth,
+        synthesisType: inputs.synthesisType,
+        synthModel: inputs.synthModel,
         genre: inputs.genre,
         voiceType: inputs.voiceType,
         notes: inputs.notes
@@ -167,7 +172,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
   // ✅ Clean reset handler
   const handleReset = useCallback(() => {
     setInputs({
-      synth: 'Generic',
+      synthesisType: '',
+      synthModel: undefined,
       genre: '',
       voiceType: '',
       styleMood: [],
@@ -191,22 +197,26 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ✅ Clean 3-column layout */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Synth Selection */}
-            <div>
-              <label className="block text-gray-200 mb-2 font-medium">Synthesizer</label>
+            {/* Synthesis Type Selection */}
+            <div className="col-span-1">
+              <label className="block text-gray-200 mb-2 font-medium">Synthesis Type</label>
               <select
-                value={inputs.synth}
-                onChange={e => updateInput('synth', e.target.value)}
+                value={inputs.synthesisType}
+                onChange={e => {
+                  updateInput('synthesisType', e.target.value);
+                  // Reset synthModel if the type changes
+                  updateInput('synthModel', undefined);
+                }}
                 className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 required
               >
-                <option value="">Select synth...</option>
-                {SYNTH_OPTIONS.map(synth => (
-                  <option key={synth} value={synth}>{synth}</option>
+                <option value="">Select synthesis type...</option>
+                {SYNTHESIS_TYPES.map(t => (
+                  <option key={t.key} value={t.key}>{t.label}</option>
                 ))}
               </select>
             </div>
-
+            
             {/* Genre Selection */}
             <div>
               <label className="block text-gray-200 mb-2 font-medium">Genre</label>
@@ -239,50 +249,70 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
               </select>
             </div>
           </div>
-
-          {/* ✅ Simplified Style/Mood Selection */}
-          <div>
-            <label className="block text-gray-200 mb-3 font-medium">
-              Style & Mood <span className="text-gray-400 text-sm">(optional)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {styleMoodOptions.slice(0, 15).map(mood => (
-                <button
-                  key={mood}
-                  type="button"
-                  onClick={() => toggleStyleMood(mood)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    inputs.styleMood.includes(mood)
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                  } border`}
-                >
-                  {mood}
-                </button>
-              ))}
+          
+          {/* Optional Synth Model Selection - Now below Synthesis Type */}
+          {inputs.synthesisType && MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.length > 0 && (
+            <div>
+              <label className="block text-gray-200 mb-2 font-medium">Synth Model (optional)</label>
+              <select
+                value={inputs.synthModel || ""}
+                onChange={e => updateInput('synthModel', e.target.value || undefined)}
+                className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              >
+                <option value="">None</option>
+                {MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.map(model => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
             </div>
-          </div>
+          )}
 
-          {/* Dynamics & Movement Selection */}
-          <div>
-            <label className="block text-gray-200 mb-3 font-medium">
-              Dynamics & Movement <span className="text-gray-400 text-sm">(optional)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {dynamicsMovementOptions.slice(0, 15).map(movement => (
-                <button
-                  key={movement}
-                  type="button"
-                  onClick={() => toggleDynamicsMovement(movement)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    inputs.dynamicsMovement.includes(movement)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                  } border`}
-                >
-                  {movement}
-                </button>
-              ))}
+          {/* Style/Mood and Dynamics/Movement in a 2-column grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ✅ Style/Mood Selection */}
+            <div>
+              <label className="block text-gray-200 mb-3 font-medium">
+                Style & Mood <span className="text-gray-400 text-sm">(optional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {styleMoodOptions.slice(0, 15).map(mood => (
+                  <button
+                    key={mood}
+                    type="button"
+                    onClick={() => toggleStyleMood(mood)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      inputs.styleMood.includes(mood)
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                    } border`}
+                  >
+                    {mood}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dynamics & Movement Selection */}
+            <div>
+              <label className="block text-gray-200 mb-3 font-medium">
+                Dynamics & Movement <span className="text-gray-400 text-sm">(optional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {dynamicsMovementOptions.slice(0, 15).map(movement => (
+                  <button
+                    key={movement}
+                    type="button"
+                    onClick={() => toggleDynamicsMovement(movement)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      inputs.dynamicsMovement.includes(movement)
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                    } border`}
+                  >
+                    {movement}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -377,22 +407,18 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
       {/* Main Instructions with integrated visual controls */}
       {result.text && (
         <div className="space-y-8">
-          {/* Oscillator Settings Display */}
+          {/* Core Sound Engine Section - Oscillators Only */}
           {result.synthConfig?.oscillators && result.synthConfig.oscillators.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">🎛️ Core Sound Engine</h2>
+              <h3 className="font-semibold text-purple-300 mb-4 text-lg">🌊 Oscillator Setup</h3>
               <div className="bg-gray-800 rounded-lg p-6">
-                {/* Responsive columns: 1 on mobile, 3-5 on desktop depending on count */}
-                <div
-                  className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${Math.min(
-                    5,
-                    Math.max(3, result.synthConfig.oscillators.length)
-                  )} gap-4`}
-                >
+                {/* Display oscillators in columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {result.synthConfig.oscillators.map((osc: any, idx: number) => (
                     <div key={idx} className="bg-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
-                      <div className="space-y-1 text-xs">
+                      <h4 className="font-semibold text-purple-300 mb-3">{osc.name || `Oscillator ${idx + 1}`}</h4>
+                      <div className="space-y-2">
                         {Object.entries(osc.values || {}).map(([param, value]) => (
                           <div key={param} className="flex justify-between">
                             <span className="text-gray-300">{param}:</span>
@@ -410,7 +436,7 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
           {/* Filter Configuration Section with Filter Visualization */}
           {result.synthConfig?.filters && result.synthConfig.filters.length > 0 && (
             <div className="border-t border-gray-600 pt-8 mt-8">
-              <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">Filter Configuration</h2>
+              <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">🎚️ Filter Configuration</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left: Filter Table(s) */}
                 <div>
