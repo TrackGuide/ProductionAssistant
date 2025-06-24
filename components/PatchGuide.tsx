@@ -9,6 +9,7 @@ import * as PatchGuideService from '../services/patchGuideServiceOptimized';
 import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
 import { Knob } from './Knob';
 import { copyToClipboard } from '../utils/copyUtils';
+import { stripHtmlTags } from '../utils/stripHtmlTags';
 
 // ✅ Simplified, consistent state structure
 interface PatchGuideInputs {
@@ -360,6 +361,8 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
   };
+  // Clean AI output of HTML/JSX tags before rendering as Markdown
+  const cleanText = stripHtmlTags(result.text);
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">
@@ -374,61 +377,37 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
       {/* Main Instructions with integrated visual controls */}
       {result.text && (
         <div className="space-y-8">
-          {/* Render the main markdown content with custom styling */}
-          <div className="prose prose-invert max-w-none prose-headings:text-white prose-h2:text-xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-gray-600 prose-h2:pb-2 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-purple-300 prose-table:text-sm prose-td:py-2 prose-td:px-3 prose-th:py-2 prose-th:px-3 prose-li:my-2">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                // Custom rendering for better spacing
-                h2: ({children, ...props}) => (
-                  <h2 {...props} className="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-600 pb-2 first:mt-0">
-                    {children}
-                  </h2>
-                ),
-                h3: ({children, ...props}) => (
-                  <h3 {...props} className="text-lg font-semibold text-purple-300 mt-6 mb-3">
-                    {children}
-                  </h3>
-                ),
-                p: ({children, ...props}) => (
-                  <p {...props} className="mb-4 leading-relaxed">
-                    {children}
-                  </p>
-                ),
-                ul: ({children, ...props}) => (
-                  <ul {...props} className="space-y-2 mb-4">
-                    {children}
-                  </ul>
-                ),
-                li: ({children, ...props}) => (
-                  <li {...props} className="my-2">
-                    {children}
-                  </li>
-                ),
-                table: ({children, ...props}) => (
-                  <div className="overflow-x-auto my-6">
-                    <table {...props} className="w-full border-collapse border border-gray-600 text-sm">
-                      {children}
-                    </table>
-                  </div>
-                ),
-                th: ({children, ...props}) => (
-                  <th {...props} className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">
-                    {children}
-                  </th>
-                ),
-                td: ({children, ...props}) => (
-                  <td {...props} className="border border-gray-600 py-2 px-3">
-                    {children}
-                  </td>
-                )
-              }}
-            >
-              {result.text}
-            </ReactMarkdown>
-          </div>
+          {/* Oscillator Settings Display */}
+          {result.synthConfig?.oscillators && result.synthConfig.oscillators.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
+              <div className="bg-gray-800 rounded-lg p-6">
+                {/* Responsive columns: 1 on mobile, 3-5 on desktop depending on count */}
+                <div
+                  className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${Math.min(
+                    5,
+                    Math.max(3, result.synthConfig.oscillators.length)
+                  )} gap-4`}
+                >
+                  {result.synthConfig.oscillators.map((osc: any, idx: number) => (
+                    <div key={idx} className="bg-gray-700 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
+                      <div className="space-y-1 text-xs">
+                        {Object.entries(osc.values || {}).map(([param, value]) => (
+                          <div key={param} className="flex justify-between">
+                            <span className="text-gray-300">{param}:</span>
+                            <span className="text-white font-mono">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Filter Configuration Section with Filter Visualization in second column */}
+          {/* Filter Configuration Section with Filter Visualization */}
           {result.synthConfig?.filters && result.synthConfig.filters.length > 0 && (
             <div className="border-t border-gray-600 pt-8 mt-8">
               <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">Filter Configuration</h2>
@@ -544,35 +523,58 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
             </div>
           </div>
 
-          {/* Oscillator Settings Display */}
-          {result.synthConfig?.oscillators && result.synthConfig.oscillators.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-purple-300 mb-4">Oscillator Summary</h3>
-              <div className="bg-gray-800 rounded-lg p-6">
-                {/* Responsive columns: 1 on mobile, 3-5 on desktop depending on count */}
-                <div
-                  className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${Math.min(
-                    5,
-                    Math.max(3, result.synthConfig.oscillators.length)
-                  )} gap-4`}
-                >
-                  {result.synthConfig.oscillators.map((osc: any, idx: number) => (
-                    <div key={idx} className="bg-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold text-purple-300 mb-3 text-sm">{osc.name || `Oscillator ${idx + 1}`}</h4>
-                      <div className="space-y-1 text-xs">
-                        {Object.entries(osc.values || {}).map(([param, value]) => (
-                          <div key={param} className="flex justify-between">
-                            <span className="text-gray-300">{param}:</span>
-                            <span className="text-white font-mono">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Main Markdown Instructions (cleaned) */}
+          <div className="prose prose-invert max-w-none prose-headings:text-white prose-h2:text-xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-gray-600 prose-h2:pb-2 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-purple-300 prose-table:text-sm prose-td:py-2 prose-td:px-3 prose-th:py-2 prose-th:px-3 prose-li:my-2">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h2: ({children, ...props}) => (
+                  <h2 {...props} className="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-600 pb-2 first:mt-0">
+                    {children}
+                  </h2>
+                ),
+                h3: ({children, ...props}) => (
+                  <h3 {...props} className="text-lg font-semibold text-purple-300 mt-6 mb-3">
+                    {children}
+                  </h3>
+                ),
+                p: ({children, ...props}) => (
+                  <p {...props} className="mb-4 leading-relaxed">
+                    {children}
+                  </p>
+                ),
+                ul: ({children, ...props}) => (
+                  <ul {...props} className="space-y-2 mb-4">
+                    {children}
+                  </ul>
+                ),
+                li: ({children, ...props}) => (
+                  <li {...props} className="my-2">
+                    {children}
+                  </li>
+                ),
+                table: ({children, ...props}) => (
+                  <div className="overflow-x-auto my-6">
+                    <table {...props} className="w-full border-collapse border border-gray-600 text-sm">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                th: ({children, ...props}) => (
+                  <th {...props} className="border border-gray-600 bg-gray-800 py-2 px-3 text-left font-semibold">
+                    {children}
+                  </th>
+                ),
+                td: ({children, ...props}) => (
+                  <td {...props} className="border border-gray-600 py-2 px-3">
+                    {children}
+                  </td>
+                )
+              }}
+            >
+              {cleanText}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
     </Card>
