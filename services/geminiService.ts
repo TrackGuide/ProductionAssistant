@@ -168,16 +168,16 @@ function buildStructuralBlueprint(): string {
 
 <div className="overflow-x-auto">
 
-| **Section** | **Duration** | **Key Elements & Instrumentation** | **Energy** |
-| --- | --- | --- | --- |
-| **Intro** | 16-32 bars | Atmospheric build, Teaser elements<br/>*Lead synth, Bass, Drums, Pads* | Low-Medium |
-| **Verse 1** | 16 bars | Main groove, Vocal/Lead melody<br/>*Vocals, Full arrangement* | Medium |
-| **Pre-Chorus** | 8 bars | Tension build, Filter sweeps<br/>*Reduced arrangement, Focus elements* | Medium-High |
-| **Chorus** | 16 bars | Full energy, Hook elements<br/>*Full arrangement, Vocal harmonies* | High |
-| **Breakdown** | 8-16 bars | Stripped back, Build tension<br/>*Breakdown elements, Build-up* | Low-Medium |
-| **Verse 2/Solo** | 16 bars | Variation, New elements<br/>*Lead elements, Minimal backing* | Medium-High |
-| **Final Chorus** | 16-24 bars | Maximum energy, All elements<br/>*Full arrangement, Climax elements* | Maximum |
-| **Outro** | 16-32 bars | Gradual fade, Ambient tail<br/>*Fade elements, Ambient textures* | Low |
+| **Section** | **Duration** | **Key Elements & Instrumentation** |
+| --- | --- | --- |
+| **Intro** | 16-32 bars | Atmospheric build, Teaser elements<br/>*Lead synth, Bass, Drums, Pads* |
+| **Verse 1** | 16 bars | Main groove, Vocal/Lead melody<br/>*Vocals, Full arrangement* |
+| **Pre-Chorus** | 8 bars | Tension build, Filter sweeps<br/>*Reduced arrangement, Focus elements* |
+| **Chorus** | 16 bars | Full energy, Hook elements<br/>*Full arrangement, Vocal harmonies* |
+| **Breakdown** | 8-16 bars | Stripped back, Build tension<br/>*Breakdown elements, Build-up* |
+| **Verse 2/Solo** | 16 bars | Variation, New elements<br/>*Lead elements, Minimal backing* |
+| **Final Chorus** | 16-24 bars | Maximum energy, All elements<br/>*Full arrangement, Climax elements* |
+| **Outro** | 16-32 bars | Gradual fade, Ambient tail<br/>*Fade elements, Ambient textures* |
 
 </div>`;
 }
