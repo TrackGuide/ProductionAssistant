@@ -465,6 +465,7 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
           )}
 
           {/* Main Envelopes Section */}
+          {result.adsrVCF && result.adsrVCA && (
           <div className="border-t border-gray-600 pt-8 mt-8">
             <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-600 pb-2">Main Envelopes</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -522,6 +523,7 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
               </div>
             </div>
           </div>
+          )}
 
           {/* Main Markdown Instructions (cleaned) */}
           <div className="prose prose-invert max-w-none prose-headings:text-white prose-h2:text-xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-gray-600 prose-h2:pb-2 prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-purple-300 prose-table:text-sm prose-td:py-2 prose-td:px-3 prose-th:py-2 prose-th:px-3 prose-li:my-2">

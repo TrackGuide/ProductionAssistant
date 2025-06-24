@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { Button } from './Button.tsx';
 import { DownloadIcon, CopyIcon } from './icons.tsx';
 import { copyToClipboard } from '../utils/copyUtils.ts';
@@ -186,6 +187,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         <ReactMarkdown 
           components={customComponents}
           remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
         >
           {content}
         </ReactMarkdown>

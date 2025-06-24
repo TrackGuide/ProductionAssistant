@@ -111,8 +111,6 @@ ${notes ? `- Additional Notes: ${notes}` : ''}
 
 **Drive/Saturation:** [percentage]%
 
-## ⚡ Dynamic Response
-
 ### 📈 Filter Envelope (VCF)
 | Parameter | Value | Purpose |
 |-----------|--------|---------|
@@ -302,7 +300,7 @@ const parseMarkdownResponse = (responseText: string): any => {
 
   // Extract filter data from new format
   const extractFilter = (): any => {
-    const filterSection = cleanText.match(/### 🎚️ Filter Configuration(.*?)## ⚡ Dynamic Response/s);
+    const filterSection = cleanText.match(/### 🎚️ Filter Configuration([\s\S]*?)(### |## |$)/);
     if (!filterSection) return { selectedType: 'Lowpass', cutoff: '5000 Hz', resonance: '30%' };
     
     const typeMatch = filterSection[1].match(/\*\*Filter Type:\*\* ([^\n]+)/);

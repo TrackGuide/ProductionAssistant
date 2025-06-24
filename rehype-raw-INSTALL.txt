@@ -1,0 +1,2 @@
+// rehype-raw is needed for react-markdown to render raw HTML in markdown
+// Install with: npm install rehype-raw
