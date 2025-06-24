@@ -7,7 +7,7 @@
  */
 export const GEMINI_MODEL_NAME =
   (typeof process !== 'undefined' && process.env.GEMINI_MODEL_NAME) ||
-  (typeof import.meta !== 'undefined' && import.meta.env.VITE_GEMINI_MODEL_NAME) ||
+  (typeof import.meta !== 'undefined' && (import.meta as any).env.VITE_GEMINI_MODEL_NAME) ||
   'gemini-2.0-flash-exp';
 
 /**
@@ -21,31 +21,44 @@ export const LAST_USED_PLUGINS_KEY = "trackGuideLastUsedPlugins";
 /**
  * Genre suggestions for guide creation
  */
-export const GENRE_SUGGESTIONS = [
-  // Pop & Rock
-  "Pop", "Indie Pop", "Synth-Pop", "Rock", "Alternative Rock", "Hard Rock", "Punk Rock", "Post-Punk", "Nu Metal", "Progressive Rock", "Psychedelic Rock", "Folk Rock", "Shoegaze",
-  // Electronic
-  "House", "Deep House", "Progressive House", "Tech House", "Bass House", "Electro House", "Minimal House",
-  "Techno", "Minimal Techno", "Industrial Techno", "Melodic Techno", "Ambient Techno", "Hard Techno",
-  "Trance", "Progressive Trance", "Psytrance", "Goa Trance", "Hard Trance",
-  "Ambient", "Dark Ambient", "Downtempo", "Chillout", "Chillwave", "Psybient", "Berlin School",
-  "Synthwave", "Retrowave", "Darksynth", "Vaporwave", "Future Funk",
-  "Drum and Bass", "Jungle", "Liquid DnB", "Neurofunk", "Breakcore",
-  "Dubstep", "Riddim", "Future Bass", "Trap (EDM)",
-  "Hardstyle", "Gabber", "UK Hardcore",
-  "IDM (Intelligent Dance Music)", "Glitch", "Breakbeat", "UK Garage", "2-Step", "Future Garage",
-  "EBM (Electronic Body Music)", "Footwork", "Juke",
-  // Hip Hop & R&B
-  "Hip Hop", "Boom Bap", "Trap", "Lo-fi Hip Hop", "Cloud Rap", "Drill", "Conscious Hip Hop", "R&B", "Contemporary R&B", "Neo-Soul", "Soul",
-  // Folk & World
-  "Folk", "Acoustic", "World Music", "Reggae", "Dub", "Ska", "Latin", "Afrobeat", "Celtic",
-  // Jazz & Blues
-  "Jazz", "Smooth Jazz", "Blues", "Funk",
-  // Metal (Subgenres)
-  "Heavy Metal", "Thrash Metal", "Death Metal", "Black Metal", "Doom Metal", "Metalcore", "Deathcore",
-  // Other/Experimental
-  "Experimental", "Noise", "Industrial", "Classical Crossover", "Chiptune", "Video Game Music"
-];
+// Import from remixGenres for consistency
+let genreSuggestions: string[] = [];
+
+try {
+  // Try to get the flattened genre list that includes metadata genres
+  const { getFlattenedGenreList } = require('./constants/remixGenres');
+  genreSuggestions = getFlattenedGenreList();
+} catch (error) {
+  // Fallback to static list if import fails
+  console.warn('Failed to load dynamic genre list, using static list', error);
+  genreSuggestions = [
+    // Pop & Rock
+    "Pop", "Indie Pop", "Synth-Pop", "Rock", "Alternative Rock", "Hard Rock", "Punk Rock", "Post-Punk", "Nu Metal", "Progressive Rock", "Psychedelic Rock", "Folk Rock", "Shoegaze",
+    // Electronic
+    "House", "Deep House", "Progressive House", "Tech House", "Bass House", "Electro House", "Minimal House",
+    "Techno", "Minimal Techno", "Industrial Techno", "Melodic Techno", "Ambient Techno", "Hard Techno",
+    "Trance", "Progressive Trance", "Psytrance", "Goa Trance", "Hard Trance",
+    "Ambient", "Dark Ambient", "Downtempo", "Chillout", "Chillwave", "Psybient", "Berlin School",
+    "Synthwave", "Retrowave", "Darksynth", "Vaporwave", "Future Funk",
+    "Drum and Bass", "Jungle", "Liquid DnB", "Neurofunk", "Breakcore",
+    "Dubstep", "Riddim", "Future Bass", "Trap (EDM)",
+    "Hardstyle", "Gabber", "UK Hardcore",
+    "IDM (Intelligent Dance Music)", "Glitch", "Breakbeat", "UK Garage", "2-Step", "Future Garage",
+    "EBM (Electronic Body Music)", "Footwork", "Juke",
+    // Hip Hop & R&B
+    "Hip Hop", "Boom Bap", "Trap", "Lo-fi Hip Hop", "Cloud Rap", "Drill", "Conscious Hip Hop", "R&B", "Contemporary R&B", "Neo-Soul", "Soul",
+    // Folk & World
+    "Folk", "Acoustic", "World Music", "Reggae", "Dub", "Ska", "Latin", "Afrobeat", "Celtic",
+    // Jazz & Blues
+    "Jazz", "Smooth Jazz", "Blues", "Funk",
+    // Metal (Subgenres)
+    "Heavy Metal", "Thrash Metal", "Death Metal", "Black Metal", "Doom Metal", "Metalcore", "Deathcore",
+    // Other/Experimental
+    "Experimental", "Noise", "Industrial", "Classical Crossover", "Chiptune", "Video Game Music"
+  ];
+}
+
+export const GENRE_SUGGESTIONS = genreSuggestions;
 
 /**
  * Vibe suggestions for guide creation

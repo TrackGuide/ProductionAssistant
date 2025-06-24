@@ -5,6 +5,7 @@ import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
+import { getCombinedGenreData } from '../constants/genreMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../types';
@@ -108,13 +109,15 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
     try {
       const base64Data = await uploadAudio(audioFile);
       const audioData = { base64: base64Data.base64, mimeType: base64Data.mimeType };
-      const genreInfo = getGenreInfo(selectedGenre);
+      
+      // Use combined genre data that includes both basic info and enhanced metadata
+      const combinedGenreData = getCombinedGenreData(selectedGenre);
 
       // Step 1: Generate the remix guide with streaming
       let fullGuideContent = '';
       let extractedMetadata: any = null;
 
-      const remixStream = generateRemixGuideStream(audioData, selectedGenre, genreInfo, daw, plugins);
+      const remixStream = generateRemixGuideStream(audioData, selectedGenre, combinedGenreData, daw, plugins);
       
       for await (const chunk of remixStream) {
         if (chunk.text) {

@@ -354,3 +354,37 @@ export const getGenreInfo = (genreName: string) => {
 export const getAllGenres = () => {
   return remixGenres.map(g => g.genre);
 };
+
+// Get flattened genre list including nested genres
+export const getFlattenedGenreList = () => {
+  const genres = getAllGenres();
+  
+  // Add any nested genres from genreMetadata if that module is available
+  try {
+    const { GENRE_METADATA } = require('./genreMetadata');
+    
+    if (GENRE_METADATA) {
+      // Process top-level genres with nested subgenres
+      for (const topGenre in GENRE_METADATA) {
+        const genreData = GENRE_METADATA[topGenre];
+        
+        // Check if this is an object with nested subgenres
+        if (typeof genreData === 'object' && genreData !== null) {
+          for (const subGenre in genreData) {
+            // Only add if it's a full subgenre object (not just a property)
+            if (typeof genreData[subGenre] === 'object' && 
+                !Array.isArray(genreData[subGenre]) && 
+                genreData[subGenre] !== null &&
+                !genres.includes(subGenre)) {
+              genres.push(subGenre);
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load genre metadata for flattened genre list:', error);
+  }
+  
+  return genres;
+};

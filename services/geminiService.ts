@@ -606,8 +606,27 @@ export async function* generateRemixGuideStream(
   }
 
   try {
+    // Get basic genre info from remixGenres.ts
     const tempoRange = genreInfo?.tempoRange ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : "120-130 BPM";
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
+    
+    // Try to get enhanced metadata if available (import at the top of the file)
+    let metadataBlock = null;
+    try {
+      // We're using dynamic import to avoid circular dependencies
+      const { getGenreMetadata } = await import('../constants/genreMetadata');
+      metadataBlock = getGenreMetadata(targetGenre);
+    } catch (err) {
+      console.warn('Could not load genre metadata:', err);
+    }
+    
+    // Extract relevant metadata for the prompt
+    const chordProgressions = metadataBlock?.chordProgressions?.join(", ") || "Standard progressions for this genre";
+    const productionTips = metadataBlock?.productionTips?.join(", ") || "Standard production techniques";
+    const scalesAndModes = metadataBlock?.scalesAndModes || "Appropriate scales for this genre";
+    const songStructure = metadataBlock?.songStructure || sections.join(" → ");
+    const dynamicRange = metadataBlock?.dynamicRange || "Standard dynamics for this genre";
+    const relatedGenres = metadataBlock?.relatedGenres?.join(", ") || "Similar genres";
     
     const structuralBlueprint = buildStructuralBlueprint();
     const pluginSection = buildPluginParameterSection(daw, plugins);
@@ -627,6 +646,13 @@ export async function* generateRemixGuideStream(
 **Target Genre:** ${targetGenre}
 **Target Tempo Range:** ${tempoRange}
 **Suggested Sections:** ${sections.join(", ")}
+${metadataBlock?.drumPatterns ? `**Typical Drum Patterns:** ${metadataBlock.drumPatterns}` : ''}
+${chordProgressions ? `**Common Chord Progressions:** ${chordProgressions}` : ''}
+${scalesAndModes ? `**Typical Scales/Modes:** ${scalesAndModes}` : ''}
+${songStructure ? `**Song Structure:** ${songStructure}` : ''}
+${dynamicRange ? `**Dynamic Characteristics:** ${dynamicRange}` : ''}
+${relatedGenres ? `**Related Genres for Inspiration:** ${relatedGenres}` : ''}
+${productionTips ? `**Production Techniques:** ${productionTips}` : ''}
 
 Create a detailed markdown remix guide that includes:
 

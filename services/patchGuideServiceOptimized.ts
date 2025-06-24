@@ -2,6 +2,7 @@
 import { generateContent } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
 import { SYNTHESIS_SCHEMA, SynthesisType } from '../synthesisTypes';
+import { getGenreMetadata } from '../constants/genreMetadata';
 
 // ✅ Simplified, focused interfaces
 export interface PatchGuideInputs {
@@ -68,6 +69,9 @@ const getSynthConfig = (synthName: string): any => {
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
   const { description, synthesisType, synthModel, genre, voiceType, notes } = inputs;
   
+  // Get genre-specific metadata if available
+  const genreMetadata = getGenreMetadata(genre);
+  
   let prompt = `You are a professional synthesizer programmer. Create a detailed patch guide for these specifications:
 
 **Target Sound:**
@@ -77,6 +81,27 @@ ${synthModel ? `- Synth Model: ${synthModel}` : ''}
 - Voice Type: ${voiceType}
 - Description: ${description}
 ${notes ? `- Additional Notes: ${notes}` : ''}`;
+
+  // Add genre-specific information if available
+  if (genreMetadata) {
+    prompt += '\n\n**Genre Characteristics:**';
+    
+    if (genreMetadata.tempos) {
+      prompt += `\n- Typical Tempo Range: ${genreMetadata.tempos}`;
+    }
+    
+    if (genreMetadata.chordProgressions && genreMetadata.chordProgressions.length > 0) {
+      prompt += `\n- Common Chord Progressions: ${genreMetadata.chordProgressions.join(', ')}`;
+    }
+    
+    if (genreMetadata.scalesAndModes) {
+      prompt += `\n- Typical Scales/Modes: ${genreMetadata.scalesAndModes}`;
+    }
+    
+    if (genreMetadata.productionTips && genreMetadata.productionTips.length > 0) {
+      prompt += `\n- Production Techniques: ${genreMetadata.productionTips.join(', ')}`;
+    }
+  }
 
   // Add synthesis-type specific parameters if available
   if (synthesisType && SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA]) {
