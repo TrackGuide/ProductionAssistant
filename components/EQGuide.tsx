@@ -7,13 +7,64 @@ export const EQGuide: React.FC = () => {
   const [selectedInstrument, setSelectedInstrument] = useState('All');
   const [selectedZone, setSelectedZone] = useState('all');
 
+  // --- General EQ Guidance for Default View ---
+  const generalEQGuidance = [
+    {
+      frequencyRange: '20-60 Hz (Sub Bass)',
+      action: 'High-pass filter',
+      description: 'Remove subsonic rumble and unwanted low-end build-up. Most instruments don\'t need content below 40-60 Hz.',
+      zoneId: 'sub'
+    },
+    {
+      frequencyRange: '60-250 Hz (Bass)',
+      action: 'Shape with care',
+      description: 'Foundation of your mix. Boost for warmth and fullness, cut to reduce muddiness. Critical for kick drums and bass instruments.',
+      zoneId: 'bass'
+    },
+    {
+      frequencyRange: '250-500 Hz (Low Mids)',
+      action: 'Often cut',
+      description: 'Common problem area. Often causes "boxiness" or "muddiness." Light cuts here can clean up your mix significantly.',
+      zoneId: 'low-mid'
+    },
+    {
+      frequencyRange: '500 Hz-2 kHz (Mids)',
+      action: 'Balance carefully',
+      description: 'Core of most instruments. Cuts can make things sound distant, boosts bring instruments forward in the mix.',
+      zoneId: 'mid'
+    },
+    {
+      frequencyRange: '2-6 kHz (High Mids)',
+      action: 'Clarity & presence',
+      description: 'Critical for vocal clarity and instrument definition. Boost for presence, cut to reduce harshness.',
+      zoneId: 'high-mid'
+    },
+    {
+      frequencyRange: '6-12 kHz (Presence)',
+      action: 'Add brightness',
+      description: 'Adds clarity and attack to instruments. Boost for more "bite," cut to smooth harsh elements.',
+      zoneId: 'presence'
+    },
+    {
+      frequencyRange: '12 kHz+ (Air)',
+      action: 'Gentle enhancement',
+      description: 'Adds "air" and openness to your mix. Subtle high-shelf boosts can make mixes sound more polished.',
+      zoneId: 'air'
+    }
+  ];
+
   // --- Filtering ---
-  // Filter by instrument and frequency zone
-  const filteredInstrumentAdvice = EQ_INSTRUMENT_ADVICE.filter(advice => {
+  const showGeneralView = selectedInstrument === 'All' && selectedZone === 'all';
+  
+  // Filter by instrument and frequency zone for detailed view
+  const filteredInstrumentAdvice = showGeneralView ? [] : EQ_INSTRUMENT_ADVICE.filter(advice => {
     const matchesInstrument = selectedInstrument === 'All' || advice.instrument === selectedInstrument;
     const matchesZone = selectedZone === 'all' || advice.frequencyRange.toLowerCase().includes(FREQUENCY_ZONES.find(z => z.id === selectedZone)?.label.split(' ')[0].toLowerCase() || '');
     return matchesInstrument && matchesZone;
   });
+
+  // Filter general guidance by zone if needed
+  const filteredGeneralGuidance = selectedZone === 'all' ? generalEQGuidance : generalEQGuidance.filter(guidance => guidance.zoneId === selectedZone);
 
   // --- Render ---
   return (
@@ -75,13 +126,38 @@ export const EQGuide: React.FC = () => {
 
       {/* Instrument-specific EQ advice cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredInstrumentAdvice.length === 0 ? (
+        {showGeneralView ? (
+          // Show general EQ guidance for default view
+          filteredGeneralGuidance.map((guidance, index) => {
+            const frequencyZone = FREQUENCY_ZONES.find(zone => zone.id === guidance.zoneId);
+            const zoneColor = frequencyZone?.color || 'bg-gray-600';
+            
+            return (
+              <Card key={index} className="bg-gray-800/80 h-fit">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${zoneColor}`}></div>
+                    <span className="text-sm font-bold text-white">{guidance.frequencyRange}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs font-medium rounded ${guidance.action.toLowerCase().includes('boost') || guidance.action.toLowerCase().includes('enhance') ? 'bg-green-600 text-white' : guidance.action.toLowerCase().includes('cut') || guidance.action.toLowerCase().includes('filter') ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                      {guidance.action.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-400">General Guidance</span>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">{guidance.description}</p>
+                </div>
+              </Card>
+            );
+          })
+        ) : filteredInstrumentAdvice.length === 0 ? (
           <div className="col-span-full">
             <Card className="bg-gray-700/80 text-center py-16">
               <p className="text-gray-300 text-lg">No EQ advice matches your current filters.<br />Try another instrument or frequency zone.</p>
             </Card>
           </div>
         ) : (
+          // Show detailed instrument-specific advice
           filteredInstrumentAdvice.map((advice, index) => {
             // Find the appropriate frequency zone color
             const frequencyZone = FREQUENCY_ZONES.find(zone => {
