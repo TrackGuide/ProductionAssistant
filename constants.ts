@@ -75,7 +75,7 @@ export const VIBE_SUGGESTIONS = [
  * DAW suggestions for guide creation
  */
 export const DAW_SUGGESTIONS = [
-  "Ableton Live", "Logic Pro X", "FL Studio", "Pro Tools", "Cubase", "Studio One", "Reason", "Bitwig Studio", "Reaper", "GarageBand"
+  "Ableton Live", "Logic Pro X", "FL Studio", "Pro Tools", "Reaper", "Cubase", "Studio One", "Reason", "Bitwig Studio", "GarageBand"
 ];
 
 // MIDI Related Constants

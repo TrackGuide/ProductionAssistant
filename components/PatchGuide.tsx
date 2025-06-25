@@ -253,36 +253,39 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
             </div>
           </div>
           
-          {/* Optional Synth Model Selection - Now below Synthesis Type */}
-          {inputs.synthesisType && MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.length > 0 && (
+          {/* Optional Synth Model and DAW Selection - Side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Synth Model Selection */}
+            {inputs.synthesisType && MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.length > 0 && (
+              <div>
+                <label className="block text-gray-200 mb-2 font-medium">Synth Model (optional)</label>
+                <select
+                  value={inputs.synthModel || ""}
+                  onChange={e => updateInput('synthModel', e.target.value || undefined)}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                >
+                  <option value="">None</option>
+                  {MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.map((model: string) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            {/* DAW Selection */}
             <div>
-              <label className="block text-gray-200 mb-2 font-medium">Synth Model (optional)</label>
+              <label className="block text-gray-200 mb-2 font-medium">DAW (optional)</label>
               <select
-                value={inputs.synthModel || ""}
-                onChange={e => updateInput('synthModel', e.target.value || undefined)}
+                value={inputs.dawName || ""}
+                onChange={e => updateInput('dawName', e.target.value || undefined)}
                 className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               >
                 <option value="">None</option>
-                {MODEL_OVERRIDES[inputs.synthesisType as keyof typeof MODEL_OVERRIDES]?.map((model: string) => (
-                  <option key={model} value={model}>{model}</option>
+                {dawMetadata.map(daw => (
+                  <option key={daw.dawName} value={daw.dawName}>{daw.dawName}</option>
                 ))}
               </select>
             </div>
-          )}
-          
-          {/* Optional DAW Selection */}
-          <div>
-            <label className="block text-gray-200 mb-2 font-medium">DAW (optional)</label>
-            <select
-              value={inputs.dawName || ""}
-              onChange={e => updateInput('dawName', e.target.value || undefined)}
-              className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-            >
-              <option value="">None</option>
-              {dawMetadata.map(daw => (
-                <option key={daw.dawName} value={daw.dawName}>{daw.dawName}</option>
-              ))}
-            </select>
           </div>
 
           {/* Style/Mood and Dynamics/Movement in a 2-column grid */}
