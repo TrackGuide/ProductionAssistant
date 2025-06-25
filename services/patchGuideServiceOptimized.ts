@@ -452,13 +452,22 @@ const extractPatchData = (parsed: any, synthConfig: any): PatchGuideResult => {
 
   // Safe oscillator extraction
   const extractOscillators = (): any[] => {
-    if (!Array.isArray(parsed.oscillators)) return [];
-    
-    return parsed.oscillators.map((osc: any, idx: number) => ({
-      name: osc.name || `Oscillator ${idx + 1}`,
-      id: String(idx + 1),
-      values: osc.values || {}
-    }));
+    if (Array.isArray(parsed.oscillators) && parsed.oscillators.length > 0) {
+      return parsed.oscillators.map((osc: any, idx: number) => ({
+        name: osc.name || `Oscillator ${idx + 1}`,
+        id: String(idx + 1),
+        values: osc.values || {}
+      }));
+    }
+    // Fallback to original synthConfig oscillators (no parsed data)
+    if (Array.isArray(synthConfig.oscillators)) {
+      return synthConfig.oscillators.map((osc: any, idx: number) => ({
+        name: osc.name || `Oscillator ${idx + 1}`,
+        id: osc.id || String(idx + 1),
+        values: {}
+      }));
+    }
+    return [];
   };
 
   // Safe filter extraction

@@ -1,4 +1,11 @@
 // constants/genreMetadata.ts
+import { remixGenres } from './remixGenres';
+
+/**
+ * Remix genre entries imported from remixGenres to consolidate genre data
+ */
+export type RemixGenreEntry = typeof remixGenres[number];
+export const REMIX_GENRES: RemixGenreEntry[] = remixGenres;
 
 export interface GenreMetadataBlock {
   chordProgressions?: string[];
@@ -625,3 +632,26 @@ export const getCombinedGenreData = (genreName: string) => {
     metadata: metadataGenreData
   };
 };
+
+// Re-export remix genre utility functions from remixGenres for consolidated imports
+/**
+ * Returns the genre information object for the given genre name from remixGenres.
+ */
+export function getGenreInfo(genreName: string) {
+  return remixGenres.find(entry => entry.genre === genreName) || null;
+}
+
+/**
+ * Returns a mapping of categories to their genres array from remixGenres.
+ */
+export function getGenresByCategory(): Record<string, string[]> {
+  return remixGenres.reduce((acc, entry) => {
+    if (!acc[entry.category]) {
+      acc[entry.category] = [];
+    }
+    if (!acc[entry.category].includes(entry.genre)) {
+      acc[entry.category].push(entry.genre);
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
+}

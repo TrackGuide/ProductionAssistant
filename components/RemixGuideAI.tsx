@@ -4,8 +4,7 @@ import { Button } from './Button';
 import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
-import { getGenreInfo, getGenresByCategory } from '../constants/remixGenres';
-import { getCombinedGenreData } from '../constants/genreMetadata';
+import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../constants/genreMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../types';
@@ -372,7 +371,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
                   className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="">Choose a genre...</option>
-                  {genresByCategory[selectedCategory].map((genre) => (
+                  {genresByCategory[selectedCategory].map((genre: string) => (
                     <option key={genre} value={genre}>
                       {genre}
                     </option>

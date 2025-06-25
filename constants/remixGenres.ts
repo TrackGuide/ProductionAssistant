@@ -334,57 +334,34 @@ export const remixGenres = [
   }
 ];
 
-export const getGenresByCategory = () => {
-  const categories: { [key: string]: string[] } = {};
-  
-  remixGenres.forEach(({ category, genre }) => {
-    if (!categories[category]) {
-      categories[category] = [];
+/**
+ * Returns a mapping of categories to their genres array.
+ */
+export function getGenresByCategory(): Record<string, string[]> {
+  return remixGenres.reduce((acc, entry) => {
+    if (!acc[entry.category]) {
+      acc[entry.category] = [];
     }
-    categories[category].push(genre);
-  });
-  
-  return categories;
-};
+    if (!acc[entry.category].includes(entry.genre)) {
+      acc[entry.category].push(entry.genre);
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
+}
 
-export const getGenreInfo = (genreName: string) => {
-  return remixGenres.find(g => g.genre === genreName);
-};
+/**
+ * Returns the genre information object for the given genre name.
+ */
+export function getGenreInfo(genre: string) {
+  return remixGenres.find(entry => entry.genre === genre);
+}
 
 export const getAllGenres = () => {
   return remixGenres.map(g => g.genre);
 };
 
-// Get flattened genre list including nested genres
-export const getFlattenedGenreList = () => {
-  const genres = getAllGenres();
-  
-  // Add any nested genres from genreMetadata if that module is available
-  try {
-    const { GENRE_METADATA } = require('./genreMetadata');
-    
-    if (GENRE_METADATA) {
-      // Process top-level genres with nested subgenres
-      for (const topGenre in GENRE_METADATA) {
-        const genreData = GENRE_METADATA[topGenre];
-        
-        // Check if this is an object with nested subgenres
-        if (typeof genreData === 'object' && genreData !== null) {
-          for (const subGenre in genreData) {
-            // Only add if it's a full subgenre object (not just a property)
-            if (typeof genreData[subGenre] === 'object' && 
-                !Array.isArray(genreData[subGenre]) && 
-                genreData[subGenre] !== null &&
-                !genres.includes(subGenre)) {
-              genres.push(subGenre);
-            }
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to load genre metadata for flattened genre list:', error);
-  }
-  
-  return genres;
+// Returns a flat list of all genre names
+export const getFlattenedGenreList = (): string[] => {
+  // Simplified: return static list of all genres
+  return getAllGenres();
 };
