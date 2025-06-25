@@ -1670,8 +1670,6 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   {mixCompareInputs.mixB && <p className="text-xs text-green-400 mt-2">Selected: {mixCompareInputs.mixB.name} ({(mixCompareInputs.mixB.size / 1024 / 1024).toFixed(2)} MB)</p>}
-                  
-                 
                 </Card>
 
                 <Card title="Notes for AI" className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
@@ -1793,42 +1791,7 @@ const App: React.FC = () => {
 
                 <div id="mix-comparison-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   <MarkdownRenderer content={mixCompareResult} />
-                  
-
                 </div>
- <div className="p-4 border-t border-gray-700 flex justify-center">
-                <Button
-                   onClick={async () => {
-                     if (!mixCompareInputs.mixB) return;
-                     setIsGeneratingMixFeedback(true);
-                     setMixFeedbackResult(null);
-                     setMixFeedbackError(null);
-                     setMixFeedbackInputs({
-                       audioFile: mixCompareInputs.mixB,
-                       userNotes: mixCompareInputs.userNotes,
-                       trackName: mixCompareInputs.mixB?.name || 'Mix B'
-                     });
-                     try {
-                       const result = await generateMixFeedback({
-                         audioFile: mixCompareInputs.mixB,
-                         userNotes: mixCompareInputs.userNotes,
-                         trackName: mixCompareInputs.mixB?.name || 'Mix B'
-                       });
-                       setMixFeedbackResult(result);
-                     } catch (err: any) {
-                       console.error("Full Mix B Feedback Error:", err);
-                       setMixFeedbackError(err.message || 'Failed to generate feedback for Mix B.');
-                     } finally {
-                       setIsGeneratingMixFeedback(false);
-                     }
-                   }}
-                   disabled={isGeneratingMixFeedback}
-                   className="w-full mt-4 text-base py-2.5 !bg-orange-600 hover:!bg-orange-700 focus:!ring-orange-500"
-                   leftIcon={<AdjustmentsHorizontalIcon className="w-5 h-5" />}
-                 >
-                   {isGeneratingMixFeedback ? 'Analyzing Mix B...' : 'Get Full Feedback for Mix B'}
-                 </Button>
-               </div>
 
                 
               </Card>
