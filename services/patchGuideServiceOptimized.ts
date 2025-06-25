@@ -2,7 +2,7 @@
 import { generateContent } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
 import { SYNTHESIS_SCHEMA, SynthesisType } from '../synthesisTypes';
-import { getGenreMetadata } from '../constants/genreMetadata';
+import { getGenreMetadata, GenreMetadataBlock } from '../constants/genreMetadata';
 
 // ✅ Simplified, focused interfaces
 export interface PatchGuideInputs {
@@ -65,211 +65,184 @@ const getSynthConfig = (synthName: string): any => {
   };
 };
 
-// ✅ Structured markdown prompt generation with improved user-friendly layout
+// ✅ Dynamic data-driven prompt generation with improved structure
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
   const { description, synthesisType, synthModel, genre, voiceType, notes } = inputs;
   
   // Get genre-specific metadata if available
-  const genreMetadata = getGenreMetadata(genre);
+  const genreMetadata = getGenreMetadata(genre) || {} as GenreMetadataBlock;
   
-  let prompt = `You are a professional synthesizer programmer. Create a detailed patch guide for these specifications:
-
-**Target Sound:**
-- Synthesis Type: ${synthesisType}
-${synthModel ? `- Synth Model: ${synthModel}` : ''}
-- Genre: ${genre}
-- Voice Type: ${voiceType}
-- Description: ${description}
-${notes ? `- Additional Notes: ${notes}` : ''}`;
-
-  // Add genre-specific information if available
-  if (genreMetadata) {
-    prompt += '\n\n**Genre Characteristics:**';
-    
-    if (genreMetadata.tempos) {
-      prompt += `\n- Typical Tempo Range: ${genreMetadata.tempos}`;
-    }
-    
-    if (genreMetadata.chordProgressions && genreMetadata.chordProgressions.length > 0) {
-      prompt += `\n- Common Chord Progressions: ${genreMetadata.chordProgressions.join(', ')}`;
-    }
-    
-    if (genreMetadata.scalesAndModes) {
-      prompt += `\n- Typical Scales/Modes: ${genreMetadata.scalesAndModes}`;
-    }
-    
-    if (genreMetadata.productionTips && genreMetadata.productionTips.length > 0) {
-      prompt += `\n- Production Techniques: ${genreMetadata.productionTips.join(', ')}`;
-    }
-  }
-
-  // Add synthesis-type specific parameters if available
-  if (synthesisType && SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA]) {
-    prompt += `\n\nGenerate a patch using these ${synthesisType} synthesis parameters:`;
-    
-    // Get the schema for this synthesis type
-    const typeSchema = SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA];
-    Object.entries(typeSchema).forEach(([section, params]) => {
-      prompt += `\n\n### ${section.charAt(0).toUpperCase() + section.slice(1)} Parameters`;
-      Object.keys(params as object).forEach(param => {
-        prompt += `\n- ${param}`;
-      });
-    });
-  }
-
-  // Add model-specific guidance if provided
-  if (synthModel) {
-    prompt += `\n\nAlso use characteristics of ${synthModel} to further refine the sound.`;
-  }
+  // Get synthesis type schema
+  const synthSchema = SYNTHESIS_SCHEMA[synthesisType as keyof typeof SYNTHESIS_SCHEMA] || {};
   
-  // Add standard response format
-  prompt += `
+  // Check for sub oscillator in model or synthesis type
+  const hasSubOscillator = 
+    synthModel && synthConfig.oscillators?.some((o: any) => o.id === '3' || (o.name?.toLowerCase().includes('sub')));
+    
+  // Check for pulse width parameter
+  const hasPulseWidth = synthesisType === 'subtractive';
+  
+  let prompt = `You are a professional synthesizer programmer. Create a **detailed patch guide** using the following data:
 
-**IMPORTANT:** You must respond with EXACTLY this structured markdown format with clear organization and excellent spacing:
+**Target Sound**  
+- Synthesis Type: ${synthesisType}  
+${synthModel ? `- Model Override: ${synthModel}` : ''}  
+- Genre: ${genre}  
+- Voice Type: ${voiceType}  
+- Style & Mood: ${description}  
+${notes ? `- Notes: ${notes}` : ''}
+
+**Genre Notes**  
+${genreMetadata.tempos ? `• Tempo: ${genreMetadata.tempos}` : ''}  
+${genreMetadata.chordProgressions && genreMetadata.chordProgressions.length ? `• Chords: ${genreMetadata.chordProgressions.join(', ')}` : ''}  
+${genreMetadata.scalesAndModes ? `• Scales/Modes: ${genreMetadata.scalesAndModes}` : ''}  
+
+---
 
 ## 🎛️ Core Sound Engine
 
-### 🌊 Oscillator Setup
-
-**Primary Oscillator (Osc 1)**
-
-- Waveform: [type] 
-- Coarse Tune: [value] semitones
-- Fine Tune: [value] cents
-- Level: [value] dB
-
-**Secondary Oscillator (Osc 2)**
-
-- Waveform: [type]
+### 🌊 Oscillator Setup  
+**Primary Osc (Osc 1)**  
+- Waveform: [type]  
 - Coarse Tune: [value] semitones  
-- Fine Tune: [value] cents
-- Level: [value] dB
+- Fine Tune: [value] cents  
+- Level: [value] dB  
 
-**Sub Oscillator** (if applicable)
+**Secondary Osc (Osc 2)**  
+- Waveform: [type]  
+- Coarse Tune: [value] semitones  
+- Fine Tune: [value] cents  
+- Level: [value] dB  
 
-- Waveform: [type]
-- Octave: [value] 
-- Level: [value] dB
+${hasPulseWidth ? `- Pulse Width: [value]%` : ''}
 
-### 🎚️ Filter Configuration
+${hasSubOscillator ? 
+`**Sub Oscillator**  
+- Waveform: [type]  
+- Octave: [value]  
+- Level: [value] dB` : ''}
 
-**Filter Type:** [type] (Lowpass/Highpass/Bandpass)
+### 🎚️ Filter Configuration  
+- Type: [type] (Lowpass/Highpass/Bandpass)  
+- Cutoff: [frequency] Hz  
+- Resonance: [percentage]%  
+- Drive/Saturation: [percentage]%  
 
-**Cutoff Frequency:** [frequency] Hz  
+### 📈 Filter Envelope (VCF)  
+| Parameter | Value      | Purpose                    |
+|-----------|------------|----------------------------|
+| Attack    | [time] ms  | [brief explanation]        |
+| Decay     | [time] ms  | [brief explanation]        |
+| Sustain   | [percentage]% | [brief explanation]     |
+| Release   | [time] ms  | [brief explanation]        |
 
-**Resonance:** [percentage]%
+### 🔊 Amplitude Envelope (VCA)  
+| Parameter | Value      | Purpose                    |
+|-----------|------------|----------------------------|
+| Attack    | [time] ms  | [brief explanation]        |
+| Decay     | [time] ms  | [brief explanation]        |
+| Sustain   | [percentage]% | [brief explanation]     |
+| Release   | [time] ms  | [brief explanation]        |
 
-**Drive/Saturation:** [percentage]%
+---
 
-### 📈 Filter Envelope (VCF)
-| Parameter | Value | Purpose |
-|-----------|--------|---------|
-| **Attack** | [time] ms | [brief explanation] |
-| **Decay** | [time] ms | [brief explanation] |
-| **Sustain** | [percentage]% | [brief explanation] |
-| **Release** | [time] ms | [brief explanation] |
+## 🎭 Effects & Modulation
 
-### 🔊 Amplitude Envelope (VCA)
-| Parameter | Value | Purpose |
-|-----------|--------|---------|
-| **Attack** | [time] ms | [brief explanation] |
-| **Decay** | [time] ms | [brief explanation] |
-| **Sustain** | [percentage]% | [brief explanation] |
-| **Release** | [time] ms | [brief explanation] |
+### 🌀 Modulation Matrix`;
 
-## 🎭 Effects & Character
+  // Dynamic modulation matrix based on synth model or synthesis type
+  if (synthModel && synthConfig.modSources && synthConfig.modDestinations) {
+    prompt += `\n\n`;
+    // Get a subset of mod sources and destinations to keep prompt length reasonable
+    const modSources = synthConfig.modSources.slice(0, 5);
+    const modDestinations = synthConfig.modDestinations.slice(0, 3);
+    
+    modSources.forEach((source: any) => {
+      if (!source || !source.name) return;
+      
+      modDestinations.forEach((dest: any) => {
+        if (!dest || !dest.params || !dest.params.length) return;
+        
+        const param = dest.params[0]; // Take first param as example
+        prompt += `- **${source.name} → ${dest.section} ${param}**: Amount [percentage]%, ${source.type === 'LFO' ? 'Rate [Hz], Waveform [type]' : ''} _(purpose)_\n`;
+      });
+    });
+  } else {
+    // Generic modulation options based on synthesis type
+    prompt += `\n\n`;
+    
+    // Always include basic modulation options
+    prompt += `- **LFO → Filter Cutoff**: Amount [percentage]%, Rate [Hz], Waveform [type] _(purpose)_\n`;
+    prompt += `- **Envelope → Oscillator Pitch**: Amount [percentage]% _(purpose)_\n`;
+    prompt += `- **Velocity → Amplitude**: Amount [percentage]% _(purpose)_\n`;
+    prompt += `- **Mod Wheel → ${synthesisType === 'subtractive' ? 'Filter Cutoff' : 'Vibrato'}**: Amount [percentage]% _(purpose)_\n`;
+  }
 
-### 🌀 Modulation Matrix
+  prompt += `\n\n### 🎧 Effects Chain\n\n`;
+  
+  // Dynamic effects chain based on synth model or fallback to standard effects
+  if (synthModel && synthConfig.effects && synthConfig.effects.length) {
+    // Use up to 5 effects from the model's available effects
+    const effects = synthConfig.effects.slice(0, 5);
+    effects.forEach((effect: any) => {
+      if (!effect || !effect.name) return;
+      
+      prompt += `- **${effect.name}**: `;
+      if (effect.parameters && effect.parameters.length) {
+        const params = effect.parameters.slice(0, 3).map((p: any) => {
+          const name = typeof p === 'string' ? p : p.name;
+          const range = p.range ? `[${p.range[0]}–${p.range[1]}${p.unit || ''}]` : '';
+          return `${name} [value${range}]`;
+        }).join(' | ');
+        prompt += `${params}\n`;
+      } else {
+        prompt += `[parameters to taste]\n`;
+      }
+    });
+  } else {
+    // Standard effects that work well with this synthesis type
+    prompt += `- **Chorus**: Rate [Hz] | Depth [percentage]% | Mix [percentage]%\n`;
+    prompt += `- **Delay**: Time [ms] | Feedback [percentage]% | Mix [percentage]%\n`;
+    prompt += `- **Reverb**: Decay [s] | Size [percentage]% | Mix [percentage]%\n`;
+    
+    // Add distortion for certain synth types
+    if (['subtractive', 'wavetable', 'fm'].includes(synthesisType)) {
+      prompt += `- **Distortion/Saturation**: Drive [percentage]% | Tone [value] | Mix [percentage]%\n`;
+    }
+  }
 
-**LFO 1 → Filter Cutoff**
+  prompt += `\n---\n\n## 🎯 Performance & Mix\n\n`;
+  
+  // Dynamic performance tips
+  prompt += `### 🎹 Playing Tips\n`;
+  prompt += `- Velocity: Use ${genreMetadata.dynamicRange ? genreMetadata.dynamicRange.toString().split(',')[0] : '[velocity response details]'}\n`;
+  prompt += `- Expression: ${genreMetadata.productionTips && genreMetadata.productionTips.length > 0 ? genreMetadata.productionTips[0] : '[expression control suggestions]'}\n`;
+  prompt += `- Register: Best for ${voiceType === 'Bass' ? 'low' : (voiceType === 'Lead' ? 'mid to high' : 'mid')} register, ${genre}-appropriate phrasing\n\n`;
+  
+  // Mix integration
+  prompt += `### 🎚️ Mix Integration\n`;
+  prompt += `- EQ: Emphasize [frequency range] Hz, cut [competing frequencies] Hz\n`;
+  prompt += `- Compression: Attack [time] ms / Release [time] ms / Ratio [value]:1\n`;
+  prompt += `- Spatial: Pan [position] / Reverb send [percentage]%\n\n`;
+  
+  // Creative suggestions
+  prompt += `### 💡 Creative Suggestions to Experiment With\n\n`;
+  prompt += `- **Variation 1:** [interesting parameter change suggestion]\n`;
+  prompt += `- **Automation idea:** Apply a slow LFO to [parameter] for evolving movement\n`;
+  prompt += `- **${genre} authenticity tip:** [specific technique relevant to the genre]\n`;
 
-- Amount: [percentage]%
-- Rate: [rate] Hz  
-- Waveform: [type]
-- *Purpose:* [explanation]
-
-**Envelope → Oscillator Pitch**
-
-- Amount: [percentage]%
-- *Purpose:* [explanation]
-
-**Mod Wheel → Vibrato**
-
-- Amount: [percentage]%
-- *Purpose:* [explanation]
-
-### 🎧 Effects Chain
-
-**Chorus**
-
-- Rate: [rate] Hz | Depth: [percentage]% | Mix: [percentage]%
-
-**Delay**
-
-- Time: [time] ms | Feedback: [percentage]% | Mix: [percentage]%
-
-**Reverb**
-
-- Decay: [time] s | Size: [percentage]% | Mix: [percentage]%
-
-## 🎯 Performance & Production
-
-### 🎹 Playing Techniques
-
-**Velocity Response:**
-
-- [Specific velocity technique advice]
-
-**Expression Control:**
-
-- [Mod wheel, aftertouch, or pedal suggestions]
-
-**Register Considerations:**
-
-- [Low/mid/high register playing advice]
-
-### 🎚️ Mix Integration
-
-**EQ Approach:**
-
-- [Frequency range emphasis/cuts]
-- [Specific EQ curve suggestions]
-
-**Compression:**
-
-- [Attack/release settings]
-- [Ratio and threshold guidance]
-
-**Spatial Placement:**
-
-- [Stereo positioning advice]
-- [Reverb send levels]
-
-### 💡 Creative Variations
-
-**For Softer Passages:**
-
-- [Parameter adjustments for dynamics]
-
-**For Aggressive Sections:**
-
-- [Parameter adjustments for intensity]
-
-**Alternative Textures:**
-
-- [Quick parameter tweaks for variation]
-
-**Guidelines:**
-- Use specific numeric values with units (Hz, ms, %, dB)
-- Include brief explanations for parameter purposes  
-- Focus on ${genre} genre characteristics and ${voiceType} voice type
-- Make all values musically appropriate and realistic
-- Organize information for quick scanning and implementation
-
-**Available Synth Parameters:**
-${JSON.stringify(synthConfig, null, 2)}
-
-Respond ONLY with the structured markdown format above. Use tables, bullet points, and clear headings for maximum readability.`;
+  prompt += `\n\n**Instructions to AI:**\n`;
+  prompt += `- Replace every [placeholder] with precise numeric values (with units) and concise purpose notes\n`;
+  prompt += `- Generate reasonable parameter values appropriate for ${genre} and ${voiceType} sound design\n`;
+  prompt += `- Make all modulation and effects settings musically appropriate and coherent\n`;
+  prompt += `- Respond ONLY in the markdown structure above—no extra commentary\n`;
+  
+  // Add synthesis type schema and synth model data for reference
+  prompt += `\n\n**Available Parameters for ${synthesisType} synthesis:**\n\`\`\`json\n${JSON.stringify(synthSchema, null, 2)}\n\`\`\`\n\n`;
+  
+  if (synthModel) {
+    prompt += `**${synthModel} Configuration:**\n\`\`\`json\n${JSON.stringify(synthConfig, null, 2)}\n\`\`\`\n\n`;
+  }
 
   return prompt;
 };;
