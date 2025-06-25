@@ -497,6 +497,11 @@ export const playMidiPatterns = (
 export const stopPlayback = () => {
   isGloballyPlaying = false; // Signal to stop looping and scheduling
   stopPlaybackInternal(true);
+  
+  // Make sure the audio context isn't suspended
+  if (audioContext && audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
 };
 
 // Internal stop function, can be called without resetting loop iteration if needed (e.g., before starting a new preview)

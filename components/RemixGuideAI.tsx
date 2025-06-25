@@ -6,7 +6,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../constants/genreMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
-import { uploadAudio } from '../services/audioService';
+import { uploadAudio, initializeAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../types';
 
 interface RemixGuideData {
@@ -170,6 +170,9 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       console.log('MIDI settings with remix defaults:', midiSettings);
 
+      // Ensure audio context is properly initialized before generating patterns
+      await initializeAudio();
+      
       const midiStream = await generateMidiPatternSuggestions(midiSettings);
       let jsonStr = '';
       
@@ -189,12 +192,22 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
       
-      // Normalize drum patterns
+      // Normalize drum patterns and ensure standard elements exist
       if (generatedMidiPatterns.drums) {
-        const lowercasedDrums: any = {};
+        // Convert all drum keys to lowercase
+        const lowercasedDrums: Record<string, any> = {};
         Object.entries(generatedMidiPatterns.drums).forEach(([key, value]) => {
           lowercasedDrums[key.toLowerCase()] = value;
         });
+        
+        // Add standard drum elements if they don't exist
+        if (!lowercasedDrums['kick']) lowercasedDrums['kick'] = [];
+        if (!lowercasedDrums['snare']) lowercasedDrums['snare'] = [];
+        if (!lowercasedDrums['hihat_closed']) lowercasedDrums['hihat_closed'] = [];
+        if (!lowercasedDrums['hihat_open']) lowercasedDrums['hihat_open'] = [];
+        if (!lowercasedDrums['crash']) lowercasedDrums['crash'] = [];
+        
+        // Update the drums in the generated patterns
         generatedMidiPatterns.drums = lowercasedDrums;
       }
 
@@ -248,6 +261,9 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       console.log('Regenerating MIDI with settings:', midiSettings);
 
+      // Ensure audio context is properly initialized before generating patterns
+      await initializeAudio();
+      
       const midiStream = await generateMidiPatternSuggestions(midiSettings);
       let jsonStr = '';
       
@@ -270,12 +286,22 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
 
       const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
       
-      // Normalize drum patterns
+      // Normalize drum patterns and ensure standard elements exist
       if (generatedMidiPatterns.drums) {
-        const lowercasedDrums: any = {};
+        // Convert all drum keys to lowercase
+        const lowercasedDrums: Record<string, any> = {};
         for (const key in generatedMidiPatterns.drums) {
           lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = generatedMidiPatterns.drums[key as keyof typeof generatedMidiPatterns.drums];
         }
+        
+        // Add standard drum elements if they don't exist
+        if (!lowercasedDrums['kick']) lowercasedDrums['kick'] = [];
+        if (!lowercasedDrums['snare']) lowercasedDrums['snare'] = [];
+        if (!lowercasedDrums['hihat_closed']) lowercasedDrums['hihat_closed'] = [];
+        if (!lowercasedDrums['hihat_open']) lowercasedDrums['hihat_open'] = [];
+        if (!lowercasedDrums['crash']) lowercasedDrums['crash'] = [];
+        
+        // Update the drums in the generated patterns
         generatedMidiPatterns.drums = lowercasedDrums;
       }
 

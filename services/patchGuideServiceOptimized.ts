@@ -231,6 +231,16 @@ Additionally, suggest **1-2 additional** modulation routings tailored to the **$
 
 - [Low/mid/high register playing advice]
 
+### 🥁 Rhythm & Percussion Integration 
+
+If this sound could be paired with drums, suggest:
+
+**Complementary Drum Elements:**
+
+- [Specific kick/snare character that pairs well]
+- [Hi-hat/cymbal patterns that work with this sound]
+- [Other percussion elements that enhance this sound]
+
 ### 🎚️ Mix Integration
 
 **EQ Approach:**

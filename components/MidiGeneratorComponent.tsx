@@ -398,7 +398,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     if (isPlayingRef.current) {
         stopPlayback();
         setIsPlaying(false);
-        await new Promise(resolve => setTimeout(resolve, 50)); 
+        await new Promise(resolve => setTimeout(resolve, 100)); 
     }
     playMidiPatterns(patterns, settings);
     setIsPlaying(true);
