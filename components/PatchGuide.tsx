@@ -10,6 +10,7 @@ import { PATCH_INPUT_CATEGORIES } from '../constants';
 import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
 import { SYNTHESIS_TYPES, MODEL_OVERRIDES } from '../synthesisTypes';
 import { copyToClipboard } from '../utils/copyUtils';
+import { dawMetadata } from '../constants/dawMetadata';
 
 // ✅ Simplified, consistent state structure
 interface PatchGuideInputs {
@@ -20,6 +21,7 @@ interface PatchGuideInputs {
   styleMood: string[];
   dynamicsMovement: string[];
   notes: string;
+  dawName?: string;
 }
 
 interface PatchGuideResult {
@@ -69,7 +71,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
     voiceType: '',
     styleMood: [],
     dynamicsMovement: [],
-    notes: ''
+    notes: '',
+    dawName: undefined
   });
 
   const [result, setResult] = useState<PatchGuideResult | null>(null);
@@ -146,7 +149,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
         synthModel: inputs.synthModel,
         genre: inputs.genre,
         voiceType: inputs.voiceType,
-        notes: inputs.notes
+        notes: inputs.notes,
+        dawName: inputs.dawName
       });
 
       const patchResult: PatchGuideResult = {
@@ -176,7 +180,8 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
       voiceType: '',
       styleMood: [],
       dynamicsMovement: [],
-      notes: ''
+      notes: '',
+      dawName: undefined
     });
     setResult(null);
     setError('');
@@ -264,6 +269,21 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
               </select>
             </div>
           )}
+          
+          {/* Optional DAW Selection */}
+          <div>
+            <label className="block text-gray-200 mb-2 font-medium">DAW (optional)</label>
+            <select
+              value={inputs.dawName || ""}
+              onChange={e => updateInput('dawName', e.target.value || undefined)}
+              className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            >
+              <option value="">None</option>
+              {dawMetadata.map(daw => (
+                <option key={daw.dawName} value={daw.dawName}>{daw.dawName}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Style/Mood and Dynamics/Movement in a 2-column grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

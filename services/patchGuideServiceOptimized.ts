@@ -3,6 +3,7 @@ import { generateContent } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
 import { SYNTHESIS_SCHEMA, SynthesisType } from '../synthesisTypes';
 import { getGenreMetadata } from '../constants/genreMetadata';
+import { getDawMetadata, suggestPlugins } from '../constants/dawMetadata';
 
 // ✅ Simplified, focused interfaces
 export interface PatchGuideInputs {
@@ -12,6 +13,7 @@ export interface PatchGuideInputs {
   genre: string;
   voiceType: string;
   notes?: string;
+  dawName?: string; // Optional DAW selection
 }
 
 export interface ADSR {
@@ -67,10 +69,13 @@ const getSynthConfig = (synthName: string): any => {
 
 // ✅ Structured markdown prompt generation with improved user-friendly layout
 const generatePrompt = (inputs: PatchGuideInputs, synthConfig: any): string => {
-  const { description, synthesisType, synthModel, genre, voiceType, notes } = inputs;
+  const { description, synthesisType, synthModel, genre, voiceType, notes, dawName } = inputs;
   
   // Get genre-specific metadata if available
   const genreMetadata = getGenreMetadata(genre);
+  
+  // Get DAW-specific metadata if available
+  const dawData = dawName ? getDawMetadata(dawName) : undefined;
   
   let prompt = `You are a professional synthesizer programmer. Create a detailed patch guide for these specifications:
 
@@ -80,7 +85,8 @@ ${synthModel ? `- Synth Model: ${synthModel}` : ''}
 - Genre: ${genre}
 - Voice Type: ${voiceType}
 - Description: ${description}
-${notes ? `- Additional Notes: ${notes}` : ''}`;
+${notes ? `- Additional Notes: ${notes}` : ''}
+${dawName ? `- DAW: ${dawName}` : ''}`;
 
   // Add genre-specific information if available
   if (genreMetadata) {
@@ -100,6 +106,23 @@ ${notes ? `- Additional Notes: ${notes}` : ''}`;
     
     if (genreMetadata.productionTips && genreMetadata.productionTips.length > 0) {
       prompt += `\n- Production Techniques: ${genreMetadata.productionTips.join(', ')}`;
+    }
+  }
+
+  // Add DAW-specific information if available
+  if (dawData) {
+    prompt += '\n\n**DAW-Specific Information:**';
+    
+    if (dawData.workflowTips && dawData.workflowTips.length > 0) {
+      prompt += `\n- Workflow Tips: ${dawData.workflowTips.join(', ')}`;
+    }
+    
+    if (dawData.stockPlugins?.Creative && dawData.stockPlugins.Creative.length > 0) {
+      prompt += `\n- Suggested Creative Effects: ${dawData.stockPlugins.Creative.join(', ')}`;
+    }
+    
+    if (dawData.suggestedSignalChains?.Synth && dawData.suggestedSignalChains.Synth.length > 0) {
+      prompt += `\n- Recommended Signal Chain: ${dawData.suggestedSignalChains.Synth.join(' → ')}`;
     }
   }
 
@@ -214,6 +237,7 @@ Additionally, suggest **1-2 additional** modulation routings tailored to the **$
 **Reverb**
 
 - Decay: [time] s | Size: [percentage]% | Mix: [percentage]%
+${dawName ? `\n\n**DAW-Specific Creative Effects**\n\n${suggestPlugins(dawName, 'Creative').map(plugin => `- ${plugin}: [suggested settings]`).join('\n')}` : ''}
 
 ## 🎯 Performance & Production
 

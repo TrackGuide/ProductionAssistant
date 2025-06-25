@@ -5,6 +5,7 @@ import { Spinner } from './Spinner';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../constants/genreMetadata';
+import { dawMetadata } from '../constants/dawMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio, initializeAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../types';
@@ -51,7 +52,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [daw, setDaw] = useState<string>('');
+  const [selectedDAW, setSelectedDAW] = useState<string>('');
   const [plugins, setPlugins] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isGeneratingMidi, setIsGeneratingMidi] = useState<boolean>(false);
@@ -116,7 +117,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       let fullGuideContent = '';
       let extractedMetadata: any = null;
 
-      const remixStream = generateRemixGuideStream(audioData, selectedGenre, combinedGenreData, daw, plugins);
+      const remixStream = generateRemixGuideStream(audioData, selectedGenre, combinedGenreData, selectedDAW, plugins);
       
       for await (const chunk of remixStream) {
         if (chunk.text) {
@@ -325,7 +326,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
     setAudioFile(null);
     setSelectedCategory('');
     setSelectedGenre('');
-    setDaw('');
+    setSelectedDAW('');
     setPlugins('');
     setRemixGuide(null);
     setError('');
@@ -426,13 +427,18 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
             <label className="block text-sm font-medium text-gray-300 mb-2">
               DAW (Digital Audio Workstation)
             </label>
-            <input
-              type="text"
-              value={daw}
-              onChange={(e) => setDaw(e.target.value)}
-              placeholder="e.g., Ableton Live, Logic Pro X, FL Studio..."
-              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+            <select
+              value={selectedDAW}
+              onChange={(e) => setSelectedDAW(e.target.value)}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Select your DAW...</option>
+              {dawMetadata.map(daw => (
+                <option key={daw.dawName} value={daw.dawName}>
+                  {daw.dawName}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -553,7 +559,7 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
                   genre: [selectedGenre],
                   artistReference: 'Remix Guide',
                   vibe: [selectedGenre],
-                  daw: daw || 'Not specified',
+                  daw: selectedDAW || 'Not specified',
                   plugins: plugins || 'Not specified',
                   availableInstruments: 'Remix instruments',
                   content: remixGuide.guide,

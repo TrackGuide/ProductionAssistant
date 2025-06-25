@@ -94,6 +94,7 @@ export interface MixFeedbackInputs {
   notes?: string;
   audioFile?: File | null;
   userNotes?: string;
+  dawName?: string;
 }
 
 export interface MixComparisonInputs {
@@ -103,6 +104,7 @@ export interface MixComparisonInputs {
   mixBName: string;
   includeMixBFeedback?: boolean;
   userNotes: string;
+  dawName?: string;
 }
 
 export interface RemixGuideInputs {

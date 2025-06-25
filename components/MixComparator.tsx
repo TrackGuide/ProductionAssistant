@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UploadIcon, CloseIcon, PlayIcon, RefreshIcon, CopyIcon } from './icons.tsx';
 import { generateMixComparison } from '../services/geminiService';
+import { dawMetadata } from '../constants/dawMetadata';
 
 interface MixComparatorProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorPro
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [copyStatus, setCopyStatus] = useState<string>('');
+  const [selectedDAW, setSelectedDAW] = useState<string>('');
 
   if (!isOpen) return null;
 
@@ -32,7 +34,9 @@ export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorPro
         mixAFile: mixABase64,
         mixBFile: mixBBase64,
         mixAName: mixA.name,
-        mixBName: mixB ? mixB.name : ''
+        mixBName: mixB ? mixB.name : '',
+        userNotes: '',
+        dawName: selectedDAW || undefined
       });
 
       // Remove unnecessary AI prompt text and lyrics/leading lines before first heading
@@ -70,6 +74,7 @@ export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorPro
     setMixB(null);
     setAnalysis('');
     setCopyStatus('');
+    setSelectedDAW('');
   };
 
   const handleCopyAnalysis = async () => {
@@ -99,6 +104,25 @@ export default function MixComparator({ isOpen, onClose }: Omit<MixComparatorPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <MixUploadBox type="A" file={mixA} setFile={setMixA} />
           <MixUploadBox type="B" file={mixB} setFile={setMixB} />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-gray-300 mb-2 font-medium">DAW (Optional)</label>
+          <select
+            value={selectedDAW}
+            onChange={(e) => setSelectedDAW(e.target.value)}
+            className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select your DAW (optional)</option>
+            {dawMetadata.map((daw) => (
+              <option key={daw.dawName} value={daw.dawName}>
+                {daw.dawName}
+              </option>
+            ))}
+          </select>
+          <p className="text-gray-400 text-sm mt-1">
+            Selecting your DAW will provide mix advice tailored to your specific tools.
+          </p>
         </div>
 
         <div className="flex gap-4 mb-6">

@@ -13,6 +13,7 @@ import { Button } from './components/Button.tsx';
 import { Card } from './components/Card.tsx';
 import { Spinner } from './components/Spinner.tsx';
 import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
+import { dawMetadata } from './constants/dawMetadata';
 import { AIAssistant } from './components/AIAssistant.tsx';
 import { EQGuide } from './components/EQGuide';
 import { LandingPage } from './components/LandingPage.tsx';
@@ -52,6 +53,7 @@ const initialMixFeedbackInputsState: MixFeedbackInputs = {
   audioFile: null,
   userNotes: '',
   trackName: '',
+  dawName: '',
 };
 
 const MAX_AUDIO_FILE_SIZE_MB = 100;
@@ -1313,7 +1315,7 @@ const App: React.FC = () => {
                             key={suggestion}
                             type="button"
                             onClick={() => handleDAWSuggestionClick(suggestion)}
-                            className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ease-in-out shadow-sm hover:shadow-md ${
+                            className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ease-in-out ${
                                 inputs.daw === suggestion 
                                 ? 'bg-orange-600 text-white ring-2 ring-orange-400 ring-offset-2 ring-offset-gray-800' 
                                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-gray-100'
@@ -1557,6 +1559,25 @@ const App: React.FC = () => {
                     placeholder="e.g., 'Focus on the low-end clarity', 'Is the vocal too loud?', 'General feedback welcome.'" 
                     rows={4}
                   />
+                </div>
+                <div>
+                  <label htmlFor="mix-daw-select" className="block text-sm font-medium text-gray-300 mb-1">Your DAW (Optional)</label>
+                  <select
+                    id="mix-daw-select"
+                    value={mixFeedbackInputs.dawName}
+                    onChange={(e) => setMixFeedbackInputs(prev => ({ ...prev, dawName: e.target.value }))}
+                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="">Select your DAW (optional)</option>
+                    {DAW_SUGGESTIONS.map((daw) => (
+                      <option key={daw} value={daw}>
+                        {daw}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Selecting your DAW will provide feedback tailored to your specific tools.
+                  </p>
                 </div>
                 <Button 
                     type="submit" 

@@ -10,6 +10,7 @@ import {
   ChatMessage,
   GuidebookEntry
 } from "../types";
+import { getDawMetadata, suggestPlugins, dawMetadata, DawMetadata } from "../constants/dawMetadata";
 
 const apiKey = 
   process.env.API_KEY ||
@@ -48,76 +49,15 @@ function buildPluginParameterSection(daw?: string, plugins?: string): string {
 - Mix: 15-30% for depth without wash`;
   }
 
-  // Get DAW-specific stock plugins
-  const getStockPlugins = (dawName: string) => {
-    const lowerDaw = dawName.toLowerCase();
-    if (lowerDaw.includes('ableton')) {
-      return {
-        eq: 'EQ Eight',
-        compressor: 'Compressor',
-        reverb: 'Reverb',
-        delay: 'Echo',
-        limiter: 'Limiter',
-        saturator: 'Saturator'
-      };
-    } else if (lowerDaw.includes('logic')) {
-      return {
-        eq: 'Channel EQ',
-        compressor: 'Compressor',
-        reverb: 'ChromaVerb',
-        delay: 'Echo',
-        limiter: 'Adaptive Limiter',
-        saturator: 'Tape'
-      };
-    } else if (lowerDaw.includes('fl studio') || lowerDaw.includes('fl')) {
-      return {
-        eq: 'Parametric EQ 2',
-        compressor: 'Fruity Compressor',
-        reverb: 'Reverb 2',
-        delay: 'Fruity Delay 3',
-        limiter: 'Fruity Limiter',
-        saturator: 'Fruity Waveshaper'
-      };
-    } else if (lowerDaw.includes('pro tools')) {
-      return {
-        eq: 'EQ III',
-        compressor: 'Dyn3 Compressor/Limiter',
-        reverb: 'D-Verb',
-        delay: 'Mod Delay III',
-        limiter: 'Dyn3 Compressor/Limiter',
-        saturator: 'Lo-Fi'
-      };
-    } else if (lowerDaw.includes('cubase') || lowerDaw.includes('nuendo')) {
-      return {
-        eq: 'StudioEQ',
-        compressor: 'Compressor',
-        reverb: 'REVerence',
-        delay: 'ModMachine',
-        limiter: 'Limiter',
-        saturator: 'Tape'
-      };
-    } else if (lowerDaw.includes('reaper')) {
-      return {
-        eq: 'ReaEQ',
-        compressor: 'ReaComp',
-        reverb: 'ReaVerb',
-        delay: 'ReaDelay',
-        limiter: 'ReaLimit',
-        saturator: 'ReaSynth'
-      };
-    } else {
-      return {
-        eq: 'Stock EQ',
-        compressor: 'Stock Compressor',
-        reverb: 'Stock Reverb',
-        delay: 'Stock Delay',
-        limiter: 'Stock Limiter',
-        saturator: 'Stock Saturator'
-      };
-    }
-  };
+  // Get DAW-specific stock plugins from dawMetadata
+  const dawData = daw ? getDawMetadata(daw) : null;
+  
+  const stockEQ = dawData && daw ? suggestPlugins(daw, 'EQ')[0] || 'Stock EQ' : 'Stock EQ';
+  const stockCompression = dawData && daw ? suggestPlugins(daw, 'Compression')[0] || 'Stock Compressor' : 'Stock Compressor';
+  const stockReverb = dawData && daw ? suggestPlugins(daw, 'Reverb')[0] || 'Stock Reverb' : 'Stock Reverb';
+  const stockDelay = dawData && daw ? suggestPlugins(daw, 'Delay')[0] || 'Stock Delay' : 'Stock Delay';
+  const stockCreative = dawData && daw ? suggestPlugins(daw, 'Creative')[0] || 'Stock Saturator' : 'Stock Saturator';
 
-  const stockPlugins = daw ? getStockPlugins(daw) : null;
   const dawSpecific = daw && !plugins ? `**${daw} Stock Plugin Chain:**` : daw ? `**${daw}-Specific Settings:**` : '';
   const pluginSpecific = plugins ? `**Custom Plugin Chain (${plugins}):**` : '';
 
@@ -127,35 +67,39 @@ ${dawSpecific}
 ${pluginSpecific}
 
 **EQ Parameters:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.eq}: High-pass at ${daw?.toLowerCase().includes('logic') ? '35' : daw?.toLowerCase().includes('fl') ? '30' : '40'} Hz, Low-mid cut at ${daw?.toLowerCase().includes('logic') ? '300' : daw?.toLowerCase().includes('fl') ? '400' : '250'} Hz (-3dB), Presence boost at ${daw?.toLowerCase().includes('logic') ? '12 kHz (+1.5dB)' : daw?.toLowerCase().includes('fl') ? '15 kHz (+2dB)' : '3 kHz (+2dB)'}` :
+${dawData && !plugins ? 
+  `- ${stockEQ}: High-pass at ${daw?.toLowerCase().includes('logic') ? '35' : daw?.toLowerCase().includes('fl') ? '30' : '40'} Hz, Low-mid cut at ${daw?.toLowerCase().includes('logic') ? '300' : daw?.toLowerCase().includes('fl') ? '400' : '250'} Hz (-3dB), Presence boost at ${daw?.toLowerCase().includes('logic') ? '12 kHz (+1.5dB)' : daw?.toLowerCase().includes('fl') ? '15 kHz (+2dB)' : '3 kHz (+2dB)'}` :
   daw === 'Ableton Live' ? '- EQ Eight: High-pass at 40 Hz, Low-mid cut at 250 Hz (-3dB), Presence boost at 3 kHz (+2dB)' : 
-  daw === 'Logic Pro X' ? '- Channel EQ: High-pass at 35 Hz, Low-mid cut at 300 Hz (-2.5dB), High boost at 12 kHz (+1.5dB)' :
+  daw === 'Logic Pro' ? '- Channel EQ: High-pass at 35 Hz, Low-mid cut at 300 Hz (-2.5dB), High boost at 12 kHz (+1.5dB)' :
   daw === 'FL Studio' ? '- Parametric EQ 2: High-pass at 30 Hz, Mid cut at 400 Hz (-4dB), Air boost at 15 kHz (+2dB)' :
   '- High-pass filter: 20-40 Hz, Low-mid cut: 200-400 Hz (-2 to -4dB), Presence boost: 2-5 kHz (+1 to +3dB)'}
 
 **Compression Settings:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.compressor}: Ratio ${daw?.toLowerCase().includes('logic') ? '3.5:1' : '4:1'}, Attack ${daw?.toLowerCase().includes('fl') ? '10ms' : daw?.toLowerCase().includes('logic') ? '20ms' : '15ms'}, Release ${daw?.toLowerCase().includes('logic') ? '150ms' : daw?.toLowerCase().includes('fl') ? '250ms' : '200ms'}${daw?.toLowerCase().includes('logic') ? ', Auto-Release enabled' : daw?.toLowerCase().includes('fl') ? ', Knee 3dB' : ', Knee 2dB'}` :
+${dawData && !plugins ? 
+  `- ${stockCompression}: Ratio ${daw?.toLowerCase().includes('logic') ? '3.5:1' : '4:1'}, Attack ${daw?.toLowerCase().includes('fl') ? '10ms' : daw?.toLowerCase().includes('logic') ? '20ms' : '15ms'}, Release ${daw?.toLowerCase().includes('logic') ? '150ms' : daw?.toLowerCase().includes('fl') ? '250ms' : '200ms'}${daw?.toLowerCase().includes('logic') ? ', Auto-Release enabled' : daw?.toLowerCase().includes('fl') ? ', Knee 3dB' : ', Knee 2dB'}` :
   daw === 'Ableton Live' ? '- Compressor: Ratio 4:1, Attack 15ms, Release 200ms, Knee 2dB' :
-  daw === 'Logic Pro X' ? '- Compressor: Ratio 3.5:1, Attack 20ms, Release 150ms, Auto-Release enabled' :
+  daw === 'Logic Pro' ? '- Compressor: Ratio 3.5:1, Attack 20ms, Release 150ms, Auto-Release enabled' :
   daw === 'FL Studio' ? '- Fruity Compressor: Ratio 4:1, Attack 10ms, Release 250ms, Knee 3dB' :
-  '- Ratio: 3:1 to 4:1, Attack: 10-30ms, Release: 100-300ms'}
+  '- Ratio: 3:1 to 4:1, Attack: 10-30ms, Release: 100-300ms, Makeup: 2-6 dB'}
 
-**Reverb & Delay:**
-${stockPlugins && !plugins ? 
-  `- ${stockPlugins.reverb}: Room/Hall setting, 1.2s decay, Pre-delay 20ms, Mix 25%
-- ${stockPlugins.delay}: 1/8 note timing, Feedback 35%, High-cut 8kHz, Mix 20%` :
-  '- Room reverb: 0.8-1.5s decay for space, Delay: 1/8 or 1/4 note timing, High-cut: 8-12 kHz to avoid harshness'}
+**Time-Based Effects:**
+${dawData && !plugins ? 
+  `- ${stockReverb}: Room/Hall setting, 1.2s decay, Pre-delay 20ms, Mix 25%
+- ${stockDelay}: 1/8 note timing, Feedback 35%, High-cut 8kHz, Mix 20%` :
+  daw === 'Ableton Live' ? '- Reverb: Hall algorithm, 1.3s decay, Pre-delay 15ms, Mix 30%\n- Echo: 1/8 note ping-pong, Feedback 30%, Filter cutoff 70%, Mix 25%' :
+  daw === 'Logic Pro' ? '- ChromaVerb: Chamber setting, 1.2s decay, Pre-delay 20ms, Mix 25%\n- Delay Designer: 1/8 dotted, Feedback 40%, Low-cut 100Hz, High-cut 9kHz' :
+  daw === 'FL Studio' ? '- Reeverb 2: Room size 70%, Diffusion 60%, Decay 1.4s, Mix 22%\n- Fruity Delay 3: Tempo-synced 1/8, Stereo offset 20ms, Feedback 35%' :
+  '- Reverb: Medium room/hall, 1-1.5s decay, 15-25ms pre-delay, 20-30% mix\n- Delay: 1/8 or 1/4 note timing, 30-40% feedback, high-cut filter'}
 
-**Effects Chain:**
-${plugins ? 
-  `- Using ${plugins}: Apply specific parameter recommendations based on your plugin selection` : 
-  stockPlugins ? 
-    `- ${stockPlugins.eq} → ${stockPlugins.compressor} → ${stockPlugins.saturator} → ${stockPlugins.reverb}/${stockPlugins.delay} → ${stockPlugins.limiter}` :
-    '- Standard effects: EQ → Compressor → Reverb/Delay → Limiter'}
-- Send levels: 15-25% to reverb bus, 10-20% to delay bus
-- Sidechain settings: 4:1 ratio, fast attack, medium release`;
+**Recommended Signal Chain:**
+${dawData && dawData.suggestedSignalChains && dawData.suggestedSignalChains.Synth ?
+  `- ${dawData.suggestedSignalChains.Synth.join(' → ')}` :
+  dawData ?
+    `- ${stockEQ} → ${stockCompression} → ${stockCreative} → ${stockReverb}/${stockDelay}` :
+    daw === 'Ableton Live' ? '- EQ Eight → Compressor → Saturator → Reverb/Echo → Limiter' :
+    daw === 'Logic Pro' ? '- Channel EQ → Compressor → Tape → ChromaVerb/Delay Designer → Adaptive Limiter' :
+    daw === 'FL Studio' ? '- Parametric EQ 2 → Fruity Compressor → Waveshaper → Reverb/Delay → Fruity Limiter' :
+    plugins ? plugins : 'EQ → Compressor → Saturation → Reverb/Delay → Limiter'}`;
 }
 
 /**
@@ -468,6 +412,26 @@ Focus on practical improvements that can be implemented immediately.`;
 export const generateMixComparison = async (
   inputs: MixComparisonInputs
 ): Promise<string> => {
+  const { dawName } = inputs;
+  
+  // Include DAW-specific recommendations if a DAW is selected
+  let dawSpecificAdvice = '';
+  if (dawName) {
+    const daw = dawMetadata.find((d: DawMetadata) => d.dawName === dawName);
+    if (daw) {
+      dawSpecificAdvice = `
+## 🎛️ ${dawName}-Specific Recommendations
+
+The user is working with ${dawName}. Provide tailored recommendations using the following plugins and workflow tips:
+
+- Stock Plugins: ${daw.stockPlugins.EQ.join(', ')} for EQ; ${daw.stockPlugins.Compression.join(', ')} for compression; 
+  ${daw.stockPlugins.Reverb.join(', ')} for reverb; ${daw.stockPlugins.Delay.join(', ')} for delay.
+- Creative Effects: ${daw.stockPlugins.Creative.join(', ')}
+- Workflow Tips: ${daw.workflowTips.join('; ')}
+`;
+    }
+  }
+
   const prompt = `
 You are an expert mixing & mastering AI. The user has uploaded two mixes:
 
@@ -497,7 +461,7 @@ Provide your analysis in clear Markdown format with the following sections:
 ## 🏆 Strengths & Opportunities (for Mix B)
 
 ## 🚀 Actionable Recommendations (for Mix B only)
-
+${dawSpecificAdvice}
 `;
 
   const response = await ai.models.generateContent({
@@ -1031,9 +995,24 @@ Focus on practical, actionable techniques that can be implemented immediately. P
 export const generateMixFeedbackWithAudio = async (
   inputs: MixFeedbackInputs
 ): Promise<string> => {
+  const { dawName } = inputs;
+  // Include DAW-specific context if provided
+  let dawContext = '';
+  if (dawName) {
+    const daw = getDawMetadata(dawName);
+    if (daw) {
+      dawContext = `
+**DAW Information:**
+- DAW: ${dawName}
+- Workflow Tips: ${daw.workflowTips.join('; ')}
+- Stock Plugins (EQ: ${daw.stockPlugins.EQ.join(', ')}; Compression: ${daw.stockPlugins.Compression.join(', ')}; Reverb: ${daw.stockPlugins.Reverb.join(', ')}; Delay: ${daw.stockPlugins.Delay.join(', ')}; Creative: ${daw.stockPlugins.Creative.join(', ')})
+`;
+    }
+  }
+
   const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
 
-**Track Information:**
+${dawContext}**Track Information:**
 - Track Name: ${inputs.trackName || "Uploaded Mix"}
 - Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
 - User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
@@ -1267,28 +1246,123 @@ export async function* generateMixFeedbackWithAudioStream(
 
   const audioBase64 = await fileToBase64(inputs.audioFile);
 
-  const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.\n\n**Track Information:**\n- Track Name: ${inputs.trackName || "Uploaded Mix"}\n- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}\n- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}\n\n**Comprehensive Analysis Framework:**\n\n## 🎧 Audio Analysis Results\n\n### Frequency Spectrum Analysis\n**Low-End (20-250 Hz):**\n- Sub-bass presence and control\n- Bass clarity and definition\n- Low-mid muddiness assessment\n\n**Midrange (250 Hz - 5 kHz):**\n- Vocal/lead instrument clarity\n- Instrument separation and masking\n- Presence and intelligibility\n\n**High-End (5 kHz+):**\n- Air and sparkle quality\n- Harshness or sibilance issues\n- Overall brightness balance\n\n### Stereo Field & Spatial Analysis\n**Width & Imaging:**\n- Stereo spread effectiveness\n- Phantom center stability\n- Side content balance\n\n**Depth & Dimension:**\n- Reverb usage and space\n- Dry/wet balance\n- Front-to-back positioning\n\n### Dynamic Range Assessment\n**Compression Analysis:**\n- Overall dynamic range\n- Transient preservation\n- Pumping or over-compression\n\n**Loudness Evaluation:**\n- Perceived loudness level\n- Peak management\n- Headroom availability\n\n### Technical Quality Check\n**Distortion & Artifacts:**\n- Unwanted harmonic distortion\n- Digital artifacts or clipping\n- Noise floor assessment\n\n**Phase Relationships:**\n- Mono compatibility\n- Phase cancellation issues\n- Correlation analysis\n\n## 🎯 Specific Recommendations\n\n### Immediate Improvements\n1. **Priority Fix #1:** [Most critical issue with specific solution]\n2. **Priority Fix #2:** [Second most important improvement]\n3. **Priority Fix #3:** [Third priority enhancement]\n\n### Technical Adjustments\n**EQ Suggestions:**\n- Specific frequency cuts/boosts with dB amounts\n- Problem frequency identification\n- Enhancement opportunities\n\n**Compression Recommendations:**\n- Ratio, attack, and release settings\n- Specific compressor types or plugins\n- Bus compression strategies\n\n**Effects Processing:**\n- Reverb and delay adjustments\n- Spatial enhancement techniques\n- Creative processing opportunities\n\n### Professional Polish\n**Mastering Considerations:**\n- Final EQ and compression\n- Stereo enhancement\n- Loudness optimization\n\n**Reference Comparison:**\n- How this mix compares to commercial standards\n- Genre-specific benchmarks\n- Areas for competitive improvement\n\nProvide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
-
-  const textPart = { text: prompt };
-  const audioPart = {
-    inlineData: {
-      data: audioBase64,
-      mimeType: inputs.audioFile.type || "audio/mpeg"
-    },
-  };
-  const contents = [audioPart, textPart];
-
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: { parts: contents },
-  });
-
-  for await (const chunk of stream) {
-    if (chunk.text) {
-      yield { text: chunk.text };
+  // Include DAW context if provided
+  const { dawName } = inputs;
+  let dawContext = '';
+  if (dawName) {
+    const daw = getDawMetadata(dawName);
+    if (daw) {
+      dawContext = `
+**DAW Information:**
+- DAW: ${dawName}
+- Workflow Tips: ${daw.workflowTips.join('; ')}
+- Stock Plugins (EQ: ${daw.stockPlugins.EQ.join(', ')}; Compression: ${daw.stockPlugins.Compression.join(', ')}; Reverb: ${daw.stockPlugins.Reverb.join(', ')}; Delay: ${daw.stockPlugins.Delay.join(', ')}; Creative: ${daw.stockPlugins.Creative.join(', ')})
+`;
     }
   }
-}
+
+  const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
+
+${dawContext}**Track Information:**
+- Track Name: ${inputs.trackName || "Uploaded Mix"}
+- Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
+- User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
+
+**Comprehensive Analysis Framework:**
+
+## 🎧 Audio Analysis Results
+
+### Frequency Spectrum Analysis
+**Low-End (20-250 Hz):**
+- Sub-bass presence and control
+- Bass clarity and definition
+- Low-mid muddiness assessment
+
+**Midrange (250 Hz - 5 kHz):**
+- Vocal/lead instrument clarity
+- Instrument separation and masking
+- Presence and intelligibility
+
+**High-End (5 kHz+):**
+- Air and sparkle quality
+- Harshness or sibilance issues
+- Overall brightness balance
+
+### Stereo Field & Spatial Analysis
+**Width & Imaging:**
+- Stereo spread effectiveness
+- Phantom center stability
+- Side content balance
+
+**Depth & Dimension:**
+- Reverb usage and space
+- Dry/wet balance
+- Front-to-back positioning
+
+### Dynamic Range Assessment
+**Compression Analysis:**
+- Overall dynamic range
+- Transient preservation
+- Pumping or over-compression
+
+**Loudness Evaluation:**
+- Perceived loudness level
+- Peak management
+- Headroom availability
+
+### Technical Quality Check
+**Distortion & Artifacts:**
+- Unwanted harmonic distortion
+- Digital artifacts or clipping
+- Noise floor assessment
+
+**Phase Relationships:**
+- Mono compatibility
+- Phase cancellation issues
+- Correlation analysis
+
+## 🎯 Specific Recommendations
+
+### Immediate Improvements
+1. **Priority Fix #1:** [Most critical issue with specific solution]
+2. **Priority Fix #2:** [Second most important improvement]
+3. **Priority Fix #3:** [Third priority enhancement]
+
+### Technical Adjustments
+**EQ Suggestions:**
+- Specific frequency cuts/boosts with dB amounts
+- Problem frequency identification
+- Enhancement opportunities
+
+**Compression Recommendations:**
+- Ratio, attack, and release settings
+- Specific compressor types or plugins
+- Bus compression strategies
+
+**Effects Processing:**
+- Reverb and delay adjustments
+- Spatial enhancement techniques
+- Creative processing opportunities
+
+### Professional Polish
+**Mastering Considerations:**
+- Final EQ and compression
+- Stereo enhancement
+- Loudness optimization
+
+**Reference Comparison:**
+- How this mix compares to commercial standards
+- Genre-specific benchmarks
+- Areas for competitive improvement
+
+Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    contents: prompt,
+  });
+  return response.text || "Unable to generate analysis. Please try again.";
+};
 
 /**
  * Streaming Mix Comparison (with audio files support)
