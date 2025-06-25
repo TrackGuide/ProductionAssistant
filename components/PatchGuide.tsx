@@ -4,6 +4,8 @@ import { Button } from './Button';
 import { Spinner } from './Spinner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import rehypeRaw from 'rehype-raw';
 import { PATCH_INPUT_CATEGORIES } from '../constants';
 import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
 import { SYNTHESIS_TYPES, MODEL_OVERRIDES } from '../synthesisTypes';
@@ -385,8 +387,47 @@ const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) =
           {copied ? 'Copied!' : 'Copy Text'}
         </button>
       </div>
-      <div className="prose prose-invert max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.text}</ReactMarkdown>
+      <div className="prose prose-invert max-w-none overflow-auto">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm, remarkBreaks]} 
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            table: ({node, ...props}) => (
+              <div className="overflow-auto my-4">
+                <table className="border-collapse border border-gray-700" {...props} />
+              </div>
+            ),
+            tr: ({node, ...props}) => (
+              <tr className="border-b border-gray-700" {...props} />
+            ),
+            th: ({node, ...props}) => (
+              <th className="border border-gray-700 px-4 py-2 bg-gray-800" {...props} />
+            ),
+            td: ({node, ...props}) => (
+              <td className="border border-gray-700 px-4 py-2" {...props} />
+            ),
+            h2: ({node, ...props}) => (
+              <h2 className="text-xl font-bold mt-8 mb-4 text-purple-400" {...props} />
+            ),
+            h3: ({node, ...props}) => (
+              <h3 className="text-lg font-bold mt-6 mb-3 text-blue-400" {...props} />
+            ),
+            p: ({node, ...props}) => (
+              <p className="my-4" {...props} />
+            ),
+            ul: ({node, ...props}) => (
+              <ul className="list-disc pl-6 my-4" {...props} />
+            ),
+            ol: ({node, ...props}) => (
+              <ol className="list-decimal pl-6 my-4" {...props} />
+            ),
+            li: ({node, ...props}) => (
+              <li className="my-1" {...props} />
+            )
+          }}
+        >
+          {result.text}
+        </ReactMarkdown>
       </div>
     </Card>
   );

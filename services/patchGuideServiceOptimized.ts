@@ -125,7 +125,7 @@ ${notes ? `- Additional Notes: ${notes}` : ''}`;
   // Add standard response format
   prompt += `
 
-**IMPORTANT:** You must respond with EXACTLY this structured markdown format with clear organization and excellent spacing:
+**IMPORTANT:** You must respond with EXACTLY this structured markdown format with clear organization. Use HTML spacing elements where needed for better layout:
 
 ## 🎛️ Core Sound Engine
 
@@ -162,16 +162,18 @@ ${notes ? `- Additional Notes: ${notes}` : ''}`;
 **Drive/Saturation:** [percentage]%
 
 ### 📈 Filter Envelope (VCF)
+
 | Parameter | Value | Purpose |
-|-----------|--------|---------|
+|-----------|-------|---------|
 | **Attack** | [time] ms | [brief explanation] |
 | **Decay** | [time] ms | [brief explanation] |
 | **Sustain** | [percentage]% | [brief explanation] |
 | **Release** | [time] ms | [brief explanation] |
 
 ### 🔊 Amplitude Envelope (VCA)
+
 | Parameter | Value | Purpose |
-|-----------|--------|---------|
+|-----------|-------|---------|
 | **Attack** | [time] ms | [brief explanation] |
 | **Decay** | [time] ms | [brief explanation] |
 | **Sustain** | [percentage]% | [brief explanation] |
@@ -180,23 +182,24 @@ ${notes ? `- Additional Notes: ${notes}` : ''}`;
 ## 🎭 Effects & Character
 
 ### 🌀 Modulation Matrix
+  
+Include these standard modulation routings:
+  
+- **LFO 1 → Filter Cutoff**
+  - Amount: [percentage]%
+  - Rate: [rate] Hz  
+  - Waveform: [type]
+  - *Purpose:* [explanation]
 
-**LFO 1 → Filter Cutoff**
+- **Envelope → Oscillator Pitch**
+  - Amount: [percentage]%
+  - *Purpose:* [explanation]
 
-- Amount: [percentage]%
-- Rate: [rate] Hz  
-- Waveform: [type]
-- *Purpose:* [explanation]
+- **Mod Wheel → Vibrato**
+  - Amount: [percentage]%
+  - *Purpose:* [explanation]
 
-**Envelope → Oscillator Pitch**
-
-- Amount: [percentage]%
-- *Purpose:* [explanation]
-
-**Mod Wheel → Vibrato**
-
-- Amount: [percentage]%
-- *Purpose:* [explanation]
+Additionally, suggest **1-2 additional** modulation routings tailored to the **${genre}** genre, the **${synthModel || synthesisType}** synth, and the target sound characteristics.
 
 ### 🎧 Effects Chain
 
@@ -264,12 +267,13 @@ ${notes ? `- Additional Notes: ${notes}` : ''}`;
 - Include brief explanations for parameter purposes  
 - Focus on ${genre} genre characteristics and ${voiceType} voice type
 - Make all values musically appropriate and realistic
-- Organize information for quick scanning and implementation
+- Format your response with proper spacing between sections
+- Use tables and bullet points for clear readability
 
 **Available Synth Parameters:**
 ${JSON.stringify(synthConfig, null, 2)}
 
-Respond ONLY with the structured markdown format above. Use tables, bullet points, and clear headings for maximum readability.`;
+Respond ONLY with the structured markdown format above. Use proper spacing between sections and ensure tables are formatted correctly.`;
 
   return prompt;
 };;
