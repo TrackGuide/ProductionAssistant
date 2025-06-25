@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Spinner } from './Spinner';
@@ -8,14 +8,13 @@ import { EnvelopeChart } from './EnvelopeChart';
 import * as PatchGuideService from '../services/patchGuideServiceOptimized';
 import { PATCH_INPUT_CATEGORIES } from '../constants';
 import { SYNTHESIS_TYPES, MODEL_OVERRIDES, SynthesisType } from '../synthesisTypes';
-import { getModelsByType } from '../utils/getModelOverrideMap';
 import { Knob } from './Knob';
 import { copyToClipboard } from '../utils/copyUtils';
 import { stripHtmlTags } from '../utils/stripHtmlTags';
 
 // ✅ Simplified, consistent state structure
 interface PatchGuideInputs {
-  synthesisType: string;
+  synthesisType: SynthesisType | "";
   synthModel?: string;
   genre: string;
   voiceType: string;
@@ -144,7 +143,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
 
       const response = await PatchGuideService.generateSynthPatchGuide({
         description,
-        synthesisType: inputs.synthesisType,
+        synthesisType: inputs.synthesisType as SynthesisType,
         synthModel: inputs.synthModel,
         genre: inputs.genre,
         voiceType: inputs.voiceType,

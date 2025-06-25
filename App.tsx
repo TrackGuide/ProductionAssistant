@@ -23,7 +23,6 @@ import { LibraryModal } from './components/LibraryModal.tsx';
 import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
 import { stopPlayback } from './services/audioService.ts';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
-import { TestComponent } from './components/TestComponent.tsx';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -1126,7 +1125,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-gray-100 flex flex-col">
-      <TestComponent />
       <header className="py-4 px-6 flex justify-between items-center border-b border-gray-800 sticky top-0 z-10 bg-gray-900/80 backdrop-blur-md">
         <div className="flex items-center space-x-4">
           <TrackGuideLogo className="w-8 h-8" />
