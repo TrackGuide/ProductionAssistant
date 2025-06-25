@@ -1,7 +1,7 @@
 // services/patchGuideServiceOptimized.ts
 import { generateContent } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
-import { SYNTHESIS_SCHEMA, SynthesisType } from '../synthesisTypes';
+import { SYNTHESIS_SCHEMA, SynthesisType } from '../constants/synthesisTypes';
 import { getGenreMetadata } from '../constants/genreMetadata';
 import { getDawMetadata, suggestPlugins } from '../constants/dawMetadata';
 

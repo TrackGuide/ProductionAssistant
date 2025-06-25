@@ -1,29 +1,7 @@
 
 > trackguide@0.0.0 build
-> vite build
+> vite build --config config/vite.config.ts
 
 vite v6.3.5 building for production...
 transforming...
-✓ 698 modules transformed.
-✗ Build failed in 2.17s
-error during build:
-components/PatchGuide.tsx (8:9): "generateSynthPatchGuide" is not exported by "services/patchGuideServiceOptimized.ts", imported by "components/PatchGuide.tsx".
-file: /workspaces/ProductionAssistant/components/PatchGuide.tsx:8:9
-
- 6: import remarkGfm from 'remark-gfm';
- 7: import { EnvelopeChart } from './EnvelopeChart';
- 8: import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
-             ^
- 9: import { PATCH_INPUT_CATEGORIES, SYNTH_OPTIONS } from '../constants';
-10: import { Knob } from './Knob';
-
-    at getRollupError (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
-    at error (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
-    at Module.error (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:16807:16)
-    at Module.traceVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:17256:29)
-    at ModuleScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:14909:39)
-    at ReturnValueScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:5633:38)
-    at FunctionBodyScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:5633:38)
-    at ReturnValueScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:5633:38)
-    at FunctionBodyScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:5633:38)
-    at BlockScope.findVariable (file:///workspaces/ProductionAssistant/node_modules/rollup/dist/es/shared/node-entry.js:5633:38)
+✓ 26 modules transformed.

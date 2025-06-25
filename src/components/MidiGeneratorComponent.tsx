@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../types';
+import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
@@ -9,7 +9,7 @@ import { Button } from './Button';
 import { Spinner } from './Spinner';
 import { Input } from './Input';
 import { PlayIcon, StopIcon, DownloadIcon, RefreshIcon, CheckboxCheckedIcon, CheckboxUncheckedIcon, KeyboardIcon } from './icons';
-import { MIDI_SCALES, MIDI_MODES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants';
+import { MIDI_SCALES, MIDI_MODES, MIDI_TIME_SIGNATURES, MIDI_DEFAULT_SETTINGS, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, GENRE_SUGGESTIONS, MIDI_TARGET_INSTRUMENTS, MIDI_SONG_SECTIONS } from '../constants/constants';
 
 // Drum name mapping for display
 const DRUM_NAMES: { [key: string]: string } = {

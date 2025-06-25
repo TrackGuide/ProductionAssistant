@@ -1,7 +1,7 @@
 
 import MidiWriter from 'midi-writer-js';
-import { GeneratedMidiPatterns, MidiSettings, ChordNoteEvent, MidiNote, DrumPatternData, DrumHit } from '../types.ts';
-import { MIDI_DRUM_MAP } from '../constants.ts';
+import { GeneratedMidiPatterns, MidiSettings, ChordNoteEvent, MidiNote, DrumPatternData, DrumHit } from '../constants/types';
+import { MIDI_DRUM_MAP } from '../constants/constants';
 
 const createTrackInstance = (trackName: string): InstanceType<typeof MidiWriter.Track> | null => {
   if (!MidiWriter.Track) return null;

@@ -1,7 +1,7 @@
 // services/geminiService.ts
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GEMINI_MODEL_NAME } from "../constants";
+import { GEMINI_MODEL_NAME } from "../constants/constants";
 import {
   UserInputs,
   MidiSettings,
@@ -9,7 +9,7 @@ import {
   MixComparisonInputs,
   ChatMessage,
   GuidebookEntry
-} from "../types";
+} from "../constants/types";
 import { getDawMetadata, suggestPlugins, dawMetadata, DawMetadata } from "../constants/dawMetadata";
 
 const apiKey = 

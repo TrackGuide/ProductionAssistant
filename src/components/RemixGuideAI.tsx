@@ -8,7 +8,7 @@ import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../cons
 import { dawMetadata } from '../constants/dawMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
 import { uploadAudio, initializeAudio } from '../services/audioService';
-import { MidiSettings, GeneratedMidiPatterns } from '../types';
+import { MidiSettings, GeneratedMidiPatterns } from '../constants/types';
 
 interface RemixGuideData {
   guide: string;

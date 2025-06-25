@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Button } from './Button.tsx';
-import { DownloadIcon, CopyIcon } from './icons.tsx';
-import { copyToClipboard } from '../utils/copyUtils.ts';
+import { Button } from './Button';
+import { DownloadIcon, CopyIcon } from './icons';
+import { copyToClipboard } from '../utils/copyUtils';
 
 interface MarkdownRendererProps {
   content: string;

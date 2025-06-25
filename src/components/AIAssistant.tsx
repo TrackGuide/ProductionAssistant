@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from './Button.tsx';
-import { Input } from './Input.tsx';
-import { Spinner } from './Spinner.tsx';
-import { generateAIAssistantResponse } from '../services/geminiService.ts';
-import { UserInputs, GuidebookEntry, ChatMessage } from '../types.ts';
+import { Button } from './Button';
+import { Input } from './Input';
+import { Spinner } from './Spinner';
+import { generateAIAssistantResponse } from '../services/geminiService';
+import { UserInputs, GuidebookEntry, ChatMessage } from '../constants/types';
 
 // TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (

@@ -1,29 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './types.ts';
+import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './src/constants/types';
 import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
   generateMixFeedbackWithAudio as generateMixFeedback,
   generateMixFeedbackWithAudioStream,
   generateMixComparisonStream
-} from './services/geminiService';
-import { Input } from './components/Input.tsx';
-import { Textarea } from './components/Textarea.tsx';
-import { Button } from './components/Button.tsx';
-import { Card } from './components/Card.tsx';
-import { Spinner } from './components/Spinner.tsx';
-import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './components/icons.tsx';
-import { dawMetadata } from './constants/dawMetadata';
-import { AIAssistant } from './components/AIAssistant.tsx';
-import { EQGuide } from './components/EQGuide';
-import { LandingPage } from './components/LandingPage.tsx';
-import { RemixGuideAI } from './components/RemixGuideAI.tsx';
-import { PatchGuide } from './components/PatchGuide';
-import { MidiGeneratorComponent } from './components/MidiGeneratorComponent.tsx';
-import { LibraryModal } from './components/LibraryModal.tsx';
-import { MarkdownRenderer } from './components/MarkdownRenderer.tsx';
-import { stopPlayback } from './services/audioService.ts';
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './constants.ts';
+} from './src/services/geminiService';
+import { Input } from './src/components/Input.tsx';
+import { Textarea } from './src/components/Textarea.tsx';
+import { Button } from './src/components/Button.tsx';
+import { Card } from './src/components/Card.tsx';
+import { Spinner } from './src/components/Spinner.tsx';
+import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './src/components/icons.tsx';
+import { dawMetadata } from './src/constants/dawMetadata';
+import { AIAssistant } from './src/components/AIAssistant.tsx';
+import { EQGuide } from './src/components/EQGuide';
+import { LandingPage } from './src/components/LandingPage.tsx';
+import { RemixGuideAI } from './src/components/RemixGuideAI.tsx';
+import { PatchGuide } from './src/components/PatchGuide';
+import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
+import { LibraryModal } from './src/components/LibraryModal.tsx';
+import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
+import { stopPlayback } from './src/services/audioService.ts';
+import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (

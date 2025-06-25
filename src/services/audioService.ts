@@ -1,6 +1,6 @@
 
-import { GeneratedMidiPatterns, MidiSettings, MidiNote, ChordNoteEvent, DrumPatternData, DrumHit, KeyOfGeneratedMidiPatterns } from '../types.ts';
-import { MIDI_DRUM_MAP } from '../constants.ts';
+import { GeneratedMidiPatterns, MidiSettings, MidiNote, ChordNoteEvent, DrumPatternData, DrumHit, KeyOfGeneratedMidiPatterns } from '../constants/types';
+import { MIDI_DRUM_MAP } from '../constants/constants';
 
 interface ActiveSourceEntry {
   node: AudioScheduledSourceNode;

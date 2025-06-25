@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card } from './Card.tsx';
+import { Card } from './Card';
 import { EQ_INSTRUMENT_ADVICE } from '../constants/eqInstrumentAdvice';
 
 // === Main Component ===
