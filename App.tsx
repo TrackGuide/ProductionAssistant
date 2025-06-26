@@ -7,6 +7,7 @@ import {
   generateMixFeedbackWithAudioStream,
   generateMixComparisonStream
 } from './src/services/geminiService';
+import { parseAiMidiResponse } from './src/utils/jsonParsingUtils';
 import { Input } from './src/components/Input.tsx';
 import { Textarea } from './src/components/Textarea.tsx';
 import { Button } from './src/components/Button.tsx';
@@ -23,6 +24,7 @@ import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.
 import { LibraryModal } from './src/components/LibraryModal.tsx';
 import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
+import { parseJsonFromResponse } from './src/utils/jsonParseUtils.ts';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
 
 // Custom TrackGuide Logo Component
@@ -454,13 +456,7 @@ const App: React.FC = () => {
           accumulatedMidiJson += chunk.text;
         }
         
-        let jsonStr = accumulatedMidiJson.trim();
-        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-        const match = jsonStr.match(fenceRegex);
-        if (match && match[2]) {
-          jsonStr = match[2].trim();
-        }
-        initialPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+        initialPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(accumulatedMidiJson, 'initial MIDI generation');
         if (initialPatternsData.drums) {
           const lowercasedDrums: any = {};
           for (const key in initialPatternsData.drums) {

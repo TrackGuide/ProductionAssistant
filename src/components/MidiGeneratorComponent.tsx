@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
+import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
 import { Card } from './Card';
@@ -302,21 +303,10 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
         console.log('Raw MIDI response:', jsonStr);
 
-        // Clean up the JSON response
-        jsonStr = jsonStr.trim();
-        
-        // Remove code blocks if present
-        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-        const match = jsonStr.match(fenceRegex);
-        if (match && match[2]) {
-            console.log('Found code block, extracting JSON:', match[2]);
-            jsonStr = match[2].trim();
-        }
-
         // Try to parse JSON
         let patternsData;
         try {
-            patternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+            patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'MIDI generation');
         } catch (parseError) {
             console.error('JSON parse error:', parseError);
             console.error('Failed to parse:', jsonStr);
@@ -503,18 +493,9 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
         console.log(`Raw MIDI response for ${trackType}:`, jsonStr);
 
-        // Clean up the JSON response
-        jsonStr = jsonStr.trim();
-        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-        const match = jsonStr.match(fenceRegex);
-        if (match && match[2]) {
-            console.log(`Found code block for ${trackType}, extracting JSON:`, match[2]);
-            jsonStr = match[2].trim();
-        }
-
         let newPatternsData;
         try {
-            newPatternsData = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+            newPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, `${trackType} regeneration`);
         } catch (parseError) {
             console.error(`JSON parse error for ${trackType}:`, parseError);
             console.error('Failed to parse:', jsonStr);

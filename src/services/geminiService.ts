@@ -328,12 +328,14 @@ You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID J
 }
 
 **CRITICAL REQUIREMENTS:**
-1. Return ONLY valid JSON. No explanatory text, no markdown formatting, no code blocks.
-2. All time values must be in beats (0 to ${settings.bars * 4})
-3. All MIDI numbers must be integers between 21-108
-4. All durations must be positive numbers
-5. All velocities must be integers between 1-127
-6. Use appropriate drum elements for ${settings.genre}:
+1. Return ONLY valid JSON. NO explanatory text, NO markdown formatting, NO code blocks, NO backticks.
+2. Start your response directly with { and end with }
+3. Do not wrap the JSON in code blocks with three backticks
+4. All time values must be in beats (0 to ${settings.bars * 4})
+5. All MIDI numbers must be integers between 21-108
+6. All durations must be positive numbers
+7. All velocities must be integers between 1-127
+8. Use appropriate drum elements for ${settings.genre}:
    - Essential: kick, snare, hihat_closed
    - Groove: open_hihat, ride_cymbal_1
    - Accents: clap, crash_cymbal_1

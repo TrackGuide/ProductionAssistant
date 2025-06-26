@@ -7,6 +7,7 @@ import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../constants/genreMetadata';
 import { dawMetadata } from '../constants/dawMetadata';
 import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
+import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
 import { uploadAudio, initializeAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../constants/types';
 
@@ -183,15 +184,38 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
         }
       }
 
-      // Clean up and parse MIDI JSON
+      // Enhanced JSON extraction and cleaning
       jsonStr = jsonStr.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-      const match = jsonStr.match(fenceRegex);
-      if (match && match[2]) {
-        jsonStr = match[2].trim();
+      
+      // Handle various markdown code block formats
+      const codeBlockPatterns = [
+        /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
+        /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
+        /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
+        /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+      ];
+      
+      for (const pattern of codeBlockPatterns) {
+        const match = jsonStr.match(pattern);
+        if (match) {
+          jsonStr = match[match.length - 1].trim(); // Get the last capture group
+          break;
+        }
+      }
+      
+      // Remove any remaining backticks or markdown artifacts
+      jsonStr = jsonStr
+        .replace(/^`+/g, '')      // Remove leading backticks
+        .replace(/`+$/g, '')      // Remove trailing backticks
+        .replace(/^json\s*/i, '') // Remove 'json' language identifier
+        .trim();
+      
+      // Validate we have valid JSON structure
+      if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
+        throw new Error(`Response doesn't contain valid JSON structure. Got: ${jsonStr.substring(0, 100)}...`);
       }
 
-      const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+      const generatedMidiPatterns = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'remix MIDI generation');
       
       // Normalize drum patterns and ensure standard elements exist
       if (generatedMidiPatterns.drums) {
@@ -275,17 +299,40 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
         }
       }
 
-      // Clean up the JSON response
+      // Enhanced JSON extraction and cleaning
       jsonStr = jsonStr.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-      const match = jsonStr.match(fenceRegex);
-      if (match && match[2]) {
-        jsonStr = match[2].trim();
+      
+      // Handle various markdown code block formats
+      const codeBlockPatterns = [
+        /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
+        /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
+        /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
+        /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+      ];
+      
+      for (const pattern of codeBlockPatterns) {
+        const match = jsonStr.match(pattern);
+        if (match) {
+          jsonStr = match[match.length - 1].trim(); // Get the last capture group
+          break;
+        }
+      }
+      
+      // Remove any remaining backticks or markdown artifacts
+      jsonStr = jsonStr
+        .replace(/^`+/g, '')      // Remove leading backticks
+        .replace(/`+$/g, '')      // Remove trailing backticks
+        .replace(/^json\s*/i, '') // Remove 'json' language identifier
+        .trim();
+      
+      // Validate we have valid JSON structure
+      if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
+        throw new Error(`Response doesn't contain valid JSON structure for regeneration. Got: ${jsonStr.substring(0, 100)}...`);
       }
 
       console.log('Raw regenerated MIDI JSON:', jsonStr);
 
-      const generatedMidiPatterns = JSON.parse(jsonStr) as GeneratedMidiPatterns;
+      const generatedMidiPatterns = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'remix MIDI regeneration');
       
       // Normalize drum patterns and ensure standard elements exist
       if (generatedMidiPatterns.drums) {
