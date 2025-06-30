@@ -1,134 +1,270 @@
-import React from 'react';
-import { MusicNoteIcon, AdjustmentsHorizontalIcon } from '../components/icons';
-import { parseSuggestedTitleFromMarkdownStream } from '../utils/guidebookUtils';
-import { GuidebookEntry } from '../types/appTypes';
-import { useAppStore } from '../store/useAppStore';
+import { useState, useCallback } from 'react';
 
-export const useContentProcessing = () => {
-  const { setCopyStatus } = useAppStore();
+interface UseContentProcessingReturn {
+  isProcessing: boolean;
+  error: string | null;
+  copyToClipboard: (content: string) => Promise<{ success: boolean; message: string }>;
+  clearError: () => void;
+}
 
-  const getFormattedTextFromHtmlElement = (element: HTMLElement): string => {
-    let text = '';
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null);
-    let currentNode;
-    let currentLine = '';
-    let listLevel = 0;
-  
-    const appendLine = (line: string) => {
-      text += line + '\n';
-      currentLine = '';
-    };
-  
-    const appendToCurrentLine = (str: string) => {
-      currentLine += str;
-    };
-  
-    while (currentNode = walker.nextNode()) {
-      if (currentNode.nodeType === Node.TEXT_NODE) {
-        appendToCurrentLine(currentNode.textContent || '');
-      } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
-        const el = currentNode as HTMLElement;
-        const tagName = el.tagName.toLowerCase();
-  
-        const blockElements = ['h1', 'h2', 'h3', 'p', 'div', 'ul', 'li', 'table', 'hr', 'tr', 'td', 'th'];
-        if (blockElements.includes(tagName) && currentLine.trim() !== '') {
-          appendLine(currentLine);
-        }
-  
-        switch (tagName) {
-          case 'h1': appendToCurrentLine('# '); break;
-          case 'h2': appendToCurrentLine('## '); break;
-          case 'h3': appendToCurrentLine('### '); break;
-          case 'p': if(text.length > 0 && !text.endsWith('\n\n') && !text.endsWith('\n')) appendLine(''); break; 
-          case 'strong': case 'b': appendToCurrentLine('**'); break;
-          case 'em': case 'i': appendToCurrentLine('*'); break;
-          case 'ul': listLevel++; break;
-          case 'li': appendToCurrentLine('  '.repeat(listLevel -1) + '- '); break;
-          case 'hr': appendLine('---'); break;
-          case 'br': appendLine(currentLine); break; 
-          case 'tr': if(currentLine.trim() !== '') appendLine(currentLine); break;
-          case 'td': case 'th': appendToCurrentLine('| '); break;
-        }
-  
-        switch (tagName) {
-          case 'h1': case 'h2': case 'h3': case 'p':
-            appendLine(currentLine);
-            appendLine(''); 
-            break;
-          case 'strong': case 'b': appendToCurrentLine('**'); break;
-          case 'em': case 'i': appendToCurrentLine('*'); break;
-          case 'ul': listLevel--; if (!text.endsWith('\n')) appendLine(currentLine); break;
-          case 'li': appendLine(currentLine); break;
-          case 'tr': appendToCurrentLine(' |'); appendLine(currentLine); break; 
-          case 'table': if (!text.endsWith('\n')) appendLine(''); break; 
-        }
-      }
-    }
-    if (currentLine.trim() !== '') {
-      appendLine(currentLine); 
-    }
-    return text.replace(/\n\s*\n/g, '\n\n').trim();
-  };
+export const useContentProcessing = (): UseContentProcessingReturn => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createCleanHtmlFromText = (text: string): string => {
-    const lines = text.split('\n');
-    let html = '<div style="color: #000000; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; background: transparent;">';
-    
-    for (const line of lines) {
-      if (line.trim() === '') {
-        html += '<br>';
-      } else if (line.startsWith('## ')) {
-        html += `<h2 style="color: #000000; font-size: 1.25rem; font-weight: bold; margin: 1rem 0 0.5rem 0;">${line.replace('## ', '')}</h2>`;
-      } else if (line.startsWith('### ')) {
-        html += `<h3 style="color: #000000; font-size: 1.1rem; font-weight: bold; margin: 0.75rem 0 0.25rem 0;">${line.replace('### ', '')}</h3>`;
-      } else if (line.startsWith('#### ')) {
-        html += `<h4 style="color: #000000; font-size: 1rem; font-weight: bold; margin: 0.5rem 0 0.25rem 0;">${line.replace('#### ', '')}</h4>`;
-      } else if (line.match(/^\d+\./)) {
-        html += `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">${line}</p>`;
-      } else if (line.startsWith('• ') || line.startsWith('- ')) {
-        html += `<p style="margin: 0.25rem 0; padding-left: 1rem; color: #000000;">${line}</p>`;
-      } else if (line.includes(': ')) {
-        const colonIndex = line.indexOf(': ');
-        const key = line.substring(0, colonIndex);
-        const value = line.substring(colonIndex + 2);
-        html += `<p style="margin: 0.25rem 0; color: #000000;"><strong style="color: #000000;">${key}:</strong> ${value}</p>`;
-      } else {
-        html += `<p style="margin: 0.5rem 0; color: #000000;">${line}</p>`;
-      }
-    }
-    
-    html += '</div>';
-    return html;
-  };
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
-  const handleCopyFormattedContent = async (elementId: string) => {
-    const contentDisplayElement = document.getElementById(elementId);
-    if (!contentDisplayElement) {
-      setCopyStatus("Content area not found.");
-      setTimeout(() => setCopyStatus(''), 3000);
-      return;
+  const copyToClipboard = useCallback(async (content: string): Promise<{ success: boolean; message: string }> => {
+    if (!content?.trim()) {
+      return { success: false, message: "No content to copy" };
     }
 
-    const plainTextContent = getFormattedTextFromHtmlElement(contentDisplayElement.cloneNode(true) as HTMLElement);
-    const cleanHtmlContent = createCleanHtmlFromText(plainTextContent);
+    setIsProcessing(true);
+    setError(null);
 
     try {
-      if (navigator.clipboard && navigator.clipboard.write) {
-        const htmlBlob = new Blob([cleanHtmlContent], { type: 'text/html' });
-        const textBlob = new Blob([plainTextContent], { type: 'text/plain' });
-        
-        // @ts-ignore
-        const clipboardItem = new ClipboardItem({
-          'text/html': htmlBlob,
-          'text/plain': textBlob,
-        });
-        await navigator.clipboard.write([clipboardItem]);
-        setCopyStatus("Content Copied (Rich Format)!");
-      } else { 
-        await navigator.clipboard.writeText(plainTextContent);
-        setCopyStatus("Content Copied (Plain Text)!");
+      // Modern Clipboard API (preferred)
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(content);
+        return { success: true, message: "Content copied to clipboard!" };
       }
+
+      // Fallback for older browsers or non-secure contexts
+      const textArea = document.createElement("textarea");
+      textArea.value = content;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      if (successful) {
+        return { success: true, message: "Content copied to clipboard!" };
+      } else {
+        throw new Error("Copy command failed");
+      }
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to copy content";
+      console.error("Copy to clipboard failed:", err);
+      setError(errorMessage);
+      return { success: false, message: "Failed to copy. Please try manually selecting and copying the text." };
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  const processMarkdown = useCallback((content: string): string => {
+    if (!content) return '';
+
+    // Basic markdown processing
+    let processed = content
+      // Convert headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Convert bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Convert italic text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Convert line breaks
+      .replace(/\n/g, '<br>');
+
+    return processed;
+  }, []);
+
+  const extractTitle = useCallback((content: string): string | null => {
+    if (!content) return null;
+
+    // Try to extract title from various formats
+    const titlePatterns = [
+      /^#\s+(.+)$/m,           // # Title
+      /^\*\*(.+)\*\*$/m,       // **Title**
+      /^(.+)\n[=-]+$/m,        // Title with underline
+    ];
+
+    for (const pattern of titlePatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+
+    // Fallback: use first line if it's short enough
+    const firstLine = content.split('\n')[0]?.trim();
+    if (firstLine && firstLine.length < 100) {
+      return firstLine;
+    }
+
+    return null;
+  }, []);
+
+  const sanitizeContent = useCallback((content: string): string => {
+    if (!content) return '';
+
+    // Remove potentially harmful content
+    return content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '');
+  }, []);
+
+  const formatForExport = useCallback((content: string, title?: string): string => {
+    const timestamp = new Date().toLocaleDateString();
+    const header = title ? `# ${title}\n\n` : '';
+    const footer = `\n\n---\n*Generated by TrackGuide AI Assistant on ${timestamp}*`;
+    
+    return `${header}${content}${footer}`;
+  }, []);
+
+  // Enhanced copy function with fallback methods
+  const copyToClipboardEnhanced = useCallback(async (content: string): Promise<{ success: boolean; message: string }> => {
+    if (!content?.trim()) {
+      return { success: false, message: "No content to copy" };
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      // Method 1: Modern Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(content);
+          return { success: true, message: "Content copied to clipboard!" };
+        } catch (clipboardError) {
+          console.warn("Modern Clipboard API failed, trying fallback:", clipboardError);
+        }
+      }
+
+      // Method 2: Legacy execCommand fallback
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = content;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, content.length);
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          return { success: true, message: "Content copied to clipboard!" };
+        }
+      } catch (execCommandError) {
+        console.warn("execCommand fallback failed:", execCommandError);
+      }
+
+      // Method 3: Final fallback - create a selection
+      try {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        const textNode = document.createTextNode(content);
+        document.body.appendChild(textNode);
+        range.selectNodeContents(textNode);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textNode);
+        
+        if (successful) {
+          return { success: true, message: "Content copied to clipboard!" };
+        }
+      } catch (selectionError) {
+        console.warn("Selection fallback failed:", selectionError);
+      }
+
+      throw new Error("All copy methods failed");
+
     } catch (err) {
       console.error("Failed to copy content using modern Clipboard API:", err);
       try {
         const textArea = document.createElement("textarea");
+        textArea.value = content;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          return { success: true, message: "Content copied to clipboard!" };
+        }
+      } catch (fallbackErr) {
+        console.error("Fallback copy method also failed:", fallbackErr);
+      }
+      
+      const errorMessage = err instanceof Error ? err.message : "Failed to copy content";
+      setError(errorMessage);
+      return { 
+        success: false, 
+        message: "Unable to copy automatically. Please manually select and copy the text." 
+      };
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  return {
+    isProcessing,
+    error,
+    copyToClipboard: copyToClipboardEnhanced,
+    clearError,
+    // Additional utility functions
+    processMarkdown,
+    extractTitle,
+    sanitizeContent,
+    formatForExport,
+  } as UseContentProcessingReturn & {
+    processMarkdown: (content: string) => string;
+    extractTitle: (content: string) => string | null;
+    sanitizeContent: (content: string) => string;
+    formatForExport: (content: string, title?: string) => string;
+  };
+};
+
+// Helper function for content validation
+export const validateContent = (content: string): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!content || typeof content !== 'string') {
+    errors.push('Content must be a non-empty string');
+  }
+
+  if (content && content.length > 100000) {
+    errors.push('Content is too long (max 100,000 characters)');
+  }
+
+  if (content && content.trim().length === 0) {
+    errors.push('Content cannot be empty or only whitespace');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Helper function for content formatting
+export const formatContentForDisplay = (content: string, maxLength: number = 1000): string => {
+  if (!content) return '';
+  
+  if (content.length <= maxLength) {
+    return content;
+  }
+  
+  return content.substring(0, maxLength) + '...';
+};
