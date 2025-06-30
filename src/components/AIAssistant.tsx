@@ -1,16 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
-import { Input } from './Input';
+import { Textarea } from './Textarea';
 import { Spinner } from './Spinner';
+import { CloseIcon } from './icons';
 import { generateAIAssistantResponse } from '../services/geminiService';
-import { UserInputs, GuidebookEntry, ChatMessage } from '../constants/types';
-
-// TrackGuide Logo Component
-const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <div className={`${className} bg-orange-500 transform rotate-45 flex items-center justify-center`}>
-    <div className="w-1/2 h-1/2 bg-white transform -rotate-45"></div>
-  </div>
-);
+import { MarkdownRendererService } from '../services/markdownRenderer.service';
+import { ContentCopyService } from '../services/contentCopy.service';
 
 interface Message {
   id: string;
@@ -20,94 +15,33 @@ interface Message {
 }
 
 interface AIAssistantProps {
-  isOpen: boolean;
-  onClose: () => void;
-  currentGuidebook?: GuidebookEntry;
-  userInputs?: UserInputs;
-  onUpdateGuidebook?: (content: string) => void;
-  onUpdateInputs?: (inputs: Partial<UserInputs>) => void;
-  isCollapsed?: boolean;
-  onToggle?: () => void;
-  // Additional context from other guides
-  remixGuideContent?: string;
-  mixFeedbackContent?: string;
-  mixComparisonContent?: string;
-  patchGuideContent?: string;
-  activeView?: string;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export const AIAssistant: React.FC<AIAssistantProps> = ({
-  isOpen,
-  currentGuidebook,
-  userInputs,
-  isCollapsed = false,
-  onToggle,
-  remixGuideContent,
-  mixFeedbackContent,
-  mixComparisonContent,
-  patchGuideContent,
-  activeView
+export const AIAssistant: React.FC<AIAssistantProps> = ({ 
+  isCollapsed, 
+  onToggleCollapse 
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [streamingResponse, setStreamingResponse] = useState('');
+  const [copyStatus, setCopyStatus] = useState<{ [key: string]: string }>({});
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  // Initialize with welcome message when first opened
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      setMessages([{
-        id: '1',
-        role: 'assistant',
-        content: `Hi! I'm your AI music production assistant. I can help you:
-
-1. Refine guides (TrackGuide, RemixGuide, PatchGuide)
-2. Analyze Mix Feedback and Comparison reports  
-3. Answer production techniques questions
-4. Provide creative suggestions and arrangement ideas
-
-What would you like to work on today?`,
-        timestamp: new Date()
-      }]);
-    }
-  }, [isOpen, messages.length]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [isOpen]);
-
-  const clearConversation = () => {
-    setMessages([{
-      id: '1',
-      role: 'assistant',
-      content: `Hi! I'm your AI music production assistant. I can help you:
-
-1. Refine guides (TrackGuide, RemixGuide, PatchGuide)
-2. Analyze Mix Feedback and Comparison reports  
-3. Answer production techniques questions
-4. Provide creative suggestions and arrangement ideas
-
-What would you like to work on today?`,
-      timestamp: new Date()
-    }]);
-  };
+  }, [messages, streamingResponse]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isGenerating) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -118,88 +52,41 @@ What would you like to work on today?`,
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
-    setIsLoading(true);
+    setIsGenerating(true);
+    setStreamingResponse('');
 
     try {
-      // Convert our Message format to ChatMessage format
-      const conversationHistory: ChatMessage[] = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-
-      // Add the new user message to conversation
-      conversationHistory.push({
-        role: 'user',
-        content: userMessage.content
-      });
-
-      // Ensure we have a current guidebook, create a default one if needed
-      const guidebook: GuidebookEntry = currentGuidebook || {
-        id: 'temp-' + Date.now(),
-        title: 'Current Project',
-        genre: userInputs?.genre || ['General'],
-        artistReference: userInputs?.artistReference || 'Not specified',
-        vibe: userInputs?.vibe || ['Creative'],
-        daw: userInputs?.daw || 'Not specified',
-        plugins: userInputs?.plugins || 'Not specified',
-        availableInstruments: userInputs?.availableInstruments || 'Not specified',
-        content: 'Working on current project',
-        createdAt: new Date().toISOString(),
-        key: userInputs?.key,
-        scale: userInputs?.scale,
-        chords: userInputs?.chords
-      };
-
-      // Get streaming response with additional context
-      const responseStream = await generateAIAssistantResponse(
-        conversationHistory, 
-        guidebook,
-        {
-          remixGuideContent,
-          mixFeedbackContent,
-          mixComparisonContent,
-          patchGuideContent,
-          activeView
-        }
-      );
+      const responseStream = await generateAIAssistantResponse(inputMessage.trim());
+      let fullResponse = '';
       
-      // Create assistant message with initial empty content
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          fullResponse += chunk.text;
+          setStreamingResponse(fullResponse);
+        }
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '',
+        content: fullResponse,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Stream the response
-      let fullContent = '';
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          fullContent += chunk.text;
-          // Update the assistant message content
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { ...msg, content: fullContent }
-                : msg
-            )
-          );
-        }
-      }
-
+      setStreamingResponse('');
     } catch (error) {
-      console.error('AI Assistant Error:', error);
+      console.error('AI Assistant error:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again or rephrase your question.',
+        content: 'Sorry, I encountered an error while processing your request. Please try again.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      setStreamingResponse('');
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -210,127 +97,246 @@ What would you like to work on today?`,
     }
   };
 
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      // Create a temporary div to render the markdown content
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      
+      const plainTextContent = ContentCopyService.getFormattedTextFromHtmlElement(tempDiv);
+      const cleanHtmlContent = ContentCopyService.createCleanHtmlFromText(plainTextContent);
 
+      if (navigator.clipboard && navigator.clipboard.write) {
+        const htmlBlob = new Blob([cleanHtmlContent], { type: 'text/html' });
+        const textBlob = new Blob([plainTextContent], { type: 'text/plain' });
+        
+        // @ts-ignore
+        const clipboardItem = new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': textBlob,
+        });
+        await navigator.clipboard.write([clipboardItem]);
+        setCopyStatus(prev => ({ ...prev, [messageId]: "Copied (Rich Format)!" }));
+      } else {
+        await navigator.clipboard.writeText(plainTextContent);
+        setCopyStatus(prev => ({ ...prev, [messageId]: "Copied!" }));
+      }
+    } catch (err) {
+      console.error("Failed to copy message:", err);
+      setCopyStatus(prev => ({ ...prev, [messageId]: "Failed to copy" }));
+    }
+
+    setTimeout(() => {
+      setCopyStatus(prev => {
+        const newStatus = { ...prev };
+        delete newStatus[messageId];
+        return newStatus;
+      });
+    }, 3000);
+  };
+
+  const clearConversation = () => {
+    setMessages([]);
+    setStreamingResponse('');
+    setCopyStatus({});
+  };
+
+  const renderMessage = (message: Message) => {
+    const isUser = message.role === 'user';
+    const renderedContent = isUser 
+      ? [<p key="user-message" className="whitespace-pre-wrap">{message.content}</p>]
+      : MarkdownRendererService.renderMarkdown(message.content, false);
+
+    return (
+      <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className={`max-w-[80%] rounded-lg p-4 ${
+          isUser 
+            ? 'bg-orange-500 text-white' 
+            : 'bg-gray-700 text-gray-100'
+        }`}>
+          <div className="flex items-start justify-between mb-2">
+            <span className={`text-xs font-medium ${
+              isUser ? 'text-orange-100' : 'text-gray-400'
+            }`}>
+              {isUser ? 'You' : 'AI Assistant'}
+            </span>
+            {!isUser && (
+              <div className="flex items-center gap-2 ml-4">
+                <button
+                  onClick={() => handleCopyMessage(message.id, message.content)}
+                  className="text-xs text-gray-400 hover:text-gray-200 transition-colors p-1 rounded hover:bg-gray-600"
+                  title="Copy message"
+                >
+                  📋
+                </button>
+                {copyStatus[message.id] && (
+                  <span className="text-xs text-green-400">
+                    {copyStatus[message.id]}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="prose prose-invert prose-sm max-w-none">
+            {renderedContent}
+          </div>
+          <div className={`text-xs mt-2 ${
+            isUser ? 'text-orange-200' : 'text-gray-500'
+          }`}>
+            {message.timestamp.toLocaleTimeString()}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (isCollapsed) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={onToggleCollapse}
+          className="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105"
+          title="Open AI Assistant"
+        >
+          <span className="text-xl">🤖</span>
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {/* Backdrop overlay when chat is open */}
-      {!isCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
-          onClick={onToggle}
-        />
-      )}
-      
-      <div className="fixed bottom-4 right-4 z-[9999]">
-        {isCollapsed ? (
-          // Collapsed state - floating button with TrackGuide logo
-          <div 
-            onClick={onToggle}
-            className="w-14 h-14 bg-gray-700 hover:bg-gray-600 rounded-full shadow-2xl cursor-pointer flex items-center justify-center hover:scale-105 transition-transform duration-200 border-2 border-orange-400/60"
-          >
-            <TrackGuideLogo className="w-8 h-8" />
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm">
+      <div className="absolute inset-4 bg-gray-800 rounded-lg shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">🤖</span>
+            <div>
+              <h2 className="text-xl font-bold text-white">AI Production Coach</h2>
+              <p className="text-sm text-gray-400">Ask me anything about music production</p>
+            </div>
           </div>
-        ) : (
-          // Expanded state - large popup window
-          <div className="fixed inset-4 md:inset-8 lg:inset-16 z-[9999] flex items-center justify-center pointer-events-none">
-            <div className="w-full max-w-4xl h-full max-h-[800px] bg-gray-800 shadow-2xl border border-gray-700 rounded-lg flex flex-col overflow-hidden pointer-events-auto">
-              {/* Header */}
-              <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-gray-700 to-gray-600 flex-shrink-0">
-                <div className="flex items-center min-w-0 flex-1">
-                  <TrackGuideLogo className="w-6 h-6 text-white mr-3 flex-shrink-0" />
-                  <h2 className="text-xl font-bold text-white truncate">Production Coach</h2>
-                </div>
-                <div className="flex gap-2 flex-shrink-0 ml-4">
-                  <Button 
-                    onClick={clearConversation} 
-                    variant="outline" 
-                    size="sm" 
-                    className="bg-orange-500 text-black border-orange-400 hover:bg-orange-600 font-medium"
-                  >
-                    Clear Chat
-                  </Button>
-                  <Button 
-                    onClick={onToggle} 
-                    variant="outline" 
-                    size="sm" 
-                    className="bg-red-500 text-black border-red-400 hover:bg-red-600 flex-shrink-0 font-bold"
-                  >
-                    <span className="text-lg">×</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Messages Container */}
-              <div 
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-900/50"
-                style={{
-                  scrollBehavior: 'smooth',
-                  overflowAnchor: 'auto'
-                }}
+          <div className="flex items-center space-x-2">
+            {messages.length > 0 && (
+              <Button
+                onClick={clearConversation}
+                variant="secondary"
+                size="sm"
+                className="text-xs"
               >
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-4 rounded-lg shadow-lg ${
-                        message.role === 'user'
-                          ? 'bg-orange-600 text-white rounded-br-sm'
-                          : 'bg-gray-700 text-gray-100 rounded-bl-sm'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap break-words leading-relaxed text-base">{message.content}</div>
-                      <div className="text-xs opacity-70 mt-3">
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-700 text-gray-100 p-4 rounded-lg shadow-lg rounded-bl-sm">
-                      <Spinner text="AI is thinking..." />
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
+                Clear Chat
+              </Button>
+            )}
+            <Button
+              onClick={onToggleCollapse}
+              variant="secondary"
+              size="sm"
+              className="p-2"
+              title="Close AI Assistant"
+            >
+              <CloseIcon className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
 
-              {/* Input Area */}
-              <div className="p-4 border-t border-gray-700 bg-gray-800 flex-shrink-0">
-                <div className="flex gap-3 mb-3">
-                  <Input
-                    ref={inputRef}
-                    type="text"
-                    placeholder="Ask about production techniques, guides, or get help with your current project..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    variant="primary"
-                    className="px-6 bg-orange-600 hover:bg-orange-700"
-                  >
-                    {isLoading ? '...' : 'Send'}
-                  </Button>
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && !streamingResponse && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🎵</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Welcome to your AI Production Coach!
+              </h3>
+              <p className="text-gray-400 max-w-md mx-auto">
+                I'm here to help with music production questions, mixing advice, 
+                creative suggestions, and technical guidance. What would you like to know?
+              </p>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                <button
+                  onClick={() => setInputMessage("How do I make my mix sound more professional?")}
+                  className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left text-sm text-gray-300 transition-colors"
+                >
+                  💡 How do I make my mix sound more professional?
+                </button>
+                <button
+                  onClick={() => setInputMessage("What's the best way to structure a song?")}
+                  className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left text-sm text-gray-300 transition-colors"
+                >
+                  🎼 What's the best way to structure a song?
+                </button>
+                <button
+                  onClick={() => setInputMessage("How do I choose the right key for my track?")}
+                  className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left text-sm text-gray-300 transition-colors"
+                >
+                  🎹 How do I choose the right key for my track?
+                </button>
+                <button
+                  onClick={() => setInputMessage("What are some creative arrangement ideas?")}
+                  className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left text-sm text-gray-300 transition-colors"
+                >
+                  ✨ What are some creative arrangement ideas?
+                </button>
+              </div>
+            </div>
+          )}
+
+          {messages.map(renderMessage)}
+
+          {/* Streaming Response */}
+          {streamingResponse && (
+            <div className="flex justify-start mb-4">
+              <div className="max-w-[80%] rounded-lg p-4 bg-gray-700 text-gray-100">
+                <div className="flex items-start justify-between mb-2">
+                  <span className="text-xs font-medium text-gray-400">
+                    AI Assistant
+                  </span>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Spinner size="sm" />
+                    <span className="text-xs text-gray-400">Thinking...</span>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 text-center">
-                  Press Enter to send • Clear Chat resets conversation • Click outside to close
+                <div className="prose prose-invert prose-sm max-w-none">
+                  {MarkdownRendererService.renderMarkdown(streamingResponse, false)}
                 </div>
               </div>
             </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-gray-700 p-4">
+          <div className="flex space-x-3">
+            <div className="flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask me anything about music production..."
+                rows={2}
+                className="resize-none"
+                disabled={isGenerating}
+              />
+            </div>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isGenerating}
+              className="self-end px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600"
+            >
+              {isGenerating ? (
+                <Spinner size="sm" />
+              ) : (
+                <span>Send</span>
+              )}
+            </Button>
           </div>
-        )}
+          <div className="mt-2 text-xs text-gray-500">
+            Press Enter to send, Shift+Enter for new line
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
