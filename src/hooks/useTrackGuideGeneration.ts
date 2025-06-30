@@ -1,143 +1,146 @@
-import { useState } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns } from '../types/appTypes';
-import { useAppStore } from '../store/useAppStore';
-import { 
-  generateGuidebookContent, 
-  generateMidiPatternSuggestions 
-} from '../services/geminiService';
-import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
-import { KeyParsingService } from '../services/keyParsing.service';
-import { TitleExtractionService } from '../services/titleExtraction.service';
-import {
-  parseBpmFromGuidebook,
-  parseChordProgressionFromGuidebook,
-  extractEssentialMidiContext
-} from '../utils/guidebookUtils';
-import { 
-  MIDI_DEFAULT_SETTINGS, 
-  MIDI_CHORD_PROGRESSIONS, 
-  MIDI_TEMPO_RANGES 
-} from '../constants/constants';
+import { useState, useCallback } from 'react';
+import { generateTrackGuide } from '../services/geminiService';
+import { TrackGuideInputs, TrackGuideResult } from '../types/trackGuide';
 
-export const useTrackGuideGeneration = () => {
-  const {
-    generatedGuidebook,
-    setGeneratedGuidebook,
-    activeGuidebookDetails,
-    setActiveGuidebookDetails,
-    error,
-    setError,
-    midiError,
-    setMidiError,
-    isLoading,
-    setIsLoading,
-    loadingMessage,
-    setLoadingMessage
-  } = useAppStore();
+interface UseTrackGuideGenerationReturn {
+  isGenerating: boolean;
+  error: string | null;
+  generateGuide: (inputs: TrackGuideInputs) => Promise<TrackGuideResult | null>;
+  clearError: () => void;
+}
 
-  const generateTrackGuide = async (inputs: UserInputs) => {
-    setIsLoading(true);
+export const useTrackGuideGeneration = (): UseTrackGuideGenerationReturn => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const clearError = useCallback(() => {
     setError(null);
-    setMidiError(null);
-    setGeneratedGuidebook("");
-    setActiveGuidebookDetails(null);
+  }, []);
 
-    // Auto-scroll to top when generation starts
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    let finalGuidebookContent = "";
-    let initialPatternsData: GeneratedMidiPatterns | undefined;
-    let finalMidiSettings: MidiSettings | undefined;
+  const generateGuide = useCallback(async (inputs: TrackGuideInputs): Promise<TrackGuideResult | null> => {
+    setIsGenerating(true);
+    setError(null);
 
     try {
-      setLoadingMessage('TrackGuide is generating...');
-      const guidebookStream = await generateGuidebookContent(inputs);
-      for await (const chunk of guidebookStream) {
-        finalGuidebookContent += chunk.text;
-        setGeneratedGuidebook(prev => prev + chunk.text);
+      // Validate inputs
+      if (!inputs.genre?.trim()) {
+        throw new Error('Genre is required');
       }
 
-      setLoadingMessage('Initial MIDI patterns are generating...');
+      if (!inputs.vibe?.trim()) {
+        throw new Error('Vibe/mood is required');
+      }
+
+      // Generate the track guide
+      const result = await generateTrackGuide(inputs);
       
-      const aiGeneratedTitle = TitleExtractionService.extractAiGeneratedTitleFromMarkdown(finalGuidebookContent);
-      const entryTitle = inputs.songTitle?.trim() ? inputs.songTitle.trim() : (aiGeneratedTitle || `TrackGuide for ${inputs.genre.join(', ') || 'Unknown Genre'}`);
-      
-      const newEntryId = Date.now().toString();
+      if (!result) {
+        throw new Error('Failed to generate track guide');
+      }
+
+      // Create the final result with metadata
       const createdAt = new Date().toISOString();
       
-      const parsedBpm = parseBpmFromGuidebook(finalGuidebookContent);
-      const parsedKey = KeyParsingService.parseKeyFromGuidebook(finalGuidebookContent);
-      const parsedProg = parseChordProgressionFromGuidebook(finalGuidebookContent);
-      const primaryGenre = inputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
-      
-      const tempoRange = MIDI_TEMPO_RANGES[primaryGenre] || MIDI_TEMPO_RANGES.Default;
-      const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
-      const defaultChordProgForGenre = (MIDI_CHORD_PROGRESSIONS[primaryGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0];
+      const finalGuidebookContent = `# Track Guide: ${inputs.genre} - ${inputs.vibe}
 
-      const essentialMidiContext = extractEssentialMidiContext(finalGuidebookContent);
-      const initialSongSection = MIDI_DEFAULT_SETTINGS.songSection; 
-      
-      let initialBars = 8;
-      const primaryGenreLower = primaryGenre.toLowerCase();
-      const shortLoopGenres = [
-        'lo-fi hip hop', 'lofi hip hop', 'lofi', 'trap', 'ambient', 'idm',
-        'breakcore', 'footwork', 'juke', 'experimental'
-      ];
-      if (shortLoopGenres.some(g => primaryGenreLower.includes(g))) {
-        initialBars = 4;
-      }
-      const initialTargetInstruments: string[] = ['chords', 'bassline', 'melody', 'drums'];
+## Overview
+**Genre:** ${inputs.genre}
+**Vibe/Mood:** ${inputs.vibe}
+**DAW:** ${inputs.daw || 'Not specified'}
+**Generated:** ${new Date(createdAt).toLocaleDateString()}
 
-      finalMidiSettings = {
-        key: parsedKey || MIDI_DEFAULT_SETTINGS.key,
-        tempo: parsedBpm || defaultTempoForGenre,
-        timeSignature: MIDI_DEFAULT_SETTINGS.timeSignature,
-        chordProgression: parsedProg || defaultChordProgForGenre,
-        genre: primaryGenre,
-        bars: initialBars,
-        targetInstruments: initialTargetInstruments, 
-        guidebookContext: essentialMidiContext,
-        songSection: initialSongSection,
-      };
+---
 
-      try {
-        const midiStream = await generateMidiPatternSuggestions(finalMidiSettings);
-        let accumulatedMidiJson = "";
-        for await (const chunk of midiStream) {
-          accumulatedMidiJson += chunk.text;
-        }
-        
-        initialPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(accumulatedMidiJson, 'initial MIDI generation');
-        if (initialPatternsData.drums) {
-          const lowercasedDrums: any = {};
-          for (const key in initialPatternsData.drums) {
-              lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = initialPatternsData.drums[key as keyof typeof initialPatternsData.drums];
-          }
-          initialPatternsData.drums = lowercasedDrums;
-        }
-        setMidiError(null);
-      } catch (midiErr: any) {
-        console.error("Initial MIDI generation failed:", midiErr);
-        const midiSpecificMessage = midiErr.message.toLowerCase().includes("json") 
-            ? `AI returned invalid JSON for MIDI patterns during initial generation. (${midiErr.message})`
-            : `Initial MIDI generation failed: ${midiErr.message}.`;
-        setMidiError(midiSpecificMessage + " You can try generating MIDI manually in the MIDI tools section.");
-        initialPatternsData = undefined;
-      }
+${result.content}
 
-      setActiveGuidebookDetails({
-        id: newEntryId,
-        title: entryTitle,
+---
+
+## Generation Details
+- **Available Instruments:** ${inputs.availableInstruments || 'Not specified'}
+- **Additional Context:** ${inputs.additionalContext || 'None provided'}
+- **Generated At:** ${createdAt}
+`;
+
+      const trackGuideResult: TrackGuideResult = {
+        id: `guide_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: `${inputs.genre} - ${inputs.vibe}`,
         genre: inputs.genre,
-        artistReference: inputs.artistReference,
-        referenceTrackLink: inputs.referenceTrackLink,
-        lyrics: inputs.lyrics,
-        key: inputs.key,
-        chords: inputs.chords,
-        generalNotes: inputs.generalNotes,
         vibe: inputs.vibe,
-        daw: inputs.daw,
-        plugins: inputs.plugins,
+        daw: inputs.daw || '',
+        additionalContext: inputs.additionalContext || '',
         availableInstruments: inputs.availableInstruments || '',
         content: finalGuidebookContent,
-        createdAt,
+        createdAt: createdAt,
+        sections: result.sections || [],
+        metadata: {
+          generationTime: Date.now(),
+          inputHash: btoa(JSON.stringify(inputs)),
+          version: '1.0'
+        }
+      };
+
+      return trackGuideResult;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      console.error('Track guide generation error:', err);
+      setError(errorMessage);
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  }, []);
+
+  return {
+    isGenerating,
+    error,
+    generateGuide,
+    clearError
+  };
+};
+
+// Helper function to validate track guide inputs
+export const validateTrackGuideInputs = (inputs: TrackGuideInputs): string[] => {
+  const errors: string[] = [];
+
+  if (!inputs.genre?.trim()) {
+    errors.push('Genre is required');
+  }
+
+  if (!inputs.vibe?.trim()) {
+    errors.push('Vibe/mood is required');
+  }
+
+  if (inputs.genre && inputs.genre.length > 100) {
+    errors.push('Genre must be less than 100 characters');
+  }
+
+  if (inputs.vibe && inputs.vibe.length > 100) {
+    errors.push('Vibe must be less than 100 characters');
+  }
+
+  if (inputs.additionalContext && inputs.additionalContext.length > 1000) {
+    errors.push('Additional context must be less than 1000 characters');
+  }
+
+  return errors;
+};
+
+// Helper function to format track guide for export
+export const formatTrackGuideForExport = (guide: TrackGuideResult): string => {
+  return `# ${guide.title}
+
+**Generated:** ${new Date(guide.createdAt).toLocaleDateString()}
+**Genre:** ${guide.genre}
+**Vibe:** ${guide.vibe}
+**DAW:** ${guide.daw || 'Not specified'}
+
+---
+
+${guide.content}
+
+---
+
+*Generated by TrackGuide AI Assistant*
+`;
+};
