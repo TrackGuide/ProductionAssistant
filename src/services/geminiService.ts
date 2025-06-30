@@ -1,20 +1,51 @@
 // services/geminiService.ts
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { UserInputs, MidiSettings, MixFeedbackInputs } from '../types/appTypes';
+import { GEMINI_MODEL_NAME } from '../constants/constants';
 import { dawMetadata } from '../constants/dawMetadata';
-import { 
-  GENRE_SUGGESTIONS, 
-  VIBE_SUGGESTIONS, 
-  MIDI_SCALES, 
-  MIDI_CHORD_PROGRESSIONS, 
-  MIDI_TEMPO_RANGES,
-  DAW_SUGGESTIONS 
-} from '../constants/constants';
+import { MIDI_TEMPO_RANGES, MIDI_CHORD_PROGRESSIONS } from '../constants/constants';
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// Initialize Gemini AI
+const getApiKey = (): string => {
+  const apiKey = 
+    (typeof process !== 'undefined' && process.env.VITE_GEMINI_API_KEY) ||
+    (typeof import.meta !== 'undefined' && (import.meta as any).env.VITE_GEMINI_API_KEY) ||
+    '';
+  
+  if (!apiKey) {
+    throw new Error('Gemini API key not found. Please set VITE_GEMINI_API_KEY in your environment variables.');
+  }
+  
+  return apiKey;
+};
 
-// Helper function to get DAW-specific context
+let genAI: GoogleGenerativeAI | null = null;
+
+const initializeGemini = (): GoogleGenerativeAI => {
+  if (!genAI) {
+    const apiKey = getApiKey();
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
+};
+
+// Helper function to get genre context
+const getGenreContext = (genres: string[]): string => {
+  const genreInfo = genres.map(genre => {
+    const tempoRange = MIDI_TEMPO_RANGES[genre];
+    const chordProgs = MIDI_CHORD_PROGRESSIONS[genre];
+    
+    return `
+**${genre} Context:**
+${tempoRange ? `- Typical BPM Range: ${tempoRange[0]}-${tempoRange[1]}` : ''}
+${chordProgs ? `- Common Chord Progressions: ${chordProgs.join(', ')}` : ''}
+`;
+  }).join('\n');
+  
+  return genreInfo;
+};
+
+// Helper function to get DAW context
 const getDawContext = (dawName: string): string => {
   const daw = dawMetadata.find(d => 
     d.name.toLowerCase().includes(dawName.toLowerCase()) ||
@@ -35,264 +66,301 @@ ${daw.mixingFeatures ? `- Mixing Features: ${daw.mixingFeatures.join(', ')}` : '
 `;
 };
 
-// Helper function to get genre-specific context
-const getGenreContext = (genres: string[]): string => {
-  const genreInfo = genres.map(genre => {
-    const tempoRange = MIDI_TEMPO_RANGES[genre];
-    const chordProgs = MIDI_CHORD_PROGRESSIONS[genre];
-    
-    return `
-**${genre} Context:**
-${tempoRange ? `- Typical BPM Range: ${tempoRange[0]}-${tempoRange[1]}` : ''}
-${chordProgs ? `- Common Chord Progressions: ${chordProgs.join(', ')}` : ''}
-`;
-  }).join('\n');
-  
-  return genreInfo;
-};
+// Main function to generate track guide
+export const generateTrackGuide = async (inputs: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
 
-export const generateGuidebookContent = async function* (inputs: UserInputs) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const genreContext = inputs.genres ? getGenreContext(inputs.genres) : '';
+    const dawContext = inputs.dawName ? getDawContext(inputs.dawName) : '';
 
-  // Get DAW-specific context
-  const dawContext = inputs.daw ? getDawContext(inputs.daw) : '';
-  
-  // Get genre-specific context
-  const genreContext = inputs.genre.length > 0 ? getGenreContext(inputs.genre) : '';
-  
-  // Validate genres against constants
-  const validGenres = inputs.genre.filter(g => 
-    GENRE_SUGGESTIONS.some(suggestion => 
-      suggestion.toLowerCase().includes(g.toLowerCase()) || 
-      g.toLowerCase().includes(suggestion.toLowerCase())
-    )
-  );
-  
-  // Validate vibes against constants
-  const validVibes = inputs.vibe.filter(v => 
-    VIBE_SUGGESTIONS.some(suggestion => 
-      suggestion.toLowerCase().includes(v.toLowerCase()) || 
-      v.toLowerCase().includes(suggestion.toLowerCase())
-    )
-  );
+    const prompt = `
+You are an expert music production assistant. Generate a comprehensive track guide based on the following inputs:
 
-  const prompt = `You are an expert music production assistant. Create a comprehensive TrackGuide for a music producer.
+**Track Details:**
+- Genres: ${inputs.genres?.join(', ') || 'Not specified'}
+- Vibes: ${inputs.vibes?.join(', ') || 'Not specified'}
+- DAW: ${inputs.dawName || 'Not specified'}
+- User Notes: ${inputs.userNotes || 'None'}
 
-**IMPORTANT CONTEXT FROM SYSTEM:**
-${dawContext}
 ${genreContext}
-
-**Available Scales:** ${MIDI_SCALES.join(', ')}
-**Supported DAWs:** ${DAW_SUGGESTIONS.join(', ')}
-**Genre Database:** ${GENRE_SUGGESTIONS.join(', ')}
-**Vibe Database:** ${VIBE_SUGGESTIONS.join(', ')}
-
-**User Input:**
-- Song Title: ${inputs.songTitle || 'Not specified'}
-- Genres: ${inputs.genre.join(', ') || 'Not specified'} ${validGenres.length !== inputs.genre.length ? '(Some genres validated against database)' : ''}
-- Vibes: ${inputs.vibe.join(', ') || 'Not specified'} ${validVibes.length !== inputs.vibe.length ? '(Some vibes validated against database)' : ''}
-- Artist Reference: ${inputs.artistReference || 'Not specified'}
-- Reference Track: ${inputs.referenceTrackLink || 'Not specified'}
-- DAW: ${inputs.daw || 'Not specified'}
-- Plugins: ${inputs.plugins || 'Not specified'}
-- Available Instruments: ${inputs.availableInstruments || 'Not specified'}
-- Key/Scale: ${inputs.key || 'Not specified'}
-- Chord Ideas: ${inputs.chords || 'Not specified'}
-- Lyrics/Vocal Ideas: ${inputs.lyrics || 'Not specified'}
-- General Notes: ${inputs.generalNotes || 'Not specified'}
-
-Create a detailed TrackGuide that includes:
-
-1. **Track Overview** - Suggested title, key insights
-2. **Genre & Style Analysis** - Reference the genre database and provide specific guidance
-3. **Suggested Key(s) / Scale(s)** - Choose from available scales: ${MIDI_SCALES.join(', ')}
-4. **BPM Recommendation** - Use genre-specific tempo ranges when available
-5. **Chord Progression Ideas** - Reference common progressions for the genre
-6. **Song Structure** - Detailed arrangement suggestions
-7. **Sound Design & Instrumentation** - Specific to the genre and available tools
-8. **Production Techniques** - ${inputs.daw ? `Specific to ${inputs.daw}` : 'General techniques'}
-9. **Mixing Approach** - ${inputs.daw ? `Using ${inputs.daw}'s strengths` : 'General mixing advice'}
-10. **Creative Ideas & Variations**
-
-${dawContext ? 'Make sure to leverage the DAW-specific strengths and features mentioned above.' : ''}
-${genreContext ? 'Use the genre-specific BPM and chord progression information provided.' : ''}
-
-Format as markdown with clear sections. Start with "# TRACKGUIDE: [Suggested Title]"`;
-
-  const result = await model.generateContentStream(prompt);
-  
-  for await (const chunk of result.stream) {
-    const chunkText = chunk.text();
-    yield { text: chunkText };
-  }
-};
-
-export const generateMidiPatternSuggestions = async function* (settings: MidiSettings) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-  // Get genre-specific context
-  const genreTempoRange = MIDI_TEMPO_RANGES[settings.genre] || MIDI_TEMPO_RANGES.Default;
-  const genreChordProgs = MIDI_CHORD_PROGRESSIONS[settings.genre] || MIDI_CHORD_PROGRESSIONS.Default;
-  
-  // Validate key against available scales
-  const isValidKey = MIDI_SCALES.includes(settings.key);
-  const keyWarning = !isValidKey ? `\n**Note:** Key "${settings.key}" not in standard scale database. Using as provided.` : '';
-
-  const prompt = `You are an expert MIDI composer. Generate MIDI patterns based on these specifications:
-
-**SYSTEM CONTEXT:**
-- Available Scales: ${MIDI_SCALES.join(', ')}
-- Genre Tempo Range for ${settings.genre}: ${genreTempoRange[0]}-${genreTempoRange[1]} BPM
-- Common Chord Progressions for ${settings.genre}: ${genreChordProgs.join(', ')}
-${keyWarning}
-
-**MIDI Settings:**
-- Key: ${settings.key} ${isValidKey ? '✓' : '⚠️'}
-- Tempo: ${settings.tempo} BPM ${settings.tempo >= genreTempoRange[0] && settings.tempo <= genreTempoRange[1] ? '(within genre range)' : '(outside typical range)'}
-- Time Signature: ${settings.timeSignature}
-- Chord Progression: ${settings.chordProgression}
-- Genre: ${settings.genre}
-- Bars: ${settings.bars}
-- Song Section: ${settings.songSection}
-- Target Instruments: ${settings.targetInstruments.join(', ')}
-
-**Additional Context:**
-${settings.guidebookContext || 'No additional context provided'}
-
-Generate MIDI patterns that:
-1. Respect the key signature and scale (${settings.key})
-2. Fit the tempo and time signature
-3. Match the genre conventions from the database
-4. Work well with the specified chord progression
-5. Are appropriate for the song section (${settings.songSection})
-
-Return as JSON with this exact structure:
-{
-  "chords": ["C4-E4-G4", "F4-A4-C5", ...],
-  "bassline": ["C2", "F2", "G2", ...],
-  "melody": ["G4", "A4", "F4", ...],
-  "drums": {
-    "kick": ["1.1.1", "1.3.1", ...],
-    "snare": ["1.2.1", "1.4.1", ...],
-    "hihat": ["1.1.1", "1.1.3", ...]
-  }
-}`;
-
-  const result = await model.generateContentStream(prompt);
-  
-  for await (const chunk of result.stream) {
-    const chunkText = chunk.text();
-    yield { text: chunkText };
-  }
-};
-
-export const generateMixFeedbackWithAudioStream = async function* (inputs: MixFeedbackInputs) {
-  const model = genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-flash',
-    generationConfig: {
-      temperature: 0.7,
-      topP: 0.8,
-      topK: 40,
-    }
-  });
-
-  // Get DAW-specific mixing context
-  const dawContext = inputs.dawName ? getDawContext(inputs.dawName) : '';
-  
-  // Convert file to base64
-  const audioBase64 = await fileToBase64(inputs.audioFile);
-
-  const prompt = `You are a professional mixing engineer. Analyze this audio file and provide detailed mixing feedback.
-
-**SYSTEM CONTEXT:**
 ${dawContext}
-**Supported DAWs:** ${DAW_SUGGESTIONS.join(', ')}
 
-**Track Information:**
-- Track Name: ${inputs.trackName || 'Not specified'}
-- DAW Used: ${inputs.dawName || 'Not specified'}
-- User Notes: ${inputs.userNotes || 'No additional notes'}
+Please provide a detailed production guide that includes:
 
-${dawContext ? `**DAW-Specific Advice:** Leverage ${inputs.dawName}'s mixing strengths mentioned above.` : ''}
+1. **Track Overview & Concept**
+2. **Arrangement Structure**
+3. **Sound Design & Instrumentation**
+4. **Mixing Approach**
+5. **Creative Techniques**
+6. **DAW-Specific Tips** (if DAW specified)
 
-Provide comprehensive feedback covering:
+Format your response in clear markdown with headers and bullet points. Be specific and actionable.
+`;
 
-1. **Overall Mix Balance**
-2. **Frequency Analysis** - EQ suggestions
-3. **Dynamics & Compression**
-4. **Stereo Field & Panning**
-5. **Reverb & Spatial Effects**
-6. **Individual Element Analysis**
-7. **Genre-Specific Considerations**
-8. **${inputs.dawName ? `${inputs.dawName}-Specific` : 'DAW'} Mixing Tips**
-9. **Improvement Recommendations**
-10. **Professional Polish Suggestions**
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
 
-Format as markdown. Start with "# 🎧 MIX FEEDBACK ANALYSIS"`;
-
-  const result = await model.generateContentStream([
-    {
-      inlineData: {
-        mimeType: inputs.audioFile.type,
-        data: audioBase64
-      }
-    },
-    { text: prompt }
-  ]);
-
-  for await (const chunk of result.stream) {
-    const chunkText = chunk.text();
-    yield { text: chunkText };
+  } catch (error) {
+    console.error('Error generating track guide:', error);
+    throw new Error(`Failed to generate track guide: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 
-// Helper function to convert file to base64
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-  });
+// Function to generate remix guide
+export const generateRemixGuide = async (inputs: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+
+    const prompt = `
+You are an expert remix producer. Create a detailed remix guide based on:
+
+**Original Track Info:**
+- Artist: ${inputs.originalArtist || 'Not specified'}
+- Track: ${inputs.originalTrack || 'Not specified'}
+- Genre: ${inputs.originalGenre || 'Not specified'}
+
+**Remix Details:**
+- Target Genre: ${inputs.remixGenre || 'Not specified'}
+- Style: ${inputs.remixStyle || 'Not specified'}
+- Vibe: ${inputs.remixVibe || 'Not specified'}
+- DAW: ${inputs.dawName || 'Not specified'}
+
+**Additional Notes:**
+${inputs.userNotes || 'None'}
+
+Provide a comprehensive remix guide including:
+
+1. **Remix Concept & Approach**
+2. **Key Elements to Preserve**
+3. **Elements to Transform**
+4. **Technical Breakdown**
+5. **Step-by-Step Process**
+6. **Creative Techniques**
+7. **Mixing & Mastering Tips**
+
+Be specific about techniques, effects, and creative decisions.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Error generating remix guide:', error);
+    throw new Error(`Failed to generate remix guide: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
-export const generateMixComparisonStream = async function* (inputs: {
-  mixAFile: string;
-  mixBFile: string;
-  mixAName: string;
-  mixBName: string;
-  includeMixBFeedback: boolean;
-  userNotes: string;
-}) {
-  const model = genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-flash',
-    generationConfig: {
-      temperature: 0.7,
-      topP: 0.8,
-      topK: 40,
-    }
-  });
+// Function to generate patch guide
+export const generatePatchGuide = async (inputs: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
 
-  const prompt = `You are a professional mixing engineer. Compare these two audio mixes and provide detailed analysis.
+    const prompt = `
+You are an expert sound designer. Create a detailed synthesizer patch guide based on:
 
-**SYSTEM CONTEXT:**
-**Supported DAWs:** ${DAW_SUGGESTIONS.join(', ')}
-**Genre Database:** ${GENRE_SUGGESTIONS.join(', ')}
+**Patch Requirements:**
+- Synth Model: ${inputs.synthModel || 'Generic'}
+- Sound Type: ${inputs.soundType || 'Not specified'}
+- Genre: ${inputs.genre || 'Not specified'}
+- Characteristics: ${inputs.characteristics?.join(', ') || 'Not specified'}
+- User Description: ${inputs.userNotes || 'None'}
 
-**Comparison Details:**
-- Mix A: ${inputs.mixAName}
-- Mix B: ${inputs.mixBName}
-- Include Mix B Individual Feedback: ${inputs.includeMixBFeedback ? 'Yes' : 'No'}
-- User Notes: ${inputs.userNotes || 'No additional notes'}
+Provide a comprehensive patch guide including:
 
-Provide comprehensive comparison covering:
+1. **Patch Overview**
+2. **Oscillator Settings**
+3. **Filter Configuration**
+4. **Envelope Settings (ADSR)**
+5. **Modulation Setup**
+6. **Effects Chain**
+7. **Performance Tips**
+8. **Variations & Tweaks**
+
+Be specific with parameter values and settings where possible.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Error generating patch guide:', error);
+    throw new Error(`Failed to generate patch guide: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Function to analyze mix and provide feedback
+export const generateMixFeedback = async (inputs: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+
+    const prompt = `
+You are an expert mixing engineer. Analyze the provided mix information and give detailed feedback:
+
+**Mix Details:**
+- Genre: ${inputs.genre || 'Not specified'}
+- DAW: ${inputs.dawName || 'Not specified'}
+- Track Elements: ${inputs.trackElements?.join(', ') || 'Not specified'}
+- Current Issues: ${inputs.currentIssues || 'None specified'}
+- Reference Track: ${inputs.referenceTrack || 'None'}
+- User Notes: ${inputs.userNotes || 'None'}
+
+Provide comprehensive mix feedback including:
+
+1. **Overall Mix Assessment**
+2. **Frequency Balance Analysis**
+3. **Stereo Field Evaluation**
+4. **Dynamic Range Review**
+5. **Specific Improvement Suggestions**
+6. **EQ Recommendations**
+7. **Compression Guidance**
+8. **Effects Processing Tips**
+9. **Reference Comparison** (if reference provided)
+
+Be specific and actionable with your recommendations.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Error generating mix feedback:', error);
+    throw new Error(`Failed to generate mix feedback: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Function to compare two mixes
+export const compareMixes = async (inputs: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+
+    const prompt = `
+You are an expert audio engineer. Compare two mixes and provide detailed analysis:
+
+**Mix A Details:**
+- Description: ${inputs.mixADescription || 'Not provided'}
+- Characteristics: ${inputs.mixACharacteristics || 'Not specified'}
+
+**Mix B Details:**
+- Description: ${inputs.mixBDescription || 'Not provided'}
+- Characteristics: ${inputs.mixBCharacteristics || 'Not specified'}
+
+**Comparison Context:**
+- Genre: ${inputs.genre || 'Not specified'}
+- Focus Areas: ${inputs.focusAreas?.join(', ') || 'General comparison'}
+- User Notes: ${inputs.userNotes || 'None'}
+
+Provide a detailed comparison including:
 
 1. **Overall Mix Comparison**
 2. **Frequency Balance Differences**
 3. **Dynamic Range Analysis**
 4. **Stereo Field Comparison**
-5. **Clarity
+5. **Clarity & Definition**
+6. **Punch & Impact**
+7. **Recommendations for Improvement**
+8. **Which Elements Work Better in Each Mix**
+
+Be objective and provide actionable insights for improving both mixes.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Error comparing mixes:', error);
+    throw new Error(`Failed to compare mixes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Function to generate AI assistant responses
+export const generateAIResponse = async (message: string, context?: any): Promise<string> => {
+  try {
+    const genAI = initializeGemini();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+
+    const contextInfo = context ? `
+**Context:**
+- Current View: ${context.currentView || 'Unknown'}
+- User Preferences: ${JSON.stringify(context.userPreferences || {})}
+- Session Info: ${JSON.stringify(context.sessionInfo || {})}
+` : '';
+
+    const prompt = `
+You are TrackGuide AI, an expert music production assistant. Respond to the user's question or request:
+
+**User Message:** ${message}
+
+${contextInfo}
+
+Provide a helpful, accurate, and detailed response. If the question is about music production, be specific with techniques, settings, and recommendations. If you need more information to provide a better answer, ask clarifying questions.
+
+Keep your response conversational but informative, and format it clearly with markdown when appropriate.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+    throw new Error(`Failed to generate AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Helper function to validate inputs
+export const validateInputs = (inputs: any, requiredFields: string[]): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  requiredFields.forEach(field => {
+    if (!inputs[field] || (Array.isArray(inputs[field]) && inputs[field].length === 0)) {
+      errors.push(`${field} is required`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Helper function to sanitize inputs
+export const sanitizeInputs = (inputs: any): any => {
+  const sanitized = { ...inputs };
+
+  // Remove any potentially harmful content
+  Object.keys(sanitized).forEach(key => {
+    if (typeof sanitized[key] === 'string') {
+      sanitized[key] = sanitized[key]
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/javascript:/gi, '')
+        .trim();
+    }
+  });
+
+  return sanitized;
+};
+
+// Export default service object
+export const geminiService = {
+  generateTrackGuide,
+  generateRemixGuide,
+  generatePatchGuide,
+  generateMixFeedback,
+  compareMixes,
+  generateAIResponse,
+  validateInputs,
+  sanitizeInputs
+};
+
+export default geminiService;
