@@ -770,33 +770,52 @@
         // Process hits in batches to avoid overwhelming the audio thread
         await Promise.all(hitPromises);
       }
-    }
-  } else if (Array.isArray(data)) {
-    // Handle melodic patterns (chords, bassline, melody)
-    const eventPromises = (data as Array<MidiNote | ChordNoteEvent>).map(async (event, index) => {
-      if (!event || typeof event.time !== 'number' || typeof event.duration !== 'number') {
-        console.warn(`🚨 Invalid ${trackKey} event at index ${index}:`, event);
-        return;
-      }
-      
-      const isChord = 'notes' in event;
-      
-      if (isChord) {
-        // Handle chord events
-        const chordEvent = event as ChordNoteEvent;
-        if (!chordEvent.notes || !Array.isArray(chordEvent.notes)) {
-          console.warn('🚨 Invalid chord notes:', chordEvent);
+    } else if (Array.isArray(data)) {
+      // Handle melodic patterns (chords, bassline, melody)
+      const eventPromises = (data as Array<MidiNote | ChordNoteEvent>).map(async (event, index) => {
+        if (!event || typeof event.time !== 'number' || typeof event.duration !== 'number') {
+          console.warn(`🚨 Invalid ${trackKey} event at index ${index}:`, event);
           return;
         }
         
-        const notePromises = chordEvent.notes.map(async (note, noteIndex) => {
-          if (!note || typeof note.midi !== 'number') {
-            console.warn(`🚨 Invalid chord note at ${index}.${noteIndex}:`, note);
+        const isChord = 'notes' in event;
+        
+        if (isChord) {
+          // Handle chord events
+          const chordEvent = event as ChordNoteEvent;
+          if (!chordEvent.notes || !Array.isArray(chordEvent.notes)) {
+            console.warn('🚨 Invalid chord notes:', chordEvent);
             return;
           }
-          
+        
+          const notePromises = chordEvent.notes.map(async (note, noteIndex) => {
+            if (!note || typeof note.midi !== 'number') {
+              console.warn(`🚨 Invalid chord note at ${index}.${noteIndex}:`, note);
+              return;
+            }
+            
+            return scheduleNote(
+              note.midi,
+              beatsToSeconds(event.time, tempo),
+              beatsToSeconds(event.duration, tempo),
+              event.velocity || 100,
+              false,
+              undefined,
+              trackKey
+            );
+          });
+        
+          await Promise.all(notePromises);
+        } else {
+          // Handle single note events
+          const noteEvent = event as MidiNote;
+          if (typeof noteEvent.midi !== 'number') {
+            console.warn(`🚨 Invalid MIDI note at index ${index}:`, noteEvent);
+            return;
+          }
+        
           return scheduleNote(
-            note.midi,
+            noteEvent.midi,
             beatsToSeconds(event.time, tempo),
             beatsToSeconds(event.duration, tempo),
             event.velocity || 100,
@@ -804,33 +823,13 @@
             undefined,
             trackKey
           );
-        });
-        
-        await Promise.all(notePromises);
-      } else {
-        // Handle single note events
-        const noteEvent = event as MidiNote;
-        if (typeof noteEvent.midi !== 'number') {
-          console.warn(`🚨 Invalid MIDI note at index ${index}:`, noteEvent);
-          return;
         }
-        
-        return scheduleNote(
-          noteEvent.midi,
-          beatsToSeconds(event.time, tempo),
-          beatsToSeconds(event.duration, tempo),
-          event.velocity || 100,
-          false,
-          undefined,
-          trackKey
-        );
-      }
-    });
+      });
     
-    // Process events in batches
-    await Promise.all(eventPromises);
-  }
-};
+      // Process events in batches
+      await Promise.all(eventPromises);
+    }
+  }; // <- This closing brace was missing, causing the syntax error
 
 // Optimized drum mapping functions
 const getDrumMidiPitch = (drumElementName: string): number | undefined => {
