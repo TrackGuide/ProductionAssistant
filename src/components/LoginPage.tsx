@@ -120,4 +120,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             <p className="text-gray-400 text-sm">
               Don't have an account?{' '}
               <button
-                onClick={
+                onClick={onNavigateToRegister}
+                className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
+                disabled={isLoading}
+              >
+                Sign up
+              </button>
+            </p>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={onNavigateBack}
+              className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
+              disabled={isLoading}
+            >
+              ← Back to app
+            </button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
