@@ -3,29 +3,24 @@ import { User, AuthState, LoginCredentials, RegisterCredentials, SavedGeneration
 import { authService } from '../services/authService';
 
 interface AuthStore extends AuthState {
-  // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => void;
   clearError: () => void;
   
-  // Generation actions
   savedGenerations: SavedGeneration[];
   saveGeneration: (generation: Omit<SavedGeneration, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<SavedGeneration>;
   loadUserGenerations: () => void;
-  deleteGeneration: (id: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
-  // Initial state
   user: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
   savedGenerations: [],
 
-  // Auth actions
   login: async (credentials) => {
     set({ isLoading: true, error: null });
     try {
@@ -77,7 +72,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
-  // Generation actions
   saveGeneration: async (generationData) => {
     try {
       const savedGeneration = await authService.saveGeneration(generationData);
@@ -96,17 +90,5 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ savedGenerations: generations.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )});
-  },
-
-  deleteGeneration: async (id) => {
-    try {
-      await authService.deleteGeneration(id);
-      set(state => ({
-        savedGenerations: state.savedGenerations.filter(g => g.id !== id)
-      }));
-    } catch (error) {
-      set({ error: error.message });
-      throw error;
-    }
   }
 }));

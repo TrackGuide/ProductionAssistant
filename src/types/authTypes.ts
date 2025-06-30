@@ -31,7 +31,7 @@ export interface SavedGeneration {
   type: 'trackGuide' | 'mixFeedback' | 'mixCompare' | 'remixGuide' | 'patchGuide';
   title: string;
   content: string;
-  inputs: any; // The original inputs used to generate
+  inputs: any;
   createdAt: string;
   updatedAt: string;
   tags?: string[];

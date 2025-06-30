@@ -1,6 +1,5 @@
 import { User, LoginCredentials, RegisterCredentials, SavedGeneration } from '../types/authTypes';
 
-// Simulated API - replace with your actual backend
 class AuthService {
   private readonly STORAGE_KEYS = {
     USER: 'trackguide_user',
@@ -8,13 +7,10 @@ class AuthService {
     GENERATIONS: 'trackguide_generations'
   };
 
-  // Authentication methods
   async login(credentials: LoginCredentials): Promise<User> {
     try {
-      // Simulate API call
       await this.delay(1000);
       
-      // For demo purposes, accept any email/password combination
       if (!credentials.email || !credentials.password) {
         throw new Error('Email and password are required');
       }
@@ -31,7 +27,6 @@ class AuthService {
         subscription: 'free'
       };
 
-      // Store user data
       localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
       localStorage.setItem(this.STORAGE_KEYS.TOKEN, `token_${user.id}`);
 
@@ -45,7 +40,6 @@ class AuthService {
     try {
       await this.delay(1000);
 
-      // Validation
       if (!credentials.email || !credentials.username || !credentials.password) {
         throw new Error('All fields are required');
       }
@@ -62,12 +56,6 @@ class AuthService {
         throw new Error('Please enter a valid email address');
       }
 
-      // Check if user already exists (simulate)
-      const existingUsers = this.getStoredUsers();
-      if (existingUsers.some(u => u.email === credentials.email)) {
-        throw new Error('An account with this email already exists');
-      }
-
       const user: User = {
         id: `user_${Date.now()}`,
         email: credentials.email,
@@ -76,9 +64,6 @@ class AuthService {
         subscription: 'free'
       };
 
-      // Store user data
-      existingUsers.push(user);
-      localStorage.setItem('trackguide_all_users', JSON.stringify(existingUsers));
       localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
       localStorage.setItem(this.STORAGE_KEYS.TOKEN, `token_${user.id}`);
 
@@ -108,7 +93,6 @@ class AuthService {
     return !!(user && token);
   }
 
-  // Generation storage methods
   async saveGeneration(generation: Omit<SavedGeneration, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<SavedGeneration> {
     const user = this.getCurrentUser();
     if (!user) {
@@ -146,20 +130,6 @@ class AuthService {
     }
   }
 
-  async deleteGeneration(generationId: string): Promise<void> {
-    const user = this.getCurrentUser();
-    if (!user) throw new Error('User must be logged in');
-
-    const generations = this.getUserGenerations();
-    const filtered = generations.filter(g => g.id !== generationId);
-    
-    localStorage.setItem(
-      `${this.STORAGE_KEYS.GENERATIONS}_${user.id}`, 
-      JSON.stringify(filtered)
-    );
-  }
-
-  // Helper methods
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -167,15 +137,6 @@ class AuthService {
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
-
-  private getStoredUsers(): User[] {
-    try {
-      const data = localStorage.getItem('trackguide_all_users');
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
   }
 }
 

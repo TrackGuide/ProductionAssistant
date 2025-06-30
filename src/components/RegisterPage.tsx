@@ -5,19 +5,21 @@ import { Input } from './Input';
 import { Card } from './Card';
 import { Spinner } from './Spinner';
 
-interface LoginPageProps {
-  onNavigateToRegister: () => void;
+interface RegisterPageProps {
+  onNavigateToLogin: () => void;
   onNavigateBack: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ 
-  onNavigateToRegister, 
+export const RegisterPage: React.FC<RegisterPageProps> = ({ 
+  onNavigateToLogin, 
   onNavigateBack 
 }) => {
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { register, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    username: '',
+    password: '',
+    confirmPassword: ''
   });
 
   useEffect(() => {
@@ -39,11 +41,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(formData);
+      await register(formData);
     } catch (error) {
       // Error is handled by the store
     }
   };
+
+  const isFormValid = formData.email && formData.username && formData.password && 
+                     formData.confirmPassword && formData.password === formData.confirmPassword;
 
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-gray-100 flex items-center justify-center p-4">
@@ -63,7 +68,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </div>
             <h1 className="text-3xl font-bold text-white">TrackGuide</h1>
           </div>
-          <p className="text-gray-400">Sign in to your account</p>
+          <p className="text-gray-400">Create your account</p>
         </div>
 
         <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
@@ -89,35 +94,60 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
             <div>
               <Input
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
+                label="Username"
+                type="text"
+                name="username"
+                value={formData.username}
                 onChange={handleInputChange}
-                placeholder="Enter your password"
+                placeholder="Choose a username"
                 required
                 disabled={isLoading}
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !formData.email || !formData.password}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <Spinner size="sm" />
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </form>
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Create a password"
+                required
+                disabled={isLoading}
+              />
+              <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+            </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Don't have an account?{' '}
-              <button
-                onClick={
+            <div>
+              <Input
+                label="Confirm Password"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm your password"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                label="Register"
+                type="submit"
+                disabled={!isFormValid || isLoading}
+                className="bg-green-500 hover:bg-green-600"
+              />
+              <Button
+                label="Back"
+                onClick={onNavigateBack}
+                className="bg-gray-500 hover:bg-gray-600"
+              />
+            </div>
+          </form>
+        </Card>
+      </div>
+    </div>
+  );
+}
