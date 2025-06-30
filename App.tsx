@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './src/types/appTypes';
+import React, { useEffect, useRef, useState } from 'react';
+import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, MixFeedbackInputs, ActiveView, MixCompareInputs } from './src/types/appTypes';
 import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
@@ -95,7 +95,7 @@ const App: React.FC = () => {
     inputs, setInputs, updateInput,
     library, setLibrary, addToLibrary, removeFromLibrary,
     activeGuidebookDetails, setActiveGuidebookDetails,
-    mixFeedbackInputs, setMixFeedbackInputs, mixFeedbackResult, setMixFeedbackResult,
+    mixFeedbackInputs, setMixFeedbackInputs, 
     currentGenreText, setCurrentGenreText,
     currentVibeText, setCurrentVibeText,
     generatedGuidebook, setGeneratedGuidebook,
@@ -107,13 +107,31 @@ const App: React.FC = () => {
     loadingMessage, setLoadingMessage,
     remixGuideContent, setRemixGuideContent,
     patchGuideContent, setPatchGuideContent
-    // ...add more as you migrate
   } = useAppStore();
+
+  // UI-only state (local)
+  const [mixFeedbackTab, setMixFeedbackTab] = useState<'feedback' | 'compare'>('feedback');
+  const [isGeneratingMixFeedback, setIsGeneratingMixFeedback] = useState(false);
+  const [streamingMixFeedback, setStreamingMixFeedback] = useState('');
+  const [mixFeedbackError, setMixFeedbackError] = useState<string | null>(null);
+  const [mixFeedbackResult, setMixFeedbackResult] = useState<string | null>(null);
+
+  const [mixCompareInputs, setMixCompareInputs] = useState<MixCompareInputs>({
+    mixA: null,
+    mixB: null,
+    userNotes: '',
+    includeMixBFeedback: false
+  });
+  const [isGeneratingMixComparison, setIsGeneratingMixComparison] = useState(false);
+  const [streamingMixComparison, setStreamingMixComparison] = useState('');
+  const [mixCompareResult, setMixCompareResult] = useState<string | null>(null);
+  const [mixCompareError, setMixCompareError] = useState<string | null>(null);
+  const [showAdvancedInput, setShowAdvancedInput] = useState(false);
 
   const audioFileInputRef = useRef<HTMLInputElement>(null);
   const genreInputRef = useRef<HTMLInputElement>(null);
   const vibeInputRef = useRef<HTMLInputElement>(null);
-  const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = React.useState<boolean>(true);
+  const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
   useEffect(() => {
     try {
@@ -296,7 +314,7 @@ const App: React.FC = () => {
       if (shortLoopGenres.some(g => primaryGenreLower.includes(g))) {
         initialBars = 4;
       }
-      const initialTargetInstruments: KeyOfGeneratedMidiPatterns[] = ['chords', 'bassline', 'melody', 'drums'];
+      const initialTargetInstruments: string[] = ['chords', 'bassline', 'melody', 'drums'];
 
       finalMidiSettings = {
         key: parsedKey || MIDI_DEFAULT_SETTINGS.key,
@@ -1099,186 +1117,4 @@ const App: React.FC = () => {
           <Card title="Blueprint Your Sound" className="lg:col-span-2 bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50">
             <p className="text-sm text-gray-400 mb-4">Describe your vision—everything's optional.</p>
               <TrackGuideForm
-                inputs={inputs}
-                currentGenreText={currentGenreText}
-                currentVibeText={currentVibeText}
-                showAdvancedInput={showAdvancedInput}
-                isLoading={isLoading}
-                loadingMessage={loadingMessage}
-                onInputChange={handleInputChange}
-                onAddMultiSelectItem={handleAddMultiSelectItem}
-                onMultiSelectKeyDown={handleMultiSelectKeyDown}
-                onMultiSelectToggle={handleMultiSelectToggle}
-                onDAWSuggestionClick={handleDAWSuggestionClick}
-                onSubmit={handleSubmit}
-                onShowLibrary={() => setShowLibraryModal(true)}
-                onClearForm={resetFormForNewGuidebook}
-                setShowAdvancedInput={setShowAdvancedInput}
-              />
-            </Card>
-
-          <div className="lg:col-span-5 space-y-6">
-            {/* Main Error */}
-            {error && !isLoading && (
-              <Card className="border-red-500 bg-red-900/40 shadow-xl">
-                <p className="text-red-300 font-semibold text-lg">TrackGuide Error:</p>
-                <p className="text-red-300">{error}</p>
-              </Card>
-            )}
-
-            {/* MIDI Error (from initial generation) - Show if no main error */}
-            {midiError && !loadingMessage.toLowerCase().includes('midi') && !error && (
-              <Card className="border-yellow-500 bg-yellow-900/40 shadow-xl">
-                <p className="text-yellow-300 font-semibold text-lg">MIDI Generation Note:</p>
-                <p className="text-yellow-300">{midiError}</p>
-              </Card>
-            )}
-
-            {/* Render guidebook content as it streams or if fully loaded */}
-            {(generatedGuidebook || (isLoading && loadingMessage.includes("TrackGuide is generating"))) && !error && (
-              <Card 
-                  title={trackGuideCardTitle} 
-                  className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
-                  titleClassName="border-b border-gray-700 text-xl"
-              >
-                {activeGuidebookDetails && !isLoading && ( // Show buttons only when not loading and details are available
-                  <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
-                    <Button onClick={handleSaveToLibrary} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
-
-                    <div className="flex-grow"></div>
-                    <Button onClick={resetFormForNewGuidebook} variant="outline" size="sm" className="!border-gray-500 !text-gray-400 hover:!bg-gray-600 hover:!text-white" leftIcon={<CloseIcon />}>Close</Button>
-                    {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
-                  </div>
-                )}
-                <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
-                  {activeGuidebookDetails && !isLoading && (
-                     <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
-                        <strong className="text-orange-300 block mb-2 text-base">TrackGuide Snapshot:</strong>
-                        <p><strong>Project Title:</strong> {activeGuidebookDetails.title}</p>
-                        <p><strong>Genre(s):</strong> {Array.isArray(activeGuidebookDetails.genre) ? activeGuidebookDetails.genre.join(', ') : activeGuidebookDetails.genre}</p>
-                        <p><strong>Artist/Song Ref:</strong> {activeGuidebookDetails.artistReference || "N/A"}</p>
-                        <p><strong>Vibe(s):</strong> {Array.isArray(activeGuidebookDetails.vibe) ? activeGuidebookDetails.vibe.join(', ') : activeGuidebookDetails.vibe}</p>
-                        <p><strong>DAW:</strong> {activeGuidebookDetails.daw}</p>
-                        <p><strong>Plugins:</strong> {activeGuidebookDetails.plugins || "N/A"}</p>
-                        <p><strong>Instruments:</strong> {activeGuidebookDetails.availableInstruments || "N/A"}</p>
-                        {activeGuidebookDetails.generatedMidiPatterns && <p className="mt-1 text-green-400"><MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.</p>}
-                    </div>
-                  )}
-
-                  <MarkdownRenderer content={generatedGuidebook} />
-                
-
-                  {isLoading && loadingMessage.includes("TrackGuide is generating") && <Spinner size="sm" text="Generating TrackGuide..." />}
-                </div>
-              </Card>
-            )}
-            
-            {/* Global Loading Spinner for non-text-streaming phases */}
-            {isLoading && !error && 
-              loadingMessage && !loadingMessage.includes("TrackGuide is generating") && 
-              (
-                <div className="flex justify-center py-10">
-                  <Spinner size="lg" text={loadingMessage || "Processing..."} />
-                </div>
-              )
-            }
-            
-            {/* MIDI Generator appears after text is complete and activeGuidebookDetails is set and not main error */}
-            {activeGuidebookDetails && !isLoading && generatedGuidebook && !error && (
-              <MidiGeneratorComponent 
-                  currentGuidebookEntry={activeGuidebookDetails}
-                  mainAppInputs={inputs}
-                  onUpdateGuidebookEntryMidi={handleUpdateGuidebookEntryMidi}
-                  parsedGuidebookBpm={parseBpmFromGuidebook(activeGuidebookDetails.content)}
-                  parsedGuidebookKey={parseKeyFromGuidebook(activeGuidebookDetails.content)}
-                  parsedGuidebookChordProg={parseChordProgressionFromGuidebook(activeGuidebookDetails.content)}
-              />
-            )}
-
-            {/* Initial Placeholder or if no content and not loading/error */}
-            {!isLoading && !generatedGuidebook && !error && !activeGuidebookDetails && ( 
-              <Card className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 flex flex-col items-center justify-center h-96 text-center min-h-[500px]">
-                  <div className="flex justify-center mb-6">
-                    <TrackGuideLogo className="w-20 h-20 opacity-80 text-orange-500"/>
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-200 mb-2">Produce Smarter. Create More.</h3>
-                  <p className="text-gray-400 max-w-md mx-auto">Tell us what you’re envisioning—TrackGuide AI will generate a custom production guide and MIDI foundation.</p>
-              </Card>
-            )}
-          </div>
-
-
-        </div>
-      )}
-
-      {activeView === 'mixFeedback' && (
-        <MixFeedbackPanel
-          mixFeedbackTab={mixFeedbackTab}
-          setMixFeedbackTab={setMixFeedbackTab}
-          mixFeedbackInputs={mixFeedbackInputs}
-          setMixFeedbackInputs={setMixFeedbackInputs}
-          mixFeedbackResult={mixFeedbackResult}
-          streamingMixFeedback={streamingMixFeedback}
-          isGeneratingMixFeedback={isGeneratingMixFeedback}
-          mixFeedbackError={mixFeedbackError}
-          handleMixAudioFileChange={handleMixAudioFileChange}
-          handleMixUserNotesChange={handleMixUserNotesChange}
-          handleGetMixFeedback={handleGetMixFeedback}
-          resetMixFeedbackForm={resetMixFeedbackForm}
-          audioFileInputRef={audioFileInputRef}
-        />
-      )}
-
-      {activeView === 'remixGuide' && (
-        <div className="max-w-7xl mx-auto">
-          {/* The onContentUpdate prop is used solely to provide streaming/final RemixGuide content to the AI Assistant context. */}
-          <RemixGuideAI onContentUpdate={setRemixGuideContent} />
-        </div>
-      )}
-
-      {activeView === 'patchGuide' && (
-        <div className="max-w-7xl mx-auto">
-          {/* The onContentUpdate prop is used solely to provide streaming/final PatchGuide content to the AI Assistant context. */}
-          <PatchGuide onContentUpdate={setPatchGuideContent} />
-        </div>
-      )}
-
-      {activeView === 'eqGuide' && (
-        <div className="max-w-7xl mx-auto">
-          <EQGuide />
-        </div>
-      )}
-
-      {showLibraryModal && (
-        <LibraryModal
-          library={library}
-          onClose={() => setShowLibraryModal(false)}
-          onLoadEntry={handleLoadFromLibrary}
-          onDeleteEntry={handleDeleteFromLibrary}
-          onCreateNew={resetFormForNewGuidebook}
-        />
-      )}
-
-      {/* AI Assistant - Floating Component */}
-      <AIAssistant
-        isOpen={!isProductionCoachCollapsed}
-        onClose={() => setIsProductionCoachCollapsed(true)}
-        currentGuidebook={activeGuidebookDetails || undefined}
-        userInputs={inputs}
-        isCollapsed={isProductionCoachCollapsed}
-        onToggle={() => setIsProductionCoachCollapsed(!isProductionCoachCollapsed)}
-        remixGuideContent={remixGuideContent}
-        mixFeedbackContent={mixFeedbackResult || undefined}
-        mixComparisonContent={mixCompareResult || undefined}
-        patchGuideContent={patchGuideContent}
-        activeView={activeView}
-      />
-
-       <footer className="text-center mt-16 py-8 border-t border-gray-700/60">
-        <p className="text-sm text-gray-500">{APP_TITLE} - AI Production Assistant</p>
-      </footer>
-    </div>
-  );
-};
-
-export default App;
+                inputs={
