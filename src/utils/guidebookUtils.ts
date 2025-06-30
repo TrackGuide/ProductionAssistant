@@ -37,6 +37,7 @@ export const parseChordProgressionFromGuidebook = (content: string): string | nu
     /Chords?:\s*([ivclxmdIVCLXMDab#ø°dimaug\d\/sus-][^\n]*)/i,
     /([ivclxmdIVCLXMD]+(?:\s*-\s*[ivclxmdIVCLXMD]+){2,})/i // Roman numeral pattern
   ];
+  
   for (const pattern of patterns) {
     const match = content.match(pattern);
     if (match && match[1]) {
@@ -96,4 +97,210 @@ export const parseSuggestedTitleFromMarkdownStream = (markdownText: string): str
     return match[1].trim().replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1');
   }
   return null;
+};
+
+/**
+ * Extracts key signature from guidebook content
+ */
+export const parseKeyFromGuidebook = (content: string): string | null => {
+  const patterns = [
+    /Key\s*(?:Signature)?:\s*([A-G][#b]?\s*(?:major|minor|maj|min))/i,
+    /(?:In|Key of)\s+([A-G][#b]?\s*(?:major|minor|maj|min))/i,
+    /([A-G][#b]?)\s*(major|minor|maj|min)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  return null;
+};
+
+/**
+ * Extracts time signature from guidebook content
+ */
+export const parseTimeSignatureFromGuidebook = (content: string): string | null => {
+  const patterns = [
+    /Time\s*Signature:\s*(\d+\/\d+)/i,
+    /(\d+\/\d+)\s*time/i,
+    /in\s+(\d+\/\d+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+};
+
+/**
+ * Extracts genre information from guidebook content
+ */
+export const parseGenreFromGuidebook = (content: string): string | null => {
+  const patterns = [
+    /Genre:\s*([^\n]+)/i,
+    /Style:\s*([^\n]+)/i,
+    /Musical\s*Style:\s*([^\n]+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim().replace(/[.,;]$/, '');
+    }
+  }
+  return null;
+};
+
+/**
+ * Extracts mood/vibe information from guidebook content
+ */
+export const parseVibeFromGuidebook = (content: string): string | null => {
+  const patterns = [
+    /Vibe:\s*([^\n]+)/i,
+    /Mood:\s*([^\n]+)/i,
+    /Feel:\s*([^\n]+)/i,
+    /Energy:\s*([^\n]+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim().replace(/[.,;]$/, '');
+    }
+  }
+  return null;
+};
+
+/**
+ * Extracts all sections from a markdown guidebook
+ */
+export const extractAllSections = (markdownText: string): Record<string, string> => {
+  const sections: Record<string, string> = {};
+  const sectionRegex = /^##\s+(.+?)$/gm;
+  let match;
+  
+  while ((match = sectionRegex.exec(markdownText)) !== null) {
+    const sectionTitle = match[1].trim();
+    const sectionContent = extractSectionContent(markdownText, new RegExp(`^##\\s+${sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'im'));
+    sections[sectionTitle] = sectionContent;
+  }
+  
+  return sections;
+};
+
+/**
+ * Extracts instrument list from guidebook content
+ */
+export const parseInstrumentsFromGuidebook = (content: string): string[] => {
+  const instruments: string[] = [];
+  const patterns = [
+    /Instruments?:\s*([^\n]+)/i,
+    /Instrumentation:\s*([^\n]+)/i,
+    /Track\s*List:\s*([^\n]+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      const instrumentText = match[1];
+      // Split by common separators and clean up
+      const splitInstruments = instrumentText
+        .split(/[,;]/)
+        .map(inst => inst.trim())
+        .filter(inst => inst.length > 0);
+      instruments.push(...splitInstruments);
+      break;
+    }
+  }
+  
+  return instruments;
+};
+
+/**
+ * Extracts arrangement structure from guidebook content
+ */
+export const parseArrangementFromGuidebook = (content: string): string[] => {
+  const arrangement: string[] = [];
+  const patterns = [
+    /(?:Song\s*)?Structure:\s*([^\n]+)/i,
+    /Arrangement:\s*([^\n]+)/i,
+    /Form:\s*([^\n]+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      const structureText = match[1];
+      // Split by common separators and clean up
+      const sections = structureText
+        .split(/[-,>]/)
+        .map(section => section.trim())
+        .filter(section => section.length > 0);
+      arrangement.push(...sections);
+      break;
+    }
+  }
+  
+  return arrangement;
+};
+
+/**
+ * Creates a summary object from guidebook content
+ */
+export const createGuidebookSummary = (content: string): {
+  bpm: number | null;
+  key: string | null;
+  timeSignature: string | null;
+  genre: string | null;
+  vibe: string | null;
+  chordProgression: string | null;
+  instruments: string[];
+  arrangement: string[];
+} => {
+  return {
+    bpm: parseBpmFromGuidebook(content),
+    key: parseKeyFromGuidebook(content),
+    timeSignature: parseTimeSignatureFromGuidebook(content),
+    genre: parseGenreFromGuidebook(content),
+    vibe: parseVibeFromGuidebook(content),
+    chordProgression: parseChordProgressionFromGuidebook(content),
+    instruments: parseInstrumentsFromGuidebook(content),
+    arrangement: parseArrangementFromGuidebook(content)
+  };
+};
+
+/**
+ * Validates if content appears to be a valid guidebook
+ */
+export const isValidGuidebook = (content: string): boolean => {
+  if (!content || content.trim().length < 100) return false;
+  
+  // Check for common guidebook markers
+  const hasMarkdownHeaders = /^##\s+/m.test(content);
+  const hasMusicalContent = /(?:bpm|tempo|chord|key|genre|style)/i.test(content);
+  const hasStructure = content.split('\n').length > 10;
+  
+  return hasMarkdownHeaders && hasMusicalContent && hasStructure;
+};
+
+/**
+ * Cleans and formats guidebook content for display
+ */
+export const formatGuidebookContent = (content: string): string => {
+  return content
+    // Normalize line endings
+    .replace(/\r\n/g, '\n')
+    // Remove excessive blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    // Clean up spacing around headers
+    .replace(/^##\s+/gm, '## ')
+    // Ensure proper spacing after headers
+    .replace(/^(##.+)$/gm, '$1\n')
+    // Trim whitespace
+    .trim();
 };

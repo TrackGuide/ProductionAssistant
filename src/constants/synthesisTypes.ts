@@ -1,12 +1,21 @@
 // synthesisTypes.ts - Dedicated file for synthesis type definitions and schemas
 
-export const SYNTHESIS_TYPES = [
+export interface SynthesisType {
+  key: string;
+  label: string;
+}
+
+export const SYNTHESIS_TYPES: SynthesisType[] = [
   { key: 'subtractive', label: 'Subtractive' },
-  { key: 'additive',   label: 'Additive' },
-  { key: 'fm',         label: 'FM' },
-  { key: 'wavetable',  label: 'Wavetable' },
-  { key: 'granular',   label: 'Granular' }
-] as const;
+  { key: 'additive', label: 'Additive' },
+  { key: 'fm', label: 'FM (Frequency Modulation)' },
+  { key: 'am', label: 'AM (Amplitude Modulation)' },
+  { key: 'wavetable', label: 'Wavetable' },
+  { key: 'granular', label: 'Granular' },
+  { key: 'physical_modeling', label: 'Physical Modeling' },
+  { key: 'sample_based', label: 'Sample-based' },
+  { key: 'hybrid', label: 'Hybrid' }
+];
 
 export const SYNTHESIS_SCHEMA = {
   subtractive: {
@@ -197,25 +206,39 @@ export const SYNTHESIS_SCHEMA = {
 
 export const MODEL_OVERRIDES: Record<string, string[]> = {
   subtractive: [
-    "Diva", "Juno106", "AnalogLab", "Generic", "SH101", "Sylenth1", "MiniMoog", "Prophet-5", 
-    "Harmor", "Vital", "Pigments", "Absynth", "Operator", "RetroSynth", "Alchemy", 
-    "Subtractor", "Thor", "Monotone", "CS-80 V", "Jun-6 V", "MS-20 V", "OP-Xa V", 
-    "Prophet-5 V", "Acid V", "MiniFreak V", "Buchla Easel V", "Synthi V", "Mini V 4", "Jup-8 V"
-  ],
-  additive: [
-    "Pigments", "Absynth", "Alchemy", "Harmor", "Kawai K5", "Vital", "Thor"
+    'Moog Minimoog', 'Roland Jupiter-8', 'Sequential Prophet-5',
+    'Oberheim OB-6', 'Dave Smith Pro-2', 'Arturia MiniBrute',
+    'Korg MS-20', 'Roland SH-101', 'Moog Sub 37'
   ],
   fm: [
-    "Operator", "FM8", "RetroSynth", "Pigments", "Absynth", "Thor"
+    'Yamaha DX7', 'Native Instruments FM8', 'Ableton Operator',
+    'Elektron Digitone', 'Yamaha Reface DX', 'Arturia DX7 V'
   ],
   wavetable: [
-    "Serum", "Vital", "Pigments", "Hive2", "MassiveX", "RetroSynth", "Zebra2", 
-    "Omnisphere", "Europa", "Thor"
+    'Waldorf Blofeld', 'Native Instruments Massive', 'Serum',
+    'Waldorf Quantum', 'PPG Wave', 'Arturia Pigments'
   ],
   granular: [
-    "Absynth", "Alchemy", "Omnisphere", "Granulator II", "Padshop", "Grain", "Malström"
+    'Native Instruments Reaktor', 'Ableton Granulator',
+    'Output Portal', 'Eventide Blackhole'
+  ],
+  additive: [
+    'Native Instruments Razor', 'Image-Line Harmor',
+    'Camel Audio Alchemy', 'Kawai K5000'
+  ],
+  physical_modeling: [
+    'Native Instruments Reaktor Prism', 'Applied Acoustics Chromaphone',
+    'Modartt Pianoteq', 'Native Instruments Guitar Rig'
+  ],
+  sample_based: [
+    'Native Instruments Kontakt', 'Ableton Simpler',
+    'Logic EXS24', 'Reason NN-XT'
+  ],
+  hybrid: [
+    'Native Instruments Massive X', 'Arturia Pigments',
+    'u-he Zebra', 'FXpansion Strobe2'
   ]
-} as const;
+};
 
 // Type definitions for better type safety
 export type SynthesisType = keyof typeof SYNTHESIS_SCHEMA;

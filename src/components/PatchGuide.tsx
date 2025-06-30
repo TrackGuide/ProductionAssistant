@@ -6,31 +6,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
-import { PATCH_INPUT_CATEGORIES } from '../constants/constants';
+// Add missing imports:
+import { PATCH_INPUT_CATEGORIES } from '../constants/patchConstants';
 import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
 import { SYNTHESIS_TYPES, MODEL_OVERRIDES } from '../constants/synthesisTypes';
 import { copyToClipboard } from '../utils/copyUtils';
 import { dawMetadata } from '../constants/dawMetadata';
-
-// ✅ Simplified, consistent state structure
-interface PatchGuideInputs {
-  synthesisType: string;
-  synthModel?: string;
-  genre: string;
-  voiceType: string;
-  styleMood: string[];
-  dynamicsMovement: string[];
-  notes: string;
-  dawName?: string;
-}
-
-interface PatchGuideResult {
-  text: string;
-  synthConfig: any;
-  adsrVCF: any;
-  adsrVCA: any;
-  summary: string;
-}
+import { PatchGuideInputs, PatchGuideResult } from '../types/patchTypes';
 
 // ✅ Error Boundary Component
 class ErrorBoundary extends React.Component<
@@ -169,7 +151,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
     } finally {
       setLoading(false);
     }
-  }, [inputs, isValid]);
+  }, [inputs, isValid, onContentUpdate]);
 
   // ✅ Clean reset handler
   const handleReset = useCallback(() => {
@@ -394,11 +376,13 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
 // ✅ Results Component: render markdown directly
 const PatchGuideResults: React.FC<{ result: PatchGuideResult }> = ({ result }) => {
   const [copied, setCopied] = React.useState(false);
-  const handleCopy = () => {
+  
+  const handleCopy = useCallback(() => {
     copyToClipboard(result.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
-  };
+  }, [result.text]);
+
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">

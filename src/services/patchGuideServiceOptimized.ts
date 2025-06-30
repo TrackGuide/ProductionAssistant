@@ -588,4 +588,243 @@ export const generateSynthPatchGuideOptimized = async (inputs: PatchGuideInputs)
 };
 
 // ✅ Backward compatibility wrapper
-export const generateSynthPatchGuide = generateSynthPatchGuideOptimized;
+import { PatchGuideInputs, PatchGuideResult, SynthConfig, ADSREnvelope } from '../types/patchTypes';
+
+interface PatchGuideRequest {
+  description: string;
+  synthesisType: string;
+  synthModel?: string;
+  genre: string;
+  voiceType: string;
+  notes?: string;
+  dawName?: string;
+}
+
+interface PatchGuideResponse {
+  text: string;
+  synthConfig: SynthConfig;
+  adsrVCF: ADSREnvelope;
+  adsrVCA: ADSREnvelope;
+  summary: string;
+}
+
+export const generateSynthPatchGuide = async (request: PatchGuideRequest): Promise<PatchGuideResponse> => {
+  // This would typically call an AI service like Gemini
+  // For now, return a structured response based on the inputs
+  
+  const synthConfig: SynthConfig = generateSynthConfig(request);
+  const adsrVCF = generateFilterEnvelope(request);
+  const adsrVCA = generateAmplifierEnvelope(request);
+  
+  const text = generatePatchGuideText(request, synthConfig, adsrVCF, adsrVCA);
+  const summary = generatePatchSummary(request);
+  
+  return {
+    text,
+    synthConfig,
+    adsrVCF,
+    adsrVCA,
+    summary
+  };
+};
+
+function generateSynthConfig(request: PatchGuideRequest): SynthConfig {
+  const config: SynthConfig = {
+    oscillator: {
+      waveform: getWaveformForVoiceType(request.voiceType),
+      octave: getOctaveForVoiceType(request.voiceType),
+      detune: 0
+    },
+    filter: {
+      type: 'lowpass',
+      cutoff: getCutoffForGenre(request.genre),
+      resonance: getResonanceForGenre(request.genre),
+      envelope: 0.5
+    },
+    amplifier: {
+      gain: 0.8,
+      pan: 0
+    },
+    effects: {
+      reverb: getReverbForGenre(request.genre),
+      delay: getDelayForGenre(request.genre),
+      chorus: 0.2
+    }
+  };
+  
+  return config;
+}
+
+function generateFilterEnvelope(request: PatchGuideRequest): ADSREnvelope {
+  const baseEnvelope = { attack: 0.1, decay: 0.5, sustain: 0.8, release: 1.5 };
+  
+  // Adjust based on voice type
+  switch (request.voiceType.toLowerCase()) {
+    case 'lead':
+      return { attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.8 };
+    case 'bass':
+      return { attack: 0.01, decay: 0.8, sustain: 0.6, release: 1.2 };
+    case 'pad':
+      return { attack: 0.5, decay: 1.0, sustain: 0.8, release: 2.0 };
+    case 'pluck':
+      return { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.3 };
+    default:
+      return baseEnvelope;
+  }
+}
+
+function generateAmplifierEnvelope(request: PatchGuideRequest): ADSREnvelope {
+  const baseEnvelope = { attack: 0.05, decay: 0.3, sustain: 0.9, release: 0.6 };
+  
+  // Adjust based on voice type
+  switch (request.voiceType.toLowerCase()) {
+    case 'lead':
+      return { attack: 0.02, decay: 0.2, sustain: 0.9, release: 0.5 };
+    case 'bass':
+      return { attack: 0.01, decay: 0.4, sustain: 0.8, release: 0.8 };
+    case 'pad':
+      return { attack: 0.8, decay: 0.5, sustain: 0.9, release: 2.5 };
+    case 'pluck':
+      return { attack: 0.01, decay: 0.1, sustain: 0.0, release: 0.2 };
+    default:
+      return baseEnvelope;
+  }
+}
+
+function generatePatchGuideText(
+  request: PatchGuideRequest, 
+  synthConfig: SynthConfig, 
+  adsrVCF: ADSREnvelope, 
+  adsrVCA: ADSREnvelope
+): string {
+  return `# ${request.voiceType} Patch for ${request.genre}
+
+## Synthesis Type: ${request.synthesisType}
+${request.synthModel ? `**Synth Model:** ${request.synthModel}` : ''}
+
+## Oscillator Settings
+- **Waveform:** ${synthConfig.oscillator?.waveform}
+- **Octave:** ${synthConfig.oscillator?.octave}
+- **Detune:** ${synthConfig.oscillator?.detune} cents
+
+## Filter Settings
+- **Type:** ${synthConfig.filter?.type}
+- **Cutoff:** ${synthConfig.filter?.cutoff} Hz
+- **Resonance:** ${synthConfig.filter?.resonance}
+- **Envelope Amount:** ${synthConfig.filter?.envelope}
+
+## Filter Envelope (VCF)
+- **Attack:** ${adsrVCF.attack}s
+- **Decay:** ${adsrVCF.decay}s
+- **Sustain:** ${adsrVCF.sustain}
+- **Release:** ${adsrVCF.release}s
+
+## Amplifier Envelope (VCA)
+- **Attack:** ${adsrVCA.attack}s
+- **Decay:** ${adsrVCA.decay}s
+- **Sustain:** ${adsrVCA.sustain}
+- **Release:** ${adsrVCA.release}s
+
+## Effects
+- **Reverb:** ${synthConfig.effects?.reverb}
+- **Delay:** ${synthConfig.effects?.delay}
+- **Chorus:** ${synthConfig.effects?.chorus}
+
+## Description
+${request.description}
+
+${request.notes ? `## Additional Notes\n${request.notes}` : ''}
+
+## Tips for ${request.genre}
+${getGenreTips(request.genre)}
+`;
+}
+
+function generatePatchSummary(request: PatchGuideRequest): string {
+  return `${request.voiceType} patch for ${request.genre} using ${request.synthesisType} synthesis`;
+}
+
+// Helper functions
+function getWaveformForVoiceType(voiceType: string): string {
+  const waveforms: Record<string, string> = {
+    'lead': 'sawtooth',
+    'bass': 'square',
+    'pad': 'sawtooth',
+    'pluck': 'square',
+    'arp': 'sawtooth',
+    'stab': 'square'
+  };
+  return waveforms[voiceType.toLowerCase()] || 'sawtooth';
+}
+
+function getOctaveForVoiceType(voiceType: string): number {
+  const octaves: Record<string, number> = {
+    'lead': 0,
+    'bass': -2,
+    'pad': -1,
+    'pluck': 0,
+    'arp': 1,
+    'stab': 0
+  };
+  return octaves[voiceType.toLowerCase()] || 0;
+}
+
+function getCutoffForGenre(genre: string): number {
+  const cutoffs: Record<string, number> = {
+    'house': 2000,
+    'techno': 1500,
+    'trance': 2500,
+    'ambient': 1000,
+    'dubstep': 800,
+    'trap': 1200
+  };
+  return cutoffs[genre.toLowerCase()] || 1500;
+}
+
+function getResonanceForGenre(genre: string): number {
+  const resonances: Record<string, number> = {
+    'house': 0.3,
+    'techno': 0.5,
+    'trance': 0.4,
+    'ambient': 0.2,
+    'dubstep': 0.7,
+    'trap': 0.4
+  };
+  return resonances[genre.toLowerCase()] || 0.3;
+}
+
+function getReverbForGenre(genre: string): number {
+  const reverbs: Record<string, number> = {
+    'house': 0.3,
+    'techno': 0.2,
+    'trance': 0.4,
+    'ambient': 0.8,
+    'dubstep': 0.1,
+    'trap': 0.2
+  };
+  return reverbs[genre.toLowerCase()] || 0.3;
+}
+
+function getDelayForGenre(genre: string): number {
+  const delays: Record<string, number> = {
+    'house': 0.2,
+    'techno': 0.3,
+    'trance': 0.4,
+    'ambient': 0.5,
+    'dubstep': 0.1,
+    'trap': 0.3
+  };
+  return delays[genre.toLowerCase()] || 0.2;
+}
+
+function getGenreTips(genre: string): string {
+  const tips: Record<string, string> = {
+    'house': '- Use moderate filter sweeps\n- Add subtle swing to rhythm\n- Layer with percussion elements',
+    'techno': '- Emphasize the attack phase\n- Use heavy filter modulation\n- Keep it driving and repetitive',
+    'trance': '- Long filter sweeps work well\n- Add plenty of reverb and delay\n- Build energy over time',
+    'ambient': '- Use slow attack times\n- Heavy reverb and delay\n- Subtle modulation',
+    'dubstep': '- Heavy low-pass filtering\n- Aggressive LFO modulation\n- Use distortion sparingly',
+    'trap': '- Sharp attacks\n- Moderate reverb\n- Layer with 808-style drums'
+  };
+  return tips[genre.toLowerCase()] || '- Experiment with different settings\n- Trust your ears\n- Reference professional tracks';
+}

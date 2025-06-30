@@ -242,40 +242,50 @@ export const MIDI_DRUM_MAP: { [key: string]: number } = {
 };
 
 // --- Patch Guide input categories for robust UI ---
-export const PATCH_INPUT_CATEGORIES = [
-  { 
-    category: "Genre", 
-    key: "genre", 
+export interface PatchInputCategory {
+  key: string;
+  label: string;
+  examples: string[];
+}
+
+export const PATCH_INPUT_CATEGORIES: PatchInputCategory[] = [
+  {
+    key: 'genre',
+    label: 'Genre',
     examples: [
-      "Techno", "House", "Trance", "Dubstep", "Drum & Bass", "Synthwave", "Ambient", 
-      "Industrial", "Rock", "Pop", "Hip Hop", "R&B", "Jazz", "Experimental", 
-      "Cinematic", "Video Game Score", "Chiptune"
+      'House', 'Techno', 'Trance', 'Ambient', 'Dubstep', 'Drum & Bass',
+      'Hip Hop', 'Trap', 'Future Bass', 'Synthwave', 'Chillwave',
+      'Pop', 'Rock', 'Jazz', 'Classical', 'Experimental', 'Minimal',
+      'Progressive', 'Deep House', 'Tech House', 'Acid', 'Breakbeat'
     ]
   },
-  { 
-    category: "Voice Type", 
-    key: "voiceType", 
+  {
+    key: 'voiceType',
+    label: 'Voice Type',
     examples: [
-      "Lead", "Pad", "Bass", "Pluck", "Arp", "FX", "Drone", "Texture", 
-      "Atmosphere", "Riser", "Impact", "Chord", "Stab"
+      'Lead', 'Bass', 'Pad', 'Arp', 'Pluck', 'Stab', 'Chord',
+      'Texture', 'Drone', 'Sequence', 'Melody', 'Harmony',
+      'Percussion', 'FX', 'Sweep', 'Riser', 'Impact'
     ]
   },
-  { 
-    category: "Style & Mood", 
-    key: "styleMood", 
+  {
+    key: 'styleMood',
+    label: 'Style & Mood',
     examples: [
-      "Warm", "Bright", "Dark", "Metallic", "Analog", "Digital", "Dreamy", 
-      "Aggressive", "Mysterious", "Epic", "Punchy", "Floating", "Gritty", 
-      "Clean", "Organic", "Mechanical", "Futuristic", "Retro", "Cyberpunk"
+      'Dark', 'Bright', 'Warm', 'Cold', 'Aggressive', 'Gentle',
+      'Dreamy', 'Energetic', 'Calm', 'Mysterious', 'Uplifting',
+      'Melancholic', 'Euphoric', 'Intense', 'Subtle', 'Bold',
+      'Vintage', 'Modern', 'Futuristic', 'Organic', 'Digital'
     ]
   },
-  { 
-    category: "Dynamics & Movement", 
-    key: "dynamicsMovement", 
+  {
+    key: 'dynamicsMovement',
+    label: 'Dynamics & Movement',
     examples: [
-      "Evolving", "Pulsating", "Static", "Rhythmic", "Flowing", "Choppy", 
-      "Breathing", "Morphing", "Swelling", "Pounding", "Cascading", "Trembling",
-      "Wobbling", "Shifting", "Undulating", "Building", "Fading", "Stuttering"
+      'Static', 'Evolving', 'Pulsing', 'Breathing', 'Pumping',
+      'Flowing', 'Choppy', 'Smooth', 'Rhythmic', 'Arrhythmic',
+      'Building', 'Fading', 'Swelling', 'Cutting', 'Morphing',
+      'Tremolo', 'Vibrato', 'Modulated', 'Filtered', 'Gated'
     ]
   }
 ];

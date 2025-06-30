@@ -3,7 +3,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GEMINI_MODEL_NAME } from '../constants/constants';
 import { dawMetadata } from '../constants/dawMetadata';
-import { MIDI_TEMPO_RANGES, MIDI_CHORD_PROGRESSIONS } from '../constants/constants';
+import { MIDI_TEMPO_RANGES, MIDI_CHORD_PROGRESSIONS } from '../constants/midiConstants';
 
 // Initialize Gemini AI
 const getApiKey = (): string => {
@@ -66,8 +66,97 @@ ${daw.mixingFeatures ? `- Mixing Features: ${daw.mixingFeatures.join(', ')}` : '
 `;
 };
 
+const generateWithRetry = async (generateFn: () => Promise<any>, maxRetries = 3): Promise<string> => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await generateFn();
+      return result.response.text();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      
+      const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+class RequestQueue {
+  private queue: Array<() => Promise<any>> = [];
+  private processing = false;
+  private readonly delay = 1000; // 1 second between requests
+
+  async add<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await request();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.process();
+    });
+  }
+
+  private async process(): Promise<void> {
+    if (this.processing || this.queue.length === 0) return;
+    
+    this.processing = true;
+    while (this.queue.length > 0) {
+      const request = this.queue.shift()!;
+      await request();
+      await new Promise(resolve => setTimeout(resolve, this.delay));
+    }
+    this.processing = false;
+  }
+}
+
+class ResponseCache {
+  private cache = new Map<string, { data: string; timestamp: number }>();
+  private readonly TTL = 5 * 60 * 1000; // 5 minutes
+
+  get(key: string): string | null {
+    const entry = this.cache.get(key);
+    if (entry && Date.now() - entry.timestamp < this.TTL) {
+      return entry.data;
+    }
+    this.cache.delete(key);
+    return null;
+  }
+
+  set(key: string, data: string): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+}
+
+interface TrackGuideInputs {
+  genres?: string[];
+  vibes?: string[];
+  dawName?: string;
+  userNotes?: string;
+}
+
+interface RemixGuideInputs {
+  originalArtist?: string;
+  originalTrack?: string;
+  originalGenre?: string;
+  remixGenre?: string;
+  remixStyle?: string;
+  remixVibe?: string;
+  dawName?: string;
+  userNotes?: string;
+}
+
 // Main function to generate track guide
-export const generateTrackGuide = async (inputs: any): Promise<string> => {
+export const generateTrackGuide = async (inputs: TrackGuideInputs): Promise<string> => {
+  const validation = validateInputs(inputs, ['genres']);
+  if (!validation.isValid) {
+    throw new Error(`Invalid inputs: ${validation.errors.join(', ')}`);
+  }
+  
+  const sanitizedInputs = sanitizeInputs(inputs);
+
   try {
     const genAI = initializeGemini();
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
