@@ -740,7 +740,6 @@
       for (const [drumElementName, hits] of Object.entries(drumData)) {
         if (!hits || !Array.isArray(hits)) continue;
         
-        // Enhanced drum key mapping
         const midiPitch = getDrumMidiPitch(drumElementName);
         const normalizedDrumKey = normalizeDrumKey(drumElementName);
         
@@ -749,7 +748,6 @@
           continue;
         }
         
-        // Schedule each drum hit with batch processing for performance
         const hitPromises = hits.map(async (hit: DrumHit) => {
           if (!hit || typeof hit.time !== 'number' || typeof hit.duration !== 'number') {
             console.warn('🚨 Invalid drum hit data:', hit);
@@ -767,11 +765,10 @@
           );
         });
         
-        // Process hits in batches to avoid overwhelming the audio thread
         await Promise.all(hitPromises);
       }
     } else if (Array.isArray(data)) {
-      // Handle melodic patterns (chords, bassline, melody)
+      // Handle melodic patterns
       const eventPromises = (data as Array<MidiNote | ChordNoteEvent>).map(async (event, index) => {
         if (!event || typeof event.time !== 'number' || typeof event.duration !== 'number') {
           console.warn(`🚨 Invalid ${trackKey} event at index ${index}:`, event);
@@ -781,7 +778,6 @@
         const isChord = 'notes' in event;
         
         if (isChord) {
-          // Handle chord events
           const chordEvent = event as ChordNoteEvent;
           if (!chordEvent.notes || !Array.isArray(chordEvent.notes)) {
             console.warn('🚨 Invalid chord notes:', chordEvent);
@@ -807,7 +803,6 @@
         
           await Promise.all(notePromises);
         } else {
-          // Handle single note events
           const noteEvent = event as MidiNote;
           if (typeof noteEvent.midi !== 'number') {
             console.warn(`🚨 Invalid MIDI note at index ${index}:`, noteEvent);
@@ -826,10 +821,9 @@
         }
       });
     
-      // Process events in batches
       await Promise.all(eventPromises);
     }
-  }; // <- This closing brace was missing, causing the syntax error
+  };
 
 // Optimized drum mapping functions
 const getDrumMidiPitch = (drumElementName: string): number | undefined => {

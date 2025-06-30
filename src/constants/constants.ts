@@ -217,28 +217,65 @@ export const MIDI_TEMPO_RANGES: { [genre: string]: [number, number] } = {
   'Default': [60, 200]
 };
 
-export const MIDI_DRUM_MAP: { [key: string]: number } = {
-  'kick': 36,        // Acoustic Bass Drum / Bass Drum 1
-  'snare': 38,       // Acoustic Snare / Snare Drum 1
-  'hihat_closed': 42,// Closed Hi-Hat
-  'open_hihat': 46,  // Open Hi-Hat
-  'tom_low': 41,     // Low Floor Tom
-  'tom_mid': 47,     // Low-Mid Tom
-  'tom_high': 50,    // High Tom
-  'crash_cymbal_1': 49,// Crash Cymbal 1
-  'ride_cymbal_1': 51, // Ride Cymbal 1
-  'clap': 39,        // Hand Clap
-  'shaker': 70,      // Shaker
-  'tambourine': 54,  // Tambourine
-  'rim_shot': 37,    // Side Stick / Rim Shot
-  'cowbell': 56,     // Cowbell
-  // Variants and aliases
+export const MIDI_DRUM_MAP: Record<string, number> = {
+  'kick': 36,
   'bass_drum': 36,
+  'acoustic_bass_drum': 36,
+  'snare': 38,
   'snare_drum': 38,
-  'closed_hihat': 42,
-  'hihat': 42,
+  'acoustic_snare': 38,
+  'electric_snare': 40,
+  'side_stick': 37,
+  'clap': 39,
+  'hand_clap': 39,
+  'hihat_closed': 42,
+  'closed_hi_hat': 42,
+  'hihat_foot': 44,
+  'open_hihat': 46,
+  'hihat_open': 46,
+  'open_hi_hat': 46,
+  'low_floor_tom': 41,
+  'tom_low': 41,
+  'high_floor_tom': 43,
+  'low_mid_tom': 47,
+  'tom_mid': 47,
+  'hi_mid_tom': 48,
+  'high_tom': 50,
+  'tom_high': 50,
+  'crash_cymbal_1': 49,
   'crash': 49,
-  'ride': 51
+  'ride_cymbal_1': 51,
+  'ride': 51,
+  'chinese_cymbal': 52,
+  'ride_bell': 53,
+  'tambourine': 54,
+  'splash_cymbal': 55,
+  'cowbell': 56,
+  'crash_cymbal_2': 57,
+  'vibraslap': 58,
+  'ride_cymbal_2': 59,
+  'hi_bongo': 60,
+  'low_bongo': 61,
+  'mute_hi_conga': 62,
+  'open_hi_conga': 63,
+  'low_conga': 64,
+  'high_timbale': 65,
+  'low_timbale': 66,
+  'high_agogo': 67,
+  'low_agogo': 68,
+  'cabasa': 69,
+  'maracas': 70,
+  'short_whistle': 71,
+  'long_whistle': 72,
+  'short_guiro': 73,
+  'long_guiro': 74,
+  'claves': 75,
+  'hi_wood_block': 76,
+  'low_wood_block': 77,
+  'mute_cuica': 78,
+  'open_cuica': 79,
+  'mute_triangle': 80,
+  'open_triangle': 81
 };
 
 // --- Patch Guide input categories for robust UI ---

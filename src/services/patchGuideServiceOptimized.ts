@@ -602,9 +602,9 @@ interface PatchGuideRequest {
 
 interface PatchGuideResponse {
   text: string;
-  synthConfig: SynthConfig;
-  adsrVCF: ADSREnvelope;
-  adsrVCA: ADSREnvelope;
+  synthConfig: any;
+  adsrVCF: any;
+  adsrVCA: any;
   summary: string;
 }
 

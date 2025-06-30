@@ -1,5 +1,5 @@
-import create from 'zustand';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from '../types/appTypes';
+import { create } from 'zustand';
+import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from '../types/types';
 import { initialInputsState, initialMixFeedbackInputsState } from '../constants/initialStates';
 
 interface AppState {
