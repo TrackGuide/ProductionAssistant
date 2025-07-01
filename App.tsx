@@ -1,31 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './src/constants/types';
+// App.tsx - New modular architecture with feature-based structure
+import React, { useState, useRef, useEffect } from 'react';
+import { useUser } from './src/context/UserContext';
+import { GuidebookEntry, UserInputs, GeneratedMidiPatterns, ActiveView } from './src/constants/types';
 import { 
-  generateGuidebookContent, 
-  generateMidiPatternSuggestions, 
-  generateMixFeedbackWithAudio as generateMixFeedback,
-  generateMixFeedbackWithAudioStream,
-  generateMixComparisonStream
-} from './src/services/geminiService';
-import { parseAiMidiResponse } from './src/utils/jsonParsingUtils';
-import { Input } from './src/components/Input.tsx';
-import { Textarea } from './src/components/Textarea.tsx';
-import { Button } from './src/components/Button.tsx';
-import { Card } from './src/components/Card.tsx';
-import { Spinner } from './src/components/Spinner.tsx';
-import { SaveIcon, BookOpenIcon, MusicNoteIcon, PlusIcon, UploadIcon, AdjustmentsHorizontalIcon, CloseIcon } from './src/components/icons.tsx';
-import { dawMetadata } from './src/constants/dawMetadata';
-import { AIAssistant } from './src/components/AIAssistant.tsx';
-import { EQGuide } from './src/components/EQGuide';
-import { LandingPage } from './src/components/LandingPage.tsx';
-import { RemixGuideAI } from './src/components/RemixGuideAI.tsx';
-import { PatchGuide } from './src/components/PatchGuide';
-import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
-import { LibraryModal } from './src/components/LibraryModal.tsx';
-import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
-import { stopPlayback } from './src/services/audioService.ts';
-import { parseJsonFromResponse } from './src/utils/jsonParseUtils.ts';
-import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
+  LOCAL_STORAGE_KEY, 
+  LAST_USED_DAW_KEY, 
+  LAST_USED_PLUGINS_KEY, 
+  MIDI_SCALES 
+} from './src/constants/constants';
+import { stopPlayback } from './src/services/audioService';
+// ...existing code...
 
 // Custom TrackGuide Logo Component
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -51,7 +35,12 @@ const initialInputsState: UserInputs = {
   availableInstruments: '',
 };
 
-const initialMixFeedbackInputsState: MixFeedbackInputs = {
+const initialMixFeedbackInputsState: {
+  audioFile: File | null;
+  userNotes: string;
+  trackName: string;
+  dawName: string;
+} = {
   audioFile: null,
   userNotes: '',
   trackName: '',
@@ -222,7 +211,12 @@ const App: React.FC = () => {
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
   // Mix Feedback State
-  const [mixFeedbackInputs, setMixFeedbackInputs] = useState<MixFeedbackInputs>(initialMixFeedbackInputsState);
+  const [mixFeedbackInputs, setMixFeedbackInputs] = useState<{
+    audioFile: File | null;
+    userNotes: string;
+    trackName: string;
+    dawName: string;
+  }>(initialMixFeedbackInputsState);
   const [mixFeedbackResult, setMixFeedbackResult] = useState<string | null>(null);
   const [streamingMixFeedback, setStreamingMixFeedback] = useState<string>('');
   const [isGeneratingMixFeedback, setIsGeneratingMixFeedback] = useState<boolean>(false);
@@ -505,20 +499,216 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveToLibrary = () => {
-    if (!activeGuidebookDetails) return; 
+  // --- Auth Modal State ---
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingSaveType, setPendingSaveType] = useState<null | 'trackGuide' | 'mixFeedback' | 'mixCompare' | 'remixGuide' | 'patchGuide'>(null);
+  const { user, isGuest, login, register, continueAsGuest } = useUser();
 
-    const entryToSave: GuidebookEntry = { ...activeGuidebookDetails };
-     
-    setLibrary(prev => {
-      const existingIndex = prev.findIndex(item => item.id === entryToSave.id);
-      if (existingIndex > -1) {
-        const updatedLibrary = [...prev];
-        updatedLibrary[existingIndex] = entryToSave;
-        return updatedLibrary;
+  // --- Save Handlers for all AI features ---
+  const handleSaveToLibrary = (type: 'trackGuide' | 'mixFeedback' | 'mixCompare' | 'remixGuide' | 'patchGuide' = 'trackGuide') => {
+    // For each type, you can add more logic as needed
+    if (!user && !isGuest) {
+      setPendingSaveType(type);
+      setShowAuthModal(true);
+      return;
+    }
+
+    // --- TrackGuide ---
+    if (type === 'trackGuide') {
+      if (!activeGuidebookDetails) return;
+      const entryToSave: GuidebookEntry = { ...activeGuidebookDetails };
+      setLibrary(prev => {
+        const existingIndex = prev.findIndex(item => item.id === entryToSave.id);
+        if (existingIndex > -1) {
+          const updatedLibrary = [...prev];
+          updatedLibrary[existingIndex] = entryToSave;
+          return updatedLibrary;
+        }
+        return [entryToSave, ...prev];
+      });
+      setPendingSaveType(null);
+      return;
+    }
+
+    // --- Mix Feedback ---
+    if (type === 'mixFeedback') {
+      if (!mixFeedbackResult || !mixFeedbackInputs.audioFile) return;
+      const newEntry: GuidebookEntry = {
+        id: Date.now().toString(),
+        title: mixFeedbackInputs.audioFile.name || 'Mix Feedback',
+        genre: [],
+        artistReference: '',
+        referenceTrackLink: '',
+        lyrics: '',
+        key: '',
+        scale: '',
+        chords: '',
+        generalNotes: '',
+        vibe: [],
+        daw: '',
+        plugins: '',
+        availableInstruments: '',
+        content: mixFeedbackResult,
+        createdAt: new Date().toISOString(),
+        midiSettings: undefined,
+        generatedMidiPatterns: undefined,
+        // custom fields
+        type: 'mixFeedback',
+        userNotes: mixFeedbackInputs.userNotes,
+        audioFileName: mixFeedbackInputs.audioFile.name,
+      } as GuidebookEntry;
+      setLibrary(prev => [newEntry, ...prev]);
+      setPendingSaveType(null);
+      return;
+    }
+
+    // --- Mix Compare ---
+    if (type === 'mixCompare') {
+      if (!mixCompareResult || !mixCompareInputs.mixA || !mixCompareInputs.mixB) return;
+      const newEntry: GuidebookEntry = {
+        id: Date.now().toString(),
+        title: `${mixCompareInputs.mixA.name} vs ${mixCompareInputs.mixB.name}`,
+        genre: [],
+        artistReference: '',
+        referenceTrackLink: '',
+        lyrics: '',
+        key: '',
+        scale: '',
+        chords: '',
+        generalNotes: '',
+        vibe: [],
+        daw: '',
+        plugins: '',
+        availableInstruments: '',
+        content: mixCompareResult,
+        createdAt: new Date().toISOString(),
+        midiSettings: undefined,
+        generatedMidiPatterns: undefined,
+        // custom fields
+        type: 'mixCompare',
+        userNotes: mixCompareInputs.userNotes,
+        mixAFileName: mixCompareInputs.mixA.name,
+        mixBFileName: mixCompareInputs.mixB.name,
+        includeMixBFeedback: mixCompareInputs.includeMixBFeedback,
+      } as GuidebookEntry;
+      setLibrary(prev => [newEntry, ...prev]);
+      setPendingSaveType(null);
+      return;
+    }
+
+    // --- RemixGuide ---
+    if (type === 'remixGuide') {
+      if (!remixGuideContent) return;
+      const newEntry: GuidebookEntry = {
+        id: Date.now().toString(),
+        title: 'Remix Guide',
+        genre: [],
+        artistReference: '',
+        referenceTrackLink: '',
+        lyrics: '',
+        key: '',
+        scale: '',
+        chords: '',
+        generalNotes: '',
+        vibe: [],
+        daw: '',
+        plugins: '',
+        availableInstruments: '',
+        content: remixGuideContent,
+        createdAt: new Date().toISOString(),
+        midiSettings: undefined,
+        generatedMidiPatterns: undefined,
+        type: 'remixGuide',
+      } as GuidebookEntry;
+      setLibrary(prev => [newEntry, ...prev]);
+      setPendingSaveType(null);
+      return;
+    }
+
+    // --- PatchGuide ---
+    if (type === 'patchGuide') {
+      if (!patchGuideContent) return;
+      const newEntry: GuidebookEntry = {
+        id: Date.now().toString(),
+        title: 'Patch Guide',
+        genre: [],
+        artistReference: '',
+        referenceTrackLink: '',
+        lyrics: '',
+        key: '',
+        scale: '',
+        chords: '',
+        generalNotes: '',
+        vibe: [],
+        daw: '',
+        plugins: '',
+        availableInstruments: '',
+        content: patchGuideContent,
+        createdAt: new Date().toISOString(),
+        midiSettings: undefined,
+        generatedMidiPatterns: undefined,
+        type: 'patchGuide',
+      } as GuidebookEntry;
+      setLibrary(prev => [newEntry, ...prev]);
+      setPendingSaveType(null);
+      return;
+    }
+
+    setPendingSaveType(null);
+  };
+  // --- Auth Modal Component ---
+  const AuthModal = ({ onClose }: { onClose: () => void }) => {
+    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [error, setError] = useState('');
+    const handleAuth = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!username || !email) {
+        setError('Please enter username and email.');
+        return;
       }
-      return [entryToSave, ...prev];
-    });
+      if (mode === 'login') login({ username, email });
+      else register({ username, email });
+      onClose();
+      if (pendingSaveType) {
+        setTimeout(() => handleSaveToLibrary(pendingSaveType), 0);
+      }
+    };
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div className="bg-gray-900 rounded-lg shadow-xl p-8 w-full max-w-md border border-orange-500 relative">
+          <h2 className="text-2xl font-bold text-orange-400 mb-4 text-center">{mode === 'login' ? 'Login' : 'Register'} to Save</h2>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <input
+              className="w-full border p-2 rounded bg-gray-800 text-white"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+            />
+            <input
+              className="w-full border p-2 rounded bg-gray-800 text-white"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            {error && <div className="text-red-400 text-sm">{error}</div>}
+            <button className="w-full bg-orange-600 text-white py-2 rounded" type="submit">{mode === 'login' ? 'Login' : 'Register'}</button>
+          </form>
+          <div className="flex justify-between mt-4">
+            <button className="text-orange-400 underline" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+              {mode === 'login' ? 'Need an account? Register' : 'Already have an account? Login'}
+            </button>
+            <button className="text-gray-400 underline" onClick={() => { continueAsGuest(); onClose(); setPendingSaveType(null); }}>
+              Continue as Guest
+            </button>
+          </div>
+          <button className="absolute top-2 right-3 text-gray-400 hover:text-white text-xl" onClick={onClose}>&times;</button>
+        </div>
+      </div>
+    );
   };
   
   const handleUpdateGuidebookEntryMidi = (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => {
@@ -1410,13 +1600,41 @@ const App: React.FC = () => {
               >
                 {activeGuidebookDetails && !isLoading && ( // Show buttons only when not loading and details are available
                   <div className="flex flex-wrap gap-3 mb-5 pb-4 border-b border-gray-700 items-center">
-                    <Button onClick={handleSaveToLibrary} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
-
+                    <Button onClick={() => handleSaveToLibrary('trackGuide')} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
                     <div className="flex-grow"></div>
                     <Button onClick={resetFormForNewGuidebook} variant="outline" size="sm" className="!border-gray-500 !text-gray-400 hover:!bg-gray-600 hover:!text-white" leftIcon={<CloseIcon />}>Close</Button>
                     {copyStatus && <span className={`ml-3 text-sm ${copyStatus.includes("Failed") || copyStatus.includes("not supported") ? "text-red-400" : "text-green-400"}`}>{copyStatus}</span>}
                   </div>
                 )}
+      {/* Save to Library for Mix Feedback (single) */}
+      {activeView === 'mixFeedback' && mixFeedbackResult && !isGeneratingMixFeedback && mixFeedbackTab === 'single' && (
+        <div className="flex justify-end my-4">
+          <Button onClick={() => handleSaveToLibrary('mixFeedback')} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
+        </div>
+      )}
+
+      {/* Save to Library for Mix Compare */}
+      {activeView === 'mixFeedback' && mixCompareResult && !isGeneratingMixComparison && mixFeedbackTab === 'compare' && (
+        <div className="flex justify-end my-4">
+          <Button onClick={() => handleSaveToLibrary('mixCompare')} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
+        </div>
+      )}
+
+      {/* Save to Library for RemixGuide */}
+      {activeView === 'remixGuide' && remixGuideContent && (
+        <div className="flex justify-end my-4">
+          <Button onClick={() => handleSaveToLibrary('remixGuide')} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
+        </div>
+      )}
+
+      {/* Save to Library for PatchGuide */}
+      {activeView === 'patchGuide' && patchGuideContent && (
+        <div className="flex justify-end my-4">
+          <Button onClick={() => handleSaveToLibrary('patchGuide')} variant="secondary" leftIcon={<SaveIcon />}>Save to Library</Button>
+        </div>
+      )}
+      {/* Auth Modal for Save to Library */}
+      {showAuthModal && <AuthModal onClose={() => { setShowAuthModal(false); setPendingSaveType(null); }} />}
                 <div id="guidebook-content-display" className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content">
                   {activeGuidebookDetails && !isLoading && (
                      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg text-sm shadow-inner border border-gray-600/50 guidebook-section-break"> 
