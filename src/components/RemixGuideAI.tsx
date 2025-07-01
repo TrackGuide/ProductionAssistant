@@ -553,7 +553,6 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
               currentGuidebookEntry={{
                 id: `remix-${Date.now()}`,
                 title: `${selectedGenre} Remix`,
-                genre: [selectedGenre],
                 artistReference: '',
                 referenceTrackLink: '',
                 lyrics: '',
@@ -566,7 +565,12 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
                 availableInstruments: '',
                 content: remixGuide.guide,
                 createdAt: new Date().toISOString(),
-                midiSettings: {},
+                midiSettings: {
+                  tempo: remixGuide.targetTempo,
+                  bars: 8,
+                  timeSignature: [4, 4],
+                },
+                generatedMidiPatterns: remixGuide.generatedMidiPatterns,
               }}
             />
           </Card>

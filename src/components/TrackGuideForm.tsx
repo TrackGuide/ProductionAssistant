@@ -22,6 +22,7 @@ interface TrackGuideFormProps {
   onShowLibrary: () => void;
   onClearForm: () => void;
   setShowAdvancedInput: (show: boolean) => void;
+  onSaveToLibrary?: () => void;
 }
 
 const SelectedPills: React.FC<{
@@ -62,7 +63,8 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
   onSubmit,
   onShowLibrary,
   onClearForm,
-  setShowAdvancedInput
+  setShowAdvancedInput,
+  onSaveToLibrary
 }) => {
   const genreInputRef = useRef<HTMLInputElement>(null);
   const vibeInputRef = useRef<HTMLInputElement>(null);
@@ -79,51 +81,123 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
         <Input label="Song Reference" name="referenceTrackLink" value={inputs.referenceTrackLink || ''} onChange={onInputChange} placeholder="e.g., YouTube, Spotify, SoundCloud link" />
       </div>
       <div className="space-y-2">
+        {/* Genre Multi-select Dropdown */}
         <div>
-          <label htmlFor="genre-input" className="block text-sm font-medium text-gray-300 mb-1.5">Genre(s)</label>
-          <div className="flex items-center gap-2">
-            <Input 
-              ref={genreInputRef}
-              id="genre-input"
-              name="currentGenreText" 
-              value={currentGenreText} 
-              onChange={onInputChange}
-              onKeyDown={(e) => onMultiSelectKeyDown(e, 'genre')}
-              placeholder="Type custom genre..." 
-              list="genre-suggestions" 
-              className="flex-grow"
-            />
-            <Button type="button" onClick={() => onAddMultiSelectItem('genre')} size="sm" variant="secondary" aria-label="Add Genre" className="px-3">
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          </div>
-          <datalist id="genre-suggestions">
-            {GENRE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-          </datalist>
-          <SelectedPills selections={inputs.genre} onRemove={(val) => onMultiSelectToggle('genre', val)} />
+          <label className="block text-sm font-medium text-gray-300 mb-3">Genre(s) <span className="text-red-400">*</span></label>
+          <select
+            multiple
+            value={inputs.genre.filter(g => GENRE_SUGGESTIONS.includes(g) || g === "__other__")}
+            onChange={e => {
+              const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+              // Keep custom genres if present
+              const customs = inputs.genre.filter(g => !GENRE_SUGGESTIONS.includes(g) && g !== "__other__");
+              onInputChange({
+                target: { name: 'genre', value: [...selected, ...customs] }
+              } as any);
+            }}
+            className="w-full mb-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 h-32"
+          >
+            {GENRE_SUGGESTIONS.map((genre) => (
+              <option key={genre} value={genre}>{genre}</option>
+            ))}
+            <option value="__other__">Other...</option>
+          </select>
+          {/* Show text input for custom genre if "Other..." is selected or custom genres exist */}
+          {(inputs.genre.some(g => !GENRE_SUGGESTIONS.includes(g)) || inputs.genre.includes("__other__")) && (
+            <div className="mt-2">
+              <Input
+                type="text"
+                value={currentGenreText}
+                onChange={onInputChange}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentGenreText.trim()) {
+                      const customs = currentGenreText.split(',').map(g => g.trim()).filter(Boolean);
+                      // Remove __other__ and add customs
+                      const filtered = inputs.genre.filter(g => GENRE_SUGGESTIONS.includes(g));
+                      onInputChange({
+                        target: { name: 'genre', value: [...filtered, ...customs] }
+                      } as any);
+                    }
+                  }
+                }}
+                placeholder="Enter custom genre(s), comma separated"
+                className="w-full"
+                onBlur={() => {
+                  if (currentGenreText.trim()) {
+                    const customs = currentGenreText.split(',').map(g => g.trim()).filter(Boolean);
+                    // Remove __other__ and add customs
+                    const filtered = inputs.genre.filter(g => GENRE_SUGGESTIONS.includes(g));
+                    onInputChange({
+                      target: { name: 'genre', value: [...filtered, ...customs] }
+                    } as any);
+                  }
+                }}
+              />
+              <span className="text-xs text-gray-400">Press enter or click away to add</span>
+            </div>
+          )}
+          <SelectedPills selections={inputs.genre.filter(g => g !== "__other__")} onRemove={(val) => onMultiSelectToggle('genre', val)} />
         </div>
+        {/* Vibe Multi-select Dropdown */}
         <div>
-          <label htmlFor="vibe-input" className="block text-sm font-medium text-gray-300 mb-1.5">Vibe / Mood</label>
-          <div className="flex items-center gap-2">
-            <Input 
-              ref={vibeInputRef}
-              id="vibe-input"
-              name="currentVibeText" 
-              value={currentVibeText} 
-              onChange={onInputChange}
-              onKeyDown={(e) => onMultiSelectKeyDown(e, 'vibe')}
-              placeholder="Type custom vibe..." 
-              list="vibe-suggestions" 
-              className="flex-grow"
-            />
-            <Button type="button" onClick={() => onAddMultiSelectItem('vibe')} size="sm" variant="secondary" aria-label="Add Vibe" className="px-3">
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          </div>
-          <datalist id="vibe-suggestions">
-            {VIBE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-          </datalist>
-          <SelectedPills selections={inputs.vibe} onRemove={(val) => onMultiSelectToggle('vibe', val)} />
+          <label className="block text-sm font-medium text-gray-300 mb-3">Vibe(s) <span className="text-red-400">*</span></label>
+          <select
+            multiple
+            value={inputs.vibe.filter(v => VIBE_SUGGESTIONS.includes(v) || v === "__other__")}
+            onChange={e => {
+              const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+              // Keep custom vibes if present
+              const customs = inputs.vibe.filter(v => !VIBE_SUGGESTIONS.includes(v) && v !== "__other__");
+              onInputChange({
+                target: { name: 'vibe', value: [...selected, ...customs] }
+              } as any);
+            }}
+            className="w-full mb-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 h-32"
+          >
+            {VIBE_SUGGESTIONS.map((vibe) => (
+              <option key={vibe} value={vibe}>{vibe}</option>
+            ))}
+            <option value="__other__">Other...</option>
+          </select>
+          {/* Show text input for custom vibe if "Other..." is selected or custom vibes exist */}
+          {(inputs.vibe.some(v => !VIBE_SUGGESTIONS.includes(v)) || inputs.vibe.includes("__other__")) && (
+            <div className="mt-2">
+              <Input
+                type="text"
+                value={currentVibeText}
+                onChange={onInputChange}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentVibeText.trim()) {
+                      const customs = currentVibeText.split(',').map(v => v.trim()).filter(Boolean);
+                      // Remove __other__ and add customs
+                      const filtered = inputs.vibe.filter(v => VIBE_SUGGESTIONS.includes(v));
+                      onInputChange({
+                        target: { name: 'vibe', value: [...filtered, ...customs] }
+                      } as any);
+                    }
+                  }
+                }}
+                placeholder="Enter custom vibe(s), comma separated"
+                className="w-full"
+                onBlur={() => {
+                  if (currentVibeText.trim()) {
+                    const customs = currentVibeText.split(',').map(v => v.trim()).filter(Boolean);
+                    // Remove __other__ and add customs
+                    const filtered = inputs.vibe.filter(v => VIBE_SUGGESTIONS.includes(v));
+                    onInputChange({
+                      target: { name: 'vibe', value: [...filtered, ...customs] }
+                    } as any);
+                  }
+                }}
+              />
+              <span className="text-xs text-gray-400">Press enter or click away to add</span>
+            </div>
+          )}
+          <SelectedPills selections={inputs.vibe.filter(v => v !== "__other__")} onRemove={(val) => onMultiSelectToggle('vibe', val)} />
         </div>
       </div>
       <div>

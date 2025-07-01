@@ -1,6 +1,8 @@
 // src/features/trackGuide/components/TrackGuideFeature.tsx
 
 import React, { useCallback, useState } from 'react';
+import { SavePromptModal } from '../../../components/SavePromptModal';
+import { Toast } from '../../../components/Toast';
 import { TrackGuideForm } from './TrackGuideForm';
 import { TrackGuideResults } from './TrackGuideResults';
 import { TrackGuideErrorBoundary } from '../../../components/ErrorBoundary';
@@ -9,7 +11,25 @@ import { useAppState, useCurrentGuidebook, useUserInputs, useLoadingAndErrors } 
 import { UserInputs } from '../../../constants/types';
 import { Card } from '../../../components/Card';
 
-export const TrackGuideFeature: React.FC<{ onSaveToLibrary: () => void }> = ({ onSaveToLibrary }) => {
+export const TrackGuideFeature: React.FC<{ onSaveToLibrary: (data: any) => void }> = ({ onSaveToLibrary }) => {
+  // State for SavePromptModal and Toast
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  // Handler for SavePromptModal
+  const handleSavePrompt = async (title: string, tags: string[]) => {
+    // Compose the data to save (currentGuidebook is the generated guide)
+    if (!currentGuidebook) return;
+    const dataToSave = {
+      ...currentGuidebook,
+      title,
+      tags,
+      type: 'trackGuide',
+    };
+    onSaveToLibrary(dataToSave);
+    setShowSavePrompt(false);
+    setShowToast(true);
+  };
   const { state, actions } = useAppState();
   const { currentGuidebook, setCurrentGuidebook, generatedContent, setGeneratedContent } = useCurrentGuidebook();
   const { userInputs, setUserInputs, resetUserInputs } = useUserInputs();
@@ -93,7 +113,7 @@ export const TrackGuideFeature: React.FC<{ onSaveToLibrary: () => void }> = ({ o
               userInputs={userInputs}
               onInputsChange={handleInputsChange}
               onSubmit={handleGenerateGuide}
-              onSaveToLibrary={onSaveToLibrary}
+              onSaveToLibrary={() => setShowSavePrompt(true)}
               onViewLibrary={handleViewLibrary}
               onClearForm={handleClearForm}
               isLoading={isLoading}
@@ -142,7 +162,7 @@ export const TrackGuideFeature: React.FC<{ onSaveToLibrary: () => void }> = ({ o
               <TrackGuideResults
                 guidebook={currentGuidebook}
                 generatedContent={generatedContent}
-                onSaveToLibrary={handleSaveToLibrary}
+                onSaveToLibrary={() => setShowSavePrompt(true)}
               />
             )}
 

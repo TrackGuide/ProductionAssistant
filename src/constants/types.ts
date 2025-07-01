@@ -2,7 +2,22 @@
     id: string;
     title: string;
     content: string;
-    timestamp: number;
+    createdAt?: string;
+    genre?: string[];
+    artistReference?: string;
+    referenceTrackLink?: string;
+    lyrics?: string;
+    key?: string;
+    scale?: string;
+    chords?: string;
+    generalNotes?: string;
+    vibe?: string[];
+    daw?: string;
+    plugins?: string;
+    availableInstruments?: string;
+    midiSettings?: MidiSettings;
+    generatedMidiPatterns?: GeneratedMidiPatterns;
+    [key: string]: any;
   }
 
   export interface UserInputs {

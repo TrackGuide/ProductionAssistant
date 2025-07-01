@@ -91,9 +91,10 @@ export const Navigation: React.FC<{ onNavigate: (view: string) => void }> = ({ o
                 size="sm"
                 className={`
                   flex items-center space-x-2 transition-all duration-200
+                  border-2
                   ${state.activeView === item.id 
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
-                    : 'bg-transparent hover:bg-gray-700 text-gray-300'
+                    ? 'bg-orange-500 border-orange-400 shadow-lg text-white' 
+                    : 'bg-gray-900 border-transparent hover:bg-gray-700 text-gray-300'
                   }
                 `}
               >
