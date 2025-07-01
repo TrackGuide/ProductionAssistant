@@ -1,6 +1,7 @@
 // src/features/trackGuide/components/TrackGuideFeature.tsx
 
 import React, { useCallback, useState } from 'react';
+import { useUser } from '../../../context/UserContext';
 import { SavePromptModal } from '../../../components/SavePromptModal';
 import { Toast } from '../../../components/Toast';
 import { TrackGuideForm } from './TrackGuideForm';
@@ -12,9 +13,11 @@ import { UserInputs } from '../../../constants/types';
 import { Card } from '../../../components/Card';
 
 export const TrackGuideFeature: React.FC<{ onSaveToLibrary: (data: any) => void }> = ({ onSaveToLibrary }) => {
-  // State for SavePromptModal and Toast
+  // State for SavePromptModal, Toast, and Auth Prompt
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const { user, isGuest } = useUser();
 
   // Handler for SavePromptModal
   const handleSavePrompt = async (title: string, tags: string[]) => {
@@ -113,7 +116,13 @@ export const TrackGuideFeature: React.FC<{ onSaveToLibrary: (data: any) => void 
               userInputs={userInputs}
               onInputsChange={handleInputsChange}
               onSubmit={handleGenerateGuide}
-              onSaveToLibrary={() => setShowSavePrompt(true)}
+              onSaveToLibrary={() => {
+                if (!user || isGuest) {
+                  setShowAuthPrompt(true);
+                } else {
+                  setShowSavePrompt(true);
+                }
+              }}
               onViewLibrary={handleViewLibrary}
               onClearForm={handleClearForm}
               isLoading={isLoading}
@@ -186,6 +195,20 @@ export const TrackGuideFeature: React.FC<{ onSaveToLibrary: (data: any) => void 
           </div>
         </div>
         {/* Save Prompt Modal */}
+        {/* Auth Prompt Modal */}
+        {showAuthPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+              <h2 className="text-xl font-bold mb-4 text-gray-900">Sign in to Save</h2>
+              <p className="mb-6 text-gray-700">You need to be logged in to save to your library.</p>
+              <div className="flex flex-col gap-3">
+                <button className="w-full bg-purple-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'login' })); }}>Log In</button>
+                <button className="w-full bg-green-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' })); }}>Register</button>
+                <button className="w-full bg-gray-300 text-gray-800 py-2 rounded font-semibold" onClick={() => setShowAuthPrompt(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
         <SavePromptModal
           isOpen={showSavePrompt}
           onClose={() => setShowSavePrompt(false)}

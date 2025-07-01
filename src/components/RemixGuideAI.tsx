@@ -1,4 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { useUser } from '../context/UserContext';
+import { SavePromptModal } from './SavePromptModal';
+import { Toast } from './Toast';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Spinner } from './Spinner';
@@ -50,6 +53,11 @@ const extractOriginalChordProgression = (guideContent: string): string | null =>
 };
 
 export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => void, onSaveToLibrary?: (data: any) => void }> = ({ onContentUpdate, onSaveToLibrary }) => {
+  const { user, isGuest } = useUser();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  // Modal and toast state
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
@@ -180,8 +188,42 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       // Build a string prompt for MIDI pattern suggestions
       const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for a song section.\nSettings: ${JSON.stringify(midiSettings)}\nRespond ONLY with valid JSON.`;
       const aiResponse = await generateAIResponse(midiPrompt);
-      let jsonStr = '';
-      // ...existing code for parsing aiResponse and normalizing drums...
+      let jsonStr = aiResponse;
+
+      // Enhanced JSON extraction and cleaning (copied from regeneration logic)
+      jsonStr = jsonStr.trim();
+      const codeBlockPatterns = [
+        /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
+        /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
+        /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
+        /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+      ];
+      for (const pattern of codeBlockPatterns) {
+        const match = jsonStr.match(pattern);
+        if (match) {
+          jsonStr = match[match.length - 1].trim();
+          break;
+        }
+      }
+      jsonStr = jsonStr
+        .replace(/^`+/g, '')
+        .replace(/`+$/g, '')
+        .replace(/^json\s*/i, '')
+        .trim();
+      if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
+        throw new Error(`Response doesn't contain valid JSON structure for MIDI generation. Got: ${jsonStr.substring(0, 100)}...`);
+      }
+      console.log('Raw MIDI JSON:', jsonStr);
+      const generatedMidiPatterns = parseAiMidiResponse(jsonStr, 'remix MIDI generation');
+      // Normalize drum patterns and ensure standard elements exist
+      if (generatedMidiPatterns.drums) {
+        const lowercasedDrums: Record<string, any> = {};
+        for (const key in generatedMidiPatterns.drums) {
+          lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = generatedMidiPatterns.drums[key as keyof typeof generatedMidiPatterns.drums];
+        }
+        generatedMidiPatterns.drums = lowercasedDrums;
+      }
+      setRemixGuide(prev => prev ? { ...prev, generatedMidiPatterns } : prev);
 
     } catch (error) {
       console.error('Error generating remix guide:', error);
@@ -507,16 +549,56 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
               {onSaveToLibrary && (
                 <button
                   className="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
-                  onClick={() => onSaveToLibrary({
-                    ...remixGuide,
-                    genre: [selectedGenre],
-                    daw: selectedDAW,
-                    plugins,
-                  })}
+                  onClick={() => {
+                    if (!user || isGuest) {
+                      setShowAuthPrompt(true);
+                    } else {
+                      setShowSavePrompt(true);
+                    }
+                  }}
                 >
                   Save to Library
                 </button>
               )}
+      {/* Auth Prompt Modal */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Sign in to Save</h2>
+            <p className="mb-6 text-gray-700">You need to be logged in to save to your library.</p>
+            <div className="flex flex-col gap-3">
+              <button className="w-full bg-purple-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'login' })); }}>Log In</button>
+              <button className="w-full bg-green-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' })); }}>Register</button>
+              <button className="w-full bg-gray-300 text-gray-800 py-2 rounded font-semibold" onClick={() => setShowAuthPrompt(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Save Prompt Modal */}
+      {onSaveToLibrary && remixGuide && (
+        <SavePromptModal
+          isOpen={showSavePrompt}
+          onClose={() => setShowSavePrompt(false)}
+          onSave={async (title, tags) => {
+            onSaveToLibrary({
+              ...remixGuide,
+              genre: [selectedGenre],
+              daw: selectedDAW,
+              plugins,
+              title,
+              tags,
+              type: 'remixGuide',
+            });
+            setShowSavePrompt(false);
+            setShowToast(true);
+          }}
+          generationType="remixGuide"
+        />
+      )}
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast message="Saved to library!" onClose={() => setShowToast(false)} />
+      )}
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
               <MarkdownRenderer content={remixGuide.guide} />

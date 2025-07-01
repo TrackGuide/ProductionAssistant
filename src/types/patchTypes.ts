@@ -6,6 +6,8 @@ export interface PatchGuideInputs {
   voiceType: string;
   notes: string;
   dawName?: string;
+  styleMood: string[];
+  dynamicsMovement: string[];
 }
 
 export interface PatchGuideResult {

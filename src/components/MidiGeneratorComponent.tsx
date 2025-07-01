@@ -233,11 +233,12 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       const newSettings = { ...prev, [field]: value };
       if (field === 'genre') {
         const newGenre = value as string;
-        const oldGenreDefaultProg = (MIDI_CHORD_PROGRESSIONS[prev.genre] || MIDI_CHORD_PROGRESSIONS.Default)[0];
+        const oldGenre = prev.genre || 'Default';
+        const oldGenreDefaultProg = (MIDI_CHORD_PROGRESSIONS[oldGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0];
         if (prev.chordProgression === oldGenreDefaultProg) {
             newSettings.chordProgression = (MIDI_CHORD_PROGRESSIONS[newGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0];
         }
-        const oldTempoRange = MIDI_TEMPO_RANGES[prev.genre] || MIDI_TEMPO_RANGES.Default;
+        const oldTempoRange = MIDI_TEMPO_RANGES[oldGenre] || MIDI_TEMPO_RANGES.Default;
         const oldDefaultTempo = Math.round((oldTempoRange[0] + oldTempoRange[1]) / 2);
         if (prev.tempo === oldDefaultTempo) {
             const newTempoRange = MIDI_TEMPO_RANGES[newGenre] || MIDI_TEMPO_RANGES.Default;
@@ -253,7 +254,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
   
   const handleTargetInstrumentChange = (instrumentId: string) => {
     setSettings(prev => {
-        const currentSelection = prev.targetInstruments;
+        const currentSelection = prev.targetInstruments || [];
         const newSelection = currentSelection.includes(instrumentId)
             ? currentSelection.filter(id => id !== instrumentId)
             : [...currentSelection, instrumentId];
@@ -291,29 +292,36 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
 
     try {
-        // TODO: Call your AI service here to get MIDI pattern suggestions as JSON
-        // Example: const aiResponse = await generateAIResponse(settingsForGeneration);
-        // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
-        // For now, you can mock or skip this step if not using AI
-        // setPatterns(patternsData);
-        // onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData);
-
-        // Try to parse JSON
-        let patternsData;
-        try {
-            patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'MIDI generation');
-        } catch (parseError) {
-            console.error('JSON parse error:', parseError);
-            console.error('Failed to parse:', jsonStr);
-            throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}. Response was: ${jsonStr.substring(0, 200)}...`);
+        // Call AI service to get MIDI pattern suggestions as JSON
+        const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for a song section.\nSettings: ${JSON.stringify(settingsForGeneration)}\nRespond ONLY with valid JSON.`;
+        const aiResponse = await import('../services/geminiService').then(m => m.generateAIResponse(midiPrompt));
+        let jsonStr = aiResponse ? aiResponse.trim() : '';
+        // Enhanced JSON extraction and cleaning
+        const codeBlockPatterns = [
+          /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
+          /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
+          /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
+          /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+        ];
+        for (const pattern of codeBlockPatterns) {
+          const match = jsonStr.match(pattern);
+          if (match) {
+            jsonStr = match[match.length - 1].trim();
+            break;
+          }
         }
-
-        console.log('Parsed MIDI patterns:', patternsData);
-
+        jsonStr = jsonStr
+          .replace(/^`+/g, '')
+          .replace(/`+$/g, '')
+          .replace(/^json\s*/i, '')
+          .trim();
+        if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
+          throw new Error(`Response doesn't contain valid JSON structure for MIDI generation. Got: ${jsonStr.substring(0, 100)}...`);
+        }
+        const patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'MIDI generation');
         // Validate patterns before setting them
         const validatePatterns = (patterns: GeneratedMidiPatterns) => {
           console.log('🔍 Validating MIDI patterns...');
-          
           // Validate chords
           if (patterns.chords) {
             patterns.chords.forEach((chord, i) => {
@@ -327,7 +335,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
               });
             });
           }
-          
           // Validate bassline and melody
           ['bassline', 'melody'].forEach(trackType => {
             const track = patterns[trackType as keyof GeneratedMidiPatterns] as MidiNote[];
@@ -339,7 +346,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
               });
             }
           });
-          
           // Validate drums
           if (patterns.drums) {
             Object.entries(patterns.drums).forEach(([drumName, hits]) => {
@@ -351,17 +357,14 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             });
           }
         };
-        
         validatePatterns(patternsData);
-
         if (patternsData.drums) {
-            const lowercasedDrums: any = {};
-            for (const key in patternsData.drums) {
-                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = patternsData.drums[key as keyof typeof patternsData.drums];
-            }
-            patternsData.drums = lowercasedDrums;
+          const lowercasedDrums: any = {};
+          for (const key in patternsData.drums) {
+            lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = patternsData.drums[key as keyof typeof patternsData.drums];
+          }
+          patternsData.drums = lowercasedDrums;
         }
-
         setPatterns(patternsData);
         onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData);
     } catch (err: any) {
@@ -483,6 +486,31 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         // setPatterns(patternsData);
         // onUpdateGuidebookEntryMidi?.(preservedSettings, patternsData);
 
+        // Actually call the AI and parse the response for single track regeneration
+        const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for the ${trackType} track.\nSettings: ${JSON.stringify(preservedSettings)}\nRespond ONLY with valid JSON.`;
+        const aiResponse = await import('../services/geminiService').then(m => m.generateAIResponse(midiPrompt));
+        let jsonStr = aiResponse ? aiResponse.trim() : '';
+        const codeBlockPatterns = [
+          /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
+          /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
+          /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
+          /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+        ];
+        for (const pattern of codeBlockPatterns) {
+          const match = jsonStr.match(pattern);
+          if (match) {
+            jsonStr = match[match.length - 1].trim();
+            break;
+          }
+        }
+        jsonStr = jsonStr
+          .replace(/^`+/g, '')
+          .replace(/`+$/g, '')
+          .replace(/^json\s*/i, '')
+          .trim();
+        if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
+          throw new Error(`Response doesn't contain valid JSON structure for MIDI regeneration. Got: ${jsonStr.substring(0, 100)}...`);
+        }
         let newPatternsData;
         try {
             newPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, `${trackType} regeneration`);
@@ -491,7 +519,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             console.error('Failed to parse:', jsonStr);
             throw new Error(`Invalid JSON response from AI for ${trackType}: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`);
         }
-
         console.log(`Parsed MIDI patterns for ${trackType}:`, newPatternsData);
 
         const updatedPatterns = {
@@ -614,7 +641,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
                 <option value="">Default (from key)</option>
-                {getAvailableModesForKey(settings.key).map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                {getAvailableModesForKey(settings.key || 'C').map(mode => <option key={mode} value={mode}>{mode}</option>)}
               </select>
             </div>
             <div>
@@ -650,7 +677,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 onChange={(e) => handleSettingChange('chordProgression', e.target.value)} 
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 text-sm"
               >
-                {getChordProgressionsForGenre(settings.genre).map(cp => <option key={cp} value={cp}>{cp}</option>)}
+                {getChordProgressionsForGenre(settings.genre || 'Default').map(cp => <option key={cp} value={cp}>{cp}</option>)}
               </select>
             </div>
             <div>
@@ -700,12 +727,12 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                         type="button"
                         onClick={() => handleTargetInstrumentChange(inst.id)}
                         className={`flex items-center px-3 py-1.5 rounded-md text-sm transition-colors duration-150 ease-in-out border
-                            ${settings.targetInstruments.includes(inst.id)
+                            ${(settings.targetInstruments || []).includes(inst.id)
                                 ? 'bg-purple-600 text-white border-purple-500 hover:bg-purple-700 shadow-md'
                                 : 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:border-gray-500'}`}
-                        aria-pressed={settings.targetInstruments.includes(inst.id)}
+                        aria-pressed={(settings.targetInstruments || []).includes(inst.id)}
                     >
-                        {settings.targetInstruments.includes(inst.id) 
+                        {(settings.targetInstruments || []).includes(inst.id)
                             ? <CheckboxCheckedIcon className="w-4 h-4 mr-2" /> 
                             : <CheckboxUncheckedIcon className="w-4 h-4 mr-2 text-gray-500" />
                         }
@@ -714,8 +741,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
                 ))}
             </div>
           </div>
-          <Button onClick={handleGeneratePatterns} disabled={isLoading || settings.targetInstruments.length === 0} className="w-full" leftIcon={<RefreshIcon className="w-5 h-5" isSpinning={isLoading}/>}>
-            {isLoading ? (loadingMessage || 'Regenerating MIDI Patterns...') : (settings.targetInstruments.length === 0 ? 'Select instruments first' : 'Regenerate MIDI Patterns')}
+          <Button onClick={handleGeneratePatterns} disabled={isLoading || (settings.targetInstruments?.length === 0)} className="w-full" leftIcon={<RefreshIcon className="w-5 h-5" isSpinning={isLoading}/>}>
+            {isLoading ? (loadingMessage || 'Regenerating MIDI Patterns...') : ((settings.targetInstruments?.length === 0) ? 'Select instruments first' : 'Regenerate MIDI Patterns')}
           </Button>
         </div>
       )}
@@ -737,7 +764,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             {renderTrackCard('melody', 'Melody')}
             {renderTrackCard('drums', 'Drums')}
           </div>
-          {patterns.error && <p className="text-sm text-yellow-400 mt-2">AI Note: {patterns.error}</p>}
+
         </div>
       )}
        {!patterns && !isLoading && !error && (

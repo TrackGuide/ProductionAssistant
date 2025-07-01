@@ -76,6 +76,13 @@
     tempo: number;
     bars: number;
     timeSignature: [number, number];
+    key?: string;
+    scale?: string;
+    genre?: string;
+    chordProgression?: string;
+    songSection?: string;
+    guidebookContext?: string;
+    targetInstruments?: string[];
   }
 
   export type KeyOfGeneratedMidiPatterns = 'chords' | 'bassline' | 'melody' | 'drums';

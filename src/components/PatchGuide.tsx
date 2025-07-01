@@ -1,4 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useUser } from '../context/UserContext';
+import { SavePromptModal } from './SavePromptModal';
+import { Toast } from './Toast';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Spinner } from './Spinner';
@@ -44,9 +47,15 @@ class ErrorBoundary extends React.Component<
 }
 
 // ✅ Optimized component with better state management
-export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
+export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void, onSaveToLibrary?: (data: any) => void }> = ({ onContentUpdate, onSaveToLibrary }) => {
+  const { user, isGuest } = useUser();
+  // Modal and toast state
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   // ✅ Clean, consistent state structure
   const [inputs, setInputs] = useState<PatchGuideInputs>({
+    description: '',
     synthesisType: '',
     synthModel: undefined,
     genre: '',
@@ -140,8 +149,10 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
         synthModel: inputs.synthModel,
         genre: inputs.genre,
         voiceType: inputs.voiceType,
+        styleMood: inputs.styleMood,
+        dynamicsMovement: inputs.dynamicsMovement,
         notes: inputs.notes,
-        dawName: inputs.dawName
+        dawName: inputs.dawName,
       });
 
       const patchResult: PatchGuideResult = {
@@ -165,6 +176,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
   // ✅ Clean reset handler
   const handleReset = useCallback(() => {
     setInputs({
+      description: '',
       synthesisType: '',
       synthModel: undefined,
       genre: '',
@@ -378,15 +390,31 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
           <ErrorBoundary>
             <PatchGuideResults result={result} />
           </ErrorBoundary>
+          {/* Save to Library Button */}
+          {onSaveToLibrary && (
+            <div className="flex justify-end mt-4">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  if (!user || isGuest) {
+                    setShowAuthPrompt(true);
+                  } else {
+                    setShowSavePrompt(true);
+                  }
+                }}
+              >
+                Save to Library
+              </Button>
+            </div>
+          )}
           {/* Auto-show MIDI generator after patch is generated */}
           <div className="mt-8">
-            {/* Lazy load or directly import as needed */}
             {(() => {
               const MidiGeneratorComponent = require('./MidiGeneratorComponent').MidiGeneratorComponent;
               return (
                 <MidiGeneratorComponent
                   currentGuidebookEntry={{
-                    // Provide minimal required fields for MIDI generator
                     content: result.text,
                     genre: [inputs.genre],
                     midiSettings: {},
@@ -396,6 +424,43 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
             })()}
           </div>
         </>
+      )}
+      {/* Auth Prompt Modal */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Sign in to Save</h2>
+            <p className="mb-6 text-gray-700">You need to be logged in to save to your library.</p>
+            <div className="flex flex-col gap-3">
+              <button className="w-full bg-purple-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'login' })); }}>Log In</button>
+              <button className="w-full bg-green-600 text-white py-2 rounded font-semibold" onClick={() => { setShowAuthPrompt(false); window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' })); }}>Register</button>
+              <button className="w-full bg-gray-300 text-gray-800 py-2 rounded font-semibold" onClick={() => setShowAuthPrompt(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Save Prompt Modal */}
+      {onSaveToLibrary && result && (
+        <SavePromptModal
+          isOpen={showSavePrompt}
+          onClose={() => setShowSavePrompt(false)}
+          onSave={async (title, tags) => {
+            onSaveToLibrary({
+              ...result,
+              genre: [inputs.genre],
+              title,
+              tags,
+              type: 'patchGuide',
+            });
+            setShowSavePrompt(false);
+            setShowToast(true);
+          }}
+          generationType="patchGuide"
+        />
+      )}
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast message="Saved to library!" onClose={() => setShowToast(false)} />
       )}
     </div>
   );
