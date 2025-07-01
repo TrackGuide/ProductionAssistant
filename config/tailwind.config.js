@@ -2,7 +2,7 @@
 export default {
   content: [
     "./index.html",
-    "./App.tsx",
+    "./src/App.refactored.tsx",
     "./index.tsx",
     "./components/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
