@@ -8,7 +8,7 @@ import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
 // Add missing imports:
 import { PATCH_INPUT_CATEGORIES } from '../constants/patchConstants';
-import { generateSynthPatchGuide } from '../services/patchGuideServiceOptimized';
+import { generateSynthPatchGuideOptimized } from '../services/patchGuideServiceOptimized';
 import { SYNTHESIS_TYPES, MODEL_OVERRIDES } from '../constants/synthesisTypes';
 import { copyToClipboard } from '../utils/copyUtils';
 import { dawMetadata } from '../constants/dawMetadata';
@@ -116,7 +116,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
     setResult(null);
 
     try {
-      // Ensure description is never empty
+      // Revert to previous PatchGuide prompt logic
       let description = [
         ...inputs.styleMood,
         ...inputs.dynamicsMovement
@@ -125,8 +125,17 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
         description = inputs.notes?.trim() || 'No specific style or movement provided';
       }
 
-      const response = await generateSynthPatchGuide({
-        description,
+      // Compose a description string for the AI prompt
+      let descriptionStr = [
+        ...inputs.styleMood,
+        ...inputs.dynamicsMovement
+      ].join(', ');
+      if (!descriptionStr.trim()) {
+        descriptionStr = inputs.notes?.trim() || 'No specific style or movement provided';
+      }
+
+      const response = await generateSynthPatchGuideOptimized({
+        description: descriptionStr,
         synthesisType: inputs.synthesisType as any,
         synthModel: inputs.synthModel,
         genre: inputs.genre,
@@ -341,7 +350,7 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
               className="flex items-center gap-2"
             >
               {loading && <Spinner />}
-              {loading ? 'Generating...' : 'Generate Patch Guide'}
+              {loading ? 'Generating our TrackGuide...' : 'Generate Patch Guide'}
             </Button>
             
             <Button 
@@ -365,9 +374,28 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
 
       {/* ✅ Results Section */}
       {result && (
-        <ErrorBoundary>
-          <PatchGuideResults result={result} />
-        </ErrorBoundary>
+        <>
+          <ErrorBoundary>
+            <PatchGuideResults result={result} />
+          </ErrorBoundary>
+          {/* Auto-show MIDI generator after patch is generated */}
+          <div className="mt-8">
+            {/* Lazy load or directly import as needed */}
+            {(() => {
+              const MidiGeneratorComponent = require('./MidiGeneratorComponent').MidiGeneratorComponent;
+              return (
+                <MidiGeneratorComponent
+                  currentGuidebookEntry={{
+                    // Provide minimal required fields for MIDI generator
+                    content: result.text,
+                    genre: [inputs.genre],
+                    midiSettings: {},
+                  }}
+                />
+              );
+            })()}
+          </div>
+        </>
       )}
     </div>
   );

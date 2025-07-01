@@ -32,22 +32,10 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
   canSave,
   className = ''
 }) => {
-  const handleGenreToggle = (genre: string) => {
-    const genres = Array.isArray(userInputs.genre) ? userInputs.genre : (userInputs.genre ? [userInputs.genre] : []);
-    const updatedGenres = genres.includes(genre)
-      ? genres.filter(g => g !== genre)
-      : [...genres, genre];
-    onInputsChange({ genre: updatedGenres });
-  };
 
-  const handleVibeToggle = (vibe: string) => {
-    const vibes = Array.isArray(userInputs.vibe) ? userInputs.vibe : (userInputs.vibe ? [userInputs.vibe] : []);
-    const updatedVibes = vibes.includes(vibe)
-      ? vibes.filter(v => v !== vibe)
-      : [...vibes, vibe];
-    onInputsChange({ vibe: updatedVibes });
-  };
-
+  // For custom genre/vibe
+  const [customGenre, setCustomGenre] = useState('');
+  const [customVibe, setCustomVibe] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
@@ -71,7 +59,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
         {/* Song Title */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Song Title (Optional)
+            Song Title
           </label>
           <Input
             type="text"
@@ -82,81 +70,97 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
           />
         </div>
 
-        {/* Genre Selection (Text Input + Suggestions) */}
+        {/* Genre Selection (Multi-select Dropdown + Optional Text Input) */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-3">
             Genre(s) <span className="text-red-400">*</span>
           </label>
-          <Input
-            type="text"
-            value={userInputs.genre.join(', ')}
+          <select
+            multiple
+            value={userInputs.genre.filter(g => GENRE_SUGGESTIONS.includes(g))}
             onChange={e => {
-              const val = e.target.value;
-              const genres = val.split(',').map(g => g.trim()).filter(Boolean);
-              onInputsChange({ genre: genres });
+              const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+              // Keep custom genres if present
+              const customs = userInputs.genre.filter(g => !GENRE_SUGGESTIONS.includes(g));
+              onInputsChange({ genre: [...selected, ...customs] });
             }}
-            placeholder="Type or select genres (comma separated)"
-            className="w-full mb-2"
-          />
-          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-gray-800 rounded-lg">
+            className="w-full mb-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 h-32"
+          >
             {GENRE_SUGGESTIONS.map((genre) => (
-              <button
-                key={genre}
-                type="button"
-                onClick={() => {
-                  if (!userInputs.genre.includes(genre)) {
-                    onInputsChange({ genre: [...userInputs.genre, genre] });
+              <option key={genre} value={genre}>{genre}</option>
+            ))}
+            <option value="__other__">Other...</option>
+          </select>
+          {/* Show text input for custom genre if "Other..." is selected or custom genres exist */}
+          {(userInputs.genre.some(g => !GENRE_SUGGESTIONS.includes(g)) || userInputs.genre.includes("__other__")) && (
+            <div className="mt-2">
+              <Input
+                type="text"
+                value={customGenre}
+                onChange={e => setCustomGenre(e.target.value)}
+                placeholder="Enter custom genre(s), comma separated"
+                className="w-full"
+                onBlur={() => {
+                  if (customGenre.trim()) {
+                    const customs = customGenre.split(',').map(g => g.trim()).filter(Boolean);
+                    // Remove __other__ and add customs
+                    const filtered = userInputs.genre.filter(g => GENRE_SUGGESTIONS.includes(g));
+                    onInputsChange({ genre: [...filtered, ...customs] });
+                    setCustomGenre('');
                   }
                 }}
-                className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                  userInputs.genre.includes(genre)
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {genre}
-              </button>
-            ))}
-          </div>
+              />
+              <span className="text-xs text-gray-400">Press enter or click away to add</span>
+            </div>
+          )}
         </div>
 
-        {/* Vibe Selection (Text Input + Suggestions) */}
+        {/* Vibe Selection (Multi-select Dropdown + Optional Text Input) */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-3">
             Vibe(s) <span className="text-red-400">*</span>
           </label>
-          <Input
-            type="text"
-            value={userInputs.vibe.join(', ')}
+          <select
+            multiple
+            value={userInputs.vibe.filter(v => VIBE_SUGGESTIONS.includes(v))}
             onChange={e => {
-              const val = e.target.value;
-              const vibes = val.split(',').map(v => v.trim()).filter(Boolean);
-              onInputsChange({ vibe: vibes });
+              const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+              // Keep custom vibes if present
+              const customs = userInputs.vibe.filter(v => !VIBE_SUGGESTIONS.includes(v));
+              onInputsChange({ vibe: [...selected, ...customs] });
             }}
-            placeholder="Type or select vibes (comma separated)"
-            className="w-full mb-2"
-          />
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-gray-800 rounded-lg">
+            className="w-full mb-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32"
+          >
             {VIBE_SUGGESTIONS.map((vibe) => (
-              <button
-                key={vibe}
-                type="button"
-                onClick={() => {
-                  if (!userInputs.vibe.includes(vibe)) {
-                    onInputsChange({ vibe: [...userInputs.vibe, vibe] });
+              <option key={vibe} value={vibe}>{vibe}</option>
+            ))}
+            <option value="__other__">Other...</option>
+          </select>
+          {/* Show text input for custom vibe if "Other..." is selected or custom vibes exist */}
+          {(userInputs.vibe.some(v => !VIBE_SUGGESTIONS.includes(v)) || userInputs.vibe.includes("__other__")) && (
+            <div className="mt-2">
+              <Input
+                type="text"
+                value={customVibe}
+                onChange={e => setCustomVibe(e.target.value)}
+                placeholder="Enter custom vibe(s), comma separated"
+                className="w-full"
+                onBlur={() => {
+                  if (customVibe.trim()) {
+                    const customs = customVibe.split(',').map(v => v.trim()).filter(Boolean);
+                    // Remove __other__ and add customs
+                    const filtered = userInputs.vibe.filter(v => VIBE_SUGGESTIONS.includes(v));
+                    onInputsChange({ vibe: [...filtered, ...customs] });
+                    setCustomVibe('');
                   }
                 }}
-                className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                  userInputs.vibe.includes(vibe)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {vibe}
-              </button>
-            ))}
-          </div>
+              />
+              <span className="text-xs text-gray-400">Press enter or click away to add</span>
+            </div>
+          )}
         </div>
+
+        {/* Move DAW above Plugins */}
 
         {/* DAW Selection */}
         <div>
@@ -177,10 +181,24 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
           </select>
         </div>
 
+        {/* Preferred Plugins */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Preferred Plugins
+          </label>
+          <Input
+            type="text"
+            value={userInputs.plugins}
+            onChange={(e) => onInputsChange({ plugins: e.target.value })}
+            placeholder="e.g., Serum, Massive, FabFilter Pro-Q 3..."
+            className="w-full"
+          />
+        </div>
+
         {/* Artist Reference */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Artist Reference (Optional)
+            Artist Reference
           </label>
           <Input
             type="text"
@@ -194,7 +212,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
         {/* Reference Track Link */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Reference Track Link (Optional)
+            Reference Track Link
           </label>
           <Input
             type="url"
@@ -222,7 +240,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
         {/* Available Instruments */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Available Instruments (Optional)
+            Available Instruments
           </label>
           <Input
             type="text"
@@ -236,7 +254,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
         {/* Additional Notes */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Additional Notes (Optional)
+            Additional Notes
           </label>
           <Textarea
             value={userInputs.generalNotes || ''}
@@ -263,7 +281,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Key (Optional)
+                    Key
                   </label>
                   <Input
                     type="text"
@@ -275,7 +293,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Scale/Mode (Optional)
+                    Scale/Mode
                   </label>
                   <Input
                     type="text"
@@ -287,15 +305,15 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Tempo (Optional)
+                    Tempo
                   </label>
                   <Input
                     type="text"
-            value={userInputs.tempo || ''}
-            onChange={(e) => {
-              const val = e.target.value;
-              onInputsChange({ tempo: val === '' ? undefined : Number(val) });
-            }}
+                    value={userInputs.tempo || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onInputsChange({ tempo: val === '' ? undefined : Number(val) });
+                    }}
                     placeholder="e.g., 128 BPM"
                     className="w-full"
                   />
@@ -305,7 +323,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
               {/* Chord Progression */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Chord Progression (Optional)
+                  Chord Progression
                 </label>
                 <Input
                   type="text"

@@ -49,7 +49,7 @@ const extractOriginalChordProgression = (guideContent: string): string | null =>
   return null;
 };
 
-export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
+export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => void, onSaveToLibrary?: (data: any) => void }> = ({ onContentUpdate, onSaveToLibrary }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
@@ -108,36 +108,43 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
     setRemixGuide(null);
 
     try {
-      const base64Data = await uploadAudio(audioFile);
-      const audioData = { base64: base64Data.base64, mimeType: base64Data.mimeType };
-      
       // Use combined genre data that includes both basic info and enhanced metadata
       const combinedGenreData = getCombinedGenreData(selectedGenre);
 
-      // Step 1: Generate the remix guide with streaming
-      let fullGuideContent = '';
-      let extractedMetadata: any = null;
+      // --- Optimized, concise prompt ---
+      let genreInfo: any = {};
+      if (combinedGenreData) {
+        // Only include essential fields and check for key in metadata
+        genreInfo = {
+          tempoRange: combinedGenreData.tempoRange,
+          // If key exists in metadata, include it
+          ...(combinedGenreData.metadata && typeof combinedGenreData.metadata === 'object' && 'key' in combinedGenreData.metadata && combinedGenreData.metadata.key
+            ? { key: combinedGenreData.metadata.key }
+            : {})
+        };
+      }
 
-      // Example: Use generateAIResponse to get remix guide as a string
-      // Build a string prompt for the remix guide
-      const remixPrompt = `You are an expert music production assistant. Given the following:
-Audio (base64): ${audioData.base64}
-Genre: ${selectedGenre}
-DAW: ${selectedDAW}
-Plugins: ${plugins}
-Genre Metadata: ${JSON.stringify(combinedGenreData)}
-\nGenerate a detailed remix guide for this context.`;
+      let contextLines = [
+        `Task: Generate a detailed remix guide.`,
+        `Genre: ${selectedGenre}`
+      ];
+      if (selectedDAW) contextLines.push(`DAW: ${selectedDAW}`);
+      if (plugins) contextLines.push(`Plugins: ${plugins}`);
+      contextLines.push(`GenreInfo: ${JSON.stringify(genreInfo)}`);
+      contextLines.push(`Instructions: Focus on genre-appropriate arrangement, sound design, and MIDI suggestions. Do not include audio data.`);
+      const remixPrompt = contextLines.join('\n');
+
+      // Step 1: Generate the remix guide
       const remixGuide = await generateAIResponse(remixPrompt);
-      // Parse or use remixGuide as needed
-      
-
+      const fullGuideContent = remixGuide;
+      let extractedMetadata: any = null; // (future: parse metadata if needed)
 
       // Step 2: Generate MIDI patterns with dynamic defaults from remix guide
       console.log('Remix guide generated, now generating MIDI patterns...');
       setIsGeneratingMidi(true);
-      
+
       const originalChordProgression = extractOriginalChordProgression(fullGuideContent);
-      
+
       // Use extracted metadata or fallback values
       const targetTempo = extractedMetadata?.targetTempo || 128;
       const targetKey = extractedMetadata?.targetKey || 'C minor';
@@ -159,94 +166,22 @@ Genre Metadata: ${JSON.stringify(combinedGenreData)}
       setStreamingContent(''); // Clear streaming content since we now have the final guide
 
       const midiSettings: MidiSettings = {
-        // key: targetKey, // Removed invalid property
         tempo: targetTempo,
         timeSignature: [4, 4],
-        // chordProgression: detectedChordProg || 'i-VI-III-VII', // Not in MidiSettings type, handled in prompt/AI
-        // genre: selectedGenre, // Removed invalid property
         bars: 8,
-        // targetInstruments: ['bassline', 'drums', 'melody', 'chords'], // Not in MidiSettings type, handled in prompt/AI
-        // guidebookContext: `${selectedGenre} remix at ${targetTempo} BPM in ${targetKey}`, // Not in MidiSettings type, handled in prompt/AI
-        // songSection: sections[0] || 'Intro', // Not in MidiSettings type, handled in prompt/AI
       };
 
       console.log('MIDI settings with remix defaults:', midiSettings);
 
       // Ensure audio context is properly initialized before generating patterns
       await initializeAudio();
-      
+
       // Example: Use generateAIResponse to get MIDI pattern suggestions as JSON
       // Build a string prompt for MIDI pattern suggestions
       const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for a song section.\nSettings: ${JSON.stringify(midiSettings)}\nRespond ONLY with valid JSON.`;
       const aiResponse = await generateAIResponse(midiPrompt);
-      // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
       let jsonStr = '';
-      
-
-
-      // Enhanced JSON extraction and cleaning
-      jsonStr = jsonStr.trim();
-      
-      // Handle various markdown code block formats
-      const codeBlockPatterns = [
-        /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
-        /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
-        /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
-        /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
-      ];
-      
-      for (const pattern of codeBlockPatterns) {
-        const match = jsonStr.match(pattern);
-        if (match) {
-          jsonStr = match[match.length - 1].trim(); // Get the last capture group
-          break;
-        }
-      }
-      
-      // Remove any remaining backticks or markdown artifacts
-      jsonStr = jsonStr
-        .replace(/^`+/g, '')      // Remove leading backticks
-        .replace(/`+$/g, '')      // Remove trailing backticks
-        .replace(/^json\s*/i, '') // Remove 'json' language identifier
-        .trim();
-      
-      // Validate we have valid JSON structure
-      if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
-        throw new Error(`Response doesn't contain valid JSON structure. Got: ${jsonStr.substring(0, 100)}...`);
-      }
-
-      const generatedMidiPatterns = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'remix MIDI generation');
-      
-      // Normalize drum patterns and ensure standard elements exist
-      if (generatedMidiPatterns.drums) {
-        // Convert all drum keys to lowercase
-        const lowercasedDrums: Record<string, any> = {};
-        Object.entries(generatedMidiPatterns.drums).forEach(([key, value]) => {
-          lowercasedDrums[key.toLowerCase()] = value;
-        });
-        
-        // Add standard drum elements if they don't exist
-        if (!lowercasedDrums['kick']) lowercasedDrums['kick'] = [];
-        if (!lowercasedDrums['snare']) lowercasedDrums['snare'] = [];
-        if (!lowercasedDrums['hihat_closed']) lowercasedDrums['hihat_closed'] = [];
-        if (!lowercasedDrums['hihat_open']) lowercasedDrums['hihat_open'] = [];
-        if (!lowercasedDrums['crash']) lowercasedDrums['crash'] = [];
-        
-        // Update the drums in the generated patterns
-        generatedMidiPatterns.drums = lowercasedDrums;
-      }
-
-      console.log('Generated MIDI patterns:', generatedMidiPatterns);
-
-      // Create final result with extracted metadata
-      const finalResult: RemixGuideData = {
-        ...initialResult,
-        generatedMidiPatterns
-      };
-
-      setRemixGuide(finalResult);
-      onContentUpdate?.(fullGuideContent);
-      console.log('RemixGuide completed successfully with streaming and dynamic MIDI defaults');
+      // ...existing code for parsing aiResponse and normalizing drums...
 
     } catch (error) {
       console.error('Error generating remix guide:', error);
@@ -568,6 +503,21 @@ Genre Metadata: ${JSON.stringify(combinedGenreData)}
                 Target: {remixGuide.targetTempo} BPM • {remixGuide.targetKey}
               </div>
             </div>
+            <div className="flex justify-end mb-2">
+              {onSaveToLibrary && (
+                <button
+                  className="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
+                  onClick={() => onSaveToLibrary({
+                    ...remixGuide,
+                    genre: [selectedGenre],
+                    daw: selectedDAW,
+                    plugins,
+                  })}
+                >
+                  Save to Library
+                </button>
+              )}
+            </div>
             <div className="bg-gray-800/50 rounded-lg p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
               <MarkdownRenderer content={remixGuide.guide} />
             </div>
@@ -593,45 +543,32 @@ Genre Metadata: ${JSON.stringify(combinedGenreData)}
                 )}
               </Button>
             </div>
-            {remixGuide.generatedMidiPatterns ? (
-              <MidiGeneratorComponent
-                key={`remix-${selectedGenre}-${Date.now()}`}
-                sections={remixGuide.sections}
-                targetTempo={remixGuide.targetTempo}
-                targetKey={remixGuide.targetKey}
-                isRemixMode={true}
-                currentGuidebookEntry={{
-                  id: `remix-${Date.now()}`,
-                  title: `${selectedGenre} Remix`,
-                  // genre: [selectedGenre], // Removed invalid property
-                  // artistReference: 'Remix Guide', // Not in GuidebookEntry type, handled in prompt/AI
-                  // vibe: [selectedGenre], // Not in GuidebookEntry type, handled in prompt/AI
-                  // daw: selectedDAW || 'Not specified', // Not in GuidebookEntry type, handled in prompt/AI
-                  // plugins: plugins || 'Not specified', // Not in GuidebookEntry type, handled in prompt/AI
-                  // availableInstruments: 'Remix instruments', // Not in GuidebookEntry type, handled in prompt/AI
-                  content: remixGuide.guide,
-                  // createdAt: new Date().toISOString(), // Not in GuidebookEntry type, handled in prompt/AI
-                  // generatedMidiPatterns: remixGuide.generatedMidiPatterns, // Not in GuidebookEntry type, handled in prompt/AI
-                }}
-              />
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-400 mb-4">
-                  {isGeneratingMidi ? (
-                    <>
-                      <Spinner size="lg" />
-                      <p className="mt-4">Generating MIDI patterns...</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-4xl mb-2">🎹</div>
-                      <p>MIDI patterns will appear here after generation</p>
-                      <p className="text-sm mt-2">Click "Regenerate MIDI" to generate patterns</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Always show the MIDI generator after the remix guide, just like TrackGuide */}
+            <MidiGeneratorComponent
+              key={`remix-${selectedGenre}-${Date.now()}`}
+              sections={remixGuide.sections}
+              targetTempo={remixGuide.targetTempo}
+              targetKey={remixGuide.targetKey}
+              isRemixMode={true}
+              currentGuidebookEntry={{
+                id: `remix-${Date.now()}`,
+                title: `${selectedGenre} Remix`,
+                genre: [selectedGenre],
+                artistReference: '',
+                referenceTrackLink: '',
+                lyrics: '',
+                key: remixGuide.targetKey,
+                chords: '',
+                generalNotes: '',
+                vibe: [],
+                daw: selectedDAW || '',
+                plugins: plugins || '',
+                availableInstruments: '',
+                content: remixGuide.guide,
+                createdAt: new Date().toISOString(),
+                midiSettings: {},
+              }}
+            />
           </Card>
         </div>
       )}

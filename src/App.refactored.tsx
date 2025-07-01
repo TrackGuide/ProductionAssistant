@@ -1,12 +1,14 @@
 // src/App.refactored.tsx
 
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
 import { useAppState } from './hooks/useAppState';
 import { LibraryModal } from './components/LibraryModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Card } from './components/Card';
 import { LOCAL_STORAGE_KEY } from './constants/constants';
+import { SavePromptModal } from './components/SavePromptModal';
+import { Toast } from './components/Toast';
 
 // Lazy load feature components for better performance
 const TrackGuideFeature = lazy(() => 
@@ -74,8 +76,11 @@ const FeatureLoadingSkeleton: React.FC = () => (
 
 export const App: React.FC = () => {
   const { state, actions } = useAppState();
-  const [authPage, setAuthPage] = React.useState<string | null>(null);
-  const [isAIAssistantCollapsed, setAIAssistantCollapsed] = React.useState(true);
+  const [authPage, setAuthPage] = useState<string | null>(null);
+  const [isAIAssistantCollapsed, setAIAssistantCollapsed] = useState(true);
+  // Save prompt/modal state
+  const [showSavePrompt, setShowSavePrompt] = useState<null | { type: 'trackGuide' | 'mixFeedback' | 'mixCompare' | 'remixGuide' | 'patchGuide', data?: any }>(null);
+  const [showToast, setShowToast] = useState<string | null>(null);
 
   // Load library from localStorage on mount
   useEffect(() => {
@@ -100,6 +105,61 @@ export const App: React.FC = () => {
       console.warn('Failed to save library to localStorage:', error);
     }
   }, [state.library]);
+
+  // Save to Library handler for all features
+  const handleSaveToLibrary = (type: 'trackGuide' | 'mixFeedback' | 'mixCompare' | 'remixGuide' | 'patchGuide', data?: any) => {
+    setShowSavePrompt({ type, data });
+  };
+
+  // Actually save to library after prompt
+  const handleSavePrompt = async (title: string, tags: string[]) => {
+    if (!showSavePrompt) return;
+    const { type, data } = showSavePrompt;
+    // Compose entry for each type
+    let entry: any = {};
+    if (type === 'trackGuide' && state.currentGuidebook) {
+      entry = {
+        ...state.currentGuidebook,
+        title,
+        tags,
+        id: state.currentGuidebook.id || Date.now().toString(),
+        timestamp: Date.now(),
+      };
+    } else if ((type === 'mixFeedback' || type === 'mixCompare') && data) {
+      entry = {
+        ...data.inputs,
+        content: data.content,
+        title,
+        tags,
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        type,
+      };
+    } else if (type === 'remixGuide' && data) {
+      entry = {
+        ...data,
+        title,
+        tags,
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        type,
+      };
+    } else if (type === 'patchGuide' && data) {
+      entry = {
+        ...data,
+        title,
+        tags,
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        type,
+      };
+    }
+    if (entry && entry.title) {
+      actions.addToLibrary(entry);
+      setShowToast('Saved to library!');
+    }
+    setShowSavePrompt(null);
+  };
 
   // Render the appropriate feature based on active view
   const renderAppContent = () => {
@@ -137,25 +197,25 @@ export const App: React.FC = () => {
             case 'trackGuide':
               return (
                 <Suspense fallback={<FeatureLoadingSkeleton />}>
-                  <TrackGuideFeature />
+                  <TrackGuideFeature onSaveToLibrary={() => handleSaveToLibrary('trackGuide')} />
                 </Suspense>
               );
             case 'mixFeedback':
               return (
                 <Suspense fallback={<FeatureLoadingSkeleton />}>
-                  <MixFeedbackFeature />
+                  <MixFeedbackFeature onSaveToLibrary={(type, data) => handleSaveToLibrary(type, data)} />
                 </Suspense>
               );
             case 'remixGuide':
               return (
                 <Suspense fallback={<FeatureLoadingSkeleton />}>
-                  <RemixGuideAI />
+                  <RemixGuideAI onSaveToLibrary={(data) => handleSaveToLibrary('remixGuide', data)} />
                 </Suspense>
               );
             case 'patchGuide':
               return (
                 <Suspense fallback={<FeatureLoadingSkeleton />}>
-                  <PatchGuide />
+                  <PatchGuide onSaveToLibrary={(data) => handleSaveToLibrary('patchGuide', data)} />
                 </Suspense>
               );
             case 'eqGuide':
@@ -189,6 +249,18 @@ export const App: React.FC = () => {
               actions.setLibraryModalOpen(false);
             }}
           />
+        )}
+
+        {/* Save Prompt Modal for all features */}
+        <SavePromptModal
+          isOpen={!!showSavePrompt}
+          onClose={() => setShowSavePrompt(null)}
+          onSave={handleSavePrompt}
+          generationType={showSavePrompt?.type || 'trackGuide'}
+        />
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast message={showToast} onClose={() => setShowToast(null)} />
         )}
 
         {/* AI Assistant - can be opened from any view */}

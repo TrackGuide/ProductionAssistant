@@ -67,13 +67,12 @@ export const useMixFeedback = () => {
 
   const handleSingleMixFileChange = (file: File | null) => {
     if (!file) return;
-    
+    console.debug('[MixFeedback] handleSingleMixFileChange: file selected', file);
     const validationError = validateAudioFile(file);
     if (validationError) {
       setMixFeedbackError(validationError);
       return;
     }
-    
     setMixFeedbackInputs(prev => ({ ...prev, audioFile: file }));
     setMixFeedbackError(null);
   };
@@ -111,17 +110,19 @@ export const useMixFeedback = () => {
       let fullContent = '';
 
       await APIRetryService.executeWithRetry(async () => {
-        // Convert our inputs to the API format
-        const apiInputs: APIMixFeedbackInputs = {
+        // Convert our inputs to the API format (plain object for debug)
+        const apiInputs = {
           trackName: mixFeedbackInputs.trackName,
           userNotes: mixFeedbackInputs.userNotes,
           dawName: mixFeedbackInputs.dawName,
-          audioFile: mixFeedbackInputs.audioFile,
+          audioFile: mixFeedbackInputs.audioFile || undefined,
         };
-        
-        // Use generateAIResponse instead of streaming function
-        const prompt = `You are an expert mix engineer. Given the following track info and user notes, provide detailed mix feedback.\nInputs: ${JSON.stringify(apiInputs)}\nRespond with a clear, actionable review.`;
-        fullContent = await generateAIResponse(prompt);
+        console.debug('[MixFeedback] generateSingleMixFeedback: apiInputs', apiInputs);
+        if (apiInputs.audioFile) {
+          console.debug('[MixFeedback] audioFile name:', apiInputs.audioFile.name, 'size:', apiInputs.audioFile.size, 'type:', apiInputs.audioFile.type);
+        }
+        // Use generateMixFeedback to send audio file to backend
+        fullContent = await import('../../../services/geminiService').then(m => m.generateMixFeedback(apiInputs));
         setStreamingMixFeedback(fullContent);
       }, { component: 'MixFeedback', operation: 'generateSingleMixFeedback' });
 

@@ -1,6 +1,6 @@
 // src/features/trackGuide/components/TrackGuideFeature.tsx
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { TrackGuideForm } from './TrackGuideForm';
 import { TrackGuideResults } from './TrackGuideResults';
 import { TrackGuideErrorBoundary } from '../../../components/ErrorBoundary';
@@ -9,7 +9,7 @@ import { useAppState, useCurrentGuidebook, useUserInputs, useLoadingAndErrors } 
 import { UserInputs } from '../../../constants/types';
 import { Card } from '../../../components/Card';
 
-export const TrackGuideFeature: React.FC = () => {
+export const TrackGuideFeature: React.FC<{ onSaveToLibrary: () => void }> = ({ onSaveToLibrary }) => {
   const { state, actions } = useAppState();
   const { currentGuidebook, setCurrentGuidebook, generatedContent, setGeneratedContent } = useCurrentGuidebook();
   const { userInputs, setUserInputs, resetUserInputs } = useUserInputs();
@@ -57,22 +57,7 @@ export const TrackGuideFeature: React.FC = () => {
     clearError
   ]);
 
-  // Handle saving to library
-  const handleSaveToLibrary = useCallback(() => {
-    if (!currentGuidebook) return;
-    
-    // Update the guidebook with current content
-    const updatedGuidebook = {
-      ...currentGuidebook,
-      content: generatedContent
-    };
-    
-    actions.addToLibrary(updatedGuidebook);
-    
-    // Show success message briefly
-    setLoadingMessage('Saved to library!');
-    setTimeout(() => setLoadingMessage(''), 2000);
-  }, [currentGuidebook, generatedContent, actions, setLoadingMessage]);
+  // Use the provided onSaveToLibrary prop
 
   // Handle opening library
   const handleViewLibrary = useCallback(() => {
@@ -108,7 +93,7 @@ export const TrackGuideFeature: React.FC = () => {
               userInputs={userInputs}
               onInputsChange={handleInputsChange}
               onSubmit={handleGenerateGuide}
-              onSaveToLibrary={handleSaveToLibrary}
+              onSaveToLibrary={onSaveToLibrary}
               onViewLibrary={handleViewLibrary}
               onClearForm={handleClearForm}
               isLoading={isLoading}
@@ -180,6 +165,17 @@ export const TrackGuideFeature: React.FC = () => {
             )}
           </div>
         </div>
+        {/* Save Prompt Modal */}
+        <SavePromptModal
+          isOpen={showSavePrompt}
+          onClose={() => setShowSavePrompt(false)}
+          onSave={handleSavePrompt}
+          generationType="trackGuide"
+        />
+        {/* Toast Notification */}
+        {showToast && (
+          <Toast message="Saved to library!" onClose={() => setShowToast(false)} />
+        )}
       </div>
     </TrackGuideErrorBoundary>
   );

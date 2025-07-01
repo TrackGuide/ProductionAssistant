@@ -62,7 +62,7 @@ class ErrorBoundary extends React.Component<
 }
 
 // ✅ Optimized component with better state management
-export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void }> = ({ onContentUpdate }) => {
+export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void, onSaveToLibrary?: (data: any) => void }> = ({ onContentUpdate, onSaveToLibrary }) => {
   // ✅ Clean, consistent state structure
   const [inputs, setInputs] = useState<PatchGuideInputs>({
     synthesisType: '',
@@ -384,6 +384,16 @@ export const PatchGuide: React.FC<{ onContentUpdate?: (content: string) => void 
       {/* ✅ Results Section */}
       {result && (
         <ErrorBoundary>
+          <div className="flex justify-end mb-2">
+            {onSaveToLibrary && (
+              <button
+                className="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
+                onClick={() => onSaveToLibrary({ ...inputs, content: result.text })}
+              >
+                Save to Library
+              </button>
+            )}
+          </div>
           <PatchGuideResults result={result} />
         </ErrorBoundary>
       )}

@@ -1,10 +1,9 @@
 export interface PatchGuideInputs {
+  description: string;
   synthesisType: string;
   synthModel?: string;
   genre: string;
   voiceType: string;
-  styleMood: string[];
-  dynamicsMovement: string[];
   notes: string;
   dawName?: string;
 }

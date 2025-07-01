@@ -222,7 +222,6 @@ You are an expert remix producer. Create a detailed remix guide based on:
 ${inputs.userNotes || 'None'}
 
 Provide a comprehensive remix guide including:
-
 1. **Remix Concept & Approach**
 2. **Key Elements to Preserve**
 3. **Elements to Transform**
@@ -234,7 +233,30 @@ Provide a comprehensive remix guide including:
 Be specific about techniques, effects, and creative decisions.
 `;
 
-    const result = await model.generateContent(prompt);
+    // Build Gemini multimodal parts
+    const parts: any[] = [{ text: prompt }];
+
+    // If an audio file is present, convert to base64 and attach as inlineData
+    if (inputs.audioFile instanceof File) {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(inputs.audioFile);
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+      });
+      parts.push({
+        inlineData: {
+          data: base64,
+          mimeType: inputs.audioFile.type || 'audio/wav',
+        }
+      });
+    }
+
+    // Use Gemini multimodal API
+    const result = await model.generateContent(parts);
     const response = await result.response;
     return response.text();
 
@@ -291,18 +313,14 @@ export const generateMixFeedback = async (inputs: any): Promise<string> => {
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
 
     const prompt = `
-You are an expert mixing engineer. Analyze the provided mix information and give detailed feedback:
+You are an expert mixing engineer. Analyze the provided mix and give detailed feedback:
 
 **Mix Details:**
-- Genre: ${inputs.genre || 'Not specified'}
 - DAW: ${inputs.dawName || 'Not specified'}
-- Track Elements: ${inputs.trackElements?.join(', ') || 'Not specified'}
-- Current Issues: ${inputs.currentIssues || 'None specified'}
-- Reference Track: ${inputs.referenceTrack || 'None'}
+- Track Name: ${inputs.trackName || 'Not specified'}
 - User Notes: ${inputs.userNotes || 'None'}
 
 Provide comprehensive mix feedback including:
-
 1. **Overall Mix Assessment**
 2. **Frequency Balance Analysis**
 3. **Stereo Field Evaluation**
@@ -316,7 +334,31 @@ Provide comprehensive mix feedback including:
 Be specific and actionable with your recommendations.
 `;
 
-    const result = await model.generateContent(prompt);
+    // Build Gemini multimodal parts (reference: compareMixes)
+    const parts: any[] = [{ text: prompt }];
+
+    // If an audio file is present, convert to base64 and attach as inlineData
+    if (inputs.audioFile instanceof File) {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(inputs.audioFile);
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+      });
+      parts.push({
+        inlineData: {
+          data: base64,
+          mimeType: inputs.audioFile.type || 'audio/wav',
+        }
+      });
+    }
+
+    // Use Gemini multimodal API (fix: pass parts array directly)
+    // See: https://ai.google.dev/gemini-api/docs/prompting/send-content
+    const result = await model.generateContent(parts);
     const response = await result.response;
     return response.text();
 

@@ -5,7 +5,7 @@ import { useMixFeedback } from '../hooks/useMixFeedback';
 import { MixFeedbackForm } from './MixFeedbackForm';
 import { MixFeedbackResults } from './MixFeedbackResults';
 
-export const MixFeedbackFeature: React.FC = () => {
+export const MixFeedbackFeature: React.FC<{ onSaveToLibrary: (type: 'mixFeedback' | 'mixCompare', data: any) => void }> = ({ onSaveToLibrary }) => {
   const {
     // Single Mix Feedback
     mixFeedbackInputs,
@@ -51,7 +51,6 @@ export const MixFeedbackFeature: React.FC = () => {
             resetSingleMixForm={resetSingleMixForm}
             isGeneratingMixFeedback={isGeneratingMixFeedback}
             mixFeedbackError={mixFeedbackError}
-            
             // Mix Compare Props
             mixCompareInputs={mixCompareInputs}
             updateMixCompareInputs={updateMixCompareInputs}
@@ -60,14 +59,12 @@ export const MixFeedbackFeature: React.FC = () => {
             resetMixCompareForm={resetMixCompareForm}
             isGeneratingMixComparison={isGeneratingMixComparison}
             mixCompareError={mixCompareError}
-            
             // UI Props
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             maxFileSizeMB={MAX_AUDIO_FILE_SIZE_MB}
           />
         </div>
-        
         {/* Results Section */}
         <div className="lg:col-span-3 space-y-6">
           <MixFeedbackResults
@@ -76,15 +73,16 @@ export const MixFeedbackFeature: React.FC = () => {
             streamingMixFeedback={streamingMixFeedback}
             isGeneratingMixFeedback={isGeneratingMixFeedback}
             mixFeedbackError={mixFeedbackError}
-            
             // Mix Comparison Results
             mixCompareResult={mixCompareResult}
             streamingMixComparison={streamingMixComparison}
             isGeneratingMixComparison={isGeneratingMixComparison}
             mixCompareError={mixCompareError}
-            
             // UI State
             activeTab={activeTab}
+            onSaveToLibrary={onSaveToLibrary}
+            mixFeedbackInputs={mixFeedbackInputs}
+            mixCompareInputs={mixCompareInputs}
           />
         </div>
       </div>

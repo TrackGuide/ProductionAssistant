@@ -112,12 +112,26 @@ export const MixFeedbackForm: React.FC<MixFeedbackFormProps> = ({
                 value={mixFeedbackInputs.trackName}
                 onChange={(e) => updateMixFeedbackInputs({ trackName: e.target.value })}
               />
-              <Input
-                label="DAW Used"
-                placeholder="e.g., Logic Pro, Ableton, FL Studio"
-                value={mixFeedbackInputs.dawName}
-                onChange={(e) => updateMixFeedbackInputs({ dawName: e.target.value })}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">DAW Used</label>
+                <select
+                  value={mixFeedbackInputs.dawName}
+                  onChange={e => updateMixFeedbackInputs({ dawName: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Select DAW (optional)</option>
+                  <option value="Ableton Live">Ableton Live</option>
+                  <option value="Logic Pro">Logic Pro</option>
+                  <option value="FL Studio">FL Studio</option>
+                  <option value="Pro Tools">Pro Tools</option>
+                  <option value="Reaper">Reaper</option>
+                  <option value="Cubase">Cubase</option>
+                  <option value="Studio One">Studio One</option>
+                  <option value="Reason">Reason</option>
+                  <option value="Bitwig Studio">Bitwig Studio</option>
+                  <option value="GarageBand">GarageBand</option>
+                </select>
+              </div>
             </div>
           </Card>
 

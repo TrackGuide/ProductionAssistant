@@ -4,22 +4,24 @@ import React from 'react';
 import { Card } from '../../../components/Card';
 import { Spinner } from '../../../components/Spinner';
 import { MarkdownRenderer } from '../../../components/MarkdownRenderer';
-
 interface MixFeedbackResultsProps {
   // Single Mix Results
   mixFeedbackResult: string | null;
   streamingMixFeedback: string;
   isGeneratingMixFeedback: boolean;
   mixFeedbackError: string | null;
-  
   // Mix Comparison Results
   mixCompareResult: string | null;
   streamingMixComparison: string;
   isGeneratingMixComparison: boolean;
   mixCompareError: string | null;
-  
   // UI State
   activeTab: 'single' | 'compare';
+  // Save to Library
+  onSaveToLibrary: (type: 'mixFeedback' | 'mixCompare', data: any) => void;
+  mixFeedbackInputs: any;
+  mixCompareInputs: any;
+// removed stray bracket
 }
 
 const TrackGuideLogo = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -115,6 +117,14 @@ export const MixFeedbackResults: React.FC<MixFeedbackResultsProps> = ({
         className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
         titleClassName="border-b border-gray-700 text-xl !text-orange-300"
       >
+        <div className="flex justify-end mb-2">
+          <button
+            className="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
+            onClick={() => onSaveToLibrary('mixFeedback', { content: mixFeedbackResult, inputs: mixFeedbackInputs })}
+          >
+            Save to Library
+          </button>
+        </div>
         <div 
           id="mix-feedback-display" 
           className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content"
@@ -143,6 +153,14 @@ export const MixFeedbackResults: React.FC<MixFeedbackResultsProps> = ({
         className="bg-gray-800/80 backdrop-blur-md shadow-xl border border-gray-700/50 sticky top-8"
         titleClassName="border-b border-gray-700 text-xl !text-orange-300"
       >
+        <div className="flex justify-end mb-2">
+          <button
+            className="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
+            onClick={() => onSaveToLibrary('mixCompare', { content: mixCompareResult, inputs: mixCompareInputs })}
+          >
+            Save to Library
+          </button>
+        </div>
         <div 
           id="mix-comparison-display" 
           className="prose prose-sm md:prose-base prose-invert max-w-none max-h-[calc(100vh-6rem)] overflow-y-auto pr-3 text-gray-300 custom-scrollbar guidebook-content"

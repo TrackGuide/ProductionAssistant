@@ -953,10 +953,10 @@ export const uploadAudio = async (file: File): Promise<{ base64: string; mimeTyp
       return;
     }
     
-    // Validate file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024;
+    // Validate file size (100MB limit)
+    const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
-      reject(new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 50MB.`));
+      reject(new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 100MB.`));
       return;
     }
     
