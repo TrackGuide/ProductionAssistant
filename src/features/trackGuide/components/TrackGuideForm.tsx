@@ -1,6 +1,6 @@
 // src/features/trackGuide/components/TrackGuideForm.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../../components/Card';
 import { Button } from '../../../components/Button';
 import { Input } from '../../../components/Input';
@@ -33,18 +33,22 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
   className = ''
 }) => {
   const handleGenreToggle = (genre: string) => {
-    const updatedGenres = userInputs.genre.includes(genre)
-      ? userInputs.genre.filter(g => g !== genre)
-      : [...userInputs.genre, genre];
+    const genres = Array.isArray(userInputs.genre) ? userInputs.genre : (userInputs.genre ? [userInputs.genre] : []);
+    const updatedGenres = genres.includes(genre)
+      ? genres.filter(g => g !== genre)
+      : [...genres, genre];
     onInputsChange({ genre: updatedGenres });
   };
 
   const handleVibeToggle = (vibe: string) => {
-    const updatedVibes = userInputs.vibe.includes(vibe)
-      ? userInputs.vibe.filter(v => v !== vibe)
-      : [...userInputs.vibe, vibe];
+    const vibes = Array.isArray(userInputs.vibe) ? userInputs.vibe : (userInputs.vibe ? [userInputs.vibe] : []);
+    const updatedVibes = vibes.includes(vibe)
+      ? vibes.filter(v => v !== vibe)
+      : [...vibes, vibe];
     onInputsChange({ vibe: updatedVibes });
   };
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
     <Card className={`space-y-6 ${className}`}>
@@ -78,17 +82,32 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
           />
         </div>
 
-        {/* Genre Selection */}
+        {/* Genre Selection (Text Input + Suggestions) */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-3">
             Genre(s) <span className="text-red-400">*</span>
           </label>
+          <Input
+            type="text"
+            value={userInputs.genre.join(', ')}
+            onChange={e => {
+              const val = e.target.value;
+              const genres = val.split(',').map(g => g.trim()).filter(Boolean);
+              onInputsChange({ genre: genres });
+            }}
+            placeholder="Type or select genres (comma separated)"
+            className="w-full mb-2"
+          />
           <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-gray-800 rounded-lg">
             {GENRE_SUGGESTIONS.map((genre) => (
               <button
                 key={genre}
                 type="button"
-                onClick={() => handleGenreToggle(genre)}
+                onClick={() => {
+                  if (!userInputs.genre.includes(genre)) {
+                    onInputsChange({ genre: [...userInputs.genre, genre] });
+                  }
+                }}
                 className={`px-3 py-1 rounded-full text-xs transition-colors ${
                   userInputs.genre.includes(genre)
                     ? 'bg-orange-600 text-white'
@@ -99,24 +118,34 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
               </button>
             ))}
           </div>
-          {userInputs.genre.length > 0 && (
-            <div className="mt-2 text-sm text-gray-400">
-              Selected: {userInputs.genre.join(', ')}
-            </div>
-          )}
         </div>
 
-        {/* Vibe Selection */}
+        {/* Vibe Selection (Text Input + Suggestions) */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-3">
             Vibe(s) <span className="text-red-400">*</span>
           </label>
+          <Input
+            type="text"
+            value={userInputs.vibe.join(', ')}
+            onChange={e => {
+              const val = e.target.value;
+              const vibes = val.split(',').map(v => v.trim()).filter(Boolean);
+              onInputsChange({ vibe: vibes });
+            }}
+            placeholder="Type or select vibes (comma separated)"
+            className="w-full mb-2"
+          />
           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-gray-800 rounded-lg">
             {VIBE_SUGGESTIONS.map((vibe) => (
               <button
                 key={vibe}
                 type="button"
-                onClick={() => handleVibeToggle(vibe)}
+                onClick={() => {
+                  if (!userInputs.vibe.includes(vibe)) {
+                    onInputsChange({ vibe: [...userInputs.vibe, vibe] });
+                  }
+                }}
                 className={`px-3 py-1 rounded-full text-xs transition-colors ${
                   userInputs.vibe.includes(vibe)
                     ? 'bg-blue-600 text-white'
@@ -127,11 +156,6 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
               </button>
             ))}
           </div>
-          {userInputs.vibe.length > 0 && (
-            <div className="mt-2 text-sm text-gray-400">
-              Selected: {userInputs.vibe.join(', ')}
-            </div>
-          )}
         </div>
 
         {/* DAW Selection */}
@@ -181,61 +205,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
           />
         </div>
 
-        {/* Musical Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Key (Optional)
-            </label>
-            <Input
-              type="text"
-              value={userInputs.key || ''}
-              onChange={(e) => onInputsChange({ key: e.target.value })}
-              placeholder="e.g., C Major, A Minor"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Scale/Mode (Optional)
-            </label>
-            <Input
-              type="text"
-              value={userInputs.scale || ''}
-              onChange={(e) => onInputsChange({ scale: e.target.value })}
-              placeholder="e.g., Dorian, Mixolydian"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Tempo (Optional)
-            </label>
-            <Input
-              type="text"
-              value={userInputs.chords || ''}
-              onChange={(e) => onInputsChange({ chords: e.target.value })}
-              placeholder="e.g., 128 BPM"
-              className="w-full"
-            />
-          </div>
-        </div>
-
-        {/* Chord Progression */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Chord Progression (Optional)
-          </label>
-          <Input
-            type="text"
-            value={userInputs.chords || ''}
-            onChange={(e) => onInputsChange({ chords: e.target.value })}
-            placeholder="e.g., I-V-vi-IV, Cm-Ab-Eb-Bb"
-            className="w-full"
-          />
-        </div>
-
-        {/* Plugins */}
+        {/* Preferred Plugins */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Preferred Plugins (Optional)
@@ -263,21 +233,7 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
           />
         </div>
 
-        {/* Lyrics */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Lyrics or Vocal Ideas (Optional)
-          </label>
-          <Textarea
-            value={userInputs.lyrics || ''}
-            onChange={(e) => onInputsChange({ lyrics: e.target.value })}
-            placeholder="Enter lyrics, vocal melodies, or thematic ideas..."
-            className="w-full"
-            rows={4}
-          />
-        </div>
-
-        {/* General Notes */}
+        {/* Additional Notes */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Additional Notes (Optional)
@@ -289,6 +245,78 @@ export const TrackGuideForm: React.FC<TrackGuideFormProps> = ({
             className="w-full"
             rows={3}
           />
+        </div>
+
+        {/* Advanced Options Collapsible */}
+        <div>
+          <button
+            type="button"
+            className="text-orange-400 underline text-sm mb-2 focus:outline-none"
+            onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
+          >
+            {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}
+          </button>
+          {showAdvanced && (
+            <div className="space-y-4 bg-gray-800 rounded-lg p-4 mt-2">
+              {/* Musical Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Key (Optional)
+                  </label>
+                  <Input
+                    type="text"
+                    value={userInputs.key || ''}
+                    onChange={(e) => onInputsChange({ key: e.target.value })}
+                    placeholder="e.g., C Major, A Minor"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Scale/Mode (Optional)
+                  </label>
+                  <Input
+                    type="text"
+                    value={userInputs.scale || ''}
+                    onChange={(e) => onInputsChange({ scale: e.target.value })}
+                    placeholder="e.g., Dorian, Mixolydian"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tempo (Optional)
+                  </label>
+                  <Input
+                    type="text"
+            value={userInputs.tempo || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              onInputsChange({ tempo: val === '' ? undefined : Number(val) });
+            }}
+                    placeholder="e.g., 128 BPM"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Chord Progression */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Chord Progression (Optional)
+                </label>
+                <Input
+                  type="text"
+                  value={userInputs.chords || ''}
+                  onChange={(e) => onInputsChange({ chords: e.target.value })}
+                  placeholder="e.g., I-V-vi-IV, Cm-Ab-Eb-Bb"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

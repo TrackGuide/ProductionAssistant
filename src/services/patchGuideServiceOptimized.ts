@@ -1,5 +1,5 @@
 // services/patchGuideServiceOptimized.ts
-import { generateContent } from './geminiService';
+import { generateAIResponse } from './geminiService';
 import synthConfigsJson from '../components/synthconfigs.json';
 import { SYNTHESIS_SCHEMA, SynthesisType } from '../constants/synthesisTypes';
 import { getGenreMetadata } from '../constants/genreMetadata';
@@ -560,7 +560,7 @@ export const generateSynthPatchGuideOptimized = async (inputs: PatchGuideInputs)
     
     const prompt = generatePrompt(inputs, synthConfig);
     
-    const responseText = await generateContent(prompt);
+    const responseText = await generateAIResponse(prompt);
     if (!responseText) {
       throw new Error('No response received from AI');
     }

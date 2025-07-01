@@ -75,6 +75,7 @@ const FeatureLoadingSkeleton: React.FC = () => (
 export const App: React.FC = () => {
   const { state, actions } = useAppState();
   const [authPage, setAuthPage] = React.useState<string | null>(null);
+  const [isAIAssistantCollapsed, setAIAssistantCollapsed] = React.useState(true);
 
   // Load library from localStorage on mount
   useEffect(() => {
@@ -101,7 +102,8 @@ export const App: React.FC = () => {
   }, [state.library]);
 
   // Render the appropriate feature based on active view
-  const renderActiveFeature = () => {
+  const renderAppContent = () => {
+    // Standalone pages (no app shell)
     if (authPage === 'login') {
       const LoginPage = require('./components/LoginPage').default;
       return <LoginPage />;
@@ -110,71 +112,81 @@ export const App: React.FC = () => {
       const RegisterPage = require('./components/RegisterPage').default;
       return <RegisterPage />;
     }
-    // Optionally handle guest logic here
-    switch (state.activeView) {
-      case 'landing':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <LandingPage onNavigate={actions.setActiveView} />
-          </Suspense>
-        );
-      case 'trackGuide':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <TrackGuideFeature />
-          </Suspense>
-        );
-      case 'mixFeedback':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <MixFeedbackFeature />
-          </Suspense>
-        );
-      case 'remixGuide':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <RemixGuideAI />
-          </Suspense>
-        );
-      case 'patchGuide':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <PatchGuide />
-          </Suspense>
-        );
-      case 'eqGuide':
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <EQGuide />
-          </Suspense>
-        );
-      default:
-        return (
-          <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <LandingPage onNavigate={actions.setActiveView} />
-          </Suspense>
-        );
+    if (state.activeView === 'landing') {
+      return (
+        <Suspense fallback={<FeatureLoadingSkeleton />}>
+          <LandingPage onGetStarted={() => actions.setActiveView('trackGuide')} />
+        </Suspense>
+      );
     }
-  };
 
-  return (
-    <ErrorBoundary>
-      <AppLayout onNavigateAuthPage={setAuthPage}>
-        {renderActiveFeature()}
+    // Main app shell for all other views
+    const handleNavigate = (view: string) => {
+      if (view === 'login' || view === 'register') {
+        setAuthPage(view);
+      } else {
+        setAuthPage(null);
+        actions.setActiveView(view as any);
+      }
+    };
+    return (
+      <AppLayout onNavigate={handleNavigate}>
+        {/* Feature view */}
+        {(() => {
+          switch (state.activeView) {
+            case 'trackGuide':
+              return (
+                <Suspense fallback={<FeatureLoadingSkeleton />}>
+                  <TrackGuideFeature />
+                </Suspense>
+              );
+            case 'mixFeedback':
+              return (
+                <Suspense fallback={<FeatureLoadingSkeleton />}>
+                  <MixFeedbackFeature />
+                </Suspense>
+              );
+            case 'remixGuide':
+              return (
+                <Suspense fallback={<FeatureLoadingSkeleton />}>
+                  <RemixGuideAI />
+                </Suspense>
+              );
+            case 'patchGuide':
+              return (
+                <Suspense fallback={<FeatureLoadingSkeleton />}>
+                  <PatchGuide />
+                </Suspense>
+              );
+            case 'eqGuide':
+              return (
+                <Suspense fallback={<FeatureLoadingSkeleton />}>
+                  <EQGuide />
+                </Suspense>
+              );
+            default:
+              return null;
+          }
+        })()}
 
         {/* Global Modals */}
         {state.isLibraryModalOpen && (
           <LibraryModal
             library={state.library}
             onClose={() => actions.setLibraryModalOpen(false)}
-            onSelect={(guidebook) => {
-              actions.setCurrentGuidebook(guidebook);
-              actions.setGeneratedContent(guidebook.content);
+            onLoadEntry={(entry) => {
+              actions.setCurrentGuidebook(entry);
+              actions.setGeneratedContent(entry.content);
               actions.setActiveView('trackGuide');
               actions.setLibraryModalOpen(false);
             }}
-            onDelete={(id) => {
+            onDeleteEntry={(id) => {
               actions.removeFromLibrary(id);
+            }}
+            onCreateNew={() => {
+              actions.setCurrentGuidebook(null);
+              actions.setActiveView('trackGuide');
+              actions.setLibraryModalOpen(false);
             }}
           />
         )}
@@ -182,11 +194,8 @@ export const App: React.FC = () => {
         {/* AI Assistant - can be opened from any view */}
         <Suspense fallback={null}>
           <AIAssistant
-            isOpen={false}
-            onClose={() => {}}
-            currentGuidebook={state.currentGuidebook}
-            userInputs={state.userInputs}
-            activeView={state.activeView}
+            isCollapsed={isAIAssistantCollapsed}
+            onToggleCollapse={() => setAIAssistantCollapsed((prev) => !prev)}
           />
         </Suspense>
 
@@ -194,12 +203,13 @@ export const App: React.FC = () => {
         {state.activeView === 'trackGuide' && state.currentGuidebook && (
           <Suspense fallback={null}>
             <MidiGeneratorComponent
-              guidebookContext={state.currentGuidebook.content}
-              isVisible={true}
+              currentGuidebookEntry={state.currentGuidebook}
             />
           </Suspense>
         )}
       </AppLayout>
-    </ErrorBoundary>
-  );
+    );
+  };
+
+  return renderAppContent();
 };

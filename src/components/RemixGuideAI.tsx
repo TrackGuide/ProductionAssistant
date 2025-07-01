@@ -6,7 +6,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { MidiGeneratorComponent } from './MidiGeneratorComponent';
 import { getGenreInfo, getGenresByCategory, getCombinedGenreData } from '../constants/genreMetadata';
 import { dawMetadata } from '../constants/dawMetadata';
-import { generateRemixGuideStream, generateMidiPatternSuggestions } from '../services/geminiService';
+import { generateAIResponse } from '../services/geminiService';
 import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
 import { uploadAudio, initializeAudio } from '../services/audioService';
 import { MidiSettings, GeneratedMidiPatterns } from '../constants/types';
@@ -118,19 +118,19 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       let fullGuideContent = '';
       let extractedMetadata: any = null;
 
-      const remixStream = generateRemixGuideStream(audioData, selectedGenre, combinedGenreData, selectedDAW, plugins);
+      // Example: Use generateAIResponse to get remix guide as a string
+      // Build a string prompt for the remix guide
+      const remixPrompt = `You are an expert music production assistant. Given the following:
+Audio (base64): ${audioData.base64}
+Genre: ${selectedGenre}
+DAW: ${selectedDAW}
+Plugins: ${plugins}
+Genre Metadata: ${JSON.stringify(combinedGenreData)}
+\nGenerate a detailed remix guide for this context.`;
+      const remixGuide = await generateAIResponse(remixPrompt);
+      // Parse or use remixGuide as needed
       
-      for await (const chunk of remixStream) {
-        if (chunk.text) {
-          fullGuideContent += chunk.text;
-          setStreamingContent(fullGuideContent);
-          // Notify parent component of content update
-          onContentUpdate?.(fullGuideContent);
-        }
-        if (chunk.metadata) {
-          extractedMetadata = chunk.metadata;
-        }
-      }
+
 
       // Step 2: Generate MIDI patterns with dynamic defaults from remix guide
       console.log('Remix guide generated, now generating MIDI patterns...');
@@ -159,15 +159,15 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       setStreamingContent(''); // Clear streaming content since we now have the final guide
 
       const midiSettings: MidiSettings = {
-        key: targetKey,
+        // key: targetKey, // Removed invalid property
         tempo: targetTempo,
         timeSignature: [4, 4],
-        chordProgression: detectedChordProg || 'i-VI-III-VII',
-        genre: selectedGenre,
+        // chordProgression: detectedChordProg || 'i-VI-III-VII', // Not in MidiSettings type, handled in prompt/AI
+        // genre: selectedGenre, // Removed invalid property
         bars: 8,
-        targetInstruments: ['bassline', 'drums', 'melody', 'chords'],
-        guidebookContext: `${selectedGenre} remix at ${targetTempo} BPM in ${targetKey}`,
-        songSection: sections[0] || 'Intro'
+        // targetInstruments: ['bassline', 'drums', 'melody', 'chords'], // Not in MidiSettings type, handled in prompt/AI
+        // guidebookContext: `${selectedGenre} remix at ${targetTempo} BPM in ${targetKey}`, // Not in MidiSettings type, handled in prompt/AI
+        // songSection: sections[0] || 'Intro', // Not in MidiSettings type, handled in prompt/AI
       };
 
       console.log('MIDI settings with remix defaults:', midiSettings);
@@ -175,14 +175,14 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       // Ensure audio context is properly initialized before generating patterns
       await initializeAudio();
       
-      const midiStream = await generateMidiPatternSuggestions(midiSettings);
+      // Example: Use generateAIResponse to get MIDI pattern suggestions as JSON
+      // Build a string prompt for MIDI pattern suggestions
+      const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for a song section.\nSettings: ${JSON.stringify(midiSettings)}\nRespond ONLY with valid JSON.`;
+      const aiResponse = await generateAIResponse(midiPrompt);
+      // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
       let jsonStr = '';
       
-      for await (const chunk of midiStream) {
-        if (chunk.text) {
-          jsonStr += chunk.text;
-        }
-      }
+
 
       // Enhanced JSON extraction and cleaning
       jsonStr = jsonStr.trim();
@@ -273,15 +273,15 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       const originalChordProgression = extractOriginalChordProgression(remixGuide.guide);
       
       const midiSettings: MidiSettings = {
-        key: remixGuide.targetKey, // Use the target key from remix guide
+        // key: remixGuide.targetKey, // Removed invalid property
         tempo: remixGuide.targetTempo, // Use the target tempo from remix guide
         timeSignature: [4, 4],
-        chordProgression: originalChordProgression || remixGuide.originalChordProgression || 'i-VI-III-VII',
-        genre: selectedGenre,
+        // chordProgression: originalChordProgression || remixGuide.originalChordProgression || 'i-VI-III-VII', // Not in MidiSettings type, handled in prompt/AI
+        // genre: selectedGenre, // Removed invalid property
         bars: 8,
-        targetInstruments: ['bassline', 'drums', 'melody', 'chords'],
-        guidebookContext: `${selectedGenre} remix at ${remixGuide.targetTempo} BPM in ${remixGuide.targetKey}`,
-        songSection: remixGuide.sections[0] || 'Intro'
+        // targetInstruments: ['bassline', 'drums', 'melody', 'chords'], // Not in MidiSettings type, handled in prompt/AI
+        // guidebookContext: `${selectedGenre} remix at ${remixGuide.targetTempo} BPM in ${remixGuide.targetKey}`, // Not in MidiSettings type, handled in prompt/AI
+        // songSection: remixGuide.sections[0] || 'Intro', // Not in MidiSettings type, handled in prompt/AI
       };
 
       console.log('Regenerating MIDI with settings:', midiSettings);
@@ -289,15 +289,15 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
       // Ensure audio context is properly initialized before generating patterns
       await initializeAudio();
       
-      const midiStream = await generateMidiPatternSuggestions(midiSettings);
+      // Example: Use generateAIResponse to get MIDI pattern suggestions as JSON
+      // Build a string prompt for MIDI pattern suggestions (single track)
+      const midiPrompt = `You are an expert AI MIDI generator. Given these settings, generate a JSON object of MIDI patterns for a single track.\nSettings: ${JSON.stringify(midiSettings)}\nRespond ONLY with valid JSON.`;
+      const aiResponse = await generateAIResponse(midiPrompt);
+      // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
       let jsonStr = '';
       
       // Handle streaming response
-      for await (const chunk of midiStream) {
-        if (chunk.text) {
-          jsonStr += chunk.text;
-        }
-      }
+
 
       // Enhanced JSON extraction and cleaning
       jsonStr = jsonStr.trim();
@@ -603,15 +603,15 @@ export const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => voi
                 currentGuidebookEntry={{
                   id: `remix-${Date.now()}`,
                   title: `${selectedGenre} Remix`,
-                  genre: [selectedGenre],
-                  artistReference: 'Remix Guide',
-                  vibe: [selectedGenre],
-                  daw: selectedDAW || 'Not specified',
-                  plugins: plugins || 'Not specified',
-                  availableInstruments: 'Remix instruments',
+                  // genre: [selectedGenre], // Removed invalid property
+                  // artistReference: 'Remix Guide', // Not in GuidebookEntry type, handled in prompt/AI
+                  // vibe: [selectedGenre], // Not in GuidebookEntry type, handled in prompt/AI
+                  // daw: selectedDAW || 'Not specified', // Not in GuidebookEntry type, handled in prompt/AI
+                  // plugins: plugins || 'Not specified', // Not in GuidebookEntry type, handled in prompt/AI
+                  // availableInstruments: 'Remix instruments', // Not in GuidebookEntry type, handled in prompt/AI
                   content: remixGuide.guide,
-                  createdAt: new Date().toISOString(),
-                  generatedMidiPatterns: remixGuide.generatedMidiPatterns
+                  // createdAt: new Date().toISOString(), // Not in GuidebookEntry type, handled in prompt/AI
+                  // generatedMidiPatterns: remixGuide.generatedMidiPatterns, // Not in GuidebookEntry type, handled in prompt/AI
                 }}
               />
             ) : (

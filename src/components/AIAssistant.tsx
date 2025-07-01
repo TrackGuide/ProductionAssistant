@@ -3,7 +3,7 @@ import { Button } from './Button';
 import { Textarea } from './Textarea';
 import { Spinner } from './Spinner';
 import { CloseIcon } from './icons';
-import { generateAIAssistantResponse } from '../services/geminiService';
+import { generateAIResponse } from '../services/geminiService';
 import { MarkdownRendererService } from '../services/markdownRenderer.service';
 import { ContentCopyService } from '../services/contentCopy.service';
 
@@ -56,15 +56,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     setStreamingResponse('');
 
     try {
-      const responseStream = await generateAIAssistantResponse(inputMessage.trim());
-      let fullResponse = '';
-      
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          fullResponse += chunk.text;
-          setStreamingResponse(fullResponse);
-        }
-      }
+      const fullResponse = await generateAIResponse(inputMessage.trim());
+      setStreamingResponse(fullResponse);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -243,7 +236,11 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && !streamingResponse && (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🎵</div>
+              <div className="flex justify-center mb-4">
+                <div className="bg-orange-500 rounded-full flex items-center justify-center" style={{ width: 64, height: 64 }}>
+                  <div className="w-1/2 h-1/2 bg-white transform -rotate-45" style={{ width: 32, height: 32 }}></div>
+                </div>
+              </div>
               <h3 className="text-xl font-semibold text-white mb-2">
                 Welcome to your AI Production Coach!
               </h3>

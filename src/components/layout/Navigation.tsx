@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useUser } from '../../context/UserContext';
-import { useUser } from '../../context/UserContext';
 import { useAppState } from '../../hooks/useAppState';
 import { ActiveView } from '../../constants/types';
 import { Button } from '../Button';
@@ -66,12 +65,9 @@ const navigationItems: NavigationItem[] = [
   { id: 'eqGuide', label: 'EQ Guide', icon: '📊' },
 ];
 
-export const Navigation: React.FC<{ onNavigateAuthPage?: (page: string) => void }> = ({ onNavigateAuthPage }) => {
-  const { state, actions } = useAppState();
 
-  const handleViewChange = (view: ActiveView) => {
-    actions.setActiveView(view);
-  };
+export const Navigation: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
+  const { state } = useAppState();
 
   return (
     <nav className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
@@ -91,7 +87,7 @@ export const Navigation: React.FC<{ onNavigateAuthPage?: (page: string) => void 
             {navigationItems.map((item) => (
               <Button
                 key={item.id}
-                onClick={() => handleViewChange(item.id)}
+                onClick={() => onNavigate(item.id)}
                 variant={state.activeView === item.id ? 'primary' : 'secondary'}
                 size="sm"
                 className={`
@@ -106,7 +102,7 @@ export const Navigation: React.FC<{ onNavigateAuthPage?: (page: string) => void 
                 <span className="text-sm font-medium">{item.label}</span>
               </Button>
             ))}
-            <UserMenu onNavigate={onNavigateAuthPage || (() => {})} />
+            <UserMenu onNavigate={onNavigate} />
           </div>
 
           {/* Mobile Menu Button */}
@@ -118,7 +114,7 @@ export const Navigation: React.FC<{ onNavigateAuthPage?: (page: string) => void 
             >
               <span className="text-lg">☰</span>
             </Button>
-            <UserMenu onNavigate={onNavigateAuthPage || (() => {})} />
+            <UserMenu onNavigate={onNavigate} />
           </div>
         </div>
 
@@ -128,7 +124,7 @@ export const Navigation: React.FC<{ onNavigateAuthPage?: (page: string) => void 
             {navigationItems.map((item) => (
               <Button
                 key={item.id}
-                onClick={() => handleViewChange(item.id)}
+                onClick={() => onNavigate(item.id)}
                 variant={state.activeView === item.id ? 'primary' : 'secondary'}
                 size="sm"
                 className={`

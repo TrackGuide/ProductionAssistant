@@ -1,12 +1,9 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-<<<<<<< HEAD
-import { App } from './src/App.refactored';
-=======
 import { App } from './src/App.refactored';
 import { UserProvider } from './src/context/UserContext';
->>>>>>> b8fad199 (commit "07.01")
+import { AppStateProvider } from './src/hooks/useAppState';
 import './src/styles/index.css';
 
 const rootElement = document.getElementById('root');
@@ -17,8 +14,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <UserProvider>
-      <App />
-    </UserProvider>
+    <AppStateProvider>
+      <UserProvider>
+        <App />
+      </UserProvider>
+    </AppStateProvider>
   </React.StrictMode>
 );

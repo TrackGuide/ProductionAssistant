@@ -101,9 +101,9 @@ export const TrackGuideFeature: React.FC = () => {
   return (
     <TrackGuideErrorBoundary>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Column */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:col-span-1">
             <TrackGuideForm
               userInputs={userInputs}
               onInputsChange={handleInputsChange}
@@ -117,7 +117,7 @@ export const TrackGuideFeature: React.FC = () => {
           </div>
 
           {/* Results Column */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Loading State */}
             {isLoading && (
               <Card className="text-center py-12">
@@ -164,7 +164,11 @@ export const TrackGuideFeature: React.FC = () => {
             {/* Empty State */}
             {!hasResults && !isLoading && !hasError && (
               <Card className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">🎵</div>
+                <div className="flex justify-center mb-4">
+                  <div className="bg-orange-500 rounded-full flex items-center justify-center" style={{ width: 64, height: 64 }}>
+                    <div className="w-1/2 h-1/2 bg-white transform -rotate-45" style={{ width: 32, height: 32 }}></div>
+                  </div>
+                </div>
                 <h3 className="text-xl font-semibold text-gray-300 mb-2">
                   Ready to Create Your Track Guide
                 </h3>

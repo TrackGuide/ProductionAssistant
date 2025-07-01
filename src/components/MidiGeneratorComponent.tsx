@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../constants/types';
-import { generateMidiPatternSuggestions } from '../services/geminiService';
+// import { generateMidiPatternSuggestions } from '../services/geminiService';
 import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
@@ -291,17 +291,12 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
 
     try {
-        const midiStream = await generateMidiPatternSuggestions(settingsForGeneration);
-        let jsonStr = '';
-        
-        // Handle streaming response
-        for await (const chunk of midiStream) {
-          if (chunk.text) {
-            jsonStr += chunk.text;
-          }
-        }
-
-        console.log('Raw MIDI response:', jsonStr);
+        // TODO: Call your AI service here to get MIDI pattern suggestions as JSON
+        // Example: const aiResponse = await generateAIResponse(settingsForGeneration);
+        // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
+        // For now, you can mock or skip this step if not using AI
+        // setPatterns(patternsData);
+        // onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData);
 
         // Try to parse JSON
         let patternsData;
@@ -481,17 +476,12 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     }
 
     try {
-        const midiStream = await generateMidiPatternSuggestions(preservedSettings);
-        let jsonStr = '';
-        
-        // Handle streaming response
-        for await (const chunk of midiStream) {
-          if (chunk.text) {
-            jsonStr += chunk.text;
-          }
-        }
-
-        console.log(`Raw MIDI response for ${trackType}:`, jsonStr);
+        // TODO: Call your AI service here to get MIDI pattern suggestions for a single track as JSON
+        // Example: const aiResponse = await generateAIResponse(preservedSettings);
+        // Parse aiResponse to get patternsData (of type GeneratedMidiPatterns)
+        // For now, you can mock or skip this step if not using AI
+        // setPatterns(patternsData);
+        // onUpdateGuidebookEntryMidi?.(preservedSettings, patternsData);
 
         let newPatternsData;
         try {

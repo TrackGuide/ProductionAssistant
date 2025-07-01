@@ -1,7 +1,7 @@
 // src/features/mixFeedback/hooks/useMixFeedback.ts
 
 import { useState } from 'react';
-import { generateMixFeedbackWithAudioStream, generateMixComparisonStream } from '../../../services/geminiService';
+import { generateAIResponse } from '../../../services/geminiService';
 import { MixFeedbackInputs as APIMixFeedbackInputs, MixComparisonInputs } from '../../../constants/types';
 import { AppError, ErrorType, createErrorHandler } from '../../../core/errors/AppError';
 import { APIRetryService } from '../../../core/services/APIRetryService';
@@ -119,12 +119,10 @@ export const useMixFeedback = () => {
           audioFile: mixFeedbackInputs.audioFile,
         };
         
-        const stream = await generateMixFeedbackWithAudioStream(apiInputs);
-        
-        for await (const chunk of stream) {
-          fullContent += chunk.text;
-          setStreamingMixFeedback(fullContent);
-        }
+        // Use generateAIResponse instead of streaming function
+        const prompt = `You are an expert mix engineer. Given the following track info and user notes, provide detailed mix feedback.\nInputs: ${JSON.stringify(apiInputs)}\nRespond with a clear, actionable review.`;
+        fullContent = await generateAIResponse(prompt);
+        setStreamingMixFeedback(fullContent);
       }, { component: 'MixFeedback', operation: 'generateSingleMixFeedback' });
 
       setMixFeedbackResult(fullContent);
@@ -167,12 +165,10 @@ export const useMixFeedback = () => {
           includeMixBFeedback: mixCompareInputs.includeMixBFeedback,
         };
         
-        const stream = await generateMixComparisonStream(apiInputs);
-        
-        for await (const chunk of stream) {
-          fullContent += chunk.text;
-          setStreamingMixComparison(fullContent);
-        }
+        // Use generateAIResponse instead of streaming function
+        const prompt = `You are an expert mix engineer. Compare these two mixes and provide detailed feedback.\nInputs: ${JSON.stringify(apiInputs)}\nRespond with a clear, actionable comparison.`;
+        fullContent = await generateAIResponse(prompt);
+        setStreamingMixComparison(fullContent);
       }, { component: 'MixFeedback', operation: 'generateMixComparison' });
 
       setMixCompareResult(fullContent);

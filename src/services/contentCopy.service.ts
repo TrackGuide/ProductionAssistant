@@ -69,5 +69,17 @@ export class ContentCopyService {
     for (const line of lines) {
       if (line.trim() === '') {
         html += '<br>';
+      } else if (line.startsWith('### ')) {
+        html += `<h3>${line.substring(4)}</h3>`;
       } else if (line.startsWith('## ')) {
-        html += `<h
+        html += `<h2>${line.substring(3)}</h2>`;
+      } else if (line.startsWith('# ')) {
+        html += `<h1>${line.substring(2)}</h1>`;
+      } else {
+        html += `<p>${line}</p>`;
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+}

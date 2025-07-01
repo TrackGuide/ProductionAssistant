@@ -6,13 +6,20 @@
   }
 
   export interface UserInputs {
-    genre: string;
-    mood: string;
-    tempo: number;
+    songTitle: string;
+    genre: string[];
+    artistReference: string;
+    referenceTrackLink: string;
+    lyrics: string;
     key: string;
     scale: string;
-    instruments: string[];
-    description: string;
+    chords: string;
+    generalNotes: string;
+    vibe: string[];
+    daw: string;
+    plugins: string;
+    availableInstruments: string;
+    tempo?: number;
   }
 
   export interface MidiNote {
@@ -94,4 +101,10 @@
     content: string;
   }
 
-  export type ActiveView = 'guidebook' | 'midi' | 'patch' | 'eq' | 'mix';
+  export type ActiveView =
+    | 'landing'
+    | 'trackGuide'
+    | 'mixFeedback'
+    | 'remixGuide'
+    | 'patchGuide'
+    | 'eqGuide';
