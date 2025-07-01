@@ -51,6 +51,12 @@ const MidiGeneratorComponent = lazy(() =>
   }))
 );
 
+const MixFeedbackFeature = lazy(() => 
+  import('./features/mixFeedback/components/MixFeedbackFeature').then(module => ({
+    default: module.MixFeedbackFeature
+  }))
+);
+
 // Loading component for Suspense fallback
 const FeatureLoadingSkeleton: React.FC = () => (
   <Card className="animate-pulse">
@@ -68,6 +74,7 @@ const FeatureLoadingSkeleton: React.FC = () => (
 
 export const App: React.FC = () => {
   const { state, actions } = useAppState();
+  const [authPage, setAuthPage] = React.useState<string | null>(null);
 
   // Load library from localStorage on mount
   useEffect(() => {
@@ -95,6 +102,15 @@ export const App: React.FC = () => {
 
   // Render the appropriate feature based on active view
   const renderActiveFeature = () => {
+    if (authPage === 'login') {
+      const LoginPage = require('./components/LoginPage').default;
+      return <LoginPage />;
+    }
+    if (authPage === 'register') {
+      const RegisterPage = require('./components/RegisterPage').default;
+      return <RegisterPage />;
+    }
+    // Optionally handle guest logic here
     switch (state.activeView) {
       case 'landing':
         return (
@@ -102,49 +118,36 @@ export const App: React.FC = () => {
             <LandingPage onNavigate={actions.setActiveView} />
           </Suspense>
         );
-
       case 'trackGuide':
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
             <TrackGuideFeature />
           </Suspense>
         );
-
       case 'mixFeedback':
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
-            <div className="max-w-4xl mx-auto">
-              <Card>
-                <h2 className="text-2xl font-bold text-white mb-4">Mix Feedback</h2>
-                <p className="text-gray-300">
-                  Mix feedback feature will be implemented here with the new architecture.
-                </p>
-              </Card>
-            </div>
+            <MixFeedbackFeature />
           </Suspense>
         );
-
       case 'remixGuide':
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
             <RemixGuideAI />
           </Suspense>
         );
-
       case 'patchGuide':
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
             <PatchGuide />
           </Suspense>
         );
-
       case 'eqGuide':
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
             <EQGuide />
           </Suspense>
         );
-
       default:
         return (
           <Suspense fallback={<FeatureLoadingSkeleton />}>
@@ -156,9 +159,9 @@ export const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <AppLayout>
+      <AppLayout onNavigateAuthPage={setAuthPage}>
         {renderActiveFeature()}
-        
+
         {/* Global Modals */}
         {state.isLibraryModalOpen && (
           <LibraryModal
@@ -179,7 +182,7 @@ export const App: React.FC = () => {
         {/* AI Assistant - can be opened from any view */}
         <Suspense fallback={null}>
           <AIAssistant
-            isOpen={false} // We'll add this to global state later if needed
+            isOpen={false}
             onClose={() => {}}
             currentGuidebook={state.currentGuidebook}
             userInputs={state.userInputs}
