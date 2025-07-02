@@ -24,6 +24,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'remixGuide', label: 'Remix Guide', icon: '🔄' },
   { id: 'patchGuide', label: 'Patch Guide', icon: '🎛️' },
   { id: 'eqGuide', label: 'EQ Guide', icon: '📊' },
+  { id: 'songFramework', label: 'Song Framework', icon: '🎼' },
 ];
 
 export const Navigation: React.FC = () => {

@@ -25,6 +25,7 @@ export interface UserInputs {
   genre: string[];
   artistReference: string;
   referenceTrackLink?: string; // New: Reference track via link (YouTube, Spotify, etc.)
+  referenceTrackAudio?: { base64: string; mimeType: string }; // New: Reference track audio data
   lyrics?: string; // New: Optional lyrics input
   key?: string; // New: Optional key input
   scale?: string; // New: Optional scale/mode input
@@ -126,4 +127,4 @@ export interface ChatMessage {
   content: string;
 }
 
-export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide' | 'patchGuide' | 'eqGuide';
+export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide' | 'patchGuide' | 'eqGuide' | 'songFramework';

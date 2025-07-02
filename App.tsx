@@ -20,6 +20,7 @@ import { EQGuide } from './src/components/EQGuide';
 import { LandingPage } from './src/components/LandingPage.tsx';
 import { RemixGuideAI } from './src/components/RemixGuideAI.tsx';
 import { PatchGuide } from './src/components/PatchGuide';
+import { SongFrameworkGenerator } from './src/components/SongFrameworkGenerator';
 import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './src/components/LibraryModal.tsx';
 import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
@@ -1228,6 +1229,20 @@ const App: React.FC = () => {
     EQ Guide
   </Button>
 
+  <Button
+    size="sm"
+    className={`w-full md:w-auto px-3 py-2 text-xs md:text-sm rounded-md transition-all duration-150 ease-in-out ${
+      activeView === 'songFramework'
+        ? 'bg-orange-500 shadow-lg hover:bg-orange-600'
+        : 'bg-gray-700/80 hover:bg-gray-600/80 border border-gray-600'
+    }`}
+    onClick={() => setActiveView('songFramework')}
+    variant={activeView === 'songFramework' ? 'primary' : 'secondary'}
+    leftIcon={<span className="w-4 h-4 text-center">🎼</span>}
+  >
+    Song Framework
+  </Button>
+
 </nav>
 
 
@@ -1821,6 +1836,12 @@ const App: React.FC = () => {
       {activeView === 'eqGuide' && (
         <div className="max-w-7xl mx-auto">
           <EQGuide />
+        </div>
+      )}
+
+      {activeView === 'songFramework' && (
+        <div className="max-w-7xl mx-auto">
+          <SongFrameworkGenerator />
         </div>
       )}
 

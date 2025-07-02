@@ -105,7 +105,36 @@ ${dawData && dawData.suggestedSignalChains && dawData.suggestedSignalChains.Synt
 /**
  * Helper function to build structural blueprint with combined instrumentation
  */
-function buildStructuralBlueprint(): string {
+function buildStructuralBlueprint(customFramework?: string, inputs?: UserInputs): string {
+  if (customFramework && inputs?.referenceTrackAudio) {
+    // For TrackGuide with reference track: provide a framework that blends the reference track analysis
+    // with other user inputs (genre, vibe, instruments, etc.)
+    return `
+## 🎼 Structural Blueprint
+
+<div className="overflow-x-auto">
+
+**Reference Track Analysis:**
+${customFramework}
+
+**Note to AI:** The above framework was generated from reference track analysis. Use it as a foundation,
+but adapt and enhance it based on the user's genre (${inputs.genre?.join(", ")}), 
+vibe (${inputs.vibe?.join(", ")}), and available instruments (${inputs.availableInstruments || "Not specified"}).
+Feel free to adjust section durations, add or modify sections, and customize instrumentation recommendations
+to create a cohesive arrangement that aligns with all user inputs.
+
+</div>`;
+  } else if (customFramework) {
+    // For standalone reference track frameworks: use as-is
+    return `
+## 🎼 Structural Blueprint
+
+<div className="overflow-x-auto">
+${customFramework}
+</div>`;
+  }
+  
+  // Default blueprint when no reference track is provided
   return `
 ## 🎼 Structural Blueprint
 
@@ -148,7 +177,30 @@ export const generateGuidebookContent = async (
   const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`         : "";
   const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
-  const structuralBlueprint = buildStructuralBlueprint();
+  // Generate custom framework from reference track if available
+  let customFramework = "";
+  if (inputs.referenceTrackAudio) {
+    try {
+      // Split instrument string if it exists
+      const instruments = inputs.availableInstruments ? 
+        inputs.availableInstruments.split(/,\s*/) : 
+        undefined;
+        
+      customFramework = await generateReferenceTrackFramework(
+        inputs.referenceTrackAudio,
+        inputs.genre?.join(", "),
+        inputs.vibe,
+        instruments,
+        false // Set to false to indicate this is part of TrackGuide, not standalone
+      );
+      console.log("Generated custom framework from reference track");
+    } catch (error) {
+      console.error("Error generating framework from reference track:", error);
+      // Will fallback to default blueprint if error occurs
+    }
+  }
+  
+  const structuralBlueprint = buildStructuralBlueprint(customFramework, inputs);
   const pluginSection       = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
   const prompt = `// ⚡ Including all fields
@@ -582,7 +634,7 @@ export async function* generateRemixGuideStream(
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
     
     // Try to get enhanced metadata if available (import at the top of the file)
-    let metadataBlock = null;
+    let metadataBlock: any = null;
     try {
       // We're using dynamic import to avoid circular dependencies
       const { getGenreMetadata } = await import('../constants/genreMetadata');
@@ -1363,7 +1415,9 @@ Provide actionable, specific feedback that can be implemented immediately to imp
     model: GEMINI_MODEL_NAME,
     contents: prompt,
   });
-  return response.text || "Unable to generate analysis. Please try again.";
+  
+  const responseText = response.text || "Unable to generate analysis. Please try again.";
+  yield { text: responseText };
 };
 
 /**
@@ -1439,3 +1493,97 @@ Focus on specific, actionable feedback for improving Mix B while acknowledging i
     }
   }
 }
+
+/**
+ * Standalone API to generate a song framework from a reference track
+ * This can be called directly from the frontend for a focused arrangement blueprint
+ */
+export const generateStandaloneSongFramework = async (
+  audioData: { base64: string; mimeType: string },
+  genre?: string,
+  vibe?: string[],
+  instruments?: string[]
+): Promise<string> => {
+  try {
+    const framework = await generateReferenceTrackFramework(
+      audioData,
+      genre,
+      vibe,
+      instruments,
+      true // Explicitly set as standalone mode
+    );
+    
+    return framework || "Could not generate framework from the reference track. Please try again or use a different track.";
+  } catch (error) {
+    console.error("Error generating standalone song framework:", error);
+    return "An error occurred while analyzing the reference track. Please try again.";
+  }
+};
+
+/**
+ * Generate a song framework based on reference track analysis
+ * This provides a standalone arrangement blueprint derived directly from an audio reference
+ * or a starting point for a blended framework when used as part of TrackGuide
+ */
+export const generateReferenceTrackFramework = async (
+  audioData: { base64: string; mimeType: string },
+  genre?: string,
+  vibe?: string[],
+  instruments?: string[],
+  isStandalone: boolean = true
+): Promise<string> => {
+  const genreText = genre ? genre : "Not specified";
+  const vibeText = vibe?.join(", ") || "Not specified";
+  const instrumentsText = instruments?.join(", ") || "Not specified";
+
+  // New JSON framework prompt for TrackGuideAI
+  const prompt = `You are TrackGuideAI, an expert music production assistant.\n\nGiven the genre, vibe, and available instruments, generate a detailed song arrangement framework in JSON format.\n\nRequirements:\n\n1. Define the song structure as an array called \"sections\", where each section is an object with:\n   - \"name\": the section name (e.g., \"Intro\", \"Verse 1\", \"Chorus\", \"Breakdown\", \"Outro\")\n   - \"bars\": the number of bars/measures in that section (integer)\n\n2. Define the \"instruments\" array listing all key instruments/elements tracked in the arrangement.\n\n3. Define a \"matrix\" which is a 2D array:\n   - Each element of \"matrix\" corresponds to one instrument’s timeline.\n   - The timeline is the concatenation of all bars across all sections in order.\n   - Each value in the timeline is either 1 (instrument plays in that bar) or 0 (instrument silent in that bar).\n\n4. Ensure the \"matrix\" matches the total number of bars summed across all sections.\n\n5. Use typical arrangement practices for the genre and vibe provided, activating instruments in appropriate sections and bars.\n\n6. The JSON output must be valid and parsable, with no extra text or explanation.\n\nInputs you can use (if provided):\n- Genre: ${genreText}\n- Vibe: ${vibeText}\n- Available instruments: ${instrumentsText}\n\nExample output format:\n\n{\n  \"sections\": [\n    {\"name\": \"Intro\", \"bars\": 16},\n    {\"name\": \"Verse 1\", \"bars\": 16},\n    {\"name\": \"Chorus\", \"bars\": 8},\n    {\"name\": \"Breakdown\", \"bars\": 8},\n    {\"name\": \"Outro\", \"bars\": 16}\n  ],\n  \"instruments\": [\n    \"Kick Drum\",\n    \"Bass\",\n    \"Lead Synth\",\n    \"Pads\",\n    \"Vocals\"\n  ],\n  \"matrix\": [\n    // Kick Drum timeline - 64 bars total (16+16+8+8+16)\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Bass timeline\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Lead Synth timeline\n    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 1,1,1,1, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\n    // Pads timeline\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Vocals timeline\n    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n  ]\n}\n";
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL_NAME,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+            {
+              inlineData: {
+                mimeType: audioData.mimeType,
+                data: audioData.base64,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    let result = response.text || "";
+    
+    // Try to extract JSON if the model wrapped it in markdown code blocks
+    const jsonMatch = result.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      result = jsonMatch[1];
+    }
+    
+    // Clean up any comments in the JSON (like the matrix comments)
+    result = result.replace(/\/\/.*$/gm, '');
+    
+    // Validate that the result is proper JSON by parsing and re-stringifying
+    try {
+      const parsed = JSON.parse(result);
+      result = JSON.stringify(parsed);
+    } catch (jsonError) {
+      console.error("AI returned invalid JSON:", jsonError);
+      // If we can't parse it, return the original response
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error generating reference track framework:", error);
+    return "";
+  }
+};
