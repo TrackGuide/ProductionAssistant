@@ -15,6 +15,31 @@ export const SongFrameworkGenerator: React.FC = () => {
   const [instruments, setInstruments] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>('');
+  
+  // Function to generate different colors for each instrument
+  const getInstrumentColor = (index: number): string => {
+    // Array of vibrant colors
+    const colors = [
+      'bg-blue-500',      // Blue
+      'bg-green-500',     // Green
+      'bg-purple-500',    // Purple
+      'bg-pink-500',      // Pink
+      'bg-yellow-500',    // Yellow
+      'bg-red-500',       // Red
+      'bg-indigo-500',    // Indigo
+      'bg-orange-500',    // Orange
+      'bg-teal-500',      // Teal
+      'bg-cyan-500',      // Cyan
+      'bg-lime-500',      // Lime
+      'bg-amber-500',     // Amber
+      'bg-rose-500',      // Rose
+      'bg-fuchsia-500',   // Fuchsia
+      'bg-emerald-500',   // Emerald
+    ];
+    
+    // Return color based on index, wrapping around if there are more instruments than colors
+    return colors[index % colors.length];
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -202,6 +227,17 @@ export const SongFrameworkGenerator: React.FC = () => {
           {/* Arrangement Visualization */}
           <div className="mb-8">
             <h4 className="text-lg font-bold text-white mb-3">Song Structure & Arrangement</h4>
+            
+            {/* Color Legend */}
+            <div className="mb-4 flex flex-wrap gap-3">
+              {parsedFramework.instruments.map((instrument: string, index: number) => (
+                <div key={index} className="flex items-center">
+                  <div className={`w-4 h-4 ${getInstrumentColor(index)} mr-2 rounded-sm`}></div>
+                  <span className="text-sm text-gray-300">{instrument}</span>
+                </div>
+              ))}
+            </div>
+            
             <div className="overflow-x-auto pb-4">
               <div className="arrangement-matrix" style={{ minWidth: 'max-content' }}>
                 {/* Header showing section markers */}
@@ -234,7 +270,7 @@ export const SongFrameworkGenerator: React.FC = () => {
                       {parsedFramework.matrix[instrumentIndex].map((active: number, barIndex: number) => (
                         <div
                           key={barIndex}
-                          className={`h-8 w-4 m-px ${active === 1 ? 'bg-blue-500' : 'bg-gray-700/30'}`}
+                          className={`h-8 w-4 m-px ${active === 1 ? getInstrumentColor(instrumentIndex) : 'bg-gray-700/30'}`}
                           title={`${instrument}: ${active === 1 ? 'Active' : 'Inactive'}`}
                         />
                       ))}
