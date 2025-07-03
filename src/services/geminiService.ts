@@ -107,15 +107,40 @@ ${dawData && dawData.suggestedSignalChains && dawData.suggestedSignalChains.Synt
  */
 function buildStructuralBlueprint(customFramework?: string, inputs?: UserInputs): string {
   if (customFramework && inputs?.referenceTrackAudio) {
-    // For TrackGuide with reference track: provide a framework that blends the reference track analysis
-    // with other user inputs (genre, vibe, instruments, etc.)
-    return `
+    // Try to parse the customFramework as JSON to create a visual representation
+    try {
+      const framework = JSON.parse(customFramework);
+      
+      // Create a formatted markdown table from the JSON framework
+      let frameworkTable = "**Song Structure Analysis from Reference Track:**\n\n";
+      
+      // Add sections information
+      frameworkTable += "| **Section** | **Bars** |\n| --- | --- |\n";
+      
+      if (framework.sections && Array.isArray(framework.sections)) {
+        framework.sections.forEach(section => {
+          frameworkTable += `| **${section.name}** | ${section.bars} |\n`;
+        });
+      }
+      
+      // Add instruments information
+      frameworkTable += "\n**Detected Instruments:**\n\n";
+      
+      if (framework.instruments && Array.isArray(framework.instruments)) {
+        framework.instruments.forEach(instrument => {
+          frameworkTable += `- ${instrument}\n`;
+        });
+      }
+      
+      // Add a note about the matrix visualization
+      frameworkTable += "\n**Note:** A detailed arrangement matrix has been analyzed showing which instruments play in each section. This will be visualized in the Song Framework view.\n";
+      
+      return `
 ## 🎼 Structural Blueprint
 
 <div className="overflow-x-auto">
 
-**Reference Track Analysis:**
-${customFramework}
+${frameworkTable}
 
 **Note to AI:** The above framework was generated from reference track analysis. Use it as a foundation,
 but adapt and enhance it based on the user's genre (${inputs.genre?.join(", ")}), 
@@ -124,14 +149,52 @@ Feel free to adjust section durations, add or modify sections, and customize ins
 to create a cohesive arrangement that aligns with all user inputs.
 
 </div>`;
-  } else if (customFramework) {
-    // For standalone reference track frameworks: use as-is
-    return `
+    } catch (error) {
+      console.error("Error parsing custom framework JSON:", error);
+      // Fallback to showing raw JSON if parsing fails
+      return `
 ## 🎼 Structural Blueprint
 
 <div className="overflow-x-auto">
+
+**Reference Track Analysis (JSON format):**
+\`\`\`json
 ${customFramework}
+\`\`\`
+
+**Note to AI:** The above framework was generated from reference track analysis. Use it as a foundation,
+but adapt and enhance it based on the user's genre (${inputs.genre?.join(", ")}), 
+vibe (${inputs.vibe?.join(", ")}), and available instruments (${inputs.availableInstruments || "Not specified"}).
+Feel free to adjust section durations, add or modify sections, and customize instrumentation recommendations
+to create a cohesive arrangement that aligns with all user inputs.
+
 </div>`;
+    }
+  } else if (customFramework) {
+    // For standalone reference track frameworks: format JSON nicely
+    try {
+      const framework = JSON.parse(customFramework);
+      let formattedJson = JSON.stringify(framework, null, 2);
+      
+      return `
+## 🎼 Structural Blueprint
+
+<div className="overflow-x-auto">
+\`\`\`json
+${formattedJson}
+\`\`\`
+</div>`;
+    } catch (error) {
+      // Fallback to raw JSON
+      return `
+## 🎼 Structural Blueprint
+
+<div className="overflow-x-auto">
+\`\`\`json
+${customFramework}
+\`\`\`
+</div>`;
+    }
   }
   
   // Default blueprint when no reference track is provided
@@ -1502,7 +1565,8 @@ export const generateStandaloneSongFramework = async (
   audioData: { base64: string; mimeType: string },
   genre?: string,
   vibe?: string[],
-  instruments?: string[]
+  instruments?: string[],
+  referenceUrl?: string
 ): Promise<string> => {
   try {
     const framework = await generateReferenceTrackFramework(
@@ -1510,7 +1574,8 @@ export const generateStandaloneSongFramework = async (
       genre,
       vibe,
       instruments,
-      true // Explicitly set as standalone mode
+      true, // Explicitly set as standalone mode
+      referenceUrl
     );
     
     return framework || "Could not generate framework from the reference track. Please try again or use a different track.";
@@ -1530,15 +1595,99 @@ export const generateReferenceTrackFramework = async (
   genre?: string,
   vibe?: string[],
   instruments?: string[],
-  isStandalone: boolean = true
+  isStandalone: boolean = true,
+  referenceUrl?: string
 ): Promise<string> => {
   const genreText = genre ? genre : "Not specified";
   const vibeText = vibe?.join(", ") || "Not specified";
   const instrumentsText = instruments?.join(", ") || "Not specified";
+  const urlText = referenceUrl ? referenceUrl : "Not provided";
 
-  // New JSON framework prompt for TrackGuideAI
-  const prompt = `You are TrackGuideAI, an expert music production assistant.\n\nGiven the genre, vibe, and available instruments, generate a detailed song arrangement framework in JSON format.\n\nRequirements:\n\n1. Define the song structure as an array called \"sections\", where each section is an object with:\n   - \"name\": the section name (e.g., \"Intro\", \"Verse 1\", \"Chorus\", \"Breakdown\", \"Outro\")\n   - \"bars\": the number of bars/measures in that section (integer)\n\n2. Define the \"instruments\" array listing all key instruments/elements tracked in the arrangement.\n\n3. Define a \"matrix\" which is a 2D array:\n   - Each element of \"matrix\" corresponds to one instrument’s timeline.\n   - The timeline is the concatenation of all bars across all sections in order.\n   - Each value in the timeline is either 1 (instrument plays in that bar) or 0 (instrument silent in that bar).\n\n4. Ensure the \"matrix\" matches the total number of bars summed across all sections.\n\n5. Use typical arrangement practices for the genre and vibe provided, activating instruments in appropriate sections and bars.\n\n6. The JSON output must be valid and parsable, with no extra text or explanation.\n\nInputs you can use (if provided):\n- Genre: ${genreText}\n- Vibe: ${vibeText}\n- Available instruments: ${instrumentsText}\n\nExample output format:\n\n{\n  \"sections\": [\n    {\"name\": \"Intro\", \"bars\": 16},\n    {\"name\": \"Verse 1\", \"bars\": 16},\n    {\"name\": \"Chorus\", \"bars\": 8},\n    {\"name\": \"Breakdown\", \"bars\": 8},\n    {\"name\": \"Outro\", \"bars\": 16}\n  ],\n  \"instruments\": [\n    \"Kick Drum\",\n    \"Bass\",\n    \"Lead Synth\",\n    \"Pads\",\n    \"Vocals\"\n  ],\n  \"matrix\": [\n    // Kick Drum timeline - 64 bars total (16+16+8+8+16)\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Bass timeline\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Lead Synth timeline\n    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 1,1,1,1, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\n    // Pads timeline\n    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\n    // Vocals timeline\n    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n  ]\n}\n";
-`;
+  // Enhanced JSON framework prompt with improved audio awareness
+  const prompt = `You are TrackGuideAI, an expert music production assistant with advanced audio analysis capabilities.
+
+TASK: Analyze the provided audio file and generate a detailed song arrangement framework in JSON format that closely matches the structure, instrumentation, and arrangement of the reference track.
+
+AUDIO ANALYSIS INSTRUCTIONS:
+1. Listen carefully to the entire audio file
+2. Identify and extract the following elements:
+   - Tempo (BPM)
+   - Key signature
+   - Time signature
+   - Overall song structure (intro, verse, chorus, etc.)
+   - Instrument/sound entries and exits
+   - Energy dynamics and transitions
+   - Density of arrangement in different sections
+   - Recurring patterns and motifs
+   - Breakdown and build-up sections
+
+3. Pay special attention to:
+   - Drum patterns and variations
+   - Bass line presence and activity
+   - Lead instrument/vocal sections
+   - Background elements (pads, atmospheres)
+   - Transition effects and techniques
+   - Dynamic range between sections
+   - Instrument layering in each section
+
+JSON OUTPUT REQUIREMENTS:
+1. Define the song structure as an array called "sections", where each section is an object with:
+   - "name": the section name (e.g., "Intro", "Verse 1", "Chorus", "Breakdown", "Outro")
+   - "bars": the number of bars/measures in that section (integer)
+
+2. Define the "instruments" array listing all key instruments/elements tracked in the arrangement.
+   - Extract these directly from what you hear in the audio
+   - Include key elements like: Drums, Bass, Lead, Vocals, Synths, etc.
+   - Use appropriate naming for the genre detected
+
+3. Define a "matrix" which is a 2D array:
+   - Each element of "matrix" corresponds to one instrument's timeline
+   - The timeline is the concatenation of all bars across all sections in order
+   - Each value in the timeline is either 1 (instrument plays in that bar) or 0 (instrument silent in that bar)
+   - Accurately reflect the actual arrangement from the audio file
+
+4. Ensure the "matrix" matches the total number of bars summed across all sections.
+
+5. CRITICAL: Base the structure, instruments, and matrix directly on your analysis of the audio file, not on generic templates.
+
+ADDITIONAL CONTEXT (Use if provided, otherwise base on audio analysis):
+- Genre: ${genreText}
+- Vibe: ${vibeText}
+- Available instruments: ${instrumentsText}
+- Reference URL: ${urlText}
+
+Example output format (do not copy this - create your framework based on the actual audio):
+
+{
+  "sections": [
+    {"name": "Intro", "bars": 16},
+    {"name": "Verse 1", "bars": 16},
+    {"name": "Chorus", "bars": 8},
+    {"name": "Breakdown", "bars": 8},
+    {"name": "Outro", "bars": 16}
+  ],
+  "instruments": [
+    "Kick Drum",
+    "Bass",
+    "Lead Synth",
+    "Pads",
+    "Vocals"
+  ],
+  "matrix": [
+    // Kick Drum timeline - 64 bars total (16+16+8+8+16)
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    // Bass timeline
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    // Lead Synth timeline
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 1,1,1,1, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    // Pads timeline
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    // Vocals timeline
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  ]
+}
+
+IMPORTANT: The JSON output must be valid and parsable, with no extra text or explanation. Return ONLY the JSON object.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -1572,9 +1721,15 @@ export const generateReferenceTrackFramework = async (
     // Clean up any comments in the JSON (like the matrix comments)
     result = result.replace(/\/\/.*$/gm, '');
     
-    // Validate that the result is proper JSON by parsing and re-stringifying
+    // Try to parse the JSON result
     try {
       const parsed = JSON.parse(result);
+      
+      // Add reference URL to the JSON if provided
+      if (referenceUrl) {
+        parsed.referenceUrl = referenceUrl;
+      }
+      
       result = JSON.stringify(parsed);
     } catch (jsonError) {
       console.error("AI returned invalid JSON:", jsonError);

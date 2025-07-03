@@ -15,6 +15,7 @@ export const SongFrameworkGenerator: React.FC = () => {
   const [instruments, setInstruments] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [referenceUrl, setReferenceUrl] = useState<string>('');
   
   // Function to generate different colors for each instrument
   const getInstrumentColor = (index: number): string => {
@@ -85,7 +86,8 @@ export const SongFrameworkGenerator: React.FC = () => {
           },
           genre || undefined,
           vibeArray.length > 0 ? vibeArray : undefined,
-          instrumentsArray.length > 0 ? instrumentsArray : undefined
+          instrumentsArray.length > 0 ? instrumentsArray : undefined,
+          referenceUrl || undefined
         );
 
         setFramework(result);
@@ -189,6 +191,19 @@ export const SongFrameworkGenerator: React.FC = () => {
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500"
             />
           </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 mb-1">
+              Reference URL (Optional)
+            </label>
+            <input
+              type="text"
+              value={referenceUrl}
+              onChange={(e) => setReferenceUrl(e.target.value)}
+              placeholder="e.g., https://youtu.be/example"
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500"
+            />
+          </div>
         </div>
 
         <div className="flex justify-center">
@@ -280,6 +295,21 @@ export const SongFrameworkGenerator: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Reference URL if available */}
+          {parsedFramework.referenceUrl && (
+            <div className="mb-4">
+              <h4 className="text-lg font-bold text-white mb-2">Reference URL</h4>
+              <a 
+                href={parsedFramework.referenceUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline break-all"
+              >
+                {parsedFramework.referenceUrl}
+              </a>
+            </div>
+          )}
 
           {/* Export options */}
           <div className="flex justify-end space-x-4">
