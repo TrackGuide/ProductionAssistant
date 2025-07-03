@@ -13,9 +13,10 @@ export const SongFrameworkGenerator: React.FC = () => {
   const [genre, setGenre] = useState<string>('');
   const [vibe, setVibe] = useState<string>('');
   const [instruments, setInstruments] = useState<string>('');
+  const [inputMethod, setInputMethod] = useState<'file' | 'url'>('file');
+  const [referenceUrl, setReferenceUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>('');
-  const [referenceUrl, setReferenceUrl] = useState<string>('');
   
   // Function to generate different colors for each instrument
   const getInstrumentColor = (index: number): string => {
@@ -50,69 +51,103 @@ export const SongFrameworkGenerator: React.FC = () => {
   };
 
   const handleAnalyzeTrack = async () => {
-    const fileInput = fileInputRef.current;
-    
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      setError('Please select an audio file to analyze.');
-      return;
-    }
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-    
     setIsLoading(true);
     setError(null);
     setFramework(null);
+    
+    // Process vibe as string array
+    const vibeArray = vibe.split(',').map(v => v.trim()).filter(v => v);
+    
+    // Process instruments as string array
+    const instrumentsArray = instruments.split(',').map(i => i.trim()).filter(i => i);
 
-    reader.onload = async (e) => {
-      try {
-        if (!e.target || typeof e.target.result !== 'string') {
-          throw new Error('Failed to read the file.');
+    try {
+      let result;
+      
+      if (inputMethod === 'file') {
+        // Handle file upload
+        const fileInput = fileInputRef.current;
+        
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+          throw new Error('Please select an audio file to analyze.');
         }
 
-        // Extract the base64 data from the data URL
-        const base64Data = e.target.result.split(',')[1];
+        const file = fileInput.files[0];
+        const reader = new FileReader();
         
-        // Process vibe as string array
-        const vibeArray = vibe.split(',').map(v => v.trim()).filter(v => v);
-        
-        // Process instruments as string array
-        const instrumentsArray = instruments.split(',').map(i => i.trim()).filter(i => i);
+        result = await new Promise<string>((resolve, reject) => {
+          reader.onload = async (e) => {
+            try {
+              if (!e.target || typeof e.target.result !== 'string') {
+                reject('Failed to read the file.');
+                return;
+              }
 
-        const result = await generateStandaloneSongFramework(
-          { 
-            base64: base64Data, 
-            mimeType: file.type 
-          },
+              // Extract the base64 data from the data URL
+              const base64Data = e.target.result.split(',')[1];
+              
+              const frameworkResult = await generateStandaloneSongFramework(
+                { 
+                  base64: base64Data, 
+                  mimeType: file.type 
+                },
+                genre || undefined,
+                vibeArray.length > 0 ? vibeArray : undefined,
+                instrumentsArray.length > 0 ? instrumentsArray : undefined
+              );
+              
+              resolve(frameworkResult);
+            } catch (err) {
+              reject(err);
+            }
+          };
+
+          reader.onerror = () => {
+            reject('Failed to read the file.');
+          };
+
+          reader.readAsDataURL(file);
+        });
+      } else {
+        // Handle URL input
+        if (!referenceUrl.trim()) {
+          throw new Error('Please enter a reference track URL.');
+        }
+        
+        result = await generateStandaloneSongFramework(
+          undefined, // No audio data
           genre || undefined,
           vibeArray.length > 0 ? vibeArray : undefined,
           instrumentsArray.length > 0 ? instrumentsArray : undefined,
-          referenceUrl || undefined
+          referenceUrl.trim()
         );
-
-        setFramework(result);
-        
-        // Try to parse the JSON result
-        try {
-          const jsonResult = JSON.parse(result);
-          setParsedFramework(jsonResult);
-        } catch (jsonError) {
-          console.error("Failed to parse framework JSON:", jsonError);
-          // We'll still display the raw result if parsing fails
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    reader.onerror = () => {
-      setError('Failed to read the file.');
+      setFramework(result);
+      
+      // Try to parse the JSON result
+      try {
+        const jsonResult = JSON.parse(result);
+        
+        // Validate the parsed result has the required properties
+        if (jsonResult && 
+            Array.isArray(jsonResult.instruments) && 
+            Array.isArray(jsonResult.sections) && 
+            Array.isArray(jsonResult.matrix)) {
+          setParsedFramework(jsonResult);
+        } else {
+          console.error("Invalid framework format - missing required properties");
+          // We'll still show the raw result even if the parsed result isn't valid
+        }
+      } catch (jsonError) {
+        console.error("Failed to parse framework JSON:", jsonError);
+        // We'll still display the raw result if parsing fails
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
       setIsLoading(false);
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -126,32 +161,75 @@ export const SongFrameworkGenerator: React.FC = () => {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-xs font-bold text-gray-400 mb-1">
-              Reference Track (MP3, WAV, M4A)
+              Reference Track Input Method
             </label>
-            <div className="flex flex-col space-y-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="audio/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="secondary"
-                  className="bg-gray-700 hover:bg-gray-600"
-                >
-                  Select File
-                </Button>
-                <span className="text-sm text-gray-300 truncate">
-                  {fileName || "No file selected"}
-                </span>
-              </div>
+            <div className="flex space-x-4 mb-2">
+              <button
+                onClick={() => setInputMethod('file')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  inputMethod === 'file' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Upload Audio File
+              </button>
+              <button
+                onClick={() => setInputMethod('url')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  inputMethod === 'url' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Provide URL
+              </button>
             </div>
           </div>
+
+          {inputMethod === 'file' ? (
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1">
+                Reference Track (MP3, WAV, M4A)
+              </label>
+              <div className="flex flex-col space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="audio/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="secondary"
+                    className="bg-gray-700 hover:bg-gray-600"
+                  >
+                    Select File
+                  </Button>
+                  <span className="text-sm text-gray-300 truncate">
+                    {fileName || "No file selected"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1">
+                Reference Track URL (YouTube, SoundCloud, etc.)
+              </label>
+              <input
+                type="text"
+                value={referenceUrl}
+                onChange={(e) => setReferenceUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-gray-400 mb-1">
@@ -191,19 +269,6 @@ export const SongFrameworkGenerator: React.FC = () => {
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500"
             />
           </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1">
-              Reference URL (Optional)
-            </label>
-            <input
-              type="text"
-              value={referenceUrl}
-              onChange={(e) => setReferenceUrl(e.target.value)}
-              placeholder="e.g., https://youtu.be/example"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500"
-            />
-          </div>
         </div>
 
         <div className="flex justify-center">
@@ -213,7 +278,7 @@ export const SongFrameworkGenerator: React.FC = () => {
             disabled={isLoading}
             className="px-8"
           >
-            {isLoading ? <Spinner size="sm" /> : "Analyze & Generate Framework"}
+            {isLoading ? <Spinner size="sm" /> : `Analyze ${inputMethod === 'url' ? 'URL' : 'Track'} & Generate Framework`}
           </Button>
         </div>
       </Card>
@@ -245,7 +310,7 @@ export const SongFrameworkGenerator: React.FC = () => {
             
             {/* Color Legend */}
             <div className="mb-4 flex flex-wrap gap-3">
-              {parsedFramework.instruments.map((instrument: string, index: number) => (
+              {parsedFramework?.instruments?.map((instrument: string, index: number) => (
                 <div key={index} className="flex items-center">
                   <div className={`w-4 h-4 ${getInstrumentColor(index)} mr-2 rounded-sm`}></div>
                   <span className="text-sm text-gray-300">{instrument}</span>
@@ -258,7 +323,7 @@ export const SongFrameworkGenerator: React.FC = () => {
                 {/* Header showing section markers */}
                 <div className="flex border-b border-gray-700 mb-2">
                   <div className="w-32 shrink-0 p-2 font-medium text-gray-400">Instrument</div>
-                  {parsedFramework.sections.map((section: {name: string, bars: number}, sectionIndex: number) => (
+                  {parsedFramework?.sections?.map((section: {name: string, bars: number}, sectionIndex: number) => (
                     <div 
                       key={sectionIndex} 
                       className="text-center text-xs font-medium text-gray-400 border-l border-gray-700 flex flex-col"
@@ -278,11 +343,11 @@ export const SongFrameworkGenerator: React.FC = () => {
                 </div>
                 
                 {/* Matrix rows */}
-                {parsedFramework.instruments.map((instrument: string, instrumentIndex: number) => (
+                {parsedFramework?.instruments?.map((instrument: string, instrumentIndex: number) => (
                   <div key={instrumentIndex} className="flex items-center border-b border-gray-700/50">
                     <div className="w-32 shrink-0 p-2 font-medium text-gray-200 truncate">{instrument}</div>
                     <div className="flex">
-                      {parsedFramework.matrix[instrumentIndex].map((active: number, barIndex: number) => (
+                      {parsedFramework?.matrix?.[instrumentIndex]?.map((active: number, barIndex: number) => (
                         <div
                           key={barIndex}
                           className={`h-8 w-4 m-px ${active === 1 ? getInstrumentColor(instrumentIndex) : 'bg-gray-700/30'}`}
@@ -295,21 +360,6 @@ export const SongFrameworkGenerator: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Reference URL if available */}
-          {parsedFramework.referenceUrl && (
-            <div className="mb-4">
-              <h4 className="text-lg font-bold text-white mb-2">Reference URL</h4>
-              <a 
-                href={parsedFramework.referenceUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline break-all"
-              >
-                {parsedFramework.referenceUrl}
-              </a>
-            </div>
-          )}
 
           {/* Export options */}
           <div className="flex justify-end space-x-4">
