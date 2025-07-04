@@ -587,7 +587,7 @@ export async function* generateRemixGuideStream(
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
     
     // Try to get enhanced metadata if available (import at the top of the file)
-    let metadataBlock = null;
+    let metadataBlock: any = null;
     try {
       // We're using dynamic import to avoid circular dependencies
       const { getGenreMetadata } = await import('../constants/genreMetadata');
@@ -614,10 +614,32 @@ export async function* generateRemixGuideStream(
 - **Available Plugins:** ${plugins || "Stock/Generic plugins"}
 
 **Analysis Requirements:**
-1. Identify the original track's tempo, key, harmonic progression, and rhythmic characteristics
+1. Identify the original track's tempo (exact BPM), key, harmonic progression, and rhythmic characteristics
 2. Determine optimal transformation approach for ${targetGenre}
 3. Provide detailed production guidance with specific techniques
 4. Include plugin-specific parameter recommendations based on user's setup
+
+**BPM Detection Guidelines:**
+- Listen carefully for beats and transients to determine precise BPM value
+- Report a single specific BPM number (e.g. "124 BPM" not "120-130 BPM")
+- Use beat counting over time to verify accuracy
+- For variable tempo tracks, report the main/dominant tempo
+
+**Key & Chord Progression Analysis Guidelines:**
+- Listen carefully to the entire track to identify ALL chord progressions present
+- For each progression, list BOTH:
+  1. Actual chord names with dashes between (e.g., "Am - C - F - G")
+  2. Roman numeral analysis in brackets (e.g., "[i - III - VI - VII]")
+- If multiple progressions are present, list each complete progression separated by commas
+- For the primary key determination:
+  1. Analyze all chord progressions together to determine the most likely tonal center
+  2. Consider where the track resolves harmonically at major section endpoints
+  3. Identify the scale/mode being used (major, minor, dorian, etc.)
+- If the key modulates during the track:
+  1. Explicitly note each modulation with an arrow (e.g., "C minor → D minor")
+  2. Specify where in the track the modulation occurs (e.g., "modulates at bridge")
+  3. For each key area, provide the corresponding chord progression
+- Identify any modal interchange or borrowed chords and note which mode they're borrowed from
 
 **Response Guidelines:**
 - Provide direct, confident analysis without using qualifiers like "Estimated" or "Based on" 
@@ -641,9 +663,9 @@ Create a detailed markdown remix guide that includes:
 
 ## 🎧 Original Track DNA Analysis
 **Detected Characteristics:**
-- **Original Tempo:** [BPM]
+- **Original Tempo:** [Exact BPM]
 - **Original Key:** [Key]
-- **Harmonic Blueprint:** [Chord progression]
+- **Harmonic Blueprint:** [Chord names and Roman numerals, e.g., "Am - C - F - G [i - III - VI - VII]"]
 - **Rhythmic Feel:** [Time signature and groove]
 - **Sonic Character:** [Tonal qualities and instrumentation]
 
@@ -736,21 +758,29 @@ ${sections.map((section: string) => `
 function extractRemixMetadata(content: string): any {
   const metadata: any = {};
   
-  // Extract tempo information
-  const originalTempoMatch = content.match(/Original Tempo:\s*(\d+)(?:\s*BPM)?/i);
+  // Extract tempo information - improved to handle more formats
+  const originalTempoMatch = content.match(/Original Tempo:\s*(\d+(?:\.\d+)?)(?:\s*BPM)?/i);
   if (originalTempoMatch) {
-    metadata.originalTempo = parseInt(originalTempoMatch[1]);
+    metadata.originalTempo = parseFloat(originalTempoMatch[1]);
   }
   
-  const targetTempoMatch = content.match(/Target Tempo:\s*(\d+)(?:\s*BPM)?/i);
+  const targetTempoMatch = content.match(/Target Tempo:\s*(\d+(?:\.\d+)?)(?:\s*BPM)?/i);
   if (targetTempoMatch) {
-    metadata.targetTempo = parseInt(targetTempoMatch[1]);
+    metadata.targetTempo = parseFloat(targetTempoMatch[1]);
   }
   
-  // Extract key information
-  const originalKeyMatch = content.match(/Original Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min))/i);
+  // Extract key information with support for modulations
+  const originalKeyMatch = content.match(/Original Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min)(?:\s*→\s*[A-G][#b]?\s*(?:major|minor|maj|min))*)/i);
   if (originalKeyMatch) {
     metadata.originalKey = originalKeyMatch[1];
+    
+    // Check for key modulation
+    if (originalKeyMatch[1].includes('→')) {
+      metadata.keyModulation = true;
+      const keys = originalKeyMatch[1].split('→').map(k => k.trim());
+      metadata.startingKey = keys[0];
+      metadata.endingKey = keys[keys.length - 1];
+    }
   }
   
   const targetKeyMatch = content.match(/Target Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min))/i);
@@ -758,10 +788,54 @@ function extractRemixMetadata(content: string): any {
     metadata.targetKey = targetKeyMatch[1];
   }
   
-  // Extract chord progression
+  // Extract chord progression with support for multiple progressions
   const chordProgMatch = content.match(/Harmonic Blueprint:\s*([^\n]+)/i);
   if (chordProgMatch) {
-    metadata.originalChordProgression = chordProgMatch[1].trim();
+    const progressionText = chordProgMatch[1].trim();
+    
+    // Handle multiple progressions separated by commas
+    if (progressionText.includes(',')) {
+      metadata.originalChordProgression = progressionText;
+      metadata.multipleProgressions = true;
+      metadata.progressions = progressionText.split(',').map(p => p.trim());
+      metadata.primaryProgression = metadata.progressions[0];
+      
+      // Parse chord names and Roman numerals separately if available
+      if (progressionText.includes('[')) {
+        try {
+          metadata.chordNames = [];
+          metadata.romanNumerals = [];
+          
+          progressionText.split(',').forEach(progression => {
+            const progressionTrimmed = progression.trim();
+            // Try to extract chord names and Roman numerals
+            const matches = progressionTrimmed.match(/(.*?)\s*\[(.*?)\]/);
+            if (matches && matches.length === 3) {
+              metadata.chordNames.push(matches[1].trim());
+              metadata.romanNumerals.push(matches[2].trim());
+            }
+          });
+        } catch (e) {
+          console.warn('Error parsing chord names and Roman numerals:', e);
+        }
+      }
+    } else {
+      metadata.originalChordProgression = progressionText;
+      metadata.multipleProgressions = false;
+      
+      // Parse chord names and Roman numerals separately if available
+      if (progressionText.includes('[')) {
+        try {
+          const matches = progressionText.match(/(.*?)\s*\[(.*?)\]/);
+          if (matches && matches.length === 3) {
+            metadata.chordNames = [matches[1].trim()];
+            metadata.romanNumerals = [matches[2].trim()];
+          }
+        } catch (e) {
+          console.warn('Error parsing chord names and Roman numerals:', e);
+        }
+      }
+    }
   }
   
   // Extract sections
@@ -794,41 +868,110 @@ export async function generateRemixGuide(
   if (!apiKey) {
     throw new Error("API Key not configured. Cannot connect to Gemini API for remix guide.");
   }
-
   try {
     const tempoRange = genreInfo?.tempoRange ? `${genreInfo.tempoRange[0]}-${genreInfo.tempoRange[1]} BPM` : "120-130 BPM";
     const sections = genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"];
-    
+    let metadataBlock: any = null;
+    let chordProgressions = "";
+    let productionTips = "";
+    let scalesAndModes = "";
+    let songStructure = "";
+    let dynamicRange = "";
+    let relatedGenres = "";
+    try {
+      const { getGenreMetadata } = await import('../constants/genreMetadata');
+      metadataBlock = getGenreMetadata(targetGenre);
+      if (metadataBlock) {
+        chordProgressions = Array.isArray(metadataBlock.chordProgressions) ? metadataBlock.chordProgressions.join(", ") : "Standard progressions for this genre";
+        productionTips = Array.isArray(metadataBlock.productionTips) ? metadataBlock.productionTips.join(", ") : "Standard production techniques";
+        scalesAndModes = typeof metadataBlock.scalesAndModes === "string" ? metadataBlock.scalesAndModes : "Appropriate scales for this genre";
+        songStructure = typeof metadataBlock.songStructure === "string" ? metadataBlock.songStructure : sections.join(" → ");
+        dynamicRange = typeof metadataBlock.dynamicRange === "string" ? metadataBlock.dynamicRange : "Standard dynamics for this genre";
+        relatedGenres = Array.isArray(metadataBlock.relatedGenres) ? metadataBlock.relatedGenres.join(", ") : "Similar genres";
+      } else {
+        chordProgressions = "Standard progressions for this genre";
+        productionTips = "Standard production techniques";
+        scalesAndModes = "Appropriate scales for this genre";
+        songStructure = sections.join(" → ");
+        dynamicRange = "Standard dynamics for this genre";
+        relatedGenres = "Similar genres";
+      }
+    } catch (err) {
+      chordProgressions = "Standard progressions for this genre";
+      productionTips = "Standard production techniques";
+      scalesAndModes = "Appropriate scales for this genre";
+      songStructure = sections.join(" → ");
+      dynamicRange = "Standard dynamics for this genre";
+      relatedGenres = "Similar genres";
+    }
     const structuralBlueprint = buildStructuralBlueprint();
     const pluginSection = buildPluginParameterSection(daw, plugins);
-    
-    const prompt = `You are TrackGuideAI's Remix Specialist. Analyze the uploaded audio track and create a comprehensive remix guide for transforming it into ${targetGenre} style.
+    const prompt = `You are TrackGuideAI's Remix Specialist. You have received an audio file (provided as base64) and must analyze ONLY the uploaded audio to extract the following:
+
+1. The original track's exact tempo (BPM)
+2. The original key (including any modulations)
+3. The full chord progression(s) and harmonic structure
+4. The rhythmic feel and time signature
+
+You MUST NOT use genre assumptions, defaults, or common values. Do not guess based on the target genre or metadata. If you cannot detect a value from the audio, state "Unable to detect" for that field.
+
+Your analysis must be based solely on the provided audio file. Do not use genre templates or fallback values for tempo, key, or chords.
 
 **User Production Setup:**
 - **DAW:** ${daw || "Not specified"}
 - **Available Plugins:** ${plugins || "Stock/Generic plugins"}
 
 **Analysis Requirements:**
-1. Identify the original track's tempo, key, harmonic progression, and rhythmic characteristics
+1. Analyze the uploaded audio and extract the original track's tempo (exact BPM), key, harmonic progression, and rhythmic characteristics
 2. Determine optimal transformation approach for ${targetGenre}
 3. Provide detailed production guidance with specific techniques
 4. Include plugin-specific parameter recommendations based on user's setup
 
+**BPM Detection Guidelines:**
+- Listen carefully for beats and transients to determine precise BPM value
+- Report a single specific BPM number (e.g. "124 BPM" not "120-130 BPM")
+- Use beat counting over time to verify accuracy
+- For variable tempo tracks, report the main/dominant tempo
+
+**Key & Chord Progression Analysis Guidelines:**
+- Listen carefully to the entire track to identify ALL chord progressions present
+- For each progression, list BOTH:
+  1. Actual chord names with dashes between (e.g., "Am - C - F - G")
+  2. Roman numeral analysis in brackets (e.g., "[i - III - VI - VII]")
+- If multiple progressions are present, list each complete progression separated by commas
+- For the primary key determination:
+  1. Analyze all chord progressions together to determine the most likely tonal center
+  2. Consider where the track resolves harmonically at major section endpoints
+  3. Identify the scale/mode being used (major, minor, dorian, etc.)
+- If the key modulates during the track:
+  1. Explicitly note each modulation with an arrow (e.g., "C minor → D minor")
+  2. Specify where in the track the modulation occurs (e.g., "modulates at bridge")
+  3. For each key area, provide the corresponding chord progression
+- Identify any modal interchange or borrowed chords and note which mode they're borrowed from
+
 **Response Guidelines:**
-- Provide direct, confident analysis without using qualifiers like "Estimated" or "Based on" 
-- Present detected values as factual information without disclaimers or parenthetical notes
+- Provide direct, confident analysis based on the audio file only
+- Do NOT use qualifiers like "Estimated" or "Based on genre" or "Common for this style"
+- If you cannot detect a value from the audio, state "Unable to detect"
 - Focus on actionable production advice rather than analysis limitations
 
 **Target Genre:** ${targetGenre}
 **Target Tempo Range:** ${tempoRange}
 **Suggested Sections:** ${sections.join(", ")}
+    ${metadataBlock && metadataBlock.drumPatterns ? `**Typical Drum Patterns:** ${metadataBlock.drumPatterns}` : ''}
+    ${chordProgressions ? `**Common Chord Progressions:** ${chordProgressions}` : ''}
+    ${scalesAndModes ? `**Typical Scales/Modes:** ${scalesAndModes}` : ''}
+    ${songStructure ? `**Song Structure:** ${songStructure}` : ''}
+    ${dynamicRange ? `**Dynamic Characteristics:** ${dynamicRange}` : ''}
+    ${relatedGenres ? `**Related Genres for Inspiration:** ${relatedGenres}` : ''}
+    ${productionTips ? `**Production Techniques:** ${productionTips}` : ''}
 
 **CRITICAL: Return your response in this EXACT JSON format:**
 {
   "guide": "FULL_MARKDOWN_GUIDE_HERE",
   "originalTempo": 120,
   "originalKey": "C minor",
-  "originalChordProgression": "i-VI-III-VII",
+  "originalChordProgression": "Am - C - F - G [i - III - VI - VII]",
   "targetTempo": 128,
   "targetKey": "C minor",
   "sections": ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"]
@@ -840,10 +983,10 @@ export async function generateRemixGuide(
 
 ## 🎧 Original Track DNA Analysis
 **Detected Characteristics:**
-- **Original Tempo:** [BPM]
-- **Original Key:** [Key]
-- **Harmonic Blueprint:** [Chord progression]
-- **Rhythmic Feel:** [Time signature and groove]
+- **Original Tempo:** [Exact BPM or "Unable to detect"]
+- **Original Key:** [Key or "Unable to detect"]
+- **Harmonic Blueprint:** [Chord names and Roman numerals, e.g., "Am - C - F - G [i - III - VI - VII]" or "Unable to detect"]
+- **Rhythmic Feel:** [Time signature and groove or "Unable to detect"]
 - **Sonic Character:** [Tonal qualities and instrumentation]
 
 **Transformation Strategy:**
@@ -923,24 +1066,19 @@ ${pluginSection}
 Focus on practical, actionable techniques that can be implemented immediately. Provide specific parameter suggestions and creative approaches that honor both the original track and the target genre aesthetic.
 
 **IMPORTANT:** Return ONLY the JSON object with the complete markdown guide in the "guide" field. Focus on detailed analysis and production techniques.`;
-
     const textPart = { text: prompt };
     const audioPart = {
       inlineData: { data: audioData.base64, mimeType: audioData.mimeType },
     };
-
     const contents = [audioPart, textPart];
-
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL_NAME,
       contents: { parts: contents },
     });
-
-    const responseText = response.text;
-    if (typeof responseText !== 'string') {
+    const responseText: string = response.text ?? "";
+    if (typeof responseText !== 'string' || !responseText) {
       throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
-
     // Parse the JSON response
     let jsonStr = responseText.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
@@ -948,58 +1086,51 @@ Focus on practical, actionable techniques that can be implemented immediately. P
     if (match && match[2]) {
       jsonStr = match[2].trim();
     }
-
-    let parsedResponse;
+    let parsedResponse: any;
     try {
       parsedResponse = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("Failed to parse JSON response:", jsonStr);
-      // Fallback: extract what we can from the text
-      const tempoMatch = responseText.match(/Target Tempo.*?(\d+)/i);
-      const keyMatch = responseText.match(/Target Key.*?([A-G][#b]?\s*(?:major|minor|maj|min)?)/i);
-      
+      // Fallback: extract what we can from the text, but do NOT use genre-based defaults
+      const tempoMatch = responseText ? responseText.match(/Original Tempo:\s*([\d.]+)/i) : null;
+      const keyMatch = responseText ? responseText.match(/Original Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min)?|Unable to detect)/i) : null;
+      const chordMatch = responseText ? responseText.match(/Harmonic Blueprint:\s*([^\n]+|Unable to detect)/i) : null;
       return {
-        guide: responseText,
-        targetTempo: tempoMatch ? parseInt(tempoMatch[1]) : (genreInfo?.tempoRange?.[0] || 128),
-        targetKey: keyMatch ? keyMatch[1].trim() : "C minor",
+        guide: responseText || "",
+        targetTempo: tempoMatch && tempoMatch[1] ? parseFloat(tempoMatch[1]) : -1,
+        targetKey: keyMatch && keyMatch[1] ? keyMatch[1].trim() : "Unable to detect",
         sections,
-        originalKey: "C minor",
-        originalTempo: 120,
-        originalChordProgression: "i-VI-III-VII"
+        originalKey: keyMatch && keyMatch[1] ? keyMatch[1].trim() : "Unable to detect",
+        originalTempo: tempoMatch && tempoMatch[1] ? parseFloat(tempoMatch[1]) : undefined,
+        originalChordProgression: chordMatch && chordMatch[1] ? chordMatch[1].trim() : "Unable to detect"
       };
     }
-
-    // Validate and structure the response
+    // Validate and structure the response, do NOT use genre-based defaults for original values
     const result = {
-      guide: parsedResponse.guide || responseText,
-      targetTempo: parsedResponse.targetTempo || (genreInfo?.tempoRange?.[0] || 128),
-      targetKey: parsedResponse.targetKey || "C minor",
-      sections: parsedResponse.sections || sections,
-      originalKey: parsedResponse.originalKey || "C minor",
-      originalTempo: parsedResponse.originalTempo || 120,
-      originalChordProgression: parsedResponse.originalChordProgression || "i-VI-III-VII"
+      guide: parsedResponse && parsedResponse.guide ? parsedResponse.guide : responseText,
+      targetTempo: parsedResponse && parsedResponse.targetTempo ? parsedResponse.targetTempo : undefined,
+      targetKey: parsedResponse && parsedResponse.targetKey ? parsedResponse.targetKey : undefined,
+      sections: parsedResponse && parsedResponse.sections ? parsedResponse.sections : sections,
+      originalKey: parsedResponse && parsedResponse.originalKey ? parsedResponse.originalKey : "Unable to detect",
+      originalTempo: parsedResponse && parsedResponse.originalTempo ? parsedResponse.originalTempo : undefined,
+      originalChordProgression: parsedResponse && parsedResponse.originalChordProgression ? parsedResponse.originalChordProgression : "Unable to detect"
     };
-
     return result;
-
   } catch (error) {
     console.error("Error generating remix guide:", error);
-    let specificMessage = "An unknown error occurred while generating remix guide.";
-    if (error instanceof Error) {
-      specificMessage = error.message;
-      if (error.message.includes("API key not valid") || error.message.includes("permission")) {
-        specificMessage = "Invalid API Key or insufficient permissions. Please check your API key configuration.";
-      } else if (error.message.toLowerCase().includes("network error") || error.message.toLowerCase().includes("failed to fetch")) {
-        specificMessage = `Network error: Failed to connect to Gemini API. Please check your internet connection. (${error.message})`;
-      } else if (error.message.includes("Candidate was blocked")) {
-        specificMessage = "The response for remix guide was blocked by the AI. This might be due to content policies. Please try again or adjust your input.";
-      } else if (error.message.includes("audio")) {
-        specificMessage = `There was an issue processing the audio file. Ensure it's a common format and not too large. (${error.message})`;
-      }
-    }
-    throw new Error(specificMessage);
+    // Always throw a generic error here, as all error messages are handled above
+    return {
+      guide: "",
+      targetTempo: genreInfo?.tempoRange?.[0] || 128,
+      targetKey: "Unable to detect",
+      sections: genreInfo?.sections || ["Intro", "Build-Up", "Drop", "Breakdown", "Outro"],
+      originalKey: "Unable to detect",
+      originalTempo: -1,
+      originalChordProgression: "Unable to detect"
+    };
   }
 }
+    // Removed unreachable throw and stray braces
 
 /**
  * 7. Enhanced Mix Feedback with Audio File Support
@@ -1209,10 +1340,9 @@ Provide your expert guidance:`;
     }
     
     return responseText;
-
   } catch (error) {
     console.error("Error generating AI assistant response:", error);
-    let specificMessage = "An unknown error occurred while generating response.";
+    let specificMessage = "An unknown error occurred while generating content.";
     if (error instanceof Error) {
       specificMessage = error.message;
       if (error.message.includes("API key not valid") || error.message.includes("permission")) {
@@ -1431,9 +1561,7 @@ Analyze both audio files and provide your comparison in clear Markdown format wi
 
 ## 🏆 Strengths & Opportunities (for Mix B)
 
-## 🚀 Actionable Recommendations (for Mix B only)
-
-Focus on specific, actionable feedback for improving Mix B while acknowledging its strengths compared to Mix A.`;
+## 🚀 Actionable Recommendations (for Mix B only)`;
 
   // Create audio parts for both files
   const mixATextPart = { text: `Mix A Audio (Earlier Version): "${inputs.mixAName}"` };

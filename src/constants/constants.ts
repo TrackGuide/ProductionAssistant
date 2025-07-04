@@ -24,9 +24,10 @@ export const LAST_USED_PLUGINS_KEY = "trackGuideLastUsedPlugins";
 // Import from remixGenres for consistency
 let genreSuggestions: string[] = [];
 
+import { getFlattenedGenreList } from './remixGenres';
+
 try {
   // Try to get the flattened genre list that includes metadata genres
-  const { getFlattenedGenreList } = require('./constants/remixGenres');
   genreSuggestions = getFlattenedGenreList();
 } catch (error) {
   // Fallback to static list if import fails
