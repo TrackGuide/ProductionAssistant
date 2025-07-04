@@ -1238,7 +1238,8 @@ export async function* generateMixFeedbackWithAudioStream(
     throw new Error("Streaming mix feedback requires an audio file.");
   }
 
-  // Convert file to base64
+
+  // Convert file to base64 (reuse logic from Mix Compare)
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1268,6 +1269,7 @@ export async function* generateMixFeedbackWithAudioStream(
     }
   }
 
+  // Build prompt as before
   const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
 
 ${dawContext}**Track Information:**
@@ -1364,11 +1366,27 @@ ${dawContext}**Track Information:**
 
 Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
 
-  const response = await ai.models.generateContent({
+  // Build Gemini API contents array (audio as inlineData, prompt as text)
+  const audioPart = {
+    inlineData: {
+      data: audioBase64,
+      mimeType: "audio/mpeg" // You may want to detect actual mime type
+    }
+  };
+  const promptPart = { text: prompt };
+  const contents = [audioPart, promptPart];
+
+  // Use streaming API (like Mix Compare)
+  const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
-    contents: prompt,
+    contents: { parts: contents },
   });
-  return response.text || "Unable to generate analysis. Please try again.";
+
+  for await (const chunk of stream) {
+    if (chunk.text) {
+      yield { text: chunk.text };
+    }
+  }
 };
 
 /**

@@ -965,26 +965,34 @@ const App: React.FC = () => {
     setMixFeedbackResult(null);
     setStreamingMixFeedback('');
     setMixFeedbackError(null);
-    
+
     try {
+      // Debug: Log file info
+      console.log('MixFeedback: audioFile', mixFeedbackInputs.audioFile);
       // Use streaming mix feedback for real-time updates
       let fullFeedback = '';
       const feedbackStream = generateMixFeedbackWithAudioStream(mixFeedbackInputs);
-      
+      if (!feedbackStream || typeof feedbackStream[Symbol.asyncIterator] !== 'function') {
+        throw new Error('generateMixFeedbackWithAudioStream did not return an async iterable.');
+      }
+      let gotChunk = false;
       for await (const chunk of feedbackStream) {
+        gotChunk = true;
         if (chunk.text) {
           fullFeedback += chunk.text;
           setStreamingMixFeedback(fullFeedback);
         }
       }
-      
+      if (!gotChunk) {
+        throw new Error('No data received from feedback stream.');
+      }
       // Apply lyrics filtering like other features
       const filteredFeedback = filterLyricsFromAIResponse(fullFeedback);
       setMixFeedbackResult(filteredFeedback);
       setStreamingMixFeedback('');
-      
     } catch (err: any) {
-      setMixFeedbackError(err.message || "An unknown error occurred while generating mix feedback.");
+      console.error('MixFeedback error:', err);
+      setMixFeedbackError((err && err.message) ? err.message : "An unknown error occurred while generating mix feedback.");
       setStreamingMixFeedback('');
     } finally {
       setIsGeneratingMixFeedback(false);
