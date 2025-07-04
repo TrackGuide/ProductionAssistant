@@ -12,39 +12,41 @@
  */
 export const extractJsonFromAiResponse = (rawResponse: string, contextName: string = 'AI response'): string => {
   let jsonStr = rawResponse.trim();
-  
   if (!jsonStr) {
     throw new Error(`Empty ${contextName} received`);
   }
-  
+
   // Handle various markdown code block formats
   const codeBlockPatterns = [
-    /^```json\s*\n(.*?)\n\s*```$/s,          // ```json\n...\n```
-    /^```\s*json\s*\n(.*?)\n\s*```$/s,       // ``` json\n...\n```
-    /^```\s*\n(.*?)\n\s*```$/s,              // ```\n...\n```
-    /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s       // General case
+    /^```json\s*\n([\s\S]*?)\n\s*```$/s,          // ```json\n...\n```
+    /^```\s*json\s*\n([\s\S]*?)\n\s*```$/s,       // ``` json\n...\n```
+    /^```\s*\n([\s\S]*?)\n\s*```$/s,              // ```\n...\n```
+    /^```(\w*)?\s*\n?([\s\S]*?)\n?\s*```$/s       // General case
   ];
-  
   for (const pattern of codeBlockPatterns) {
     const match = jsonStr.match(pattern);
     if (match) {
-      jsonStr = match[match.length - 1].trim(); // Get the last capture group
+      jsonStr = match[match.length - 1].trim();
       break;
     }
   }
-  
   // Remove any remaining backticks or markdown artifacts
   jsonStr = jsonStr
-    .replace(/^`+/g, '')      // Remove leading backticks
-    .replace(/`+$/g, '')      // Remove trailing backticks
-    .replace(/^json\s*/i, '') // Remove 'json' language identifier
+    .replace(/^`+/g, '')
+    .replace(/`+$/g, '')
+    .replace(/^json\s*/i, '')
     .trim();
-  
+
   // Validate we have valid JSON structure
   if (!jsonStr.startsWith('{') || !jsonStr.endsWith('}')) {
-    throw new Error(`${contextName} doesn't contain valid JSON structure. Got: ${jsonStr.substring(0, 100)}...`);
+    // Fallback: try to extract the first {...} JSON object from anywhere in the string
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    } else {
+      throw new Error(`${contextName} doesn't contain valid JSON structure. Got: ${jsonStr.substring(0, 100)}...`);
+    }
   }
-  
   return jsonStr;
 };
 
