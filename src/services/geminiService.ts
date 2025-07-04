@@ -152,6 +152,7 @@ export const generateGuidebookContent = async (
   const pluginSection       = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
   const prompt = `// ⚡ Including all fields
+
 You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
 
 Create a detailed TrackGuide for the following specifications:
@@ -168,6 +169,8 @@ ${chordsContext}
 ${referenceContext}
 ${lyricsContext}
 ${notesContext}
+
+At the end of your opening summary sentence, always add: This guide is a starting point—remember to use your ears and trust your intuition.
 
 **Note:** This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
