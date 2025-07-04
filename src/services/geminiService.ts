@@ -169,7 +169,9 @@ ${referenceContext}
 ${lyricsContext}
 ${notesContext}
 
-**IMPORTANT FORMATTING REQUIREMENTS:**
+**Note:** This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
+
+**IMPORTANT REQUIREMENTS:**
 1. Include the exact Structural Blueprint table with Instrumentation column as provided
 2. Use specific plugin parameters when DAW/plugins are specified
 3. Provide actionable, detailed guidance for each section
