@@ -170,7 +170,7 @@ ${referenceContext}
 ${lyricsContext}
 ${notesContext}
 
-At the end of your opening summary sentence, always add: This guide is a starting point—remember to use your ears and trust your intuition.
+At the end of your opening summary sentence, always add: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
 **Note:** This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
