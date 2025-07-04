@@ -59,17 +59,17 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       </p>
     ),
     ul: ({ children }: any) => (
-      <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1 ml-4">
+      <ul className="list-disc text-gray-300 mb-4 space-y-1 ml-4 pl-4">
         {children}
       </ul>
     ),
     ol: ({ children }: any) => (
-      <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1 ml-4">
+      <ol className="list-decimal text-gray-300 mb-4 space-y-1 ml-4 pl-4">
         {children}
       </ol>
     ),
     li: ({ children }: any) => (
-      <li className="text-gray-300 mb-1">
+      <li className="text-gray-300 mb-1 pl-1">
         {children}
       </li>
     ),
