@@ -652,4 +652,4 @@ const RemixGuideAI: React.FC<{ onContentUpdate?: (content: string) => void }> = 
   );
 };
 
-export { RemixGuideAI };
+export default RemixGuideAI;
