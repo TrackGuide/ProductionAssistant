@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
@@ -293,26 +292,63 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     try {
         const midiStream = await generateMidiPatternSuggestions(settingsForGeneration);
         let jsonStr = '';
-        
-        // Handle streaming response
         for await (const chunk of midiStream) {
           if (chunk.text) {
             jsonStr += chunk.text;
           }
         }
-
         console.log('Raw MIDI response:', jsonStr);
-
-        // Try to parse JSON
+        // Fallback minimal pattern generator
+        const getMinimalMidiPattern = () => {
+          const key = settingsForGeneration.key || 'C Major';
+          const tempo = settingsForGeneration.tempo || 120;
+          const bars = settingsForGeneration.bars || 4;
+          const targetInstruments = settingsForGeneration.targetInstruments || ['chords', 'bassline', 'melody', 'drums'];
+          const minimal: GeneratedMidiPatterns = {};
+          if (targetInstruments.includes('chords')) {
+            minimal.chords = [{
+              time: 0,
+              name: key.split(' ')[0] + 'maj',
+              duration: bars,
+              notes: [{ pitch: 'C4', midi: 60 }, { pitch: 'E4', midi: 64 }, { pitch: 'G4', midi: 67 }],
+              velocity: 90
+            }];
+          }
+          if (targetInstruments.includes('bassline')) {
+            minimal.bassline = [{
+              time: 0,
+              midi: 36,
+              duration: bars,
+              velocity: 100,
+              pitch: 'C2'
+            }];
+          }
+          if (targetInstruments.includes('melody')) {
+            minimal.melody = [{
+              time: 0,
+              midi: 72,
+              duration: 1,
+              velocity: 95,
+              pitch: 'C5'
+            }];
+          }
+          if (targetInstruments.includes('drums')) {
+            minimal.drums = {
+              kick: [{ time: 0, duration: 0.25, velocity: 120 }],
+              snare: [{ time: 1, duration: 0.25, velocity: 100 }],
+              hihat_closed: [{ time: 0.5, duration: 0.125, velocity: 80 }]
+            };
+          }
+          return minimal;
+        };
         let patternsData;
         try {
-            patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'MIDI generation');
+            patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, 'MIDI generation', getMinimalMidiPattern());
         } catch (parseError) {
             console.error('JSON parse error:', parseError);
             console.error('Failed to parse:', jsonStr);
-            throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}. Response was: ${jsonStr.substring(0, 200)}...`);
+            patternsData = getMinimalMidiPattern();
         }
-
         console.log('Parsed MIDI patterns:', patternsData);
 
         // Validate patterns before setting them
@@ -483,23 +519,58 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     try {
         const midiStream = await generateMidiPatternSuggestions(preservedSettings);
         let jsonStr = '';
-        
-        // Handle streaming response
         for await (const chunk of midiStream) {
           if (chunk.text) {
             jsonStr += chunk.text;
           }
         }
-
         console.log(`Raw MIDI response for ${trackType}:`, jsonStr);
 
         let newPatternsData;
+        // Fallback minimal pattern for single track
+        const getMinimalSingleTrackPattern = () => {
+          const key = preservedSettings.key || 'C Major';
+          const bars = preservedSettings.bars || 4;
+          const minimal: GeneratedMidiPatterns = {};
+          if (trackType === 'chords') {
+            minimal.chords = [{
+              time: 0,
+              name: key.split(' ')[0] + 'maj',
+              duration: bars,
+              notes: [{ pitch: 'C4', midi: 60 }, { pitch: 'E4', midi: 64 }, { pitch: 'G4', midi: 67 }],
+              velocity: 90
+            }];
+          } else if (trackType === 'bassline') {
+            minimal.bassline = [{
+              time: 0,
+              midi: 36,
+              duration: bars,
+              velocity: 100,
+              pitch: 'C2'
+            }];
+          } else if (trackType === 'melody') {
+            minimal.melody = [{
+              time: 0,
+              midi: 72,
+              duration: 1,
+              velocity: 95,
+              pitch: 'C5'
+            }];
+          } else if (trackType === 'drums') {
+            minimal.drums = {
+              kick: [{ time: 0, duration: 0.25, velocity: 120 }],
+              snare: [{ time: 1, duration: 0.25, velocity: 100 }],
+              hihat_closed: [{ time: 0.5, duration: 0.125, velocity: 80 }]
+            };
+          }
+          return minimal;
+        };
         try {
-            newPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, `${trackType} regeneration`);
+            newPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, `${trackType} regeneration`, getMinimalSingleTrackPattern());
         } catch (parseError) {
             console.error(`JSON parse error for ${trackType}:`, parseError);
             console.error('Failed to parse:', jsonStr);
-            throw new Error(`Invalid JSON response from AI for ${trackType}: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`);
+            newPatternsData = getMinimalSingleTrackPattern();
         }
 
         console.log(`Parsed MIDI patterns for ${trackType}:`, newPatternsData);

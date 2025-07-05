@@ -51,19 +51,29 @@ export const extractJsonFromAiResponse = (rawResponse: string, contextName: stri
 };
 
 /**
- * Parses AI-generated MIDI patterns with enhanced error handling
+ * Parses AI-generated MIDI patterns with enhanced error handling and fallback
  * @param rawResponse - The raw response string from the AI
  * @param contextName - Optional context name for error messages
- * @returns Parsed GeneratedMidiPatterns object
- * @throws Error with descriptive message if parsing fails
+ * @param fallback - Optional fallback value to return if parsing fails
+ * @returns Parsed GeneratedMidiPatterns object or fallback
+ * @throws Error with descriptive message if parsing fails and no fallback is provided
  */
-export const parseAiMidiResponse = <T = any>(rawResponse: string, contextName: string = 'MIDI generation'): T => {
+export const parseAiMidiResponse = <T = any>(rawResponse: string, contextName: string = 'MIDI generation', fallback?: T): T => {
   try {
     const cleanedJson = extractJsonFromAiResponse(rawResponse, contextName);
     return JSON.parse(cleanedJson) as T;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
-    
+    // Try to extract the first {...} block as a last resort
+    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]) as T;
+      } catch {}
+    }
+    if (fallback !== undefined) {
+      return fallback;
+    }
     // Provide more specific error messages for common issues
     if (errorMessage.includes('Unexpected token')) {
       if (errorMessage.includes('`')) {
@@ -72,7 +82,6 @@ export const parseAiMidiResponse = <T = any>(rawResponse: string, contextName: s
         throw new Error(`AI returned malformed JSON for ${contextName}. (${errorMessage})`);
       }
     }
-    
     throw new Error(`Failed to parse ${contextName} response: ${errorMessage}`);
   }
 };
