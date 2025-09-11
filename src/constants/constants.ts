@@ -3,12 +3,11 @@
 /**
  * Name of the Gemini model to use for AI content generation.
  * Can be overridden via the GEMINI_MODEL_NAME or VITE_GEMINI_MODEL_NAME environment variable.
- * Defaults to 'gemini-2.0-flash-exp'.
- */
+/* Defaults to 'gemini-2.0-flash'. */
 export const GEMINI_MODEL_NAME =
   (typeof process !== 'undefined' && process.env.GEMINI_MODEL_NAME) ||
   (typeof import.meta !== 'undefined' && (import.meta as any).env.VITE_GEMINI_MODEL_NAME) ||
-  'gemini-2.0-flash-exp';
+  'gemini-2.0-flash';
 
 /**
  * Application-wide constants
