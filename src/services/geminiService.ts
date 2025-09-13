@@ -1958,7 +1958,7 @@ async function* _geminiStreamText(prompt: string, systemInstruction?: string) {
  * Analyze a vocal topline: estimate BPM/key/scale, transcribe lyrics, and optionally produce a simple melody MIDI (as base64).
  * Returns a ToplineAnalysis.
  */
-export async function analyzeTopline(audio: any, opts?: { requestMelodyMidi?: boolean }): Promise<ToplineAnalysis> {
+async function analyzeTopline_alt(audio: any, opts?: { requestMelodyMidi?: boolean }): Promise<ToplineAnalysis> {
   const inline = await _toInlineData(audio);
   const sys = `You are an expert music analyst. Return precise JSON with fields:
 {
@@ -2005,7 +2005,7 @@ Return ONLY a JSON object as described.
  * Stream a TrackGuide using BOTH user inputs and the detected topline analysis.
  * The guide MUST include a "Lyrics" section if lyrics were transcribed.
  */
-export async function* generateGuidebookFromToplineStream(inputs: UserInputs, analysis: ToplineAnalysis) {
+async function* generateGuidebookFromToplineStream_alt(inputs: UserInputs, analysis: ToplineAnalysis) {
   const parts: string[] = [];
   parts.push(`# TASK
 Generate a detailed, production-ready "TrackGuide" markdown. Use the user's vision and the vocal analysis as hard constraints.
@@ -2047,7 +2047,7 @@ If lyrics exist, include them verbatim in a "Lyrics" section near the top.
  * Returns a JSON object with at least a "melody" derived from the vocal line, suitable for your MIDI pipeline.
  * This is a non-streaming helper to keep UI simple.
  */
-export async function generateMidiFromTopline(settings: MidiFromToplineSettings & { analysis: ToplineAnalysis }): Promise<any> {
+async function generateMidiFromTopline_alt(settings: MidiFromToplineSettings & { analysis: ToplineAnalysis }): Promise<any> {
   const { analysis } = settings;
   const sys = `You convert musical descriptions into compact MIDI JSON for a DAW helper.
 Return ONLY JSON with the structure:
