@@ -234,7 +234,11 @@ const App: React.FC = () => {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
-  
+  // 🔶 Topline additions: hold auto-analysis + transcribed lyrics + pending MIDI from panel
+  const [toplineAnalysis, setToplineAnalysis] = useState<ToplineAnalysis | null>(null);
+  const [pendingToplineMidi, setPendingToplineMidi] = useState<GeneratedMidiPatterns | null>(null);
+  const [toplineLyrics, setToplineLyrics] = useState<string>("");
+
   // Production Coach chat state
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
 
@@ -393,6 +397,11 @@ const App: React.FC = () => {
     setCopyStatus('');
     stopPlayback();
     setShowLibraryModal(false);
+
+    // 🔶 Topline additions
+    setToplineAnalysis(null);
+    setPendingToplineMidi(null);
+    setToplineLyrics("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -415,18 +424,50 @@ const App: React.FC = () => {
     let initialPatternsData: GeneratedMidiPatterns | undefined;
     let finalMidiSettings: MidiSettings | undefined;
 
+    // 🔶 Ensure lyrics from auto-transcription flow are injected if user didn't type any
+    const finalInputs: UserInputs = {
+      ...inputs,
+      lyrics: (inputs.lyrics && inputs.lyrics.trim().length > 0)
+        ? inputs.lyrics
+        : (toplineLyrics || inputs.lyrics || '')
+    };
+
     try {
       setLoadingMessage('TrackGuide is generating...');
-      const guidebookStream = await generateGuidebookContent(inputs);
-      for await (const chunk of guidebookStream) {
+
+      // 🔶 If topline analysis exists, use the topline-aware stream; else fallback to text-only
+      const stream =
+        toplineAnalysis
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? (generateGuidebookFromToplineStream as any)(finalInputs, toplineAnalysis)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          : (generateGuidebookContent as any)(finalInputs);
+
+      for await (const chunk of stream) {
         finalGuidebookContent += chunk.text;
         setGeneratedGuidebook(prev => prev + chunk.text);
+      }
+
+      // 🔶 If we have lyrics and the model didn't include a dedicated section, append it
+      if (finalInputs.lyrics && !/^\s*##\s*Lyrics/im.test(finalGuidebookContent)) {
+        finalGuidebookContent += `
+
+## Lyrics
+
+${finalInputs.lyrics.trim()}
+`;
+        setGeneratedGuidebook(prev => prev + `
+
+## Lyrics
+
+${finalInputs.lyrics.trim()}
+`);
       }
 
       setLoadingMessage('Initial MIDI patterns are generating...');
       
       const aiGeneratedTitle = extractAiGeneratedTitleFromMarkdown(finalGuidebookContent);
-      const entryTitle = inputs.songTitle?.trim() ? inputs.songTitle.trim() : (aiGeneratedTitle || `TrackGuide for ${inputs.genre.join(', ') || 'Unknown Genre'}`);
+      const entryTitle = finalInputs.songTitle?.trim() ? finalInputs.songTitle.trim() : (aiGeneratedTitle || `TrackGuide for ${finalInputs.genre.join(', ') || 'Unknown Genre'}`);
       
       const newEntryId = Date.now().toString();
       const createdAt = new Date().toISOString();
@@ -434,7 +475,7 @@ const App: React.FC = () => {
       const parsedBpm = parseBpmFromGuidebook(finalGuidebookContent);
       const parsedKey = parseKeyFromGuidebook(finalGuidebookContent);
       const parsedProg = parseChordProgressionFromGuidebook(finalGuidebookContent);
-      const primaryGenre = inputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
+      const primaryGenre = finalInputs.genre[0] || MIDI_DEFAULT_SETTINGS.genre;
       
       const tempoRange = MIDI_TEMPO_RANGES[primaryGenre] || MIDI_TEMPO_RANGES.Default;
       const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
@@ -474,37 +515,50 @@ const App: React.FC = () => {
         }
         
         initialPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(accumulatedMidiJson, 'initial MIDI generation');
-        if (initialPatternsData.drums) {
+
+        // Normalize drum keys to lower_snake (you had this already)
+        if (initialPatternsData && (initialPatternsData as any).drums) {
           const lowercasedDrums: any = {};
-          for (const key in initialPatternsData.drums) {
-              lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = initialPatternsData.drums[key as keyof typeof initialPatternsData.drums];
+          for (const key in (initialPatternsData as any).drums) {
+            lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = (initialPatternsData as any).drums[key];
           }
-          initialPatternsData.drums = lowercasedDrums;
+          (initialPatternsData as any).drums = lowercasedDrums;
         }
+
+        // 🔶 Merge pending topline MIDI (if user uploaded vocal/topline earlier)
+        if (pendingToplineMidi) {
+          const merged: any = { ...(initialPatternsData || {}), ...(pendingToplineMidi as any) };
+          // If the topline MIDI contains a melody line, also alias it to vocal_topline
+          if ((pendingToplineMidi as any).melody && !(merged as any).vocal_topline) {
+            (merged as any).vocal_topline = (pendingToplineMidi as any).melody;
+          }
+          initialPatternsData = merged as GeneratedMidiPatterns;
+        }
+
         setMidiError(null);
       } catch (midiErr: any) {
         console.error("Initial MIDI generation failed:", midiErr);
-        const midiSpecificMessage = midiErr.message.toLowerCase().includes("json") 
+        const midiSpecificMessage = midiErr?.message?.toLowerCase?.().includes("json") 
             ? `AI returned invalid JSON for MIDI patterns during initial generation. (${midiErr.message})`
-            : `Initial MIDI generation failed: ${midiErr.message}.`;
+            : `Initial MIDI generation failed: ${midiErr?.message || 'Unknown error'}.`;
         setMidiError(midiSpecificMessage + " You can try generating MIDI manually in the MIDI tools section.");
-        initialPatternsData = undefined; // Ensure it's undefined on error
+        initialPatternsData = pendingToplineMidi || undefined; // still preserve vocal MIDI if available
       }
 
       setActiveGuidebookDetails({
         id: newEntryId,
         title: entryTitle,
-        genre: inputs.genre,
-        artistReference: inputs.artistReference,
-        referenceTrackLink: inputs.referenceTrackLink,
-        lyrics: inputs.lyrics,
-        key: inputs.key,
-        chords: inputs.chords,
-        generalNotes: inputs.generalNotes,
-        vibe: inputs.vibe,
-        daw: inputs.daw,
-        plugins: inputs.plugins,
-        availableInstruments: inputs.availableInstruments || '',
+        genre: finalInputs.genre,
+        artistReference: finalInputs.artistReference,
+        referenceTrackLink: finalInputs.referenceTrackLink,
+        lyrics: finalInputs.lyrics,
+        key: finalInputs.key,
+        chords: finalInputs.chords,
+        generalNotes: finalInputs.generalNotes,
+        vibe: finalInputs.vibe,
+        daw: finalInputs.daw,
+        plugins: finalInputs.plugins,
+        availableInstruments: finalInputs.availableInstruments || '',
         content: finalGuidebookContent, // Use fully assembled content
         createdAt,
         midiSettings: finalMidiSettings, 
@@ -512,10 +566,9 @@ const App: React.FC = () => {
       });
 
     } catch (err: any) {
-       setError(err.message || 'An unexpected error occurred while generating TrackGuide.');
-       // If guidebook streaming fails, ensure activeGuidebookDetails is not set with partial data
+       setError(err?.message || 'An unexpected error occurred while generating TrackGuide.');
        setActiveGuidebookDetails(null); 
-       setGeneratedGuidebook(""); // Clear potentially partial streamed content
+       setGeneratedGuidebook(""); 
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -541,7 +594,6 @@ const App: React.FC = () => {
   const handleUpdateGuidebookEntryMidi = (midiSettings: MidiSettings, generatedMidiPatterns: GeneratedMidiPatterns) => {
     setActiveGuidebookDetails(prev => {
         if (!prev) return null; 
-        // Ensure content (guidebook text) is preserved from the existing state
         return {
             ...prev, 
             midiSettings,
@@ -1403,7 +1455,33 @@ const App: React.FC = () => {
         setActiveGuidebookDetails(prev => (prev ? { ...prev, content: fullGuide } : prev));
       }}
       onMidiReady={(midi) => {
-        setActiveGuidebookDetails(prev => (prev ? { ...prev, generatedMidiPatterns: midi } : prev));
+        // 🔶 capture MIDI even before the main entry is created
+        setPendingToplineMidi(midi);
+        setActiveGuidebookDetails(prev => {
+          if (!prev) return prev;
+          const merged: any = { ...(prev.generatedMidiPatterns || {}), ...(midi as any) };
+          if ((midi as any).melody && !(merged as any).vocal_topline) {
+            (merged as any).vocal_topline = (midi as any).melody;
+          }
+          return { ...prev, generatedMidiPatterns: merged as GeneratedMidiPatterns };
+        });
+      }}
+      // The following two are optional — added with ts-ignore to avoid breaking builds
+      // if your ToplineBuilderPanel hasn't declared them yet.
+      // @ts-ignore
+      onAnalysisComplete={(analysis: ToplineAnalysis) => {
+        setToplineAnalysis(analysis);
+        if (analysis?.transcribedLyrics && (!inputs.lyrics || inputs.lyrics.trim() === '')) {
+          setInputs(prev => ({ ...prev, lyrics: analysis.transcribedLyrics! }));
+          setToplineLyrics(analysis.transcribedLyrics!);
+        }
+      }}
+      // @ts-ignore
+      onLyricsTranscribed={(lyrics: string) => {
+        setToplineLyrics(lyrics || "");
+        if (!inputs.lyrics || inputs.lyrics.trim() === '') {
+          setInputs(prev => ({ ...prev, lyrics: lyrics || "" }));
+        }
       }}
     />
   </div>
@@ -1416,7 +1494,7 @@ const App: React.FC = () => {
                           <Input label="Chords" name="chords" value={inputs.chords || ''} onChange={handleInputChange} placeholder="e.g., Am - F - C - G" />
                         </div>
                         <div>
-                          <Textarea label="Lyrics" name="lyrics" value={inputs.lyrics || ''} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={2} />
+                          <Textarea label="Lyrics" name="lyrics" value={(inputs.lyrics || '')} onChange={handleInputChange} placeholder="Paste your lyrics here if you have any..." rows={2} />
                         </div>
                       </div>
 
