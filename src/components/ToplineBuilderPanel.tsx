@@ -10,8 +10,10 @@ import {
   ToplineAnalysis,
   GeneratedMidiPatterns,
 } from "../constants/types";
+import { Button } from "./Button";
+import { Card } from "./Card";
+import { UploadIcon } from "./icons";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-
 
 type Props = {
   inputs: UserInputs;
@@ -19,8 +21,6 @@ type Props = {
   onGuideDone?: (fullText: string, analysis?: ToplineAnalysis) => void;
   onMidiReady?: (midi: GeneratedMidiPatterns) => void;
 };
-
-const ACCEPT = "audio/wav,audio/mpeg,audio/x-m4a,audio/mp4,audio/aac,audio/flac";
 
 export default function ToplineBuilderPanel({
   inputs,
@@ -69,7 +69,7 @@ export default function ToplineBuilderPanel({
       for await (const { text } of stream) {
         if (text) {
           guideRef.current += text;
-          setGuide(prev => prev + text);
+          setGuide((prev) => prev + text);
         }
       }
       onGuideDone?.(guideRef.current, analysis);
@@ -124,44 +124,78 @@ export default function ToplineBuilderPanel({
   }, [analysis, defaultMidi, inputs, onMidiReady]);
 
   const disabled = useMemo(() => busy !== null, [busy]);
-  const canGuide = !!analysis;
-  const canMidi = !!analysis;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <input type="file" accept={ACCEPT} onChange={handleFileChange} disabled={disabled} />
-        <button className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                onClick={runAnalysis} disabled={!file || disabled}>
-          {busy === "analyzing" ? "Analyzing…" : "Analyze Topline"}
-        </button>
-        <button className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                onClick={streamGuide} disabled={!canGuide || disabled}>
-          {busy === "guiding" ? "Generating Guide…" : "Generate Vocal-First Guide"}
-        </button>
-        <button className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                onClick={generateMidi} disabled={!canMidi || disabled}>
-          {busy === "midi" ? "Generating MIDI…" : "Generate MIDI From Topline"}
-        </button>
+    <div className="space-y-4">
+      {/* File upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-200 mb-2">
+          Upload Topline / Vocal
+        </label>
+        <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-600 bg-gray-700/30 hover:bg-gray-600 cursor-pointer transition-colors">
+          <UploadIcon className="w-4 h-4 text-gray-300" />
+          <span className="text-sm text-gray-200">
+            {file ? file.name : "Choose File"}
+          </span>
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </label>
       </div>
 
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={runAnalysis}
+          disabled={!file || disabled}
+        >
+          {busy === "analyzing" ? "Analyzing…" : "Analyze Topline"}
+        </Button>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={streamGuide}
+          disabled={!analysis || disabled}
+        >
+          {busy === "guiding" ? "Generating Guide…" : "Generate Vocal-First Guide"}
+        </Button>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={generateMidi}
+          disabled={!analysis || disabled}
+        >
+          {busy === "midi" ? "Generating MIDI…" : "Generate MIDI From Topline"}
+        </Button>
+      </div>
+
+      {/* Analysis summary */}
       {analysis && (
-        <div className="text-sm p-3 rounded bg-gray-50 border">
-          <div><strong>Detected:</strong></div>
-          <div>BPM: {typeof analysis.bpm === "number" ? analysis.bpm : analysis.bpm}</div>
-          <div>Key/Scale: {analysis.key} / {analysis.scale}</div>
-          <div>Phrases: {analysis.phrases.length} • Sections: {analysis.sections.length}</div>
-          <div>Motif: {analysis.motifSummary || "—"}</div>
-        </div>
+        <Card className="p-3 bg-gray-700/40 border border-gray-600/50 text-sm">
+          <div className="text-gray-200 font-semibold mb-1">Detected Topline</div>
+          <p>BPM: {typeof analysis.bpm === "number" ? analysis.bpm : analysis.bpm}</p>
+          <p>Key / Scale: {analysis.key} / {analysis.scale}</p>
+          <p>Phrases: {analysis.phrases.length} • Sections: {analysis.sections.length}</p>
+          <p>Motif: {analysis.motifSummary || "—"}</p>
+        </Card>
       )}
 
+      {/* Streamed guide */}
       {guide && (
-        <div className="p-3 rounded border bg-white">
+        <Card className="p-3 bg-gray-700/40 border border-gray-600/50">
           <MarkdownRenderer markdown={guide} />
-        </div>
+        </Card>
       )}
 
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {/* Errors */}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
     </div>
   );
 }
