@@ -10,7 +10,8 @@ import {
   ToplineAnalysis,
   GeneratedMidiPatterns,
 } from "../constants/types";
-import MarkdownRenderer from "./MarkdownRenderer";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+
 
 type Props = {
   inputs: UserInputs;
