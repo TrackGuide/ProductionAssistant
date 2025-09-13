@@ -25,6 +25,130 @@ if (!apiKey) {
 const ai = new GoogleGenAI({ apiKey });
 
 /**
+ * Robust helpers to accept audio in multiple shapes:
+ * - File/Blob
+ * - data URL string ("data:audio/...;base64,XXXX")
+ * - raw base64 string
+ * - { base64, mimeType }
+ * - { audioBase64, mimeType?, filename? }
+ * - { data, mimeType } where data is string|ArrayBuffer|Uint8Array|Blob
+ */
+function _sniffMime(filename?: string, fallback: string = "audio/wav"): string {
+  if (!filename) return fallback;
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".mp3")) return "audio/mpeg";
+  if (lower.endsWith(".wav")) return "audio/wav";
+  if (lower.endsWith(".m4a")) return "audio/mp4";
+  if (lower.endsWith(".aac")) return "audio/aac";
+  if (lower.endsWith(".flac")) return "audio/flac";
+  if (lower.endsWith(".ogg") || lower.endsWith(".oga")) return "audio/ogg";
+  if (lower.endsWith(".webm")) return "audio/webm";
+  return fallback;
+}
+
+function _arrayBufferToBase64(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function _normalizeAudioInput(audio: any, mimeHint?: string): Promise<{ base64: string; mimeType: string }> {
+  if (!audio) throw new Error("No audio provided to analyzeTopline.");
+  // If it's already a data URL string
+  if (typeof audio === "string") {
+    if (audio.startsWith("data:")) {
+      // data:[mime];base64,XXXX
+      const comma = audio.indexOf(",");
+      const header = audio.slice(5, comma); // "audio/wav;base64"
+      const [mime] = header.split(";");
+      return { base64: audio.slice(comma + 1), mimeType: mime || (mimeHint || "audio/wav") };
+    }
+    // raw base64
+    return { base64: audio, mimeType: mimeHint || "audio/wav" };
+  }
+  // Blob / File
+  if (typeof Blob !== "undefined" && audio instanceof Blob) {
+    const mimeType = (audio as any).type || (mimeHint || "audio/wav");
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onloadend = () => {
+        try {
+          const s = String(r.result);
+          resolve(s.split(",")[1]);
+        } catch (err) { reject(err); }
+      };
+      r.onerror = reject;
+      r.readAsDataURL(audio);
+    });
+    return { base64, mimeType };
+  }
+  // { base64, mimeType }
+  if (typeof audio === "object" && "base64" in audio) {
+    return { base64: (audio as any).base64, mimeType: (audio as any).mimeType || (mimeHint || "audio/wav") };
+  }
+  // { audioBase64, filename?, mimeType? }
+  if (typeof audio === "object" && "audioBase64" in audio) {
+    const fn = (audio as any).filename as (string | undefined);
+    const guessed = _sniffMime(fn, mimeHint || "audio/wav");
+    return { base64: (audio as any).audioBase64, mimeType: (audio as any).mimeType || guessed };
+  }
+  // { data, mimeType }
+  if (typeof audio === "object" && "data" in audio && "mimeType" in audio) {
+    const d = (audio as any).data;
+    const mime = (audio as any).mimeType || mimeHint || "audio/wav";
+    if (typeof d === "string") {
+      if (d.startsWith("data:")) {
+        const comma = d.indexOf(",");
+        const header = d.slice(5, comma);
+        const [m] = header.split(";");
+        return { base64: d.slice(comma + 1), mimeType: m || mime };
+      }
+      // assume raw base64 string
+      return { base64: d, mimeType: mime };
+    }
+    if (typeof Blob !== "undefined" && d instanceof Blob) {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onloadend = () => {
+          try {
+            const s = String(r.result);
+            resolve(s.split(",")[1]);
+          } catch (err) { reject(err); }
+        };
+        r.onerror = reject;
+        r.readAsDataURL(d);
+      });
+      return { base64, mimeType: (d as any).type || mime };
+    }
+    // ArrayBuffer or Uint8Array
+    if (d instanceof ArrayBuffer || (typeof Uint8Array !== "undefined" && d instanceof Uint8Array)) {
+      return { base64: _arrayBufferToBase64(d), mimeType: mime };
+    }
+  }
+  // Fallback: try FileReader if possible
+  if (typeof FileReader !== "undefined") {
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onloadend = () => {
+          try {
+            const s = String(r.result);
+            resolve(s.split(",")[1]);
+          } catch (err) { reject(err); }
+        };
+        r.onerror = reject;
+        r.readAsDataURL(audio as any);
+      });
+      return { base64, mimeType: mimeHint || "audio/wav" };
+    } catch (e) {
+      // fallthrough
+    }
+  }
+  throw new Error("Unsupported audio input format for analyzeTopline.");
+}
+
+/**
  * Helper function to build plugin-specific parameter suggestions
  */
 function buildPluginParameterSection(daw?: string, plugins?: string): string {
@@ -648,59 +772,55 @@ export const analyzeTopline = async (
   audio: File | { base64: string; mimeType: string }
 ): Promise<ToplineAnalysis> => {
   if (!apiKey) throw new Error("API key not configured.");
-
-  const toBase64 = async () => {
-    if ("base64" in audio) return audio.base64;
-    const b64 = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onloadend = () => {
-        const s = String(r.result);
-        resolve(s.split(",")[1]);
-      };
-      r.onerror = reject;
-      r.readAsDataURL(audio as File);
-    });
-    return b64;
-  };
-
-  const audioBase64 = await toBase64();
+  // Accept File/Blob, data URL, raw base64, or objects with audioBase64/base64
+  const norm = await _normalizeAudioInput(audio, (audio && audio.filename) ? _sniffMime(audio.filename) : undefined);
   const audioPart = {
     inlineData: {
-      data: audioBase64,
-      mimeType: "mimeType" in audio ? audio.mimeType : "audio/mpeg"
+      data: norm.base64,
+      mimeType: norm.mimeType || "audio/wav"
     }
-  };
+  } as const;
 
-  const prompt = `You are TrackGuideAI's Topline Analyzer. Analyze ONLY the uploaded vocal audio and return STRICT JSON for:
+  const sys = `You are an expert music analyst. Return precise JSON with fields:
 {
-  "bpm": 0 | "Unable to detect",
+  "bpm": number | "Unable to detect",
   "timeSignature": "4/4" | "3/4" | "6/8" | "Unable to detect",
-  "key": "A minor" | "C major" | "Unable to detect",
-  "scale": "Natural minor" | "Major" | "Dorian" | "Unable to detect",
-  "tessitura": {"low": "C3", "high": "G4"} | null,
-  "registerCenter": "E4" | null,
-  "pitchContour": [ { "time": 0, "duration": 1, "midi": 64, "pitch": "E4", "lyric": "word", "velocity": 90 } ],
-  "phrases": [ { "start": 0, "end": 4, "text": "lyric line", "intensity": "med" } ],
-  "sections": [ { "label": "Verse", "start": 0, "end": 16, "confidence": 0.82 } ],
-  "motifSummary": "Short description of recurring rhythmic/melodic motifs",
-  "chordCandidates": [ { "section": "Verse", "chords": "Am - F - C - G", "roman": "i - VI - III - VII" } ]
+  "key": string | "Unable to detect",
+  "scale": string | "Unable to detect",
+  "tessitura": {"low": string, "high": string} | null,
+  "registerCenter": string | null,
+  "pitchContour": [ { "time": number, "duration": number, "midi": number, "pitch": string, "lyric": string, "velocity": number } ],
+  "phrases": [ { "start": number, "end": number, "text": string, "intensity": "low" | "med" | "high" } ],
+  "sections": [ { "label": string, "start": number, "end": number, "confidence": number } ],
+  "motifSummary": string,
+  "chordCandidates": [ { "section": string, "chords": string, "roman": string } ],
+  "lyrics": string | null
 }
 Rules:
-1) Use audio evidence only. If unsure, set fields to "Unable to detect" or null where specified.
-2) pitchContour times are in beats; durations in beats; midi 21–108; velocity 1–127 if used.
-3) Choose chordCandidates that do NOT contradict melody notes present in pitchContour for that section.
-4) Return ONLY the JSON.`;
+- Use audio evidence only.
+- If unsure, set exact fields to "Unable to detect" or null as specified.
+- pitchContour times/durations are in beats at the inferred BPM.
+- Always include "lyrics" (transcribe best-effort).`;
 
-  const resp = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: { parts: [audioPart, { text: prompt }] },
-  });
-
-  let text = resp.text?.trim() || "";
-  const fence = /^```(?:json)?\s*\n([\s\S]*?)\n```$/;
-  const m = text.match(fence);
-  if (m) text = m[1].trim();
-  const parsed = JSON.parse(text) as ToplineAnalysis;
+  const model = ai.models.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction: sys });
+  const resp = await model.generateContent([audioPart, { text: "Analyze this vocal topline. Respond with ONLY JSON." }]);
+  const text = resp.response.text ? resp.response.text() : String(resp.response);
+  // Extract JSON (tolerate markdown fenced code)
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const jsonStr = jsonMatch ? jsonMatch[1] : text;
+  let parsed: ToplineAnalysis;
+  try {
+    parsed = JSON.parse(jsonStr) as ToplineAnalysis;
+  } catch (e) {
+    // Best effort: try to locate JSON object
+    const braceStart = jsonStr.indexOf("{");
+    const braceEnd = jsonStr.lastIndexOf("}");
+    if (braceStart >= 0 && braceEnd > braceStart) {
+      parsed = JSON.parse(jsonStr.slice(braceStart, braceEnd + 1)) as ToplineAnalysis;
+    } else {
+      throw new Error("Topline analysis JSON parse failed.");
+    }
+  }
   return parsed;
 };
 
@@ -1855,237 +1975,3 @@ Analyze both audio files and provide your comparison in clear Markdown format wi
     }
   }
 }
-
-
-// === BEGIN: Appended Topline/Vocal Upload Support (non-breaking) ===
-
-/**
- * Utility: convert a File/Blob/Base64 string into { mimeType, data } for Gemini inlineData.
- */
-async function _toInlineData(audio: any): Promise<{ mimeType: string; data: string }> {
-  // If already looks like inlineData, pass through
-  if (audio && typeof audio === 'object' && audio.mimeType && audio.data) {
-    return audio as { mimeType: string; data: string };
-  }
-  // If it's a data URL or base64 string
-  if (typeof audio === 'string') {
-    const isDataUrl = audio.startsWith('data:');
-    if (isDataUrl) {
-      const [meta, b64] = audio.split(',', 2);
-      const mimeMatch = /^data:([^;]+);base64$/.exec(meta);
-      const mimeType = mimeMatch ? mimeMatch[1] : 'audio/mpeg';
-      return { mimeType, data: b64 };
-    }
-    // Assume raw base64 of an mp3 by default
-    return { mimeType: 'audio/mpeg', data: audio };
-  }
-  // If it's a Blob / File
-  if (typeof window !== 'undefined' && typeof (window as any).FileReader !== 'undefined' && audio && (audio as Blob).slice) {
-    const blob: Blob = audio as Blob;
-    const mimeType = (blob as any).type || 'audio/mpeg';
-    const reader = new FileReader();
-    const p = new Promise<{ mimeType: string; data: string }>((resolve, reject) => {
-      reader.onerror = () => reject(reader.error);
-      reader.onload = () => {
-        try {
-          const result = String(reader.result || '');
-          if (result.startsWith('data:')) {
-            const [meta, b64] = result.split(',', 2);
-            resolve({ mimeType, data: b64 });
-          } else {
-            // Should not happen, but fallback
-            resolve({ mimeType, data: result });
-          }
-        } catch (e) { reject(e); }
-      };
-    });
-    reader.readAsDataURL(blob);
-    return p;
-  }
-  throw new Error('Unsupported audio input. Provide File/Blob or base64 data URL/string.');
-}
-
-/**
- * Utility: best-effort JSON extraction from LLM text.
- */
-function _extractJson<T = any>(raw: string): T {
-  try {
-    // Try raw first
-    return JSON.parse(raw) as T;
-  } catch {}
-  // Try fenced blocks
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(raw);
-  if (fence && fence[1]) {
-    try { return JSON.parse(fence[1]); } catch {}
-  }
-  // Try first {...} block
-  const brace = /(\{[\s\S]*\})/.exec(raw);
-  if (brace && brace[1]) {
-    try { return JSON.parse(brace[1]); } catch {}
-  }
-  throw new Error('AI did not return valid JSON.');
-}
-
-/**
- * Utility: stream text from a Gemini call. This uses @google/genai if available.
- */
-async function* _geminiStreamText(prompt: string, systemInstruction?: string) {
-  try {
-    // We import lazily to avoid bundling issues if types are missing
-    const { GoogleGenAI } = await import("@google/genai");
-    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (globalThis as any)?.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error('Missing VITE_GEMINI_API_KEY');
-    // @ts-ignore - types may vary across versions
-    const client = new GoogleGenAI({ apiKey });
-    // @ts-ignore
-    const model = client.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction });
-    // @ts-ignore
-    const stream = await model.generateContentStream({
-      contents: [{ role: "user", parts: [{ text: prompt }]}],
-    });
-    // @ts-ignore
-    for await (const chunk of stream.stream) {
-      const text = (chunk?.text && chunk.text()) || (chunk?.candidates?.[0]?.content?.parts?.[0]?.text) || "";
-      if (text) yield { text };
-    }
-  } catch (err) {
-    // Fallback: single-shot non-streaming error
-    throw err;
-  }
-}
-
-/**
- * Analyze a vocal topline: estimate BPM/key/scale, transcribe lyrics, and optionally produce a simple melody MIDI (as base64).
- * Returns a ToplineAnalysis.
- */
-async function analyzeTopline_alt(audio: any, opts?: { requestMelodyMidi?: boolean }): Promise<ToplineAnalysis> {
-  const inline = await _toInlineData(audio);
-  const sys = `You are an expert music analyst. Return precise JSON with fields:
-{
-  "bpm": number,                       // Estimated tempo
-  "key": string,                       // e.g., "C Major" or "A Minor"
-  "scale": string,                     // e.g., "Dorian", "Mixolydian", "Natural Minor"
-  "lyrics": string,                    // Transcribed lyrics (if any), empty string if none discernible
-  "confidence": number,                // 0..1
-  "notes": string                      // brief notes/assumptions
-}`;
-  const prompt = `Analyze the following isolated vocal/topline audio. Estimate BPM, musical key, and scale/mode. 
-If words are sung, transcribe lyrics clearly.
-Return ONLY a JSON object as described.
-
-[Audio follows as inlineData].`;
-
-  // @ts-ignore
-  const { GoogleGenAI } = await import("@google/genai");
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (globalThis as any)?.VITE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Missing VITE_GEMINI_API_KEY');
-  // @ts-ignore
-  const client = new GoogleGenAI({ apiKey });
-  // @ts-ignore
-  const model = client.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction: sys });
-  // @ts-ignore
-  const res = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: inline }]}],
-  });
-  // @ts-ignore
-  const text = res?.response?.candidates?.[0]?.content?.parts?.map((p: any)=>p.text).join('') || res?.response?.text || res?.text || '';
-  const json = _extractJson<any>(text);
-  const analysis: ToplineAnalysis = {
-    bpm: json.bpm || 120,
-    key: json.key || "C Major",
-    scale: json.scale || "Ionian",
-    lyrics: json.lyrics || "",
-    confidence: typeof json.confidence === 'number' ? json.confidence : 0.6,
-    notes: json.notes || "",
-  };
-  return analysis;
-}
-
-/**
- * Stream a TrackGuide using BOTH user inputs and the detected topline analysis.
- * The guide MUST include a "Lyrics" section if lyrics were transcribed.
- */
-async function* generateGuidebookFromToplineStream_alt(inputs: UserInputs, analysis: ToplineAnalysis) {
-  const parts: string[] = [];
-  parts.push(`# TASK
-Generate a detailed, production-ready "TrackGuide" markdown. Use the user's vision and the vocal analysis as hard constraints.
-If lyrics exist, include them verbatim in a "Lyrics" section near the top.
-
-# USER INPUTS (summarize):
-- Title: ${inputs.songTitle || "(AI suggest one)"} 
-- Genres: ${Array.isArray(inputs.genre) ? inputs.genre.join(', ') : inputs.genre || "unspecified"}
-- Vibe: ${Array.isArray(inputs.vibe) ? inputs.vibe.join(', ') : inputs.vibe || "unspecified"}
-- Artist Ref: ${inputs.artistReference || "n/a"}
-- DAW: ${inputs.daw || "unspecified"}; Plugins: ${inputs.plugins || "unspecified"}
-- Instruments: ${inputs.availableInstruments || "unspecified"}
-- Key/Scale (user): ${inputs.key || inputs.scale || "unspecified"}
-
-# VOCAL ANALYSIS (use for tempo/harmony & arrangement):
-- BPM: ${analysis.bpm}
-- Key: ${analysis.key}
-- Scale/Mode: ${analysis.scale}
-- Confidence: ${analysis.confidence}
-- Notes: ${analysis.notes || "n/a"}
-- Lyrics: ${analysis.lyrics ? "present" : "none detected"}
-
-# FORMAT REQUIREMENTS
-- Start with: "# TRACKGUIDE: "<suggested title>"
-- Provide sections for: 1) Song Overview, 2) Sound Palette, 3) Arrangement & Structure, 4) Harmony, Melody & Rhythmic Core, 5) Production Steps, 6) Mixing Pointers, 7) Mastering Targets.
-- Add a "Lyrics" section if lyrics exist. Do NOT fabricate lyrics.
-- Prefer ${analysis.key} / ${analysis.scale}, around ${analysis.bpm} BPM (±3 if necessary).
-- Use tasteful defaults if users left fields blank.
-- Be concise but concrete: include specific settings when beneficial.
-`);
-  const prompt = parts.join('\n');
-  for await (const chunk of _geminiStreamText(prompt)) {
-    yield chunk;
-  }
-}
-
-/**
- * Derive MIDI patterns from a topline analysis and (optionally) extra settings.
- * Returns a JSON object with at least a "melody" derived from the vocal line, suitable for your MIDI pipeline.
- * This is a non-streaming helper to keep UI simple.
- */
-async function generateMidiFromTopline_alt(settings: MidiFromToplineSettings & { analysis: ToplineAnalysis }): Promise<any> {
-  const { analysis } = settings;
-  const sys = `You convert musical descriptions into compact MIDI JSON for a DAW helper.
-Return ONLY JSON with the structure:
-{
-  "tempo": number,
-  "timeSignature": [number, number],
-  "melody": { "notes": Array<{ midi:number, start:number, duration:number, velocity?:number }> },
-  "meta": { "key": string, "scale": string, "source": "topline" }
-}`;
-  const prompt = `Given this vocal/topline analysis:
-- BPM: ${analysis.bpm}
-- Key: ${analysis.key}
-- Scale: ${analysis.scale}
-
-Create a simple lead melody that tracks the vocal's implied contour. Keep it musical and playable.
-Return ONLY the JSON specified.`;
-
-  // @ts-ignore
-  const { GoogleGenAI } = await import("@google/genai");
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (globalThis as any)?.VITE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Missing VITE_GEMINI_API_KEY');
-  // @ts-ignore
-  const client = new GoogleGenAI({ apiKey });
-  // @ts-ignore
-  const model = client.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction: sys });
-  // @ts-ignore
-  const res = await model.generateContent({ contents: [{ role: "user", parts: [{ text: prompt }]}] });
-  // @ts-ignore
-  const text = res?.response?.candidates?.[0]?.content?.parts?.map((p: any)=>p.text).join('') || res?.response?.text || res?.text || '';
-  const json = _extractJson<any>(text);
-  // Add defaults/fallbacks
-  json.tempo = json.tempo ?? settings.tempo ?? analysis.bpm ?? 120;
-  json.timeSignature = json.timeSignature ?? settings.timeSignature ?? [4,4];
-  json.meta = json.meta ?? {};
-  json.meta.key = json.meta.key ?? settings.key ?? analysis.key ?? "C Major";
-  json.meta.scale = json.meta.scale ?? analysis.scale ?? "Ionian";
-  json.meta.source = "topline";
-  return json;
-}
-
-// === END: Appended Topline/Vocal Upload Support ===
