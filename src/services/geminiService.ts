@@ -403,34 +403,49 @@ Focus on practical, actionable advice that can be immediately applied in ${dawCo
   return stream;
 };
 
-/**
- * Generate a vocal-first Guidebook that builds the whole production around a topline.
- * Streams markdown, mirroring your other streaming generators.
- */
+// --- replace the whole function in geminiService.ts ---
 export async function* generateGuidebookFromToplineStream(
   inputs: UserInputs,
-  topline: ToplineAnalysis
+  topline?: ToplineAnalysis
 ): AsyncGenerator<{ text: string }, void, unknown> {
   if (!apiKey) throw new Error("API key not configured.");
+
+  // Defensive fallback so we don't crash if analysis wasn't provided
+  const tl: ToplineAnalysis = topline ?? {
+    bpm: "Unable to detect",
+    timeSignature: "4/4",
+    key: "Unable to detect",
+    scale: "Unable to detect",
+    tessitura: null,
+    registerCenter: null,
+    pitchContour: [],
+    phrases: [],
+    sections: [],
+    motifSummary: "",
+    chordCandidates: [],
+    lyrics: null
+  };
 
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
   const vocalContext = `
 Topline Summary:
-- BPM: ${typeof topline.bpm === "number" ? topline.bpm : topline.bpm}
-- Time Signature: ${topline.timeSignature}
-- Key/Scale: ${topline.key} / ${topline.scale}
-- Tessitura: ${topline.tessitura ? `${topline.tessitura.low} to ${topline.tessitura.high}` : "Unknown"}
-- Register Center: ${topline.registerCenter || "Unknown"}
-- Motif Summary: ${topline.motifSummary || "N/A"}
+- BPM: ${typeof tl.bpm === "number" ? tl.bpm : tl.bpm}
+- Time Signature: ${tl.timeSignature}
+- Key/Scale: ${tl.key} / ${tl.scale}
+- Tessitura: ${tl.tessitura ? `${tl.tessitura.low} to ${tl.tessitura.high}` : "Unknown"}
+- Register Center: ${tl.registerCenter || "Unknown"}
+- Motif Summary: ${tl.motifSummary || "N/A"}
 
 Phrase Map (beats):
-${topline.phrases.slice(0,12).map(p => `- ${p.start}–${p.end} (${p.intensity || "med"}) ${p.text ? `: "${p.text}"` : ""}`).join("\n")}
+${tl.phrases.slice(0,12).map(p => `- ${p.start}–${p.end} (${p.intensity || "med"}) ${p.text ? `: "${p.text}"` : ""}`).join("\n")}
+
 Section Hints:
-${topline.sections.slice(0,8).map(s => `- ${s.label}: ${s.start}–${s.end} (conf ${s.confidence.toFixed(2)})`).join("\n")}
+${tl.sections.slice(0,8).map(s => `- ${s.label}: ${s.start}–${s.end} (conf ${typeof s.confidence === "number" ? s.confidence.toFixed(2) : s.confidence})`).join("\n")}
+
 Chord Candidates:
-${topline.chordCandidates.slice(0,4).map(c => `- ${c.section}: ${c.chords}${c.roman ? ` [${c.roman}]` : ""}`).join("\n")}
+${tl.chordCandidates.slice(0,4).map(c => `- ${c.section}: ${c.chords}${c.roman ? ` [${c.roman}]` : ""}`).join("\n")}
 `;
 
   const prompt = `You are TrackGuideAI. Create a vocal-first TrackGuide that builds the entire production around the uploaded topline.
@@ -499,6 +514,7 @@ Keep it practical, specific, and immediately usable in ${inputs.daw || "the DAW"
     if (chunk.text) yield { text: chunk.text };
   }
 }
+
 
 
 /**
