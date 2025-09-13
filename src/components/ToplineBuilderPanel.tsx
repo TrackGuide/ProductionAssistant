@@ -3,13 +3,13 @@ import {
   analyzeTopline,
   generateGuidebookFromToplineStream,
   generateMidiFromTopline,
-} from "../../services/geminiService";
+} from "../services/geminiService";
 import {
   UserInputs,
   MidiFromToplineSettings,
   ToplineAnalysis,
   GeneratedMidiPatterns,
-} from "../../constants/types";
+} from "../constants/types";
 import MarkdownRenderer from "../MarkdownRenderer";
 
 type Props = {
