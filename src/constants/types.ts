@@ -1,3 +1,42 @@
+// ─────────────────────────────────────────────────────────────
+// Topline (vocal) analysis types — shared across UI and services
+// ─────────────────────────────────────────────────────────────
+export interface ToplineNote {
+  time: number;        // beats
+  duration: number;    // beats
+  midi: number;        // 21–108
+  pitch: string;       // e.g., "E4"
+  lyric?: string;      // optional syllable/word
+  velocity?: number;   // 1–127 (if inferred)
+}
+
+export interface ToplinePhrase {
+  start: number;       // beats
+  end: number;         // beats
+  text?: string;       // optional line/lyric
+  intensity?: "low" | "med" | "high";
+}
+
+export interface SectionHint {
+  label: string;       // "Intro" | "Verse" | "Pre-Chorus" | "Chorus" | etc.
+  start: number;       // beats
+  end: number;         // beats
+  confidence: number;  // 0–1
+}
+
+export interface ToplineAnalysis {
+  bpm: number | "Unable to detect";
+  timeSignature: string | "Unable to detect"; // e.g., "4/4"
+  key: string | "Unable to detect";           // e.g., "A minor"
+  scale: string | "Unable to detect";         // e.g., "Natural minor"
+  tessitura: { low: string; high: string } | null;
+  registerCenter: string | null;              // e.g., "E4"
+  pitchContour: ToplineNote[];                // melody as notes over time
+  phrases: ToplinePhrase[];
+  sections: SectionHint[];
+  motifSummary: string;                       // short description of recurring motifs
+  chordCandidates: Array<{ section: string; chords: string; roman?: string }>;
+}
 
 export interface GuidebookEntry {
   id: string;
@@ -17,6 +56,7 @@ export interface GuidebookEntry {
   content: string;
   createdAt: string;
   midiSettings?: MidiSettings;
+  toplineAnalysis?: ToplineAnalysis;
   generatedMidiPatterns?: GeneratedMidiPatterns;
 }
 
@@ -85,6 +125,12 @@ export interface MidiSettings {
   targetInstruments: string[]; // e.g., ['chords', 'melody', 'drums']
   guidebookContext?: string; // Optional context from the main TrackGuide
   songSection?: string; // Added for selecting song section context
+}
+
+// Helper for MIDI generation that uses a vocal topline
+export interface MidiFromToplineSettings extends MidiSettings {
+  topline: ToplineAnalysis;
+  avoidDoublingMelody?: boolean;
 }
 
 // Types for Mix Feedback Feature
