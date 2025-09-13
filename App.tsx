@@ -1,12 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserInputs, GuidebookEntry, MidiSettings, GeneratedMidiPatterns, KeyOfGeneratedMidiPatterns, MixFeedbackInputs, ActiveView } from './src/constants/types';
+import { 
+  UserInputs,
+  GuidebookEntry,
+  MidiSettings,
+  MidiFromToplineSettings,   // NEW
+  GeneratedMidiPatterns,
+  KeyOfGeneratedMidiPatterns,
+  MixFeedbackInputs,
+  ActiveView,
+  ToplineAnalysis            // NEW
+} from './src/constants/types';
+
 import { 
   generateGuidebookContent, 
   generateMidiPatternSuggestions, 
   generateMixFeedbackWithAudio as generateMixFeedback,
   generateMixFeedbackWithAudioStream,
-  generateMixComparisonStream
+  generateMixComparisonStream,
+  analyzeTopline,                        // NEW
+  generateGuidebookFromToplineStream,    // NEW
+  generateMidiFromTopline,               // NEW
+  generateHarmonySuggestions             // NEW (optional harmony helper)
 } from './src/services/geminiService';
+
 import { parseAiMidiResponse } from './src/utils/jsonParsingUtils';
 import { Input } from './src/components/Input.tsx';
 import { Textarea } from './src/components/Textarea.tsx';
@@ -23,6 +39,7 @@ import { PatchGuide } from './src/components/PatchGuide';
 import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './src/components/LibraryModal.tsx';
 import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
+import ToplineBuilderPanel from './src/components/ToplineBuilderPanel.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
 import { parseJsonFromResponse } from './src/utils/jsonParseUtils.ts';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
@@ -1364,6 +1381,8 @@ const App: React.FC = () => {
                           <Input label="Scale/Mode" name="scale" value={inputs.scale || ''} onChange={handleInputChange} placeholder="e.g., Dorian, Mixolydian" />
                         </div>
                       </div>
+
+                      
 
                       {/* Chords and Lyrics Row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
