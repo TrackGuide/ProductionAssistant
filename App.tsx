@@ -39,7 +39,7 @@ import { PatchGuide } from './src/components/PatchGuide';
 import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './src/components/LibraryModal.tsx';
 import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
-import ToplineBuilderPanel from './src/components/ToplineBuilderPanel.tsx';
+import { ToplineBuilderPanel } from './src/components/ToplineBuilderPanel.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
 import { parseJsonFromResponse } from './src/utils/jsonParseUtils.ts';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
