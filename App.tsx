@@ -1382,7 +1382,33 @@ const App: React.FC = () => {
                         </div>
                       </div>
 
-                      
+                      {/* ⬇️ Additional Options: Build Around Vocal */}
+<div className="mt-6 border-t border-gray-600 pt-4">
+  <h4 className="text-sm font-semibold text-gray-200 mb-3">Additional Options</h4>
+
+  <div className="mt-2 border rounded p-3 bg-gray-700/30">
+    <h5 className="font-semibold mb-2 text-gray-100">🎤 Build Around Vocal (Beta)</h5>
+
+    <ToplineBuilderPanel
+      inputs={inputs}
+      defaultMidi={{
+        tempo: 120,
+        timeSignature: [4, 4],
+        bars: 8,
+        targetInstruments: ["chords", "bassline", "melody", "drums"],
+        songSection: "Verse",
+      }}
+      onGuideDone={(fullGuide: string) => {
+        setGeneratedGuidebook(fullGuide);
+        setActiveGuidebookDetails(prev => (prev ? { ...prev, content: fullGuide } : prev));
+      }}
+      onMidiReady={(midi) => {
+        setActiveGuidebookDetails(prev => (prev ? { ...prev, generatedMidiPatterns: midi } : prev));
+      }}
+    />
+  </div>
+</div>
+
 
                       {/* Chords and Lyrics Row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
