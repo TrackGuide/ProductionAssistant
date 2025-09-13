@@ -39,7 +39,7 @@ import { PatchGuide } from './src/components/PatchGuide';
 import { MidiGeneratorComponent } from './src/components/MidiGeneratorComponent.tsx';
 import { LibraryModal } from './src/components/LibraryModal.tsx';
 import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
-import ToplineBuilderPanel from './src/components/ToplineBuilderPanel.tsx';
+import  ToplineBuilderPanel  from './src/components/ToplineBuilderPanel.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
 import { parseJsonFromResponse } from './src/utils/jsonParseUtils.ts';
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
@@ -234,6 +234,10 @@ const App: React.FC = () => {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const [showAdvancedInput, setShowAdvancedInput] = useState<boolean>(false);
   
+  // NEW: topline state
+  const [toplineFile, setToplineFile] = useState<File | null>(null);
+  const [toplineAnalysis, setToplineAnalysis] = useState<ToplineAnalysis | null>(null);
+  const [toplineAnalyzeStatus, setToplineAnalyzeStatus] = useState<string>('');
   
   // Production Coach chat state
   const [isProductionCoachCollapsed, setIsProductionCoachCollapsed] = useState<boolean>(true);
@@ -393,7 +397,53 @@ const App: React.FC = () => {
     setCopyStatus('');
     stopPlayback();
     setShowLibraryModal(false);
+    // clear topline state
+    setToplineFile(null);
+    setToplineAnalysis(null);
+    setToplineAnalyzeStatus('');
   };
+
+  // NEW: auto-analyze topline on upload and gently fill inputs
+  useEffect(() => {
+    const runToplineAnalysis = async () => {
+      if (!toplineFile) return;
+
+      try {
+        setToplineAnalyzeStatus('Analyzing vocal…');
+        const base64 = await fileToBase64(toplineFile);
+
+        const analysis = await analyzeTopline({
+          audioBase64: base64,
+          filename: toplineFile.name,
+          context: {
+            genre: inputs.genre,
+            key: inputs.key,
+            scale: inputs.scale,
+            chords: inputs.chords,
+            notes: inputs.generalNotes,
+          },
+        } as any);
+
+        setToplineAnalysis(analysis as ToplineAnalysis);
+        setToplineAnalyzeStatus('Topline analyzed ✓');
+
+        const a: any = analysis;
+        setInputs((prev) => ({
+          ...prev,
+          lyrics: prev.lyrics || a?.lyrics || a?.transcribedLyrics || prev.lyrics,
+          key: prev.key || a?.key || a?.detectedKey || prev.key,
+          scale: prev.scale || a?.scale || a?.detectedScale || prev.scale,
+          chords: prev.chords || a?.chords || a?.suggestedChords || prev.chords,
+        }));
+      } catch (err: any) {
+        console.error('Topline analysis failed:', err);
+        setToplineAnalyzeStatus(`error: ${err?.message || 'failed to analyze topline'}`);
+      }
+    };
+
+    runToplineAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toplineFile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -417,7 +467,20 @@ const App: React.FC = () => {
 
     try {
       setLoadingMessage('TrackGuide is generating...');
-      const guidebookStream = await generateGuidebookContent(inputs);
+
+      // CHANGED: prefer topline-driven guidebook when a vocal was uploaded
+      let guidebookStream: AsyncIterable<{ text: string }>;
+      if (toplineFile) {
+        const audioBase64 = await fileToBase64(toplineFile);
+        guidebookStream = await generateGuidebookFromToplineStream({
+          inputs,
+          audioBase64,
+          analysis: toplineAnalysis || undefined,
+        } as any);
+      } else {
+        guidebookStream = await generateGuidebookContent(inputs);
+      }
+
       for await (const chunk of guidebookStream) {
         finalGuidebookContent += chunk.text;
         setGeneratedGuidebook(prev => prev + chunk.text);
@@ -775,7 +838,7 @@ const App: React.FC = () => {
 
       if (lineContent.startsWith('# TRACKGUIDE:')) {
         const titleMatch = lineContent.match(/^#\s*TRACKGUIDE:\s*"?([^"\n]+)"?/i);
-        const actualTitle = titleMatch && titleMatch[1] ? titleMatch[1].trim() : "Generated TrackGuide";
+        const actualTitle = titleMatch && match[1] ? titleMatch[1].trim() : "Generated TrackGuide";
         elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-orange-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-orange-400 opacity-80" />{actualTitle}</h1>); return;
       }
       if (lineContent.startsWith('# ') && !isMixFeedback) { elements.push(<h1 key={key} className="text-3xl font-bold mt-6 mb-4 text-orange-300 break-words flex items-center"><MusicNoteIcon className="w-6 h-6 mr-3 text-orange-400 opacity-80" />{String.prototype.substring.call(processedLine, 2)}</h1>); return; }
@@ -1356,6 +1419,40 @@ const App: React.FC = () => {
                   <Textarea label="Available Instruments" name="availableInstruments" value={inputs.availableInstruments || ''} onChange={handleInputChange} placeholder="e.g., Electric Guitar, Moog Subsequent 37, Roland TR-808, Vocals" rows={2} />
                 </div>
 
+                {/* Vocal / Topline (optional) — always visible */}
+                <div className="mt-4 border rounded p-3 bg-gray-700/30">
+                  <h5 className="font-semibold mb-2 text-gray-100">🎤 Vocal / Topline</h5>
+
+                  <input
+                    id="topline-upload"
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setToplineFile(f);
+                    }}
+                    className="block w-full text-sm text-gray-300
+                               file:mr-4 file:py-2 file:px-4
+                               file:rounded-md file:border-0
+                               file:text-sm file:font-semibold
+                               file:bg-orange-600 file:text-white
+                               hover:file:bg-orange-700
+                               cursor-pointer"
+                  />
+
+                  {toplineFile && (
+                    <p className="text-xs text-green-400 mt-2">
+                      Selected: {toplineFile.name} ({(toplineFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+
+                  {toplineAnalyzeStatus && (
+                    <p className={`text-xs mt-2 ${toplineAnalyzeStatus.startsWith('error') ? 'text-red-400' : 'text-orange-300'}`}>
+                      {toplineAnalyzeStatus}
+                    </p>
+                  )}
+                </div>
+
                 {/* Advanced Input Toggle */}
                 <div className="border-t border-gray-600 pt-4">
                   <Button 
@@ -1382,7 +1479,32 @@ const App: React.FC = () => {
                         </div>
                       </div>
 
-                      
+                      {/* ⬇️ Additional Options: Build Around Vocal */}
+                      <div className="mt-6 border-t border-gray-600 pt-4">
+                        <h4 className="text-sm font-semibold text-gray-200 mb-3">Additional Options</h4>
+
+                        <div className="mt-2 border rounded p-3 bg-gray-700/30">
+                          <h5 className="font-semibold mb-2 text-gray-100">🎤 Build Around Vocal (Beta)</h5>
+
+                          <ToplineBuilderPanel
+                            inputs={inputs}
+                            defaultMidi={{
+                              tempo: 120,
+                              timeSignature: [4, 4],
+                              bars: 8,
+                              targetInstruments: ["chords", "bassline", "melody", "drums"],
+                              songSection: "Verse",
+                            }}
+                            onGuideDone={(fullGuide: string) => {
+                              setGeneratedGuidebook(fullGuide);
+                              setActiveGuidebookDetails(prev => (prev ? { ...prev, content: fullGuide } : prev));
+                            }}
+                            onMidiReady={(midi) => {
+                              setActiveGuidebookDetails(prev => (prev ? { ...prev, generatedMidiPatterns: midi } : prev));
+                            }}
+                          />
+                        </div>
+                      </div>
 
                       {/* Chords and Lyrics Row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
