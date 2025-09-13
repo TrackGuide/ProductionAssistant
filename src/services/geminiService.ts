@@ -32,7 +32,13 @@ const ai = new GoogleGenAI({ apiKey });
  * - { base64, mimeType }
  * - { audioBase64, mimeType?, filename? }
  * - { data, mimeType } where data is string|ArrayBuffer|Uint8Array|Blob
+ * - (ADDED) { file | audioFile | dataUrl | blob | buffer | arrayBuffer | bytes }
  */
+// ADDED: tiny helper
+function _isArrayBufferLike(x: any): x is ArrayBuffer | Uint8Array {
+  return x instanceof ArrayBuffer || x instanceof Uint8Array;
+}
+
 function _sniffMime(filename?: string, fallback: string = "audio/wav"): string {
   if (!filename) return fallback;
   const lower = filename.toLowerCase();
@@ -50,24 +56,33 @@ function _arrayBufferToBase64(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
+  return (typeof btoa !== "undefined" ? btoa(binary) : Buffer.from(binary, "binary").toString("base64"));
 }
 
-async function _normalizeAudioInput(audio: any, mimeHint?: string): Promise<{ base64: string; mimeType: string }> {
+// CHANGED: greatly expanded accepted shapes; removed unsafe fallback readAsDataURL on arbitrary objects
+async function _normalizeAudioInput(
+  audio: any,
+  mimeHint?: string
+): Promise<{ base64: string; mimeType: string }> {
   if (!audio) throw new Error("No audio provided to analyzeTopline.");
-  // If it's already a data URL string
+
+  // 1) string input: raw base64 OR full data URL
   if (typeof audio === "string") {
     if (audio.startsWith("data:")) {
-      // data:[mime];base64,XXXX
       const comma = audio.indexOf(",");
       const header = audio.slice(5, comma); // "audio/wav;base64"
       const [mime] = header.split(";");
       return { base64: audio.slice(comma + 1), mimeType: mime || (mimeHint || "audio/wav") };
     }
-    // raw base64
     return { base64: audio, mimeType: mimeHint || "audio/wav" };
   }
-  // Blob / File
+
+  // 2) ArrayBuffer / Uint8Array
+  if (_isArrayBufferLike(audio)) {
+    return { base64: _arrayBufferToBase64(audio), mimeType: mimeHint || "audio/wav" };
+  }
+
+  // 3) Blob / File
   if (typeof Blob !== "undefined" && audio instanceof Blob) {
     const mimeType = (audio as any).type || (mimeHint || "audio/wav");
     const base64 = await new Promise<string>((resolve, reject) => {
@@ -83,68 +98,85 @@ async function _normalizeAudioInput(audio: any, mimeHint?: string): Promise<{ ba
     });
     return { base64, mimeType };
   }
-  // { base64, mimeType }
-  if (typeof audio === "object" && "base64" in audio) {
-    return { base64: (audio as any).base64, mimeType: (audio as any).mimeType || (mimeHint || "audio/wav") };
-  }
-  // { audioBase64, filename?, mimeType? }
-  if (typeof audio === "object" && "audioBase64" in audio) {
-    const fn = (audio as any).filename as (string | undefined);
-    const guessed = _sniffMime(fn, mimeHint || "audio/wav");
-    return { base64: (audio as any).audioBase64, mimeType: (audio as any).mimeType || guessed };
-  }
-  // { data, mimeType }
-  if (typeof audio === "object" && "data" in audio && "mimeType" in audio) {
-    const d = (audio as any).data;
-    const mime = (audio as any).mimeType || mimeHint || "audio/wav";
-    if (typeof d === "string") {
-      if (d.startsWith("data:")) {
-        const comma = d.indexOf(",");
-        const header = d.slice(5, comma);
-        const [m] = header.split(";");
-        return { base64: d.slice(comma + 1), mimeType: m || mime };
+
+  // 4) known object wrappers
+  if (audio && typeof audio === "object") {
+    // common keys we see in UI code
+    if (audio.file instanceof Blob)         return _normalizeAudioInput(audio.file, audio.mimeType || mimeHint);
+    if (audio.audioFile instanceof Blob)    return _normalizeAudioInput(audio.audioFile, audio.mimeType || mimeHint);
+    if (audio.blob instanceof Blob)         return _normalizeAudioInput(audio.blob, audio.mimeType || mimeHint);
+
+    // base64/dataUrl strings in various keys
+    if (typeof audio.dataUrl === "string")  return _normalizeAudioInput(audio.dataUrl, audio.mimeType || mimeHint);
+    if (typeof audio.audioBase64 === "string") {
+      const fn = (audio as any).filename as (string | undefined);
+      const guessed = _sniffMime(fn, mimeHint || "audio/wav");
+      const raw = audio.audioBase64.includes(",") ? audio.audioBase64.split(",").pop()! : audio.audioBase64;
+      return { base64: raw, mimeType: audio.mimeType || guessed };
+    }
+    if (typeof audio.base64 === "string") {
+      const raw = audio.base64.includes(",") ? audio.base64.split(",").pop()! : audio.base64;
+      return { base64: raw, mimeType: audio.mimeType || mimeHint || "audio/wav" };
+    }
+
+    // generic { data, mimeType }
+    if ("data" in audio && ("mimeType" in audio || mimeHint)) {
+      const d = (audio as any).data;
+      const mime = (audio as any).mimeType || mimeHint || "audio/wav";
+      if (typeof d === "string") {
+        if (d.startsWith("data:")) {
+          const comma = d.indexOf(",");
+          const header = d.slice(5, comma);
+          const [m] = header.split(";");
+          return { base64: d.slice(comma + 1), mimeType: m || mime };
+        }
+        return { base64: d, mimeType: mime };
       }
-      // assume raw base64 string
-      return { base64: d, mimeType: mime };
+      if (typeof Blob !== "undefined" && d instanceof Blob) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onloadend = () => {
+            try {
+              const s = String(r.result);
+              resolve(s.split(",")[1]);
+            } catch (err) { reject(err); }
+          };
+          r.onerror = reject;
+          r.readAsDataURL(d);
+        });
+        return { base64, mimeType: (d as any).type || mime };
+      }
+      if (_isArrayBufferLike(d)) {
+        return { base64: _arrayBufferToBase64(d), mimeType: mime };
+      }
     }
-    if (typeof Blob !== "undefined" && d instanceof Blob) {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onloadend = () => {
-          try {
-            const s = String(r.result);
-            resolve(s.split(",")[1]);
-          } catch (err) { reject(err); }
-        };
-        r.onerror = reject;
-        r.readAsDataURL(d);
-      });
-      return { base64, mimeType: (d as any).type || mime };
+
+    // other buffer-like keys people use
+    if (_isArrayBufferLike(audio.buffer)) {
+      return { base64: _arrayBufferToBase64(audio.buffer), mimeType: audio.mimeType || mimeHint || "audio/wav" };
     }
-    // ArrayBuffer or Uint8Array
-    if (d instanceof ArrayBuffer || (typeof Uint8Array !== "undefined" && d instanceof Uint8Array)) {
-      return { base64: _arrayBufferToBase64(d), mimeType: mime };
+    if (_isArrayBufferLike(audio.arrayBuffer)) {
+      return { base64: _arrayBufferToBase64(audio.arrayBuffer), mimeType: audio.mimeType || mimeHint || "audio/wav" };
+    }
+    if (_isArrayBufferLike(audio.bytes)) {
+      return { base64: _arrayBufferToBase64(audio.bytes), mimeType: audio.mimeType || mimeHint || "audio/wav" };
+    }
+
+    // filename-only hint
+    if (audio.filename && typeof audio.filename === "string") {
+      const guessed = _sniffMime(audio.filename, mimeHint || "audio/wav");
+      // if the only thing we had was filename and nothing else, we can't extract data here
+      // fall through to error below
+      if (typeof audio.dataUrl === "string" || typeof audio.base64 === "string" || typeof audio.audioBase64 === "string") {
+        // already handled above
+      } else {
+        // nothing usable to read actual bytes
+      }
     }
   }
-  // Fallback: try FileReader if possible
-  if (typeof FileReader !== "undefined") {
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onloadend = () => {
-          try {
-            const s = String(r.result);
-            resolve(s.split(",")[1]);
-          } catch (err) { reject(err); }
-        };
-        r.onerror = reject;
-        r.readAsDataURL(audio as any);
-      });
-      return { base64, mimeType: mimeHint || "audio/wav" };
-    } catch (e) {
-      // fallthrough
-    }
-  }
+
+  // If we got here, we don't have something we can read safely.
+  console.error("Unsupported audio shape passed to analyzeTopline:", audio);
   throw new Error("Unsupported audio input format for analyzeTopline.");
 }
 
@@ -588,8 +620,7 @@ Generate patterns appropriate for ${settings.genre} in the ${settings.songSectio
 };
 
 /**
- * Generate MIDI that supports the vocal topline.
- * Returns VALID JSON only (no markdown) and enforces harmony alignment with the vocal.
+ * Generate MIDI that supports the vocal topline (streaming JSON).
  */
 export const generateMidiFromTopline = async (
   settings: MidiFromToplineSettings
@@ -767,13 +798,16 @@ ${dawSpecificAdvice}
 
 /**
  * Analyze a vocal topline from audio and return STRICT JSON (ToplineAnalysis).
+ * CHANGED: accept flexible shapes; use robust normalizer; no risky FileReader on non-Blob.
  */
 export const analyzeTopline = async (
-  audio: File | { base64: string; mimeType: string }
+  audio: any // CHANGED: more permissive, UI can pass File | Blob | dataURL | base64 | wrappers
 ): Promise<ToplineAnalysis> => {
   if (!apiKey) throw new Error("API key not configured.");
-  // Accept File/Blob, data URL, raw base64, or objects with audioBase64/base64
-  const norm = await _normalizeAudioInput(audio, (audio && audio.filename) ? _sniffMime(audio.filename) : undefined);
+  const norm = await _normalizeAudioInput(
+    audio,
+    (audio && (audio.filename || audio.name)) ? _sniffMime(audio.filename || audio.name) : undefined
+  );
   const audioPart = {
     inlineData: {
       data: norm.base64,
@@ -805,14 +839,12 @@ Rules:
   const model = ai.models.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction: sys });
   const resp = await model.generateContent([audioPart, { text: "Analyze this vocal topline. Respond with ONLY JSON." }]);
   const text = resp.response.text ? resp.response.text() : String(resp.response);
-  // Extract JSON (tolerate markdown fenced code)
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const jsonStr = jsonMatch ? jsonMatch[1] : text;
   let parsed: ToplineAnalysis;
   try {
     parsed = JSON.parse(jsonStr) as ToplineAnalysis;
   } catch (e) {
-    // Best effort: try to locate JSON object
     const braceStart = jsonStr.indexOf("{");
     const braceEnd = jsonStr.lastIndexOf("}");
     if (braceStart >= 0 && braceEnd > braceStart) {
@@ -1068,13 +1100,7 @@ ${sections.map((section: string) => `
 ---
 *Generated by TrackGuideAI - Your AI Music Production Assistant*`;
 
-    // Create parts array with audio first, then prompt text (matches MixFeedback approach)
-    const audioPart = {
-      inlineData: {
-        mimeType: audioData.mimeType,
-        data: audioData.base64
-      }
-    };
+    const audioPart = { inlineData: { mimeType: audioData.mimeType, data: audioData.base64 } };
     const promptPart = { text: prompt };
     const contents = [audioPart, promptPart];
 
@@ -1092,7 +1118,6 @@ ${sections.map((section: string) => `
       }
     }
 
-    // Extract metadata from the generated content
     const metadata = extractRemixMetadata(fullText);
     yield { text: '', metadata };
 
@@ -1106,23 +1131,15 @@ ${sections.map((section: string) => `
 function extractRemixMetadata(content: string): any {
   const metadata: any = {};
   
-  // Extract tempo information - improved to handle more formats
   const originalTempoMatch = content.match(/Original Tempo:\s*(\d+(?:\.\d+)?)(?:\s*BPM)?/i);
-  if (originalTempoMatch) {
-    metadata.originalTempo = parseFloat(originalTempoMatch[1]);
-  }
+  if (originalTempoMatch) metadata.originalTempo = parseFloat(originalTempoMatch[1]);
   
   const targetTempoMatch = content.match(/Target Tempo:\s*(\d+(?:\.\d+)?)(?:\s*BPM)?/i);
-  if (targetTempoMatch) {
-    metadata.targetTempo = parseFloat(targetTempoMatch[1]);
-  }
+  if (targetTempoMatch) metadata.targetTempo = parseFloat(targetTempoMatch[1]);
   
-  // Extract key information with support for modulations
   const originalKeyMatch = content.match(/Original Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min)(?:\s*→\s*[A-G][#b]?\s*(?:major|minor|maj|min))*)/i);
   if (originalKeyMatch) {
     metadata.originalKey = originalKeyMatch[1];
-    
-    // Check for key modulation
     if (originalKeyMatch[1].includes('→')) {
       metadata.keyModulation = true;
       const keys = originalKeyMatch[1].split('→').map(k => k.trim());
@@ -1132,32 +1149,22 @@ function extractRemixMetadata(content: string): any {
   }
   
   const targetKeyMatch = content.match(/Target Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min))/i);
-  if (targetKeyMatch) {
-    metadata.targetKey = targetKeyMatch[1];
-  }
+  if (targetKeyMatch) metadata.targetKey = targetKeyMatch[1];
   
-  // Extract chord progression with support for multiple progressions
   const chordProgMatch = content.match(/Harmonic Blueprint:\s*([^\n]+)/i);
   if (chordProgMatch) {
     const progressionText = chordProgMatch[1].trim();
-    
-    // Handle multiple progressions separated by commas
     if (progressionText.includes(',')) {
       metadata.originalChordProgression = progressionText;
       metadata.multipleProgressions = true;
       metadata.progressions = progressionText.split(',').map(p => p.trim());
       metadata.primaryProgression = metadata.progressions[0];
-      
-      // Parse chord names and Roman numerals separately if available
       if (progressionText.includes('[')) {
         try {
           metadata.chordNames = [];
           metadata.romanNumerals = [];
-          
-          progressionText.split(',').forEach(progression => {
-            const progressionTrimmed = progression.trim();
-            // Try to extract chord names and Roman numerals
-            const matches = progressionTrimmed.match(/(.*?)\s*\[(.*?)\]/);
+          progressionText.split(',').forEach((progression: string) => {
+            const matches = progression.trim().match(/(.*?)\s*\[(.*?)\]/);
             if (matches && matches.length === 3) {
               metadata.chordNames.push(matches[1].trim());
               metadata.romanNumerals.push(matches[2].trim());
@@ -1170,8 +1177,6 @@ function extractRemixMetadata(content: string): any {
     } else {
       metadata.originalChordProgression = progressionText;
       metadata.multipleProgressions = false;
-      
-      // Parse chord names and Roman numerals separately if available
       if (progressionText.includes('[')) {
         try {
           const matches = progressionText.match(/(.*?)\s*\[(.*?)\]/);
@@ -1186,12 +1191,10 @@ function extractRemixMetadata(content: string): any {
     }
   }
   
-  // Extract sections
   const sectionsMatch = content.match(/Sections:\s*\[(.*?)\]/i);
   if (sectionsMatch) {
     metadata.sections = sectionsMatch[1].split(',').map(s => s.trim().replace(/"/g, ''));
   }
-  
   return metadata;
 }
 
@@ -1427,19 +1430,15 @@ Focus on practical, actionable techniques that can be implemented immediately. P
     if (typeof responseText !== 'string' || !responseText) {
       throw new Error("Received an unexpected response format from Gemini API for remix guide.");
     }
-    // Parse the JSON response
     let jsonStr = responseText.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
-    if (match && match[2]) {
-      jsonStr = match[2].trim();
-    }
+    if (match && match[2]) jsonStr = match[2].trim();
     let parsedResponse: any;
     try {
       parsedResponse = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("Failed to parse JSON response:", jsonStr);
-      // Fallback: extract what we can from the text, but do NOT use genre-based defaults
       const tempoMatch = responseText ? responseText.match(/Original Tempo:\s*([\d.]+)/i) : null;
       const keyMatch = responseText ? responseText.match(/Original Key:\s*([A-G][#b]?\s*(?:major|minor|maj|min)?|Unable to detect)/i) : null;
       const chordMatch = responseText ? responseText.match(/Harmonic Blueprint:\s*([^\n]+|Unable to detect)/i) : null;
@@ -1453,7 +1452,6 @@ Focus on practical, actionable techniques that can be implemented immediately. P
         originalChordProgression: chordMatch && chordMatch[1] ? chordMatch[1].trim() : "Unable to detect"
       };
     }
-    // Validate and structure the response, do NOT use genre-based defaults for original values
     const result = {
       guide: parsedResponse && parsedResponse.guide ? parsedResponse.guide : responseText,
       targetTempo: parsedResponse && parsedResponse.targetTempo ? parsedResponse.targetTempo : undefined,
@@ -1466,7 +1464,6 @@ Focus on practical, actionable techniques that can be implemented immediately. P
     return result;
   } catch (error) {
     console.error("Error generating remix guide:", error);
-    // Always throw a generic error here, as all error messages are handled above
     return {
       guide: "",
       targetTempo: genreInfo?.tempoRange?.[0] || 128,
@@ -1478,7 +1475,7 @@ Focus on practical, actionable techniques that can be implemented immediately. P
     };
   }
 }
-    // Removed unreachable throw and stray braces
+// Removed unreachable throw and stray braces
 
 /**
  * 7. Enhanced Mix Feedback with Audio File Support
@@ -1487,7 +1484,6 @@ export const generateMixFeedbackWithAudio = async (
   inputs: MixFeedbackInputs
 ): Promise<string> => {
   const { dawName } = inputs;
-  // Include DAW-specific context if provided
   let dawContext = '';
   if (dawName) {
     const daw = getDawMetadata(dawName);
@@ -1747,14 +1743,10 @@ export async function* generateMixFeedbackWithAudioStream(
     throw new Error("API Key not configured. Cannot connect to Gemini API for mix feedback.");
   }
 
-  // If no audio file, fallback to text-only streaming (not implemented here)
   if (!inputs.audioFile) {
-    // Optionally, you could yield the result of generateMixFeedback, but for now just throw
     throw new Error("Streaming mix feedback requires an audio file.");
   }
 
-
-  // Convert file to base64 (reuse logic from Mix Compare)
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1769,7 +1761,6 @@ export async function* generateMixFeedbackWithAudioStream(
 
   const audioBase64 = await fileToBase64(inputs.audioFile);
 
-  // Include DAW context if provided
   const { dawName } = inputs;
   let dawContext = '';
   if (dawName) {
@@ -1779,128 +1770,30 @@ export async function* generateMixFeedbackWithAudioStream(
 **DAW Information:**
 - DAW: ${dawName}
 - Workflow Tips: ${daw.workflowTips.join('; ')}
-- Stock Plugins (EQ: ${daw.stockPlugins.EQ.join(', ')}; Compression: ${daw.stockPlugins.Compression.join(', ')}; Reverb: ${daw.stockPlugins.Reverb.join(', ')}; Delay: ${daw.stockPlugins.Delay.join(', ')}; Creative: ${daw.stockPlugins.Creative.join(', ')})
-`;
+- Stock Plugins (EQ: ${daw.stockPlugins.EQ.join(', ')}; Compression: ${daw.stockPlugins.Compression.join(', ')}; Reverb: ${daw.stockPlugins.Reverb.join(', ')}; Delay: ${daw.stockPlugins.Delay.join(', ')}; Creative: ${daw.stockPlugins.Creative.join(', ')})`;
     }
   }
 
-  // Build prompt as before
   const prompt = `You are TrackGuideAI's Advanced Mix Analysis Expert. Analyze the uploaded audio file and provide comprehensive mix feedback.
 
-${dawContext}**Track Information:**
+${dawContext}
 - Track Name: ${inputs.trackName || "Uploaded Mix"}
 - Focus Areas: ${inputs.focus || "Overall mix balance and clarity"}
 - User Notes: ${inputs.notes || inputs.userNotes || "No specific notes provided"}
 
-**Comprehensive Analysis Framework:**
+Return a clear markdown report with sections for Frequency, Stereo/Space, Dynamics, Technical, and Actionable Recommendations.`;
 
-## 🎧 Audio Analysis Results
-
-### Frequency Spectrum Analysis
-**Low-End (20-250 Hz):**
-- Sub-bass presence and control
-- Bass clarity and definition
-- Low-mid muddiness assessment
-
-**Midrange (250 Hz - 5 kHz):**
-- Vocal/lead instrument clarity
-- Instrument separation and masking
-- Presence and intelligibility
-
-**High-End (5 kHz+):**
-- Air and sparkle quality
-- Harshness or sibilance issues
-- Overall brightness balance
-
-### Stereo Field & Spatial Analysis
-**Width & Imaging:**
-- Stereo spread effectiveness
-- Phantom center stability
-- Side content balance
-
-**Depth & Dimension:**
-- Reverb usage and space
-- Dry/wet balance
-- Front-to-back positioning
-
-### Dynamic Range Assessment
-**Compression Analysis:**
-- Overall dynamic range
-- Transient preservation
-- Pumping or over-compression
-
-**Loudness Evaluation:**
-- Perceived loudness level
-- Peak management
-- Headroom availability
-
-### Technical Quality Check
-**Distortion & Artifacts:**
-- Unwanted harmonic distortion
-- Digital artifacts or clipping
-- Noise floor assessment
-
-**Phase Relationships:**
-- Mono compatibility
-- Phase cancellation issues
-- Correlation analysis
-
-## 🎯 Specific Recommendations
-
-### Immediate Improvements
-1. **Priority Fix #1:** [Most critical issue with specific solution]
-2. **Priority Fix #2:** [Second most important improvement]
-3. **Priority Fix #3:** [Third priority enhancement]
-
-### Technical Adjustments
-**EQ Suggestions:**
-- Specific frequency cuts/boosts with dB amounts
-- Problem frequency identification
-- Enhancement opportunities
-
-**Compression Recommendations:**
-- Ratio, attack, and release settings
-- Specific compressor types or plugins
-- Bus compression strategies
-
-**Effects Processing:**
-- Reverb and delay adjustments
-- Spatial enhancement techniques
-- Creative processing opportunities
-
-### Professional Polish
-**Mastering Considerations:**
-- Final EQ and compression
-- Stereo enhancement
-- Loudness optimization
-
-**Reference Comparison:**
-- How this mix compares to commercial standards
-- Genre-specific benchmarks
-- Areas for competitive improvement
-
-Provide actionable, specific feedback that can be implemented immediately to improve the mix quality and professional impact.`;
-
-  // Build Gemini API contents array (audio as inlineData, prompt as text)
-  const audioPart = {
-    inlineData: {
-      data: audioBase64,
-      mimeType: "audio/mpeg" // You may want to detect actual mime type
-    }
-  };
+  const audioPart = { inlineData: { data: audioBase64, mimeType: "audio/mpeg" } };
   const promptPart = { text: prompt };
   const contents = [audioPart, promptPart];
 
-  // Use streaming API (like Mix Compare)
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
     contents: { parts: contents },
   });
 
   for await (const chunk of stream) {
-    if (chunk.text) {
-      yield { text: chunk.text };
-    }
+    if (chunk.text) yield { text: chunk.text };
   }
 };
 
@@ -1927,42 +1820,15 @@ Mix B: "${inputs.mixBName}" — the current working version
 
 User Notes: ${inputs.userNotes || "No specific notes provided"}
 
-Analyze both audio files and provide your comparison in clear Markdown format with the following sections:
+Analyze both audio files and provide your comparison in clear Markdown format with sections for Overall, Frequency, Stereo/Depth, Dynamics/Loudness, Technical, Strengths & Opportunities (B), and Actionable Recs (B).`;
 
-## 🎧 Overall Comparison
-
-## 🎛️ Frequency Balance
-
-## 🎚️ Stereo Image & Depth
-
-## 📈 Dynamics & Loudness
-
-## ⚙️ Technical Quality
-
-## 🏆 Strengths & Opportunities (for Mix B)
-
-## 🚀 Actionable Recommendations (for Mix B only)`;
-
-  // Create audio parts for both files
   const mixATextPart = { text: `Mix A Audio (Earlier Version): "${inputs.mixAName}"` };
-  const mixABase64Part = {
-    inlineData: {
-      data: inputs.mixAFile,
-      mimeType: "audio/mpeg"
-    }
-  };
+  const mixABase64Part = { inlineData: { data: inputs.mixAFile, mimeType: "audio/mpeg" } };
 
   const mixBTextPart = { text: `Mix B Audio (Current Version): "${inputs.mixBName}"` };
-  const mixBBase64Part = {
-    inlineData: {
-      data: inputs.mixBFile,
-      mimeType: "audio/mpeg"
-    }
-  };
+  const mixBBase64Part = { inlineData: { data: inputs.mixBFile, mimeType: "audio/mpeg" } };
 
-  const promptPart = { text: prompt };
-
-  const contents = [mixABase64Part, mixATextPart, mixBBase64Part, mixBTextPart, promptPart];
+  const contents = [mixABase64Part, mixATextPart, mixBBase64Part, mixBTextPart, { text: prompt }];
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
@@ -1970,8 +1836,6 @@ Analyze both audio files and provide your comparison in clear Markdown format wi
   });
 
   for await (const chunk of stream) {
-    if (chunk.text) {
-      yield { text: chunk.text };
-    }
+    if (chunk.text) yield { text: chunk.text };
   }
 }
