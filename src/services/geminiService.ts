@@ -798,21 +798,26 @@ ${dawSpecificAdvice}
 
 /**
  * Analyze a vocal topline from audio and return STRICT JSON (ToplineAnalysis).
- * CHANGED: accept flexible shapes; use robust normalizer; no risky FileReader on non-Blob.
+ * Uses the same REST-style SDK calls as the rest of the file.
  */
 export const analyzeTopline = async (
-  audio: any // CHANGED: more permissive, UI can pass File | Blob | dataURL | base64 | wrappers
+  audio: any
 ): Promise<ToplineAnalysis> => {
   if (!apiKey) throw new Error("API key not configured.");
+
+  // Normalize input (File/Blob/dataURL/base64/wrappers)
   const norm = await _normalizeAudioInput(
     audio,
-    (audio && (audio.filename || audio.name)) ? _sniffMime(audio.filename || audio.name) : undefined
+    (audio && (audio.filename || audio.name))
+      ? _sniffMime(audio.filename || audio.name)
+      : undefined
   );
+
   const audioPart = {
     inlineData: {
       data: norm.base64,
-      mimeType: norm.mimeType || "audio/wav"
-    }
+      mimeType: norm.mimeType || "audio/wav",
+    },
   } as const;
 
   const sys = `You are an expert music analyst. Return precise JSON with fields:
@@ -836,15 +841,24 @@ Rules:
 - pitchContour times/durations are in beats at the inferred BPM.
 - Always include "lyrics" (transcribe best-effort).`;
 
-  const model = ai.models.getGenerativeModel({ model: GEMINI_MODEL_NAME, systemInstruction: sys });
-  const resp = await model.generateContent([audioPart, { text: "Analyze this vocal topline. Respond with ONLY JSON." }]);
-  const text = resp.response.text ? resp.response.text() : String(resp.response);
+  // IMPORTANT: use the same pattern the rest of your code uses
+  const resp = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    systemInstruction: sys,
+    contents: { parts: [audioPart, { text: "Analyze this vocal topline. Respond with ONLY JSON." }] },
+  });
+
+  // In this SDK, text is at resp.text
+  const text = typeof resp?.text === "string" ? resp.text : String(resp ?? "");
+
+  // Extract JSON (tolerate fenced code)
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const jsonStr = jsonMatch ? jsonMatch[1] : text;
+
   let parsed: ToplineAnalysis;
   try {
     parsed = JSON.parse(jsonStr) as ToplineAnalysis;
-  } catch (e) {
+  } catch {
     const braceStart = jsonStr.indexOf("{");
     const braceEnd = jsonStr.lastIndexOf("}");
     if (braceStart >= 0 && braceEnd > braceStart) {
@@ -855,6 +869,7 @@ Rules:
   }
   return parsed;
 };
+
 
 
 /**
