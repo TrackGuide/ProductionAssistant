@@ -87,20 +87,23 @@ export const extractJsonFromAiResponse = (
     .trim();
 
   // 3) If not clearly a single JSON object, attempt balanced extraction
-  const looksObject = jsonStr.startsWith("{") && jsonStr.endsWith("}");
-  if (!looksObject) {
+  // Validate structure (balanced object), try balanced extractor, then salvage
+  if (!(jsonStr.startsWith("{") && jsonStr.endsWith("}"))) {
     const balanced = extractJsonObject(jsonStr);
     if (balanced) {
       jsonStr = balanced;
     } else {
-      throw new Error(
-        `${contextName} doesn't contain valid JSON structure. Got: ${jsonStr.substring(
-          0,
-          100
-        )}...`
-      );
+      const salvaged = salvageTruncatedJson(jsonStr);
+      if (salvaged && salvaged.startsWith("{")) {
+        jsonStr = salvaged;
+      } else {
+        throw new Error(`${contextName} doesn't contain valid JSON structure. Got: ${jsonStr.substring(0, 100)}...`);
+      }
     }
   }
+
+
+  
 
   // 4) Final light repair for common JSON quirks
   jsonStr = lightJsonRepair(jsonStr);
@@ -122,6 +125,10 @@ export function parseJsonSafe<T = any>(
 
   const extracted = extractJsonObject(raw);
   if (extracted) candidates.push(extracted);
+
+    // Also try a salvaged version for truncated/mid-stream JSON
+  candidates.push(salvageTruncatedJson(raw));
+
 
   for (const candidate of candidates) {
     for (const version of [candidate, lightJsonRepair(candidate)]) {
@@ -216,3 +223,79 @@ export function parseAiToplineResponse<T = any>(raw: string) {
     coerce: coerceToplineNumbers,
   });
 }
+
+/** Attempt to salvage truncated JSON by auto-closing braces/brackets and trimming junk. */
+function salvageTruncatedJson(input: string): string {
+  let s = input ?? "";
+
+  // 1) Remove BOM, fences, and stray trailing junk (like a dangling ')')
+  s = s.replace(/^\uFEFF/, "");
+  // remove any trailing backticks or a single trailing parenthesis
+  s = s.replace(/[`]+$/g, "").replace(/\)\s*$/g, "");
+
+  // 2) If there's a fenced block anywhere, pull its body
+  const fence = s.match(/```(?:json|json5)?\s*([\s\S]*?)```/i);
+  if (fence && fence[1]) s = fence[1];
+
+  // 3) Start from first '{'
+  const start = s.indexOf("{");
+  if (start === -1) return input; // nothing we can do
+
+  // 4) Walk the string tracking quotes and a stack of { and [
+  let out = s.slice(start);
+  let stack: ("{" | "[")[] = [];
+  let inString = false;
+  let escape = false;
+
+  const chars = out.split("");
+  let i = 0;
+  for (; i < chars.length; i++) {
+    const ch = chars[i];
+
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === "{") {
+      stack.push("{");
+      continue;
+    }
+    if (ch === "}") {
+      if (stack.length && stack[stack.length - 1] === "{") stack.pop();
+      continue;
+    }
+    if (ch === "[") {
+      stack.push("[");
+      continue;
+    }
+    if (ch === "]") {
+      if (stack.length && stack[stack.length - 1] === "[") stack.pop();
+      continue;
+    }
+  }
+
+  let repaired = out;
+
+  // 5) If we ended mid-structure, clean trailing comma and close what’s open.
+  repaired = repaired.replace(/,\s*$/g, ""); // trailing comma at end
+  while (stack.length) {
+    const open = stack.pop();
+    repaired += open === "{" ? "}" : "]";
+  }
+
+  // 6) Light cleanup & quote fixes as a final pass
+  repaired = lightJsonRepair(repaired);
+  return repaired.trim();
+}
+
