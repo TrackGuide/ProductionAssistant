@@ -74,3 +74,15 @@ export function ensureToplineMelody(
 
   return Object.assign({}, patterns, { topline_melody: tlMidi });
 }
+
+/**
+ * Convenience wrapper used in App.tsx to inject melody from vocal topline.
+ */
+export function generateToplineMidi(
+  analysis: ToplineAnalysis,
+  opts?: { defaultVelocity?: number; maxBeats?: number }
+): MidiNote[] {
+  return toplineToMidi(analysis, opts);
+}
+
+export default generateToplineMidi;
