@@ -8,7 +8,7 @@ import {
   MidiNote,
 } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
-import { parseAiMidiResponse, getMinimalMidiPattern } from '../utils/jsonParsingUtils'; // ⬅️ removed sanitizeJson here
+import { parseAiMidiResponse, getMinimalMidiPattern } from '../utils/jsonParsingUtils';
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
 
@@ -76,40 +76,30 @@ interface MidiGeneratorProps {
   isRemixMode?: boolean;
 }
 
-/** Local JSON sanitizer to harden AI responses (no external import needed) */
+/** Local JSON sanitizer (avoids import mismatch issues) */
 function sanitizeJson(raw: string): string {
   if (!raw) return raw;
-
   let s = raw;
-
-  // Remove markdown code fences
+  // Remove code fences
   s = s.replace(/```(?:json|json5)?\s*([\s\S]*?)```/gi, '$1');
-
-  // Take largest {...} block if extra prose surrounds it
+  // Keep largest {...}
   const first = s.indexOf('{');
   const last = s.lastIndexOf('}');
-  if (first !== -1 && last !== -1 && last > first) {
-    s = s.slice(first, last + 1);
-  }
-
-  // Remove trailing commas before } or ]
+  if (first !== -1 && last !== -1 && last > first) s = s.slice(first, last + 1);
+  // Trailing commas
   s = s.replace(/,\s*([}\]])/g, '$1');
-
-  // Replace NaN/Infinity with null
+  // NaN/Infinity
   s = s.replace(/\bNaN\b/g, 'null').replace(/\b-Infinity\b/g, 'null').replace(/\bInfinity\b/g, 'null');
-
-  // Very light bracket mismatch salvage (best-effort)
+  // Brace salvage
   const opens = (s.match(/{/g) || []).length;
   const closes = (s.match(/}/g) || []).length;
-  if (opens > closes) s = s + '}'.repeat(opens - closes);
-
+  if (opens > closes) s += '}'.repeat(opens - closes);
   return s.trim();
 }
 
-/** Pull a concise context block from the guidebook to steer MIDI generation */
+/** Pull a concise context block from guidebook to steer MIDI generation */
 const extractRichMidiContext = (guidebookContent: string): string => {
   if (!guidebookContent) return 'General musical context. Focus on genre and vibe.';
-  // Prefer content up to Instrument & Sound Design or Structural Blueprint, else cap at ~1500 chars
   const i1 = guidebookContent.indexOf('## 3. Instrument & Sound Design Guide');
   const i2 = guidebookContent.indexOf('## 2. Structural Blueprint');
   const endIndex = i1 > 0 ? i1 : i2 > 0 ? i2 : Math.min(1500, guidebookContent.length);
@@ -149,8 +139,8 @@ const validatePatterns = (patterns: GeneratedMidiPatterns) => {
         });
       });
     }
-    // Bassline / Melody
-    (['bassline', 'melody'] as const).forEach((trackType) => {
+    // Bassline / Melody / Topline Melody
+    (['bassline', 'melody', 'topline_melody'] as const).forEach((trackType) => {
       const track = patterns[trackType] as MidiNote[] | undefined;
       if (track) {
         track.forEach((note, i) => {
@@ -207,15 +197,14 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         genre: 'Electronic',
         songSection: sections?.[0] || MIDI_DEFAULT_SETTINGS.songSection,
         guidebookContext: `Remix mode for ${targetKey || 'C minor'} at ${targetTempo || 128} BPM`,
-        targetInstruments: ['bassline', 'drums', 'melody', 'chords'],
+        targetInstruments: ['bassline', 'drums', 'melody', 'chords', 'topline_melody'], // include topline in remix if desired
         bars: 8,
       };
     }
 
     if (currentGuidebookEntry?.midiSettings) {
       const s = currentGuidebookEntry.midiSettings;
-      const bars =
-        BAR_OPTIONS.includes(s.bars) ? s.bars : MIDI_DEFAULT_SETTINGS.bars;
+      const bars = BAR_OPTIONS.includes(s.bars) ? s.bars : MIDI_DEFAULT_SETTINGS.bars;
       const songSection = s.songSection || MIDI_DEFAULT_SETTINGS.songSection;
       const targetInstruments =
         s.targetInstruments && s.targetInstruments.length > 0
@@ -223,22 +212,14 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           : [...MIDI_DEFAULT_SETTINGS.targetInstruments];
       const guidebookContext =
         s.guidebookContext || extractRichMidiContext(currentGuidebookEntry.content);
-      return {
-        ...s,
-        bars,
-        songSection,
-        targetInstruments,
-        guidebookContext,
-      };
+      return { ...s, bars, songSection, targetInstruments, guidebookContext };
     }
 
     const initialGenre =
       currentGuidebookEntry?.genre?.[0] ||
       mainAppInputs?.genre?.[0] ||
       MIDI_DEFAULT_SETTINGS.genre;
-    const richContextForMidi = extractRichMidiContext(
-      currentGuidebookEntry?.content || ''
-    );
+    const richContextForMidi = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
     const tempoRange = MIDI_TEMPO_RANGES[initialGenre] || MIDI_TEMPO_RANGES.Default;
     const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
@@ -257,9 +238,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     } else {
       initialBars = 8;
     }
-    initialBars = BAR_OPTIONS.includes(initialBars)
-      ? initialBars
-      : MIDI_DEFAULT_SETTINGS.bars;
+    initialBars = BAR_OPTIONS.includes(initialBars) ? initialBars : MIDI_DEFAULT_SETTINGS.bars;
 
     return {
       ...MIDI_DEFAULT_SETTINGS,
@@ -268,8 +247,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       tempo: parsedGuidebookBpm || defaultTempoForGenre,
       chordProgression:
         parsedGuidebookChordProg ||
-        (MIDI_CHORD_PROGRESSIONS[initialGenre] ||
-          MIDI_CHORD_PROGRESSIONS.Default)[0],
+        (MIDI_CHORD_PROGRESSIONS[initialGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0],
       guidebookContext: richContextForMidi,
       targetInstruments: [...MIDI_DEFAULT_SETTINGS.targetInstruments],
       songSection: initialSongSection,
@@ -280,7 +258,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
   /** Generated patterns */
   const [patterns, setPatterns] = useState<GeneratedMidiPatterns | null>(() => {
     if (isRemixMode && initialPatterns) {
-      // Placeholder: skip conversion until format is fully defined in Remix module
       const converted: GeneratedMidiPatterns = {};
       Object.entries(initialPatterns).forEach(([section, instruments]) => {
         Object.entries(instruments).forEach(([instrument, pattern]) => {
@@ -306,7 +283,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
 
-  /** Reset/retune when guidebook entry or parsed values change */
+  /** Reset/retune when guidebook or parsed values change */
   useEffect(() => {
     let initialBarsVal: number;
     if (currentGuidebookEntry?.midiSettings) {
@@ -314,45 +291,30 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       initialBarsVal = s.bars || MIDI_DEFAULT_SETTINGS.bars;
       setSettings({
         ...s,
-        bars: BAR_OPTIONS.includes(initialBarsVal)
-          ? initialBarsVal
-          : MIDI_DEFAULT_SETTINGS.bars,
+        bars: BAR_OPTIONS.includes(initialBarsVal) ? initialBarsVal : MIDI_DEFAULT_SETTINGS.bars,
         songSection: s.songSection || MIDI_DEFAULT_SETTINGS.songSection,
         targetInstruments:
           s.targetInstruments && s.targetInstruments.length > 0
             ? s.targetInstruments
             : [...MIDI_DEFAULT_SETTINGS.targetInstruments],
-        guidebookContext:
-          s.guidebookContext || extractRichMidiContext(currentGuidebookEntry.content),
+        guidebookContext: s.guidebookContext || extractRichMidiContext(currentGuidebookEntry.content),
       });
     } else {
       const primaryGenre =
         currentGuidebookEntry?.genre?.[0] ||
         mainAppInputs?.genre?.[0] ||
         MIDI_DEFAULT_SETTINGS.genre;
-      const richContext = extractRichMidiContext(
-        currentGuidebookEntry?.content || ''
-      );
+      const richContext = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
-      const tempoRange =
-        MIDI_TEMPO_RANGES[primaryGenre] || MIDI_TEMPO_RANGES.Default;
-      const defaultTempoForGenre = Math.round(
-        (tempoRange[0] + tempoRange[1]) / 2
-      );
+      const tempoRange = MIDI_TEMPO_RANGES[primaryGenre] || MIDI_TEMPO_RANGES.Default;
+      const defaultTempoForGenre = Math.round((tempoRange[0] + tempoRange[1]) / 2);
 
       const initialSongSection = MIDI_DEFAULT_SETTINGS.songSection;
       let calculatedInitialBars = MIDI_DEFAULT_SETTINGS.bars;
       const sectionLower = initialSongSection.toLowerCase();
-      if (
-        sectionLower.includes('intro') ||
-        sectionLower.includes('outro') ||
-        sectionLower.includes('fill') ||
-        sectionLower.includes('breakdown')
-      ) {
-        calculatedInitialBars = 4;
-      } else {
-        calculatedInitialBars = 8;
-      }
+      calculatedInitialBars = sectionLower.match(/intro|outro|fill|breakdown/)
+        ? 4
+        : 8;
       initialBarsVal = BAR_OPTIONS.includes(calculatedInitialBars)
         ? calculatedInitialBars
         : MIDI_DEFAULT_SETTINGS.bars;
@@ -363,8 +325,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         tempo: parsedGuidebookBpm || defaultTempoForGenre,
         chordProgression:
           parsedGuidebookChordProg ||
-          (MIDI_CHORD_PROGRESSIONS[primaryGenre] ||
-            MIDI_CHORD_PROGRESSIONS.Default)[0],
+          (MIDI_CHORD_PROGRESSIONS[primaryGenre] || MIDI_CHORD_PROGRESSIONS.Default)[0],
         genre: primaryGenre,
         guidebookContext: richContext,
         targetInstruments: [...MIDI_DEFAULT_SETTINGS.targetInstruments],
@@ -441,9 +402,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     await initializeAudio();
 
     const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(
-      currentGuidebookEntry?.content || ''
-    );
+    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
     const settingsForGeneration: MidiSettings = isRemixMode
       ? {
@@ -597,9 +556,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
     await initializeAudio();
 
     const primaryGenre = currentGuidebookEntry?.genre?.[0] || settings.genre;
-    const richContextForRegeneration = extractRichMidiContext(
-      currentGuidebookEntry?.content || ''
-    );
+    const richContextForRegeneration = extractRichMidiContext(currentGuidebookEntry?.content || '');
 
     const preservedSettings: MidiSettings = isRemixMode
       ? {
@@ -687,10 +644,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         .join(', ')}`;
     } else if (trackId === 'chords' && Array.isArray(trackData)) {
       trackInfo = `${trackData.length} chord events`;
-    } else if (
-      (trackId === 'bassline' || trackId === 'melody') &&
-      Array.isArray(trackData)
-    ) {
+    } else if ((trackId === 'bassline' || trackId === 'melody' || trackId === 'topline_melody') && Array.isArray(trackData)) {
       trackInfo = `${trackData.length} notes`;
     }
 
@@ -758,10 +712,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mb-6">
             {/* Key */}
             <div>
-              <label
-                htmlFor="midi-key"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-key" className="block text-sm font-medium text-gray-300 mb-1">
                 Key
               </label>
               <select
@@ -780,10 +731,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Scale/Mode */}
             <div>
-              <label
-                htmlFor="midi-scale"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-scale" className="block text-sm font-medium text-gray-300 mb-1">
                 Scale/Mode <span className="text-xs text-gray-400">(Optional)</span>
               </label>
               <select
@@ -803,10 +751,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Tempo */}
             <div>
-              <label
-                htmlFor="midi-tempo"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-tempo" className="block text-sm font-medium text-gray-300 mb-1">
                 Tempo (BPM)
               </label>
               <Input
@@ -821,10 +766,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Time Signature */}
             <div>
-              <label
-                htmlFor="midi-timesig"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-timesig" className="block text-sm font-medium text-gray-300 mb-1">
                 Time Signature
               </label>
               <select
@@ -848,10 +790,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Chord Progression */}
             <div>
-              <label
-                htmlFor="midi-chords"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-chords" className="block text-sm font-medium text-gray-300 mb-1">
                 Chord Progression
               </label>
               <select
@@ -870,10 +809,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* MIDI Genre Context */}
             <div>
-              <label
-                htmlFor="midi-genre"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-genre" className="block text-sm font-medium text-gray-300 mb-1">
                 MIDI Genre Context
               </label>
               <select
@@ -903,10 +839,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Loop Length */}
             <div>
-              <label
-                htmlFor="midi-bars"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-bars" className="block text-sm font-medium text-gray-300 mb-1">
                 Loop Length (Bars)
               </label>
               <select
@@ -925,10 +858,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
             {/* Song Section */}
             <div className="lg:col-span-1">
-              <label
-                htmlFor="midi-songsection"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
+              <label htmlFor="midi-songsection" className="block text-sm font-medium text-gray-300 mb-1">
                 Song Section Context
               </label>
               <select
@@ -1021,6 +951,7 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
             {renderTrackCard('chords', 'Chords')}
             {renderTrackCard('bassline', 'Bassline')}
             {renderTrackCard('melody', 'Melody')}
+            {renderTrackCard('topline_melody', 'Lead Melody (Topline)')} {/* NEW */}
             {renderTrackCard('drums', 'Drums')}
           </div>
 
