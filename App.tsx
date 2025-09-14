@@ -372,6 +372,31 @@ const App: React.FC = () => {
     setActiveGuidebookDetails(null);
     setCopyStatus('');
     stopPlayback();
+    // Step 3: Transcribe topline to extract lyrics (Deepgram)
+if (toplineFile) {
+  try {
+    const { analyzeTopline } = await import('./src/services/audioService'); // adjust if needed
+    const { transcribeTopline } = await import('./src/services/transcribeService'); // adjust if needed
+
+    const [topline, lyrics] = await Promise.all([
+      analyzeTopline(toplineFile),
+      transcribeTopline(toplineFile),
+    ]);
+
+    if (topline && typeof topline === "object") {
+      topline.hasLyrics = !!lyrics;
+      topline.lyrics = lyrics || null;
+      setToplineAnalysis(topline); // optional state setter
+    }
+
+    if (lyrics?.trim()) {
+      inputs.lyrics = lyrics.trim();
+    }
+  } catch (err) {
+    console.error("Topline transcription failed:", err);
+  }
+}
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (inputs.daw) localStorage.setItem(LAST_USED_DAW_KEY, inputs.daw);
