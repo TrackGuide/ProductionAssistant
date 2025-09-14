@@ -563,6 +563,7 @@ export async function* generateGuidebookFromToplineStream(
 ): AsyncGenerator<{ text: string }, void, unknown> {
   if (!apiKey) throw new Error("API key not configured.");
 
+  // Use provided topline if present; otherwise a safe minimal shell
   const tl: ToplineAnalysis = topline ?? {
     bpm: "Unable to detect",
     timeSignature: "Unable to detect",
@@ -575,70 +576,65 @@ export async function* generateGuidebookFromToplineStream(
     sections: [],
     motifSummary: "",
     chordCandidates: [],
-    lyrics: null,
   };
 
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
-  const vocalSection = buildVocalProcessingSection(inputs.daw, inputs.plugins);
+  const vocalSection  = buildVocalProcessingSection(inputs.daw, inputs.plugins);
 
-  const titleContext = inputs.songTitle ? `- Project Name: ${inputs.songTitle}` : "";
-  const artistContext = inputs.artistReference ? `- Artist References: ${inputs.artistReference}` : "";
-  const genreContext = inputs.genre?.join(", ") || "Not specified";
-  const vibeContext = inputs.vibe?.join(", ") || "Not specified";
+  const titleContext      = inputs.songTitle        ? `- Project Name: ${inputs.songTitle}`                       : "";
+  const artistContext     = inputs.artistReference  ? `- Artist References: ${inputs.artistReference}`            : "";
+  const genreContext      = inputs.genre?.join(", ") || "Not specified";
+  const vibeContext       = inputs.vibe?.join(", ")  || "Not specified";
   const instrumentContext = inputs.availableInstruments || "Not specified";
-  const dawContext = inputs.daw || "Not specified";
-  const pluginContext = inputs.plugins || "Stock/Generic plugins";
-  const keyContext = inputs.key ? `Key: ${inputs.key}` : "";
-  const scaleContext = inputs.scale ? `Scale/Mode: ${inputs.scale}` : "";
-  const chordsContext = inputs.chords ? `Chord Progression: ${inputs.chords}` : "";
-  const referenceContext = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
-  const lyricsContext = inputs.lyrics ? `Lyrics Theme: ${inputs.lyrics}` : "";
-  const notesContext = inputs.generalNotes ? `Additional Notes: ${inputs.generalNotes}` : "";
+  const dawContext        = inputs.daw               ? inputs.daw : "Not specified";
+  const pluginContext     = inputs.plugins           ? inputs.plugins : "Stock/Generic plugins";
+  const keyContext        = inputs.key               ? `Key: ${inputs.key}`                  : "";
+  const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`         : "";
+  const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}` : "";
+  const referenceContext  = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
+  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`      : "";
+  const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const toplineOneLiner = [
     typeof tl.bpm === "number" ? `${tl.bpm} BPM` : null,
     tl.timeSignature && tl.timeSignature !== "Unable to detect" ? tl.timeSignature : null,
     tl.key && tl.key !== "Unable to detect" ? `${tl.key}` : null,
-    tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
+  ].filter(Boolean).join(" · ");
 
   const lyricsSection =
-    tl.lyrics && tl.lyrics.trim().length > 0
+    tl.phrases?.length || (Array.isArray(tl.pitchContour) && tl.pitchContour.length)
       ? `
 ## 🎤 Vocal Topline & Lyrical Summary
 
 **Topline Attributes:** ${toplineOneLiner || "—"}
-${tl.tessitura ? `\n- Tessitura: ${tl.tessitura}` : ""}
-${tl.registerCenter ? `\n- Register Center: ${tl.registerCenter}` : ""}
+${tl.tessitura ? `- Tessitura: ${tl.tessitura.low ?? ""}–${tl.tessitura.high ?? ""}\n` : ""}
+${tl.registerCenter ? `- Register Center: ${tl.registerCenter}\n` : ""}
 
-**Extracted Lyrics (best-effort transcription):**
-${tl.lyrics.trim()}
-
-${tl.phrases?.length ? `
-**Phrase Map (by beat timing):**
+${tl.phrases?.length ? `**Phrase Map (by beat timing):**
 ${tl.phrases.slice(0, 8).map(p =>
   `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""}${p.intensity ? ` (${p.intensity})` : ""}`
 ).join("\n")}` : ""}
 
 **Creative Use:** Let the topline guide your musical decisions:
 - Repeating words can become rhythmic or melodic motifs.
-- Emotional themes (e.g., longing, urgency, release) can shape sound choices (e.g., airy pads, aggressive stabs, filtered builds).
+- Emotional themes can shape sound choices (e.g., airy pads, aggressive stabs, filtered builds).
 - Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
-` : "";
+`
+      : "";
 
-  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
+  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
 
-Create a detailed TrackGuide for the following specifications:
+Create a professional-level TrackGuide based on the following creative direction:
+
 ${titleContext}
 ${artistContext}
-- **Genre**: ${genreContext}
-- **Vibe**: ${vibeContext}
-- **Available Instruments**: ${instrumentContext}
-- **DAW**: ${dawContext}
-- **Plugins**: ${pluginContext}
+- Genre: ${genreContext}
+- Vibe: ${vibeContext}
+- Available Instruments: ${instrumentContext}
+- DAW: ${dawContext}
+- Plugins: ${pluginContext}
 ${keyContext}
 ${scaleContext}
 ${chordsContext}
@@ -648,34 +644,15 @@ ${notesContext}
 
 A vocal topline was uploaded. Use it as a reference for harmonic fit, arrangement pacing, emotional energy, and lyrical inspiration. It should not override the user’s inputs—but it can enrich your suggestions.
 
-At the end of your opening summary sentence, always add: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
-
-**IMPORTANT REQUIREMENTS:**
-1. Include the exact Structural Blueprint table with Instrumentation column as provided
-2. Use specific plugin parameters when DAW/plugins are specified
-3. Provide actionable, detailed guidance for each section
-4. Use markdown formatting with proper headers and emphasis
+At the end of your opening summary sentence, add exactly: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
 ### Required Sections (keep this structure exactly):
-- Include all sections listed below in the exact order
-- Use topline phrasing/motifs to inspire rhythmic and melodic decisions when relevant
-
 ${structuralBlueprint}
 
 ## 🎵 Genre DNA Analysis
-**Core Characteristics:**
-- Tempo range and feel
-- Harmonic structure and chord progressions
-- Rhythmic patterns and groove elements
-- Sonic palette and instrumentation choices
-
-**Reference Analysis:**
-${inputs.referenceTrackLink ? `Analyze the provided reference track for key production techniques and arrangement ideas.` : `Draw from classic examples in the ${genreContext} genre for inspiration.`}
-
-## 🎶 Harmony, Melody & Rhythmic Core
-- Suggested key, scale, and chord progression
-- Melodic phrasing, motifs, and vocal interplay
-- Rhythmic feel and syncopation techniques
+- Core Characteristics (tempo feel, harmony, rhythm, sonic palette)
+- Reference Analysis (${inputs.referenceTrackLink ? "Use the provided link." : `Draw from classic examples in ${genreContext}.`})
+- **Use topline phrasing/motifs to inspire rhythmic and melodic decisions**
 
 ## 🎹 Instrument & Sound Design
 
@@ -692,129 +669,80 @@ ${inputs.referenceTrackLink ? `Analyze the provided reference track for key prod
 - Layering strategies for fullness
 
 ### 🔌 Plugin Chains by Instrument
-
-For each core instrument (e.g., Lead Synth, Bass, Drums, Harmonic Layers), include:
-- **Plugin Chain**: Show the full processing chain using the format → [Plugin → Plugin → Plugin]
-- **Detailed Parameters**: Give specific values for relevant plugin settings (e.g., filters, envelopes, modulation, FX)
--- Use one bullet per plugin with its parameters.
-
-**Formatting Example:**
+Use this exact bullet format. Do **not** compress into paragraphs.
 
 **Lead Synth**  
-Vital → Auto Filter → Chorus-Ensemble → Reverb  
-• Vital: Saw wave, FM mod 30%, Wavetable mod via LFO (1/8 sync)  
-• Auto Filter: High-pass @ 200 Hz, Res 0.4  
-• Chorus-Ensemble: Rate 0.3 Hz, Amount 40%  
-• Reverb: Hall, 1.3s decay, 15ms predelay, 30% wet
+**Chain:** Vital → Auto Filter → Chorus-Ensemble → Reverb  
+- **Vital:** Osc 1 Saw; FM from Osc 2 (30%); LFO → WT Position (1/8)  
+- **Auto Filter:** HPF @ 200 Hz; Res 0.40  
+- **Chorus-Ensemble:** Rate 0.3 Hz; Amount 40%  
+- **Reverb:** Hall; Decay 1.3 s; Pre-delay 15 ms; Mix 30%
 
-Ensure this section is clear, copy-paste ready, and consistent across all instruments.
+**Bass**  
+**Chain:** Operator/Vital → Overdrive → EQ Eight → Compressor  
+- **Operator/Vital:** Sub = Sine; Mid layer = Saw; FM 20%  
+- **Overdrive:** Drive 15%; Tone 60%; Mix 30%  
+- **EQ Eight:** HPF 30 Hz; Dip 250 Hz (-2 dB); Presence 3 kHz (+2 dB)  
+- **Compressor:** 4–6:1; Attack 10–20 ms; Release 100–200 ms; Sidechain from Kick
+
+**Drums**  
+**Chain:** Drum Rack → Glue Compressor → EQ Eight → Saturator  
+- **Drum Rack:** Punchy kick; snappy snare; tight closed hat  
+- **Glue:** 3:1; Attack 10 ms; Release Auto; Soft Clip ON  
+- **EQ Eight:** HPF hats @ 400 Hz; Snare +2 dB @ 5 kHz  
+- **Saturator:** Drive +6–8 dB; Color 40%; Mix 20%
+
+**Harmonic Layers / Pad**  
+**Chain:** Jup-8 V / Prophet V → Auto Pan → Hybrid Reverb  
+- **Synth:** Dual saws; slow attack; gentle LPF movement  
+- **Auto Pan:** Rate 0.2 Hz; Amount 60%; Sine  
+- **Hybrid Reverb:** Hall; Decay 2.0 s; Pre-delay 25 ms; Mix 35–40%
 
 ### 🛠️ Global Plugin Tips & FX Guidance
-
-Provide general sound processing tips that apply across instruments.
+(Do **not** add any other “Processing Tips & Plugin Parameters” sections. Keep only this one global block.)
 
 **EQ Tips**
-- Use high-pass filters (~30–40 Hz) on non-bass elements
-- Cut muddiness at 250–400 Hz
-- Boost presence around 2–5 kHz for clarity
+- HPF non-bass elements ~30–40 Hz
+- Cut 250–400 Hz muddiness
+- Presence 2–5 kHz as needed
 
 **Compression**
-- General drum bus: Ratio 3–4:1, Attack 10–30ms, Release Auto
-- Bass compression: Fast attack for sub control, slow release
-- Lead synth: Medium knee, 2–4:1 ratio to control dynamics
+- Drum bus: 3–4:1, 10–30 ms attack, Auto release, 1–2 dB GR
+- Bass: faster attack for sub control, slow/med release
+- Leads: 2–4:1 with medium knee
 
 **Spatial FX**
-- Reverb: Hall or Plate (1.2–2s decay), Pre-delay 10–25ms, Wet 20–40%
-- Delay: Use ping-pong or slapback to widen leads or vocals
-- Chorus: Subtle rate (0.2–0.5 Hz), Mix under 40%
+- Reverb: Hall/Plate 1.2–2.0 s; Pre-delay 10–25 ms; Wet 20–40%
+- Delay: 1/8 or 1/4 ping-pong for hooks
+- Chorus: 0.2–0.5 Hz, Mix < 40%
 
-**Layering**
-- Use EQ and multiband compression to glue layered sounds
-- Offset layers slightly in pitch/timing for thickness
-- Pan complementary layers apart (e.g., left/right)
-
-Keep this section concise and universally useful — no duplication from plugin chains above.
-
+${pluginSection}
 ${vocalSection}
 
-## 🎙️ Vocal Capture & Processing
+## 🎚️ Per-Song Mixing & Bus Plan (Specific)
+- **No generic advice.** Reference this track’s BPM/key/sections/topline; give values with units.
 
-**Microphone Suggestions (pick 1):**  
-Provide **3–4 mic options** suited to the **genre / vibe / reference** with one-line rationale for each and a price tier tag.
-- **Budget (≈$100–$200):** e.g., Audio-Technica AT2020 — clean, bright top; good for airy pop toplines  
-- **Mid (≈$300–$600):** e.g., sE Electronics sE2200 — modern presence; smooth sibilance control  
-- **Workhorse (≈$800–$1.2k):** e.g., Shure SM7B — controlled low mids; rejects room; great for aggressive/close vocals  
-- **Character (≈$1.5k+):** e.g., Warm WA-251 — vintage top gloss; flattering for lush pads / dreamy pop
-
-**Suggested Chain (stock-first):**  
-- **Utility (Gain/Trim):** hit -12 to -9 dBFS peaks  
-- **HPF / EQ:** HPF 80–100 Hz; gentle 3 kHz presence; de-mud 250 Hz if needed  
-- **De-Esser:** split-band @ 6–8 kHz, 3–6 dB GR  
-- **Compressor:** 1176-style (4:1, fast attack/release) into Opto (2–3 dB GR)  
-- **Reverb/Delay Sends:** Short plate (0.9–1.3 s), timed 1/8 or 1/4 ping-pong throws
-
-> Replace the mic list dynamically according to genre/vibe/reference. Do **not** include generic “record 2–3 takes” performance tips.
-
-## 🎚️ Mixing & Arrangement Strategy
-
-**Context:** For this track — **${genreContext}**, **${vibeContext}**, **${toplineOneLiner || `${parsedGuidebookBpm || inputs?.bpm || settings?.tempo || '—'} BPM`}**, **${tl.key || inputs.key || 'Key TBA'}** — optimize space around the **topline** and low-end movement.
-
-### Mix Matrix (only include elements that exist in Available Instruments or structural blueprint)
-| Element | Main EQ (Hz/dB/Q) | Comp (ratio/att/release/GR) | Sidechain (source/amt) | Pan/Width | Reverb/Delay Sends |
+| Element | Main EQ (Hz/dB/Q) | Comp | Sidechain | Pan/Width | Sends |
 |---|---|---|---|---|---|
-| Kick | HPF off; notch 250 Hz (-2 dB, Q 1.2) | 4:1 / 10ms / 80ms / 2–3 dB | — | C / 10–20%W | Room - small (10%), slap 1/16 (5%) |
-| Sub-Bass | LPF 100 Hz; HPF 25–30 Hz | 3:1 / 15ms / 120ms / 2–4 dB | **Kick → 3–5 dB** | C / 20–30%W | Short plate (5–10%), no delay |
-| Mid-Bass | HPF 35–40 Hz; dip 250–300 Hz (-2 dB) | 4:1 / 20ms / 150ms / 3 dB | **Kick → 2–3 dB** | C-5 / 30–40%W | Room (10–15%), 1/8 delay (5%) |
-| Lead Synth | HPF 120–200 Hz; presence +2 dB @ 3–4 kHz | 2:1 / 15ms / 120ms / 1–2 dB | Snare (fills) → 1–2 dB | ±15 / 60–80%W | Plate 1.2–1.6s (15–25%), 1/8 ping-pong (10%) |
-| Pad / Harmonics | HPF 150 Hz; air +1 dB @ 12–14 kHz | 2:1 / 30ms / 200ms / 1–2 dB | **Kick → 1–2 dB (drops)** | ±30 / 80–100%W | Hall 1.8–2.2s (20–35%), 1/4 note (8–12%) |
-| **Topline Vocal** | HPF 80–100 Hz; de-mud 250–350 Hz (-1–2 dB); presence +2 dB @ 3 kHz if needed | 1176-style 4:1 fast → LA-2A +2–3 dB | **Duck pads/FX 1–2 dB** | C / 20–30%W | Plate 1.0–1.3s (15–25%); timed throws on phrase ends |
+| Kick | HPF off; notch 250 Hz (-2 dB, Q 1.2) | 4:1 / 10ms / 80ms / 2–3 dB GR | — | C / 10–20%W | Room 10%, slap 1/16 5% |
+| Sub-Bass | HPF 25–30 Hz; LPF 100 Hz | 3:1 / 15ms / 120ms / 2–4 dB | Kick→3–5 dB | C / 20–30%W | Plate 5–10% |
+| Lead Synth | HPF 120–200 Hz; +2 dB @ 3–4 kHz | 2:1 / 15ms / 120ms / 1–2 dB | Snare fills→1–2 dB | ±15 / 60–80%W | Plate 15–25%, 1/8 PP 10% |
+| Topline | HPF 80–100 Hz; -1–2 dB @ 250–350 Hz | 1176 4:1 → LA-2A +2–3 dB | Duck pads/FX 1–2 dB | C / 20–30%W | Plate 15–25%; 1/4 throws |
 
-> Replace values to fit **this song’s** register (use ${tl.tessitura || 'mid-register'} and phrase peaks). No generic wording — give numbers.
+## 🎼 Arrangement Flow & Energy Management (Song-Specific)
+- **Intro (bars e.g., 1–8):** Thin drums; pad motif in ${inputs.key ?? tl.key ?? "key"}; leads low-cut 200 Hz.
+- **Verse (9–16):** Sub enters; hats closed; throws only on phrase ends.
+- **Pre (17–24):** Add arp 1/8 @ ${typeof tl.bpm === "number" ? tl.bpm : inputs?.key ? "" : ""} BPM; LPF 300→2 kHz; reduce reverb 10%.
+- **Drop (25–32):** Full kit; open hats; sidechain pad/bass; double hook with Lead @ unison/+12.
+- **Break (33–40):** Pull sub; spotlight topline; plate 20–25%, 1/4 throws.
+- **Final Drop (41–48):** Extra perc layer; chord inversion swap; widen pads +10%.
 
-### Sidechain Routing Map (bars & sections)
-- **Kick → Sub/Mid-Bass:** **${structuralBlueprint ? 'Drops & busy verses' : 'Drops'}**, e.g., bars **${'write bar ranges from blueprint'}** at **3–5 dB**.
-- **Kick → Pads:** during build → drop transitions, bars **${'e.g., 25–32'}**, **1–2 dB**.
-- **Snare → Lead/FX tails:** on fills, bars **${'e.g., 15–16, 31–32'}**, **1–2 dB**.
-
-### Stereo & Space Plan (targets)
-- **Centers:** Kick, Snare, Sub-Bass, Lead Vox.
-- **Width:** Pads **80–100%**, Lead Synth **60–80%**, Perc FX **50–70%**.
-- **Depth:** Short plate for leads, longer hall for pads; **dry vs wet** shifts before drops (reduce wet by 5–10%).
-- **Delay Throws:** On lyric/phrase tails at bars **${'e.g., 7, 15, 31'}** (1/8 or 1/4 ping-pong, 8–12% send).
-
-### Bus & Master Targets (tailored)
-- **Drum Bus:** Glue 2:1, **10ms/Auto**, 1–2 dB GR; tape sat low.
-- **Music Bus:** 2:1, **20–30ms/150–250ms**, 1–2 dB GR; gentle tilt if pad heavy.
-- **Vox Bus:** De-esser (6–8 kHz), opto +2 dB; plate send **15–25%**.
-- **Master:** gentle glue (1–2 dB GR), **ceiling -0.8 dBFS**, target loudness per genre (**${genreContext}** typical streaming: **${genreContext?.includes('House') ? '-7 to -8 LUFS short-term on drops' : '-10 to -12 LUFS integrated'}**). Keep transients intact.
-
-## 🎼 Arrangement Flow & Energy Management
-
-**Section Map (bars may vary; align to Structural Blueprint):**
-- **Intro (bars ${'e.g., 1–8'}):** Thin drums; tease pad motif in ${tl.key || inputs.key}; low-cut leads at 200 Hz, -5 dB send to hall.
-- **Verse A (bars ${'e.g., 9–16'}):** Sub-bass enters; hats closed; topline sparse phrasing → leave FX throws on phrase ends only.
-- **Pre (bars ${'e.g., 17–24'}):** Add arp **(1/8 @ ${parsedGuidebookBpm || tl.bpm || 'BPM?'})**; automate LPF cutoff **(300→2 kHz)**; reduce reverb 10% to “dry up” before drop.
-- **Drop/Chorus (bars ${'e.g., 25–32'}):** Full kit; open hats; sidechain pad/bass; double topline hook with **Lead Synth** at **unison/+12**.
-- **Break/Bridge (bars ${'e.g., 33–40'}):** Pull sub; keep mid-bass riff ghosted; spotlight topline with plate 20–25% and 1/4 throws.
-- **Final Drop (bars ${'e.g., 41–48'}):** Extra percussion layer; chord inversion swap on repeat; widen pads +10%.
-
-**Energy Curve (1–5):** Intro 2 → Verse 3 → Pre 4 → Drop 5 → Break 2–3 → Final Drop 5.
-
-**Automation Keyframes (bars & values):**
-- **Pad LPF:** 300 Hz → 6 kHz across pre (bars ${'e.g., 17–24'})  
-- **Topline Send:** throws to 1/4 at bars **${'e.g., 8, 16, 32'}** (send +6–8 dB, 1 bar tail)  
-- **Bass Sidechain Depth:** +1 dB at drop bars **${'e.g., 25–26'}** for impact  
-- **Stereo Width:** Pads +10% at drop; leads +5% (avoid phase > 120°)
-
-**Contrast Moves:**
-- **Hats:** closed → open (+3 dB @ 10 kHz) at drops  
-- **Drum Fill:** 1-bar snare build + reverse crash into drops  
-- **Harmony:** invert chord 4 on repeat to freshen chorus  
-
-
-${lyricsSection}
-
-Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
+### Guidelines:
+1. Use the vocal phrasing to inform dynamics and space.
+2. If lyrics are available, reference their emotional tone and themes.
+3. Repeated or standout words can become motifs in melody or rhythm.
+4. Maintain a clear, DAW-ready writing style.
+5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
@@ -829,6 +757,7 @@ Focus on practical, actionable advice that can be immediately applied in ${dawCo
     if (chunk.text) yield { text: chunk.text };
   }
 }
+
 
 
 
@@ -925,7 +854,6 @@ Generate patterns appropriate for **${settings.genre}** in the **${settings.song
 };
 
 
-  return stream;
 
 /**
  * Generate MIDI that supports the vocal topline (streaming JSON).
