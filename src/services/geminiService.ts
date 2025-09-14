@@ -457,6 +457,7 @@ ${structuralBlueprint}
 ${inputs.referenceTrackLink ? `Analyze the provided reference track for key production techniques and arrangement ideas.` : `Draw from classic examples in the ${genreContext} genre for inspiration.`}
 
 ## 🎹 Instrument & Sound Design
+
 **Primary Elements:**
 - Lead sounds: Character, processing, and role
 - Bass design: Sub content, mid presence, and groove
@@ -468,6 +469,25 @@ ${inputs.referenceTrackLink ? `Analyze the provided reference track for key prod
 - Filter movements and modulation
 - Effects processing and spatial placement
 - Layering strategies for fullness
+
+### 🔌 Plugin Chains by Instrument
+
+For each core instrument (e.g., Lead Synth, Bass, Drums, Harmonic Layers), include:
+- **Plugin Chain**: Show the full processing chain using the format → [Plugin → Plugin → Plugin]
+- **Detailed Parameters**: Give specific values for relevant plugin settings (e.g., filters, envelopes, modulation, FX)
+
+**Formatting Example:**
+
+**Lead Synth**  
+Vital → Auto Filter → Chorus-Ensemble → Reverb  
+• Vital: Saw wave, FM mod 30%, Wavetable mod via LFO (1/8 sync)  
+• Auto Filter: High-pass @ 200 Hz, Res 0.4  
+• Chorus-Ensemble: Rate 0.3 Hz, Amount 40%  
+• Reverb: Hall, 1.3s decay, 15ms predelay, 30% wet
+
+Ensure this section is clear, copy-paste ready, and consistent across all instruments.
+
+
 
 ${pluginSection}
 ${vocalSection}
@@ -489,15 +509,11 @@ ${vocalSection}
 - Limiting: Loudness and peak control
 
 ## 🎼 Arrangement Flow & Energy Management
-**Section Transitions:**
-- Build techniques: Risers, drum fills, filter sweeps
-- Drop preparation: Silence, reverse reverbs, tension
-- Energy curves: How to maintain listener engagement
-
-**Variation Techniques:**
-- Verse differences: Subtle changes to maintain interest
-- Chorus variations: Building intensity across repetitions
-- Bridge/breakdown: Contrast and reset before final sections
+- Typical structure (e.g., intro → verse → drop → breakdown → outro)
+- Tension & release using vocals, automation, FX
+- Creating contrast between sections (instrumentation, groove, space)
+- Dynamic flow driven by instrument layering and transitions
+- Subtle variation techniques (layer drops, filter sweeps, delays)
 
 Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
@@ -515,7 +531,6 @@ export async function* generateGuidebookFromToplineStream(
 ): AsyncGenerator<{ text: string }, void, unknown> {
   if (!apiKey) throw new Error("API key not configured.");
 
-  // Use provided topline if present; otherwise a safe minimal shell
   const tl: ToplineAnalysis = topline ?? {
     bpm: "Unable to detect",
     timeSignature: "Unable to detect",
@@ -528,36 +543,39 @@ export async function* generateGuidebookFromToplineStream(
     sections: [],
     motifSummary: "",
     chordCandidates: [],
-    lyrics: null
+    lyrics: null,
   };
 
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
-  const vocalSection  = buildVocalProcessingSection(inputs.daw, inputs.plugins);
+  const vocalSection = buildVocalProcessingSection(inputs.daw, inputs.plugins);
 
-  const titleContext      = inputs.songTitle       ? `- Project Name: ${inputs.songTitle}`              : "";
-  const artistContext     = inputs.artistReference ? `- Artist References: ${inputs.artistReference}`   : "";
-  const genreContext      = inputs.genre?.join(", ")  || "Not specified";
-  const vibeContext       = inputs.vibe?.join(", ")   || "Not specified";
+  const titleContext = inputs.songTitle ? `- Project Name: ${inputs.songTitle}` : "";
+  const artistContext = inputs.artistReference ? `- Artist References: ${inputs.artistReference}` : "";
+  const genreContext = inputs.genre?.join(", ") || "Not specified";
+  const vibeContext = inputs.vibe?.join(", ") || "Not specified";
   const instrumentContext = inputs.availableInstruments || "Not specified";
-  const dawContext        = inputs.daw               ? inputs.daw : "Not specified";
-  const pluginContext     = inputs.plugins           ? inputs.plugins : "Stock/Generic plugins";
-  const keyContext        = inputs.key               ? `Key: ${inputs.key}`                  : "";
-  const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`         : "";
-  const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}` : "";
-  const referenceContext  = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
-  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`      : "";
-  const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
+  const dawContext = inputs.daw || "Not specified";
+  const pluginContext = inputs.plugins || "Stock/Generic plugins";
+  const keyContext = inputs.key ? `Key: ${inputs.key}` : "";
+  const scaleContext = inputs.scale ? `Scale/Mode: ${inputs.scale}` : "";
+  const chordsContext = inputs.chords ? `Chord Progression: ${inputs.chords}` : "";
+  const referenceContext = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
+  const lyricsContext = inputs.lyrics ? `Lyrics Theme: ${inputs.lyrics}` : "";
+  const notesContext = inputs.generalNotes ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const toplineOneLiner = [
     typeof tl.bpm === "number" ? `${tl.bpm} BPM` : null,
     tl.timeSignature && tl.timeSignature !== "Unable to detect" ? tl.timeSignature : null,
     tl.key && tl.key !== "Unable to detect" ? `${tl.key}` : null,
-    tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
-  ].filter(Boolean).join(" · ");
+    tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
-  const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
-    ? `
+  const lyricsSection =
+    tl.lyrics && tl.lyrics.trim().length > 0
+      ? `
 ## 🎤 Vocal Topline & Lyrical Summary
 
 **Topline Attributes:** ${toplineOneLiner || "—"}
@@ -579,17 +597,16 @@ ${tl.phrases.slice(0, 8).map(p =>
 - Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
 ` : "";
 
-  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
+  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
 
-Create a professional-level TrackGuide based on the following creative direction:
-
+Create a detailed TrackGuide for the following specifications:
 ${titleContext}
 ${artistContext}
-- Genre: ${genreContext}
-- Vibe: ${vibeContext}
-- Available Instruments: ${instrumentContext}
-- DAW: ${dawContext}
-- Plugins: ${pluginContext}
+- **Genre**: ${genreContext}
+- **Vibe**: ${vibeContext}
+- **Available Instruments**: ${instrumentContext}
+- **DAW**: ${dawContext}
+- **Plugins**: ${pluginContext}
 ${keyContext}
 ${scaleContext}
 ${chordsContext}
@@ -599,53 +616,137 @@ ${notesContext}
 
 A vocal topline was uploaded. Use it as a reference for harmonic fit, arrangement pacing, emotional energy, and lyrical inspiration. It should not override the user’s inputs—but it can enrich your suggestions.
 
-At the end of your opening summary sentence, add exactly: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
+At the end of your opening summary sentence, always add: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
+
+**IMPORTANT REQUIREMENTS:**
+1. Include the exact Structural Blueprint table with Instrumentation column as provided
+2. Use specific plugin parameters when DAW/plugins are specified
+3. Provide actionable, detailed guidance for each section
+4. Use markdown formatting with proper headers and emphasis
 
 ### Required Sections (keep this structure exactly):
+- Include all sections listed below in the exact order
+- Use topline phrasing/motifs to inspire rhythmic and melodic decisions when relevant
+
 ${structuralBlueprint}
 
 ## 🎵 Genre DNA Analysis
-- Core Characteristics (tempo feel, harmony, rhythm, sonic palette)
-- Reference Analysis (${inputs.referenceTrackLink ? "Use the provided link." : `Draw from classic examples in ${genreContext}.`})
+**Core Characteristics:**
+- Tempo range and feel
+- Harmonic structure and chord progressions
+- Rhythmic patterns and groove elements
+- Sonic palette and instrumentation choices
+
+**Reference Analysis:**
+${inputs.referenceTrackLink ? `Analyze the provided reference track for key production techniques and arrangement ideas.` : `Draw from classic examples in the ${genreContext} genre for inspiration.`}
+
+## 🎶 Harmony, Melody & Rhythmic Core
+- Suggested key, scale, and chord progression
+- Melodic phrasing, motifs, and vocal interplay
+- Rhythmic feel and syncopation techniques
 
 ## 🎹 Instrument & Sound Design
-- Primary Elements (lead, bass, drums, harmonic layers)
-- Sound Shaping (synthesis, filters, effects, layering)
+
+**Primary Elements:**
+- Lead sounds: Character, processing, and role
+- Bass design: Sub content, mid presence, and groove
+- Drum programming: Kick selection, snare character, hi-hat patterns
+- Harmonic elements: Pad textures, chord voicings, arpeggios
+
+**Sound Shaping:**
+- Synthesis techniques and oscillator choices
+- Filter movements and modulation
+- Effects processing and spatial placement
+- Layering strategies for fullness
+
+### 🔌 Plugin Chains by Instrument
+
+For each core instrument (e.g., Lead Synth, Bass, Drums, Harmonic Layers), include:
+- **Plugin Chain**: Show the full processing chain using the format → [Plugin → Plugin → Plugin]
+- **Detailed Parameters**: Give specific values for relevant plugin settings (e.g., filters, envelopes, modulation, FX)
+
+**Formatting Example:**
+
+**Lead Synth**  
+Vital → Auto Filter → Chorus-Ensemble → Reverb  
+• Vital: Saw wave, FM mod 30%, Wavetable mod via LFO (1/8 sync)  
+• Auto Filter: High-pass @ 200 Hz, Res 0.4  
+• Chorus-Ensemble: Rate 0.3 Hz, Amount 40%  
+• Reverb: Hall, 1.3s decay, 15ms predelay, 30% wet
+
+Ensure this section is clear, copy-paste ready, and consistent across all instruments.
+
+### 🛠️ Global Plugin Tips & FX Guidance
+
+Provide general sound processing tips that apply across instruments.
+
+**EQ Tips**
+- Use high-pass filters (~30–40 Hz) on non-bass elements
+- Cut muddiness at 250–400 Hz
+- Boost presence around 2–5 kHz for clarity
+
+**Compression**
+- General drum bus: Ratio 3–4:1, Attack 10–30ms, Release Auto
+- Bass compression: Fast attack for sub control, slow release
+- Lead synth: Medium knee, 2–4:1 ratio to control dynamics
+
+**Spatial FX**
+- Reverb: Hall or Plate (1.2–2s decay), Pre-delay 10–25ms, Wet 20–40%
+- Delay: Use ping-pong or slapback to widen leads or vocals
+- Chorus: Subtle rate (0.2–0.5 Hz), Mix under 40%
+
+**Layering**
+- Use EQ and multiband compression to glue layered sounds
+- Offset layers slightly in pitch/timing for thickness
+- Pan complementary layers apart (e.g., left/right)
+
+Keep this section concise and universally useful — no duplication from plugin chains above.
 
 ${pluginSection}
 ${vocalSection}
 
 ## 🎚️ Mixing & Arrangement Strategy
-- Frequency Management (low/mid/high)
-- Spatial Design (stereo, depth, movement)
-- Dynamic Control (compression, sidechain, limiting)
+
+**Frequency Management:**
+- Low-end: Sub-bass vs bass guitar/synth separation
+- Midrange: Vocal/lead clarity and instrument separation  
+- High-end: Air, sparkle, and presence balance
+
+**Spatial Design:**
+- Stereo width: Center, sides, and phantom center elements
+- Depth: Reverb sends, delay throws, and dry/wet balance
+- Movement: Automation, panning, and filter sweeps
+
+**Dynamic Control:**
+- Compression: Individual tracks and bus processing
+- Sidechain: Pumping effects and clarity enhancement
+- Limiting: Loudness and peak control
 
 ## 🎼 Arrangement Flow & Energy Management
-- Section transitions, energy curves, variation techniques
+- Typical structure (e.g., intro → verse → drop → breakdown → outro)
+- Tension & release using vocals, automation, FX
+- Creating contrast between sections (instrumentation, groove, space)
+- Dynamic flow based on vocal energy/motifs
+- Subtle variation techniques (layer drops, filter sweeps, delays)
 
 ${lyricsSection}
 
-### Guidelines:
-1. Use the vocal phrasing to inform dynamics and space (e.g., pauses, cadences, phrasing).
-2. If lyrics are available, reference their emotional tone and themes in your musical suggestions.
-3. Repeated or standout words can become motifs in melody or rhythm.
-4. Maintain a clear, DAW-ready writing style. Think like a producer guiding another.
-5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
+Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
-const stream = await ai.models.generateContentStream({
-  model: GEMINI_MODEL_NAME,
-  generationConfig: {
-    responseMimeType: "application/json",
-    temperature: 0.7,
-  },
-  contents: { parts: [{ text: prompt }] },
-});
-
+  const stream = await ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.7,
+    },
+    contents: { parts: [{ text: prompt }] },
+  });
 
   for await (const chunk of stream) {
     if (chunk.text) yield { text: chunk.text };
   }
 }
+
 
 
 
