@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MidiSettings, GeneratedMidiPatterns, UserInputs, GuidebookEntry, ChordNoteEvent, MidiNote, KeyOfGeneratedMidiPatterns } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
-import { parseAiMidiResponse } from '../utils/jsonParsingUtils';
+import { 
+  parseAiMidiResponse,
+  sanitizeJson,
+  getMinimalMidiPattern
+} from '../utils/jsonParsingUtils';
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
 import { Card } from './Card';
@@ -543,88 +547,49 @@ try {
         };
     }
 
-    try {
-        const midiStream = await generateMidiPatternSuggestions(preservedSettings);
-        let jsonStr = '';
-        for await (const chunk of midiStream) {
-          if (chunk.text) {
-            jsonStr += chunk.text;
-          }
-        }
-        console.log(`Raw MIDI response for ${trackType}:`, jsonStr);
+ try {
+  // 1) Call AI for initial MIDI suggestions (streaming or non-streaming)
+  const midiStream = await generateMidiPatternSuggestions(settingsForGeneration);
 
-        let newPatternsData;
-        // Fallback minimal pattern for single track
-        const getMinimalSingleTrackPattern = () => {
-          const key = preservedSettings.key || 'C Major';
-          const bars = preservedSettings.bars || 4;
-          const minimal: GeneratedMidiPatterns = {};
-          if (trackType === 'chords') {
-            minimal.chords = [{
-              time: 0,
-              name: key.split(' ')[0] + 'maj',
-              duration: bars,
-              notes: [{ pitch: 'C4', midi: 60 }, { pitch: 'E4', midi: 64 }, { pitch: 'G4', midi: 67 }],
-              velocity: 90
-            }];
-          } else if (trackType === 'bassline') {
-            minimal.bassline = [{
-              time: 0,
-              midi: 36,
-              duration: bars,
-              velocity: 100,
-              pitch: 'C2'
-            }];
-          } else if (trackType === 'melody') {
-            minimal.melody = [{
-              time: 0,
-              midi: 72,
-              duration: 1,
-              velocity: 95,
-              pitch: 'C5'
-            }];
-          } else if (trackType === 'drums') {
-            minimal.drums = {
-              kick: [{ time: 0, duration: 0.25, velocity: 120 }],
-              snare: [{ time: 1, duration: 0.25, velocity: 100 }],
-              hihat_closed: [{ time: 0.5, duration: 0.125, velocity: 80 }]
-            };
-          }
-          return minimal;
-        };
-        try {
-            newPatternsData = parseAiMidiResponse<GeneratedMidiPatterns>(jsonStr, `${trackType} regeneration`, getMinimalSingleTrackPattern());
-        } catch (parseError) {
-            console.error(`JSON parse error for ${trackType}:`, parseError);
-            console.error('Failed to parse:', jsonStr);
-            newPatternsData = getMinimalSingleTrackPattern();
-        }
+  // 2) Accumulate the raw text
+  let jsonStr = '';
+  for await (const chunk of midiStream) {
+    if (chunk?.text) jsonStr += chunk.text;
+  }
 
-        console.log(`Parsed MIDI patterns for ${trackType}:`, newPatternsData);
+  // 3) Sanitize & parse
+  console.log('Raw MIDI response:', jsonStr);
+  const safe = sanitizeJson(jsonStr);
 
-        const updatedPatterns = {
-            ...patterns,
-            [trackType]: newPatternsData[trackType]
-        };
+  let patternsData: GeneratedMidiPatterns;
+  try {
+    patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(
+      safe,
+      'MIDI generation',
+      getMinimalMidiPattern()
+    );
+  } catch (parseError) {
+    console.error('JSON parse error:', parseError);
+    console.error('Failed to parse (sanitized):', safe);
+    patternsData = getMinimalMidiPattern();
+  }
 
-        if (trackType === 'drums' && newPatternsData.drums) {
-            const lowercasedDrums: any = {};
-            for (const key in newPatternsData.drums) {
-                lowercasedDrums[key.toLowerCase().replace(/\s+/g, '_')] = newPatternsData.drums[key as keyof typeof newPatternsData.drums];
-            }
-            updatedPatterns.drums = lowercasedDrums;
-        }
-
-        setPatterns(updatedPatterns);
-        onUpdateGuidebookEntryMidi?.(settings, updatedPatterns);
-    } catch (err) {
-        console.error('Error regenerating single track:', err);
-        setError(`Failed to regenerate ${trackType}. Please try again.`);
-    } finally {
-        setIsLoading(false);
-        setLoadingMessage('');
-    }
-  };
+  // 4) Update state/UI
+  setPatterns(patternsData);
+  onUpdateGuidebookEntryMidi?.(settingsForGeneration, patternsData);
+} catch (err: any) {
+  console.error('MIDI Generation Error:', err);
+  const specificMessage =
+    typeof err?.message === 'string' && err.message.toLowerCase().includes('json')
+      ? 'AI returned malformed JSON for initial MIDI generation.'
+      : (err?.message || 'Unknown error during MIDI generation.');
+  setMidiError(specificMessage);
+  // Optional: provide a minimal playable fallback
+  const fallback = getMinimalMidiPattern();
+  setPatterns(fallback);
+} finally {
+  setIsGenerating(false);
+}
 
   const toggleSettingsInputs = async () => {
     if (!showSettingsInputs) {
