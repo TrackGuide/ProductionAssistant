@@ -113,7 +113,8 @@ export const MIDI_TARGET_INSTRUMENTS = [
   { id: 'chords', label: 'Chords' },
   { id: 'bassline', label: 'Bassline' },
   { id: 'melody', label: 'Melody' },
-  { id: 'drums', label: 'Drums' }
+  { id: 'topline_melody', label: 'Topline Melody' }, // NEW
+  { id: 'drums', label: 'Drums' },
 ];
 
 export const MIDI_SONG_SECTIONS = [
