@@ -493,27 +493,59 @@ ${pluginSection}
 ${vocalSection}
 
 ## 🎚️ Mixing & Arrangement Strategy
-**Frequency Management:**
-- Low-end: Sub-bass vs bass guitar/synth separation
-- Midrange: Vocal/lead clarity and instrument separation  
-- High-end: Air, sparkle, and presence balance
+**Context:** For this track — **${genreContext}**, **${vibeContext}**, **${toplineOneLiner || `${parsedGuidebookBpm || inputs?.bpm || settings?.tempo || '—'} BPM`}**, **${tl.key || inputs.key || 'Key TBA'}** — optimize space around the **topline** and low-end movement.
 
-**Spatial Design:**
-- Stereo width: Center, sides, and phantom center elements
-- Depth: Reverb sends, delay throws, and dry/wet balance
-- Movement: Automation, panning, and filter sweeps
+### Mix Matrix (only include elements that exist in Available Instruments or structural blueprint)
+| Element | Main EQ (Hz/dB/Q) | Comp (ratio/att/release/GR) | Sidechain (source/amt) | Pan/Width | Reverb/Delay Sends |
+|---|---|---|---|---|---|
+| Kick | HPF off; notch 250 Hz (-2 dB, Q 1.2) | 4:1 / 10ms / 80ms / 2–3 dB | — | C / 10–20%W | Room - small (10%), slap 1/16 (5%) |
+| Sub-Bass | LPF 100 Hz; HPF 25–30 Hz | 3:1 / 15ms / 120ms / 2–4 dB | **Kick → 3–5 dB** | C / 20–30%W | Short plate (5–10%), no delay |
+| Mid-Bass | HPF 35–40 Hz; dip 250–300 Hz (-2 dB) | 4:1 / 20ms / 150ms / 3 dB | **Kick → 2–3 dB** | C-5 / 30–40%W | Room (10–15%), 1/8 delay (5%) |
+| Lead Synth | HPF 120–200 Hz; presence +2 dB @ 3–4 kHz | 2:1 / 15ms / 120ms / 1–2 dB | Snare (fills) → 1–2 dB | ±15 / 60–80%W | Plate 1.2–1.6s (15–25%), 1/8 ping-pong (10%) |
+| Pad / Harmonics | HPF 150 Hz; air +1 dB @ 12–14 kHz | 2:1 / 30ms / 200ms / 1–2 dB | **Kick → 1–2 dB (drops)** | ±30 / 80–100%W | Hall 1.8–2.2s (20–35%), 1/4 note (8–12%) |
+| **Topline Vocal** | HPF 80–100 Hz; de-mud 250–350 Hz (-1–2 dB); presence +2 dB @ 3 kHz if needed | 1176-style 4:1 fast → LA-2A +2–3 dB | **Duck pads/FX 1–2 dB** | C / 20–30%W | Plate 1.0–1.3s (15–25%); timed throws on phrase ends |
 
-**Dynamic Control:**
-- Compression: Individual tracks and bus processing
-- Sidechain: Pumping effects and clarity enhancement
-- Limiting: Loudness and peak control
+> Replace values to fit **this song’s** register (use ${tl.tessitura || 'mid-register'} and phrase peaks). No generic wording — give numbers.
 
-## 🎼 Arrangement Flow & Energy Management
-- Typical structure (e.g., intro → verse → drop → breakdown → outro)
-- Tension & release using vocals, automation, FX
-- Creating contrast between sections (instrumentation, groove, space)
-- Dynamic flow driven by instrument layering and transitions
-- Subtle variation techniques (layer drops, filter sweeps, delays)
+### Sidechain Routing Map (bars & sections)
+- **Kick → Sub/Mid-Bass:** **${structuralBlueprint ? 'Drops & busy verses' : 'Drops'}**, e.g., bars **${'write bar ranges from blueprint'}** at **3–5 dB**.
+- **Kick → Pads:** during build → drop transitions, bars **${'e.g., 25–32'}**, **1–2 dB**.
+- **Snare → Lead/FX tails:** on fills, bars **${'e.g., 15–16, 31–32'}**, **1–2 dB**.
+
+### Stereo & Space Plan (targets)
+- **Centers:** Kick, Snare, Sub-Bass, Lead Vox.
+- **Width:** Pads **80–100%**, Lead Synth **60–80%**, Perc FX **50–70%**.
+- **Depth:** Short plate for leads, longer hall for pads; **dry vs wet** shifts before drops (reduce wet by 5–10%).
+- **Delay Throws:** On lyric/phrase tails at bars **${'e.g., 7, 15, 31'}** (1/8 or 1/4 ping-pong, 8–12% send).
+
+### Bus & Master Targets (tailored)
+- **Drum Bus:** Glue 2:1, **10ms/Auto**, 1–2 dB GR; tape sat low.
+- **Music Bus:** 2:1, **20–30ms/150–250ms**, 1–2 dB GR; gentle tilt if pad heavy.
+- **Vox Bus:** De-esser (6–8 kHz), opto +2 dB; plate send **15–25%**.
+- **Master:** gentle glue (1–2 dB GR), **ceiling -0.8 dBFS**, target loudness per genre (**${genreContext}** typical streaming: **${genreContext?.includes('House') ? '-7 to -8 LUFS short-term on drops' : '-10 to -12 LUFS integrated'}**). Keep transients intact.
+## 🎼 Arrangement Flow & Energy Management (Song-Specific)
+
+**Section Map (bars may vary; align to Structural Blueprint):**
+- **Intro (bars ${'e.g., 1–8'}):** Thin drums; tease pad motif in ${tl.key || inputs.key}; low-cut leads at 200 Hz, -5 dB send to hall.
+- **Verse A (bars ${'e.g., 9–16'}):** Sub-bass enters; hats closed; topline sparse phrasing → leave FX throws on phrase ends only.
+- **Pre (bars ${'e.g., 17–24'}):** Add arp **(1/8 @ ${parsedGuidebookBpm || tl.bpm || 'BPM?'})**; automate LPF cutoff **(300→2 kHz)**; reduce reverb 10% to “dry up” before drop.
+- **Drop/Chorus (bars ${'e.g., 25–32'}):** Full kit; open hats; sidechain pad/bass; double topline hook with **Lead Synth** at **unison/+12**.
+- **Break/Bridge (bars ${'e.g., 33–40'}):** Pull sub; keep mid-bass riff ghosted; spotlight topline with plate 20–25% and 1/4 throws.
+- **Final Drop (bars ${'e.g., 41–48'}):** Extra percussion layer; chord inversion swap on repeat; widen pads +10%.
+
+**Energy Curve (1–5):** Intro 2 → Verse 3 → Pre 4 → Drop 5 → Break 2–3 → Final Drop 5.
+
+**Automation Keyframes (bars & values):**
+- **Pad LPF:** 300 Hz → 6 kHz across pre (bars ${'e.g., 17–24'})  
+- **Topline Send:** throws to 1/4 at bars **${'e.g., 8, 16, 32'}** (send +6–8 dB, 1 bar tail)  
+- **Bass Sidechain Depth:** +1 dB at drop bars **${'e.g., 25–26'}** for impact  
+- **Stereo Width:** Pads +10% at drop; leads +5% (avoid phase > 120°)
+
+**Contrast Moves:**
+- **Hats:** closed → open (+3 dB @ 10 kHz) at drops  
+- **Drum Fill:** 1-bar snare build + reverse crash into drops  
+- **Harmony:** invert chord 4 on repeat to freshen chorus  
+
 
 Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
@@ -664,6 +696,7 @@ ${inputs.referenceTrackLink ? `Analyze the provided reference track for key prod
 For each core instrument (e.g., Lead Synth, Bass, Drums, Harmonic Layers), include:
 - **Plugin Chain**: Show the full processing chain using the format → [Plugin → Plugin → Plugin]
 - **Detailed Parameters**: Give specific values for relevant plugin settings (e.g., filters, envelopes, modulation, FX)
+-- Use one bullet per plugin with its parameters.
 
 **Formatting Example:**
 
@@ -702,32 +735,82 @@ Provide general sound processing tips that apply across instruments.
 
 Keep this section concise and universally useful — no duplication from plugin chains above.
 
-${pluginSection}
 ${vocalSection}
+
+## 🎙️ Vocal Capture & Processing
+
+**Microphone Suggestions (pick 1):**  
+Provide **3–4 mic options** suited to the **genre / vibe / reference** with one-line rationale for each and a price tier tag.
+- **Budget (≈$100–$200):** e.g., Audio-Technica AT2020 — clean, bright top; good for airy pop toplines  
+- **Mid (≈$300–$600):** e.g., sE Electronics sE2200 — modern presence; smooth sibilance control  
+- **Workhorse (≈$800–$1.2k):** e.g., Shure SM7B — controlled low mids; rejects room; great for aggressive/close vocals  
+- **Character (≈$1.5k+):** e.g., Warm WA-251 — vintage top gloss; flattering for lush pads / dreamy pop
+
+**Suggested Chain (stock-first):**  
+- **Utility (Gain/Trim):** hit -12 to -9 dBFS peaks  
+- **HPF / EQ:** HPF 80–100 Hz; gentle 3 kHz presence; de-mud 250 Hz if needed  
+- **De-Esser:** split-band @ 6–8 kHz, 3–6 dB GR  
+- **Compressor:** 1176-style (4:1, fast attack/release) into Opto (2–3 dB GR)  
+- **Reverb/Delay Sends:** Short plate (0.9–1.3 s), timed 1/8 or 1/4 ping-pong throws
+
+> Replace the mic list dynamically according to genre/vibe/reference. Do **not** include generic “record 2–3 takes” performance tips.
 
 ## 🎚️ Mixing & Arrangement Strategy
 
-**Frequency Management:**
-- Low-end: Sub-bass vs bass guitar/synth separation
-- Midrange: Vocal/lead clarity and instrument separation  
-- High-end: Air, sparkle, and presence balance
+**Context:** For this track — **${genreContext}**, **${vibeContext}**, **${toplineOneLiner || `${parsedGuidebookBpm || inputs?.bpm || settings?.tempo || '—'} BPM`}**, **${tl.key || inputs.key || 'Key TBA'}** — optimize space around the **topline** and low-end movement.
 
-**Spatial Design:**
-- Stereo width: Center, sides, and phantom center elements
-- Depth: Reverb sends, delay throws, and dry/wet balance
-- Movement: Automation, panning, and filter sweeps
+### Mix Matrix (only include elements that exist in Available Instruments or structural blueprint)
+| Element | Main EQ (Hz/dB/Q) | Comp (ratio/att/release/GR) | Sidechain (source/amt) | Pan/Width | Reverb/Delay Sends |
+|---|---|---|---|---|---|
+| Kick | HPF off; notch 250 Hz (-2 dB, Q 1.2) | 4:1 / 10ms / 80ms / 2–3 dB | — | C / 10–20%W | Room - small (10%), slap 1/16 (5%) |
+| Sub-Bass | LPF 100 Hz; HPF 25–30 Hz | 3:1 / 15ms / 120ms / 2–4 dB | **Kick → 3–5 dB** | C / 20–30%W | Short plate (5–10%), no delay |
+| Mid-Bass | HPF 35–40 Hz; dip 250–300 Hz (-2 dB) | 4:1 / 20ms / 150ms / 3 dB | **Kick → 2–3 dB** | C-5 / 30–40%W | Room (10–15%), 1/8 delay (5%) |
+| Lead Synth | HPF 120–200 Hz; presence +2 dB @ 3–4 kHz | 2:1 / 15ms / 120ms / 1–2 dB | Snare (fills) → 1–2 dB | ±15 / 60–80%W | Plate 1.2–1.6s (15–25%), 1/8 ping-pong (10%) |
+| Pad / Harmonics | HPF 150 Hz; air +1 dB @ 12–14 kHz | 2:1 / 30ms / 200ms / 1–2 dB | **Kick → 1–2 dB (drops)** | ±30 / 80–100%W | Hall 1.8–2.2s (20–35%), 1/4 note (8–12%) |
+| **Topline Vocal** | HPF 80–100 Hz; de-mud 250–350 Hz (-1–2 dB); presence +2 dB @ 3 kHz if needed | 1176-style 4:1 fast → LA-2A +2–3 dB | **Duck pads/FX 1–2 dB** | C / 20–30%W | Plate 1.0–1.3s (15–25%); timed throws on phrase ends |
 
-**Dynamic Control:**
-- Compression: Individual tracks and bus processing
-- Sidechain: Pumping effects and clarity enhancement
-- Limiting: Loudness and peak control
+> Replace values to fit **this song’s** register (use ${tl.tessitura || 'mid-register'} and phrase peaks). No generic wording — give numbers.
+
+### Sidechain Routing Map (bars & sections)
+- **Kick → Sub/Mid-Bass:** **${structuralBlueprint ? 'Drops & busy verses' : 'Drops'}**, e.g., bars **${'write bar ranges from blueprint'}** at **3–5 dB**.
+- **Kick → Pads:** during build → drop transitions, bars **${'e.g., 25–32'}**, **1–2 dB**.
+- **Snare → Lead/FX tails:** on fills, bars **${'e.g., 15–16, 31–32'}**, **1–2 dB**.
+
+### Stereo & Space Plan (targets)
+- **Centers:** Kick, Snare, Sub-Bass, Lead Vox.
+- **Width:** Pads **80–100%**, Lead Synth **60–80%**, Perc FX **50–70%**.
+- **Depth:** Short plate for leads, longer hall for pads; **dry vs wet** shifts before drops (reduce wet by 5–10%).
+- **Delay Throws:** On lyric/phrase tails at bars **${'e.g., 7, 15, 31'}** (1/8 or 1/4 ping-pong, 8–12% send).
+
+### Bus & Master Targets (tailored)
+- **Drum Bus:** Glue 2:1, **10ms/Auto**, 1–2 dB GR; tape sat low.
+- **Music Bus:** 2:1, **20–30ms/150–250ms**, 1–2 dB GR; gentle tilt if pad heavy.
+- **Vox Bus:** De-esser (6–8 kHz), opto +2 dB; plate send **15–25%**.
+- **Master:** gentle glue (1–2 dB GR), **ceiling -0.8 dBFS**, target loudness per genre (**${genreContext}** typical streaming: **${genreContext?.includes('House') ? '-7 to -8 LUFS short-term on drops' : '-10 to -12 LUFS integrated'}**). Keep transients intact.
 
 ## 🎼 Arrangement Flow & Energy Management
-- Typical structure (e.g., intro → verse → drop → breakdown → outro)
-- Tension & release using vocals, automation, FX
-- Creating contrast between sections (instrumentation, groove, space)
-- Dynamic flow based on vocal energy/motifs
-- Subtle variation techniques (layer drops, filter sweeps, delays)
+
+**Section Map (bars may vary; align to Structural Blueprint):**
+- **Intro (bars ${'e.g., 1–8'}):** Thin drums; tease pad motif in ${tl.key || inputs.key}; low-cut leads at 200 Hz, -5 dB send to hall.
+- **Verse A (bars ${'e.g., 9–16'}):** Sub-bass enters; hats closed; topline sparse phrasing → leave FX throws on phrase ends only.
+- **Pre (bars ${'e.g., 17–24'}):** Add arp **(1/8 @ ${parsedGuidebookBpm || tl.bpm || 'BPM?'})**; automate LPF cutoff **(300→2 kHz)**; reduce reverb 10% to “dry up” before drop.
+- **Drop/Chorus (bars ${'e.g., 25–32'}):** Full kit; open hats; sidechain pad/bass; double topline hook with **Lead Synth** at **unison/+12**.
+- **Break/Bridge (bars ${'e.g., 33–40'}):** Pull sub; keep mid-bass riff ghosted; spotlight topline with plate 20–25% and 1/4 throws.
+- **Final Drop (bars ${'e.g., 41–48'}):** Extra percussion layer; chord inversion swap on repeat; widen pads +10%.
+
+**Energy Curve (1–5):** Intro 2 → Verse 3 → Pre 4 → Drop 5 → Break 2–3 → Final Drop 5.
+
+**Automation Keyframes (bars & values):**
+- **Pad LPF:** 300 Hz → 6 kHz across pre (bars ${'e.g., 17–24'})  
+- **Topline Send:** throws to 1/4 at bars **${'e.g., 8, 16, 32'}** (send +6–8 dB, 1 bar tail)  
+- **Bass Sidechain Depth:** +1 dB at drop bars **${'e.g., 25–26'}** for impact  
+- **Stereo Width:** Pads +10% at drop; leads +5% (avoid phase > 120°)
+
+**Contrast Moves:**
+- **Hats:** closed → open (+3 dB @ 10 kHz) at drops  
+- **Drum Fill:** 1-bar snare build + reverse crash into drops  
+- **Harmony:** invert chord 4 on repeat to freshen chorus  
+
 
 ${lyricsSection}
 
@@ -757,8 +840,13 @@ Focus on practical, actionable advice that can be immediately applied in ${dawCo
 export const generateMidiPatternSuggestions = async (
   settings: MidiSettings
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
+  // Whether UI requested a separate topline melody track
+  const toplineRequested =
+    Array.isArray(settings.targetInstruments) &&
+    settings.targetInstruments.includes("topline_melody");
+
   const prompt = `// ⚡ Including guidebookContext
-You are TrackGuideAI's MIDI Pattern Generator. Return a single minified JSON object only. 
+You are TrackGuideAI's MIDI Pattern Generator. Return a single **minified** JSON object only.
 Do not include prose, comments, backticks, or code fences.
 
 **Requirements:**
@@ -772,108 +860,70 @@ Do not include prose, comments, backticks, or code fences.
 - Bars: ${settings.bars}
 - Target Instruments: ${settings.targetInstruments.join(", ")}
 - Guidebook Context: ${settings.guidebookContext || "Not specified"}
+- Topline present/requested: ${toplineRequested ? "yes" : "no"}
 
-**JSON Structure Required:**
+**Topline Melody Track (VERY IMPORTANT):**
+- If a vocal topline was uploaded in this project **or** "topline_melody" appears in Target Instruments, output a **separate** track named **"topline_melody"** that cleanly follows the vocal’s pitch (smoothed/quantized notes).
+- Do **NOT** merge the topline with "melody". You may output **both** "melody" and "topline_melody".
+- If no topline exists and "topline_melody" was not requested, **omit** the "topline_melody" key entirely.
+
+**JSON Structure Required (example schema):**
 {
   "chords": [
-    {
-      "time": 0,
-      "name": "Cm",
-      "duration": 2,
-      "notes": [{"pitch": "C4", "midi": 60}, {"pitch": "Eb4", "midi": 63}, {"pitch": "G4", "midi": 67}],
-      "velocity": 90
-    }
+    {"time": 0, "name": "Cm", "duration": 2,
+     "notes": [{"pitch": "C4", "midi": 60}, {"pitch": "Eb4", "midi": 63}, {"pitch": "G4", "midi": 67}],
+     "velocity": 90}
   ],
   "bassline": [
-    {
-      "time": 0,
-      "midi": 36,
-      "duration": 0.5,
-      "velocity": 100,
-      "pitch": "C2"
-    }
+    {"time": 0, "midi": 36, "duration": 0.5, "velocity": 100, "pitch": "C2"}
   ],
   "melody": [
-    {
-      "time": 0,
-      "midi": 72,
-      "duration": 1,
-      "velocity": 95,
-      "pitch": "C5"
-    }
+    {"time": 0, "midi": 72, "duration": 1, "velocity": 95, "pitch": "C5"}
+  ],
+  "topline_melody": [
+    {"time": 0, "midi": 74, "duration": 0.5, "velocity": 90, "pitch": "D5"}
   ],
   "drums": {
-    "kick": [
-      {"time": 0, "duration": 0.25, "velocity": 120},
-      {"time": 2, "duration": 0.25, "velocity": 115}
-    ],
-    "snare": [
-      {"time": 1, "duration": 0.25, "velocity": 100},
-      {"time": 3, "duration": 0.25, "velocity": 105}
-    ],
-    "hihat_closed": [
-      {"time": 0.5, "duration": 0.125, "velocity": 80},
-      {"time": 1.5, "duration": 0.125, "velocity": 75}
-    ],
-    "open_hihat": [
-      {"time": 1.75, "duration": 0.5, "velocity": 85}
-    ],
-    "clap": [
-      {"time": 1, "duration": 0.25, "velocity": 95}
-    ],
-    "tom_high": [
-      {"time": 3.5, "duration": 0.25, "velocity": 90}
-    ],
-    "tom_mid": [
-      {"time": 3.75, "duration": 0.25, "velocity": 95}
-    ],
-    "tom_low": [
-      {"time": 4, "duration": 0.5, "velocity": 100}
-    ],
-    "crash_cymbal_1": [
-      {"time": 0, "duration": 2, "velocity": 110}
-    ],
-    "ride_cymbal_1": [
-      {"time": 0.5, "duration": 0.25, "velocity": 70}
-    ]
+    "kick": [{"time": 0, "duration": 0.25, "velocity": 120}, {"time": 2, "duration": 0.25, "velocity": 115}],
+    "snare": [{"time": 1, "duration": 0.25, "velocity": 100}, {"time": 3, "duration": 0.25, "velocity": 105}],
+    "hihat_closed": [{"time": 0.5, "duration": 0.125, "velocity": 80}, {"time": 1.5, "duration": 0.125, "velocity": 75}],
+    "open_hihat": [{"time": 1.75, "duration": 0.5, "velocity": 85}],
+    "clap": [{"time": 1, "duration": 0.25, "velocity": 95}],
+    "tom_high": [{"time": 3.5, "duration": 0.25, "velocity": 90}],
+    "tom_mid": [{"time": 3.75, "duration": 0.25, "velocity": 95}],
+    "tom_low": [{"time": 4, "duration": 0.5, "velocity": 100}],
+    "crash_cymbal_1": [{"time": 0, "duration": 2, "velocity": 110}],
+    "ride_cymbal_1": [{"time": 0.5, "duration": 0.25, "velocity": 70}]
   }
 }
 
 **CRITICAL REQUIREMENTS:**
 1. Return ONLY valid JSON. NO explanatory text, NO markdown formatting, NO code blocks, NO backticks.
-2. Start your response directly with { and end with }
-3. Do not wrap the JSON in code blocks with three backticks
-4. All time values must be in beats (0 to ${settings.bars * 4})
-5. All MIDI numbers must be integers between 21-108
-6. All durations must be positive numbers
-7. All velocities must be integers between 1-127
-8. Use appropriate drum elements for ${settings.genre}:
-   - Essential: kick, snare, hihat_closed
+2. Start the response directly with { and end with } (minified is preferred).
+3. Do not wrap the JSON in code blocks or quotes.
+4. All time values must be in **beats** (0 to ${settings.bars * 4} for 4/4 sections).
+5. All MIDI numbers must be integers between **21–108**.
+6. All durations must be **positive** numbers.
+7. All velocities must be integers between **1–127**.
+8. Drum elements must fit **${settings.genre}** and the **${settings.songSection || "General Loop"}** context:
+   - Essentials: kick, snare, hihat_closed
    - Groove: open_hihat, ride_cymbal_1
    - Accents: clap, crash_cymbal_1
    - Fills: tom_high, tom_mid, tom_low
-   - Choose elements that fit the genre and song section
+   - Use only what serves the genre/section.
+9. **Do not merge "topline_melody" into "melody".** If topline exists (or requested), output "topline_melody" as a separate key. If not, omit the key.
+10. Use **snake_case** keys only. Omit keys that have no content (no empty arrays or nulls).
+11. Keep notes/midi events **on-grid** (typical quantization: 1/8 or 1/16) unless genre-specific syncopation is required.
 
-**Genre-Specific Drum Guidelines:**
-- Electronic/House/Techno: Focus on kick, hihat_closed, open_hihat, clap
-- Rock/Metal: Use kick, snare, hihat_closed, crash_cymbal_1, tom_high, tom_mid, tom_low
-- Hip Hop/Trap: Emphasize kick, snare, hihat_closed, clap
-- Jazz/Funk: Include ride_cymbal_1, hihat_closed, kick, snare
-- Pop: Balanced use of kick, snare, hihat_closed, crash_cymbal_1, clap
+Generate patterns appropriate for **${settings.genre}** in the **${settings.songSection}** section, using **${settings.chordProgression}** in **${settings.key}**. Output MUST be valid JSON and nothing else.`;
 
-Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.
+  return ai.models.generateContentStream({
+    model: GEMINI_MODEL_NAME,
+    // You can keep generationConfig if you use it elsewhere; omitted here for parity with your original
+    contents: { parts: [{ text: prompt }] },
+  });
+};
 
-Output MUST be valid JSON and nothing else.`;
-
- const stream = await ai.models.generateContentStream({
-  model: GEMINI_MODEL_NAME,
-  generationConfig: {
-    // forces a JSON body instead of prose/fences
-    responseMimeType: "application/json",
-    temperature: 0.7
-  },
-  contents: { parts: [{ text: prompt }] },
-});
 
   return stream;
 };
