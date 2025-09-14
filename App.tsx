@@ -375,13 +375,26 @@ const App: React.FC = () => {
   // 🧠 Step 3: Transcribe topline to extract lyrics (Deepgram)
 if (toplineFile && toplineFile instanceof File) {
   try {
-    const { analyzeTopline } = await import('./src/services/audioService');
-    const transcribeTopline = (await import('./src/services/deepgramTranscriber')).default;
+     // Resilient module loads (support both ./src/services/* and project-root fallbacks)
+    const audioMod = await import('./src/services/audioService').catch(() =>
+      import('./audioService')
+    );
+    const dgMod = await import('./src/services/deepgramTranscriber').catch(() =>
+      import('./deepgramTranscriber')
+    );
+
+    // Prefer named exports, fall back to default where applicable
+    const analyzeTopline =
+      (audioMod as any).analyzeTopline ?? (audioMod as any).default?.analyzeTopline;
+
+    const transcribeTopline =
+      (dgMod as any).transcribeTopline ?? (dgMod as any).default;
 
     const [topline, lyrics] = await Promise.all([
-      analyzeTopline(toplineFile),
-      transcribeTopline(toplineFile),
+      typeof analyzeTopline === 'function' ? analyzeTopline(toplineFile) : Promise.resolve(null),
+      typeof transcribeTopline === 'function' ? transcribeTopline(toplineFile) : Promise.resolve(null),
     ]);
+
 
       if (topline && typeof topline === "object") {
         topline.hasLyrics = !!lyrics;
@@ -420,20 +433,26 @@ if (toplineFile && toplineFile instanceof File) {
     try {
       setLoadingMessage('TrackGuide is generating...');
 
-      let guidebookStream: AsyncIterable<{ text: string }>;
-if (toplineFile && toplineAnalysis) {
-  guidebookStream = await generateGuidebookFromToplineStream(
-    inputs,
-    toplineAnalysis
-  );
-} else {
-  guidebookStream = await generateGuidebookContent(inputs);
-}
+          let guidebookStream: AsyncIterable<{ text: string }>;
+
+      if (toplineFile) {
+        guidebookStream = await generateGuidebookFromToplineStream(
+          inputs,
+          toplineAnalysis || undefined
+        );
+      } else {
+        guidebookStream = await generateGuidebookContent(inputs);
+      }
 
       for await (const chunk of guidebookStream) {
         finalGuidebookContent += chunk.text;
-        setGeneratedGuidebook(prev => prev + chunk.text);
+        setGeneratedGuidebook(prev =>
+          prev + (typeof (chunk as any).text === "function"
+            ? (chunk as any).text()
+            : (chunk as any).text ?? "")
+        );
       }
+
 
       setLoadingMessage('Initial MIDI patterns are generating...');
 
