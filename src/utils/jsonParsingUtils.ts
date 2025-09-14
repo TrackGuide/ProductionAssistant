@@ -322,3 +322,55 @@ export function parseAiToplineResponse<T = any>(raw: string) {
     coerce: coerceToplineNumbers,
   });
 }
+
+/**
+ * Returns a minimal valid MIDI pattern object to use as fallback.
+ */
+export function getMinimalMidiPattern(): GeneratedMidiPatterns {
+  return {
+    chords: [
+      {
+        time: 0,
+        name: "C",
+        duration: 4,
+        notes: [
+          { pitch: "C4", midi: 60 },
+          { pitch: "E4", midi: 64 },
+          { pitch: "G4", midi: 67 },
+        ],
+        velocity: 90,
+      },
+    ],
+    bassline: [
+      {
+        time: 0,
+        midi: 36,
+        duration: 1,
+        velocity: 100,
+        pitch: "C2",
+      },
+    ],
+    melody: [
+      {
+        time: 0,
+        midi: 72,
+        duration: 1,
+        velocity: 95,
+        pitch: "C5",
+      },
+    ],
+    drums: {
+      kick: [{ time: 0, duration: 0.25, velocity: 120 }],
+      snare: [{ time: 2, duration: 0.25, velocity: 100 }],
+      hihat_closed: [{ time: 1, duration: 0.125, velocity: 80 }],
+      open_hihat: [],
+      clap: [],
+      tom_high: [],
+      tom_mid: [],
+      tom_low: [],
+      crash_cymbal_1: [],
+      ride_cymbal_1: [],
+    },
+  };
+}
+
