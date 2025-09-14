@@ -528,13 +528,28 @@ export async function* generateGuidebookFromToplineStream(
   ].filter(Boolean).join(" · ");
 
 const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
-  ? `\n## Lyrics & Topline Overview\nDetected key details: ${toplineOneLiner || "—"}\n\nLyrics (extracted from topline):\n${tl.lyrics.trim()}\n\nPlease reflect the lyrical themes, mood, and repeating words in your musical guidance. For example:
-- If words suggest motion or falling, suggest matching motifs or transitions.
-- If the lyrics are melancholic or nostalgic, favor moody pads, ambient textures, or reverb-drenched leads.
-- If the lyrics include specific emotional phrases (like "stay", "run", "breathe"), you can map those to arrangement or motif suggestions.
+  ? `
+## 🎤 Vocal Topline & Lyrical Summary
 
-You may refer back to lyrics in sections like Genre DNA, Arrangement Flow, or Instrument & Sound Design when relevant.\n`
-  : "";
+**Topline Attributes:** ${toplineOneLiner || "—"}
+${tl.tessitura ? `\n- Tessitura: ${tl.tessitura}` : ""}
+${tl.registerCenter ? `\n- Register Center: ${tl.registerCenter}` : ""}
+
+**Extracted Lyrics (best-effort transcription):**
+${tl.lyrics.trim()}
+
+${tl.phrases?.length ? `
+**Phrase Map (by beat timing):**
+${tl.phrases.slice(0, 8).map(p =>
+  `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""}${p.intensity ? ` (${p.intensity})` : ""}`
+).join("\n")}` : ""}
+
+**Creative Use:** Let the topline guide your musical decisions:
+- Repeating words can become rhythmic or melodic motifs.
+- Emotional themes (e.g., longing, urgency, release) can shape sound choices (e.g., airy pads, aggressive stabs, filtered builds).
+- Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
+` : "";
+
 
 
   const phraseHints = tl.phrases?.length
