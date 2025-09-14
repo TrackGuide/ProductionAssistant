@@ -17,26 +17,38 @@ export function toplineToMidi(
   const safeNum = (v: any) => (typeof v === "number" && isFinite(v) ? v : NaN);
   const clampMidi = (m: number) => Math.max(21, Math.min(108, Math.round(m)));
 
-  const notes = (topline.pitchContour || []).map((n) => {
+  const raw = (topline.pitchContour || [])
+  .map((n) => {
     const time = safeNum(n.time);
-    const dur  = safeNum(n.duration);
+    const dur = safeNum(n.duration);
     const midi = clampMidi(safeNum(n.midi));
-
-    if (!(time >= 0) || !(dur > 0) || !isFinite(midi)) return null;
-    if (typeof maxBeats === "number" && time > maxBeats) return null;
-
     const velocity = Math.max(1, Math.min(127, Math.round(n.velocity ?? defVel)));
-    return <MidiNote>{
-      time,
-      midi,
-      duration: dur,
-      velocity,
-      pitch: n.pitch, // keep for display/logging
-      name: n.lyric,  // optional: store lyric in 'name' for UI overlays
-    };
-  });
+    return (time >= 0 && dur > 0 && isFinite(midi))
+      ? { time, duration: dur, midi, velocity, pitch: n.pitch, name: n.lyric }
+      : null;
+  })
+  .filter(Boolean) as MidiNote[];
 
-  return notes.filter(Boolean) as MidiNote[];
+// Apply smoothing to reduce jitter or extreme jumps
+const smoothed: MidiNote[] = [];
+for (let i = 0; i < raw.length; i++) {
+  const window = raw.slice(Math.max(0, i - 1), i + 2);
+  const pitches = window.map(n => n.midi).sort((a, b) => a - b);
+  const medianMidi = pitches[Math.floor(pitches.length / 2)];
+  const original = raw[i];
+
+  // Reject if it's a large sudden jump (octave+)
+  const prev = raw[i - 1];
+  if (prev && Math.abs(original.midi - prev.midi) > 12) continue;
+
+  smoothed.push({
+    ...original,
+    midi: medianMidi,
+  });
+}
+
+return smoothed;
+
 }
 
 /**
