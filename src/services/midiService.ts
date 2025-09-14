@@ -140,6 +140,27 @@ export const generateMidiFile = (
         hasContent = true;
     }
   }
+  // Melody track
+  if (patterns.melody && patterns.melody.length > 0) {
+    let melodyTrack = createTrackInstance(`${trackNamePrefix} Melody`);
+    melodyTrack = configureAndAddTrack(melodyTrack);
+    if (melodyTrack) {
+        addNotesToTrack(melodyTrack, patterns.melody, 3, false);
+        tracks.push(melodyTrack);
+        hasContent = true;
+    }
+  }
+
+  // Topline melody (vocal lead) track
+  if ((patterns as any).topline_melody && (patterns as any).topline_melody.length > 0) {
+    let toplineTrack = createTrackInstance(`${trackNamePrefix} Topline`);
+    toplineTrack = configureAndAddTrack(toplineTrack);
+    if (toplineTrack) {
+        addNotesToTrack(toplineTrack, (patterns as any).topline_melody, 4, false);
+        tracks.push(toplineTrack);
+        hasContent = true;
+    }
+  }
   if (patterns.drums && Object.keys(patterns.drums).length > 0) {
     let drumTrack = createTrackInstance(`${trackNamePrefix} Drums`);
     drumTrack = configureAndAddTrack(drumTrack);
