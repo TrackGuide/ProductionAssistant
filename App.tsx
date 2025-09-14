@@ -40,6 +40,7 @@ import { MarkdownRenderer } from './src/components/MarkdownRenderer.tsx';
 import ToplineBuilderPanel from './src/components/ToplineBuilderPanel.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
 import { generateToplineMidi } from './src/services/toplineMidi';
+import { ensureToplineMelody } from './src/services/toplineMidi'; // adjust path as needed
 
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
 
@@ -452,18 +453,25 @@ const App: React.FC = () => {
         }
         setMidiError(null);
 
-// Merge topline melody if available
+
+// ...
+
 if (toplineAnalysis) {
   try {
-    const toplineMidi = generateToplineMidi(toplineAnalysis, finalMidiSettings);
-    if (toplineMidi?.length) {
-      if (!initialPatternsData) initialPatternsData = {};
-      initialPatternsData.melody = toplineMidi;
-    }
+    initialPatternsData = ensureToplineMelody(
+      initialPatternsData || {},
+      toplineAnalysis,
+      {
+        bars: finalMidiSettings?.bars,
+        timeSignature: finalMidiSettings?.timeSignature,
+        defaultVelocity: 92, // optional override
+      }
+    );
   } catch (err) {
-    console.error("Topline MIDI generation failed", err);
+    console.error("Topline melody merge failed:", err);
   }
 }
+
 
         
       } catch (midiErr: any) {
@@ -478,7 +486,9 @@ if (toplineAnalysis) {
         genre: inputs.genre,
         artistReference: inputs.artistReference,
         referenceTrackLink: inputs.referenceTrackLink,
-        lyrics: inputs.lyrics,
+        lyrics: toplineAnalysis?.lyrics?.trim()
+  ? toplineAnalysis.lyrics.trim()
+  : inputs.lyrics,
         key: inputs.key,
         chords: inputs.chords,
         generalNotes: inputs.generalNotes,
@@ -881,16 +891,34 @@ if (toplineAnalysis) {
                       <p><strong>DAW:</strong> {activeGuidebookDetails.daw}</p>
                       <p><strong>Plugins:</strong> {activeGuidebookDetails.plugins || "N/A"}</p>
                       <p><strong>Instruments:</strong> {activeGuidebookDetails.availableInstruments || "N/A"}</p>
+                      {/* Extracted Lyrics (if present) */}
+{activeGuidebookDetails.lyrics && (
+  <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-600/50 shadow-inner guidebook-section-break">
+    <strong className="text-orange-300 block mb-2 text-base">Extracted Lyrics:</strong>
+    <p className="whitespace-pre-line text-gray-300 text-sm">{activeGuidebookDetails.lyrics}</p>
+  </div>
+)}
+
                      {activeGuidebookDetails.generatedMidiPatterns && (
   <div className="mt-1 space-y-1">
     <p className="text-green-400">
       <MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.
     </p>
-    {activeGuidebookDetails.generatedMidiPatterns.melody && (
-      <p className="text-blue-400 text-sm ml-6">
-        🎤 Topline melody merged into MIDI.
+ {activeGuidebookDetails.generatedMidiPatterns.melody && (
+  <>
+    <p className="text-blue-400 text-sm ml-6">
+      🎤 Topline melody merged into MIDI.
+    </p>
+    {toplineAnalysis?.hasLyrics && (
+      <p className="text-blue-300 text-xs ml-8">
+        ✏️ Lyrics extracted from vocal pitch contour.
       </p>
     )}
+  </>
+)}
+
+)}
+
   </div>
 )}
 
