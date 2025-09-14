@@ -505,7 +505,6 @@ export async function* generateGuidebookFromToplineStream(
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
-  // SAME core prompt as your “no-topline” trackguide, just add a small topline note.
   const titleContext      = inputs.songTitle       ? `- Project Name: ${inputs.songTitle}`              : "";
   const artistContext     = inputs.artistReference ? `- Artist References: ${inputs.artistReference}`   : "";
   const genreContext      = inputs.genre?.join(", ")  || "Not specified";
@@ -527,8 +526,8 @@ export async function* generateGuidebookFromToplineStream(
     tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
   ].filter(Boolean).join(" · ");
 
-const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
-  ? `
+  const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
+    ? `
 ## 🎤 Vocal Topline & Lyrical Summary
 
 **Topline Attributes:** ${toplineOneLiner || "—"}
@@ -550,13 +549,7 @@ ${tl.phrases.slice(0, 8).map(p =>
 - Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
 ` : "";
 
-
-
-  const phraseHints = tl.phrases?.length
-    ? `\nTopline phrase map (beats):\n${tl.phrases.slice(0,8).map(p => `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""} (${p.intensity || "med"})`).join("\n")}\n`
-    : "";
-
-const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
+  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
 
 Create a professional-level TrackGuide based on the following creative direction:
 
@@ -607,7 +600,6 @@ ${lyricsSection}
 3. Repeated or standout words can become motifs in melody or rhythm.
 4. Maintain a clear, DAW-ready writing style. Think like a producer guiding another.
 5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
-
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
