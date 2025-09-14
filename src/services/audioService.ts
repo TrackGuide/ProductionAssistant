@@ -365,108 +365,58 @@ export const playMidiPatterns = (
 
       if (trackKey === 'drums' && typeof data === 'object' && !Array.isArray(data)) {
         Object.entries(data as DrumPatternData).forEach(([drumElementName, hits]) => {
-          // Enhanced drum key mapping with more robust pattern matching
-          let midiPitch: number | undefined;
-          let normalizedDrumKey: string;
-          
-          console.log(`🥁 Processing drum element: "${drumElementName}"`);
-          
-          // First try direct lookup
-          midiPitch = MIDI_DRUM_MAP[drumElementName];
-          normalizedDrumKey = drumElementName;
-          
-          if (!midiPitch) {
-            // Try normalized key (lowercase, replace spaces with underscores)
-            const drumKeyClean = drumElementName.toLowerCase().replace(/\s+/g, '_');
-            midiPitch = MIDI_DRUM_MAP[drumKeyClean];
-            normalizedDrumKey = drumKeyClean;
-          }
-          
-          if (!midiPitch) {
-            // Try comprehensive aliases and variations
-            const aliases: { [key: string]: { midi: string, key: string } } = {
-              'kick_drum': { midi: 'kick', key: 'kick' },
-              'bass_drum': { midi: 'kick', key: 'kick' },
-              'acoustic_bass_drum': { midi: 'kick', key: 'kick' },
-              'snare_drum': { midi: 'snare', key: 'snare' },
-              'acoustic_snare': { midi: 'snare', key: 'snare' },
-              'hi_hat_closed': { midi: 'hihat_closed', key: 'hihat_closed' },
-              'hi_hat_open': { midi: 'open_hihat', key: 'open_hihat' },
-              'hihat_open': { midi: 'open_hihat', key: 'open_hihat' },
-              'closed_hi_hat': { midi: 'hihat_closed', key: 'hihat_closed' },
-              'open_hi_hat': { midi: 'open_hihat', key: 'open_hihat' },
-              'crash_cymbal': { midi: 'crash_cymbal_1', key: 'crash_cymbal_1' },
-              'crash': { midi: 'crash', key: 'crash_cymbal_1' },
-              'ride_cymbal': { midi: 'ride_cymbal_1', key: 'ride_cymbal_1' },
-              'ride': { midi: 'ride', key: 'ride_cymbal_1' },
-              'hand_clap': { midi: 'clap', key: 'clap' },
-              'handclap': { midi: 'clap', key: 'clap' },
-              'tom_hi': { midi: 'tom_high', key: 'tom_high' },
-              'tom_lo': { midi: 'tom_low', key: 'tom_low' },
-              'high_tom': { midi: 'tom_high', key: 'tom_high' },
-              'mid_tom': { midi: 'tom_mid', key: 'tom_mid' },
-              'low_tom': { midi: 'tom_low', key: 'tom_low' },
-              'low_floor_tom': { midi: 'tom_low', key: 'tom_low' },
-              'high_floor_tom': { midi: 'tom_high', key: 'tom_high' }
-            };
-            
-            const searchKey = drumElementName.toLowerCase().replace(/\s+/g, '_');
-            const aliasMatch = aliases[searchKey];
-            if (aliasMatch) {
-              midiPitch = MIDI_DRUM_MAP[aliasMatch.midi];
-              normalizedDrumKey = aliasMatch.key;
-            }
-          }
-          
-          console.log(`🥁 Final mapping: "${drumElementName}" -> "${normalizedDrumKey}" -> MIDI: ${midiPitch}`);
-          
+          const normalizedDrumKey = drumElementName.toLowerCase().replace(/\s+/g, '_');
+          const midiPitch = (MIDI_DRUM_MAP as any)[normalizedDrumKey] ?? (MIDI_DRUM_MAP as any)[drumElementName] ?? 36;
+
           if (typeof midiPitch !== 'number' || !hits) {
             console.warn(`🚨 No MIDI mapping found for drum element: "${drumElementName}"`);
-            console.warn('🚨 Available drum mappings:', Object.keys(MIDI_DRUM_MAP));
             return;
           }
-          
-          hits.forEach((hit: DrumHit) => {
+
+          (hits as DrumHit[]).forEach((hit) => {
             console.log(`🥁 Scheduling ${normalizedDrumKey} hit:`, hit);
-            scheduleNote(midiPitch!, beatsToSeconds(hit.time, tempo), beatsToSeconds(hit.duration, tempo), hit.velocity, true, normalizedDrumKey, trackKey);
+            const startSec = beatsToSeconds((hit.time ?? 0), tempo);
+            const durSec = beatsToSeconds((hit.duration ?? 0.25), tempo);
+            const vel = hit.velocity ?? 100;
+            scheduleNote(midiPitch, startSec, durSec, vel, true, normalizedDrumKey, 'drums');
           });
         });
-      } else if (Array.isArray(data)) {
-        (data as Array<MidiNote | ChordNoteEvent>).forEach((event, index) => {
-          console.log(`🎹 Processing ${trackKey} event ${index}:`, event);
-          const isChord = 'notes' in event; // Check if it's a ChordNoteEvent
-          if (isChord) {
-            // For chords, schedule each note within the chord
-            (event as ChordNoteEvent).notes.forEach((note, noteIndex) => {
-              console.log(`🎹 Chord note ${noteIndex}:`, note);
-              if (typeof note.midi === 'number') {
-                scheduleNote(note.midi, beatsToSeconds(event.time, tempo), beatsToSeconds(event.duration, tempo), event.velocity, false, undefined, trackKey);
-              } else {
-                console.warn(`🚨 Invalid MIDI number in chord note:`, note);
-              }
-            });
-          } else {
-            // For single notes (melody, bassline)
-            const noteEvent = event as MidiNote;
-            console.log(`🎹 Single note:`, noteEvent);
-            if (typeof noteEvent.midi === 'number') {
-              scheduleNote(noteEvent.midi, beatsToSeconds(event.time, tempo), beatsToSeconds(event.duration, tempo), event.velocity, false, undefined, trackKey);
-            } else {
-              console.warn(`🚨 Invalid MIDI number in note:`, noteEvent);
-            }
-          }
-        });
+        return;
       }
+
+      (data as (MidiNote | ChordNoteEvent)[]).forEach((event: any, idx: number) => {
+        const isChord = 'notes' in event;
+        if (isChord) {
+          const chordEvent = event as ChordNoteEvent;
+          chordEvent.notes.forEach((note) => {
+            if (typeof note.midi === 'number') {
+              const startSec = beatsToSeconds((event.time ?? 0), tempo);
+              const durSec = beatsToSeconds((event.duration ?? 1), tempo);
+              const vel = event.velocity ?? 90;
+              scheduleNote(note.midi, startSec, durSec, vel, false, undefined, trackKey);
+            }
+          });
+        } else {
+          const noteEvent = event as MidiNote;
+          if (typeof noteEvent.midi === 'number') {
+            const startSec = beatsToSeconds((event.time ?? 0), tempo);
+            const durSec = beatsToSeconds((event.duration ?? 0.5), tempo);
+            const vel = event.velocity ?? 90;
+            scheduleNote(noteEvent.midi, startSec, durSec, vel, false, undefined, trackKey);
+          }
+        }
+      });
     };
     
     // Determine which tracks to schedule based on trackToPlay argument
-    const tracksToSchedule: KeyOfGeneratedMidiPatterns[] = trackToPlay ? [trackToPlay] : ['chords', 'bassline', 'melody', 'drums'];
+    const tracksToSchedule: KeyOfGeneratedMidiPatterns[] = trackToPlay ? [trackToPlay] : ['chords','bassline','melody','topline_melody','drums'];
 
     tracksToSchedule.forEach(key => {
         switch(key) {
             case 'chords': if (patterns.chords) scheduleTrack('chords', patterns.chords); break;
             case 'bassline': if (patterns.bassline) scheduleTrack('bassline', patterns.bassline); break;
             case 'melody': if (patterns.melody) scheduleTrack('melody', patterns.melody); break;
+            case 'topline_melody': if (patterns.topline_melody) scheduleTrack('topline_melody', patterns.topline_melody); break;
             case 'drums': if (patterns.drums) scheduleTrack('drums', patterns.drums); break;
         }
     });
