@@ -13,6 +13,8 @@ import {
   ToplineAnalysis            // NEW
 } from "../constants/types";
 import { getDawMetadata, suggestPlugins, dawMetadata, DawMetadata } from "../constants/dawMetadata";
+import { parseAiToplineResponse } from "../utils/jsonParsingUtils";
+import { ToplineAnalysisAIResponse, normalizeTopline } from "../constants/types";
 
 const apiKey = 
   process.env.API_KEY ||
@@ -179,6 +181,80 @@ async function _normalizeAudioInput(
   console.error("Unsupported audio shape passed to analyzeTopline:", audio);
   throw new Error("Unsupported audio input format for analyzeTopline.");
 }
+
+// ─────────────────────────────────────────────────────────────
+// NEW: Force-JSON topline raw call (inserted right after _normalizeAudioInput)
+// ─────────────────────────────────────────────────────────────
+async function analyzeToplineRawJSON(
+  audio: File | Blob | string | { base64?: string; audioBase64?: string; data?: any; mimeType?: string; filename?: string }
+): Promise<string> {
+  // Normalize many possible input shapes → { base64, mimeType }
+  const norm = await _normalizeAudioInput(
+    audio as any,
+    typeof audio === "object" && audio && "filename" in audio ? _sniffMime((audio as any).filename) : undefined
+  );
+
+  if (!norm?.base64 || norm.base64.length < 32) {
+    throw new Error("Topline analysis received empty audio data.");
+  }
+
+  const audioPart = {
+    inlineData: { data: norm.base64, mimeType: norm.mimeType || "audio/wav" },
+  } as const;
+
+  // System-style instruction: STRICT JSON ONLY
+  const instruction = `
+You are an expert vocal-topline analyst. Return STRICT JSON ONLY (no markdown, no backticks, no explanations).
+
+Fields and types (commit to concrete values where audio permits):
+{
+  "bpm": number | "Unable to detect",
+  "timeSignature": "4/4" | "3/4" | "6/8" | "Unable to detect",
+  "key": string | "Unable to detect",
+  "scale": string | "Unable to detect",
+  "tessitura": { "low": string, "high": string } | null,
+  "registerCenter": string | null,
+  "pitchContour": [
+    { "time": number, "duration": number, "midi": number, "pitch": string, "lyric": string, "velocity": number }
+  ],
+  "phrases": [
+    { "start": number, "end": number, "text": string, "intensity": "low" | "med" | "high" }
+  ],
+  "sections": [
+    { "label": string, "start": number, "end": number, "confidence": number }
+  ],
+  "motifSummary": string,
+  "chordCandidates": [
+    { "section": string, "chords": string, "roman": string }
+  ],
+  "lyrics": string | null
+}
+
+Constraints:
+- Analyze AUDIO only. Prefer concrete values; use "Unable to detect" only when genuinely necessary.
+- bpm: single integer (dominant tempo if variable).
+- timeSignature: choose closest fit (typically 4/4).
+- pitchContour should be dense enough to reconstruct melody (beats for time/duration; midi 21–108; velocity 1–127).
+- sections: coarse song sections with confidence 0–1.
+- Always include best-effort "lyrics" transcript (null only if unintelligible).
+- Output ONLY the JSON object (start with { and end with }).`;
+
+  // Ask Gemini for JSON directly (responseMimeType triggers JSON-only)
+  const resp = await ai.models.generateContent({
+    model: GEMINI_MODEL_NAME,
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.2,
+      topP: 0.9,
+    },
+    contents: { parts: [audioPart, { text: instruction }] },
+  });
+
+  // When responseMimeType is JSON, .text is the JSON string
+  const raw = typeof resp.text === "function" ? resp.text() : resp.text ?? String(resp.response ?? "");
+  return String(raw || "");
+}
+
 
 /**
  * Helper function to build plugin-specific parameter suggestions
@@ -813,120 +889,51 @@ ${dawSpecificAdvice}
 };
 
 /**
- * Analyze a vocal topline from audio and return STRICT JSON (ToplineAnalysis).
- * - Requires concrete BPM, key, scale whenever audio allows (discourages "Unable to detect").
- * - Always returns a best-effort lyrics transcript.
- * - Returns a dense pitchContour for melody MIDI extraction.
- * - Robust JSON extraction (handles fenced code, extra prose).
+ * Analyze a vocal topline from audio and return normalized ToplineAnalysis.
+ * - Forces model to emit strict JSON (no prose).
+ * - Parses robustly via jsonParsingUtils.
+ * - Normalizes into your canonical ToplineAnalysis shape with safe defaults.
  */
 export const analyzeTopline = async (
   audio: File | Blob | string | { base64?: string; audioBase64?: string; data?: any; mimeType?: string; filename?: string }
 ): Promise<ToplineAnalysis> => {
   if (!apiKey) throw new Error("API key not configured.");
 
-  // Normalize many possible input shapes → { base64, mimeType }
-  const norm = await _normalizeAudioInput(
-    audio as any,
-    typeof audio === "object" && audio && "filename" in audio ? _sniffMime((audio as any).filename) : undefined
-  );
+  // 1) Get strict-JSON string from the model
+  const rawJson = await analyzeToplineRawJSON(audio);
 
-  if (!norm?.base64 || norm.base64.length < 32) {
-    throw new Error("Topline analysis received empty audio data.");
+  // 2) Tolerant parse (handles fence text, trailing commas, single quotes, etc.)
+  const parsed = parseAiToplineResponse<ToplineAnalysisAIResponse>(rawJson);
+  if (!parsed.ok) {
+    console.error("[Topline JSON parse error]", parsed.error, parsed.raw);
+    // Safe default so the UI never crashes
+    return {
+      bpm: "Unable to detect",
+      timeSignature: "Unable to detect",
+      key: "Unable to detect",
+      scale: "Unable to detect",
+      tessitura: null,
+      registerCenter: null,
+      pitchContour: [],
+      phrases: [],
+      sections: [],
+      motifSummary: "",
+      chordCandidates: [],
+    };
   }
 
-  const audioPart = {
-    inlineData: {
-      data: norm.base64,
-      mimeType: norm.mimeType || "audio/wav",
-    },
-  } as const;
+  // 3) Normalize loose AI fields → your strict ToplineAnalysis
+  const finalTopline = normalizeTopline(parsed.data);
 
-  // Harder, more opinionated instruction so the model *commits* to values.
-  const prompt = `
-You are an expert vocal-topline analyst. Listen closely to the provided audio and output ONLY JSON (no markdown, no commentary).
+  // 4) Guard rails
+  if (!Array.isArray(finalTopline.pitchContour)) finalTopline.pitchContour = [];
+  if (!Array.isArray(finalTopline.phrases)) finalTopline.phrases = [];
+  if (!Array.isArray(finalTopline.sections)) finalTopline.sections = [];
+  if (!Array.isArray(finalTopline.chordCandidates)) finalTopline.chordCandidates = [];
 
-Return this exact shape:
-
-{
-  "bpm": number | "Unable to detect",
-  "timeSignature": "4/4" | "3/4" | "6/8" | "Unable to detect",
-  "key": string | "Unable to detect",
-  "scale": string | "Unable to detect",
-  "tessitura": { "low": string, "high": string } | null,
-  "registerCenter": string | null,
-  "pitchContour": [
-    { "time": number, "duration": number, "midi": number, "pitch": string, "lyric": string, "velocity": number }
-  ],
-  "phrases": [
-    { "start": number, "end": number, "text": string, "intensity": "low" | "med" | "high" }
-  ],
-  "sections": [
-    { "label": string, "start": number, "end": number, "confidence": number }
-  ],
-  "motifSummary": string,
-  "chordCandidates": [
-    { "section": string, "chords": string, "roman": string }
-  ],
-  "lyrics": string | null
-}
-
-STRICT REQUIREMENTS:
-1) Analyze the AUDIO only. If the audio is reasonably clear, DO NOT use "Unable to detect". Commit to specific values.
-2) bpm must be a single integer (e.g., 122). If tempo varies, choose the dominant/main tempo.
-3) key and scale should be musical (e.g., "C Major", "A Minor", "D Dorian"). Avoid undecided phrases.
-4) timeSignature should be "4/4", "3/4", or "6/8" unless clearly something else; pick the closest fit.
-5) pitchContour must be dense enough to reconstruct a singable melody: 
-   - time: beats (relative to detected bpm), monotonically non-decreasing
-   - duration: in beats, positive
-   - midi: 21–108
-   - pitch: note name with octave (e.g., "C4")
-   - lyric: syllable or word that corresponds to the note; empty string if not discernible
-   - velocity: 1–127
-6) phrases list contiguous vocal phrases with start/end in beats, and short text summary from lyrics
-7) sections should be coarse musical sections (e.g., "Verse", "Chorus", "Bridge") with confidence 0–1
-8) Always provide a best-effort full "lyrics" string transcript (null only if genuinely no intelligible words)
-9) chordCandidates should propose chords per section, and include Roman numerals for the chosen key
-10) Output ONLY pure JSON (no code fences, no backticks, no explanations).
-`;
-
-  // Use the same API style as the rest of your working calls (no getGenerativeModel)
-  const resp = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: { parts: [audioPart, { text: prompt }] },
-  });
-
-  // Pull text safely
-  const raw = typeof resp.text === "function" ? resp.text() : resp.text ?? String(resp.response ?? "");
-
-  // Extract JSON safely (handle fenced or stray text)
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = (fenced ? fenced[1] : raw).trim();
-
-  let parsed: ToplineAnalysis;
-  try {
-    parsed = JSON.parse(candidate) as ToplineAnalysis;
-  } catch {
-    const s = candidate.indexOf("{");
-    const e = candidate.lastIndexOf("}");
-    if (s >= 0 && e > s) {
-      parsed = JSON.parse(candidate.slice(s, e + 1)) as ToplineAnalysis;
-    } else {
-      throw new Error("Topline analysis JSON parse failed.");
-    }
-  }
-
-  // Minimal post-fix to prevent undefined access later in UI
-  if (!parsed.pitchContour) parsed.pitchContour = [];
-  if (!parsed.phrases) parsed.phrases = [];
-  if (!parsed.sections) parsed.sections = [];
-  if (!parsed.chordCandidates) parsed.chordCandidates = [];
-  if (parsed.bpm === undefined || parsed.bpm === null) parsed.bpm = "Unable to detect";
-  if (!parsed.timeSignature) parsed.timeSignature = "Unable to detect";
-  if (!parsed.key) parsed.key = "Unable to detect";
-  if (!parsed.scale) parsed.scale = "Unable to detect";
-
-  return parsed;
+  return finalTopline;
 };
+
 
 
 
