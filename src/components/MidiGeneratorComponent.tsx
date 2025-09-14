@@ -289,22 +289,49 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         };
     }
 
-    try {
-        const midiStream = await generateMidiPatternSuggestions(settingsForGeneration);
-        let jsonStr = '';
-        for await (const chunk of midiStream) {
-          if (chunk.text) {
-            jsonStr += chunk.text;
-          }
-        }
-        console.log('Raw MIDI response:', jsonStr);
-        // Fallback minimal pattern generator
-        const getMinimalMidiPattern = () => {
-          const key = settingsForGeneration.key || 'C Major';
-          const tempo = settingsForGeneration.tempo || 120;
-          const bars = settingsForGeneration.bars || 4;
-          const targetInstruments = settingsForGeneration.targetInstruments || ['chords', 'bassline', 'melody', 'drums'];
-          const minimal: GeneratedMidiPatterns = {};
+function sanitizeJson(raw: string): string {
+  if (!raw) return raw;
+
+  // 1) strip code fences or markdown junk
+  let s = raw.replace(/```[\s\S]*?```/g, '').replace(/```json|```/gi, '');
+
+  // 2) take the largest balanced {...} block
+  const first = s.indexOf('{');
+  const last  = s.lastIndexOf('}');
+  if (first !== -1 && last !== -1 && last > first) {
+    s = s.slice(first, last + 1);
+  }
+
+  // 3) remove trailing commas before closing ] or }
+  s = s.replace(/,\s*([}\]])/g, '$1');
+
+  // 4) replace NaN/Infinity with null
+  s = s.replace(/\bNaN\b/g, 'null').replace(/\bInfinity\b/g, 'null').replace(/\b-Infinity\b/g, 'null');
+
+  // 5) ensure any empty drum arrays aren’t `: ]` style mistakes
+  s = s.replace(/"time":\s*]\s*}/g, '"time":0}');
+
+  return s.trim();
+}
+
+    
+let jsonStr = '';
+for await (const chunk of midiStream) {
+  if (chunk.text) jsonStr += chunk.text;
+}
+console.log('Raw MIDI response:', jsonStr);
+
+const safe = sanitizeJson(jsonStr);
+
+let patternsData;
+try {
+  patternsData = parseAiMidiResponse<GeneratedMidiPatterns>(safe, 'MIDI generation', getMinimalMidiPattern());
+} catch (parseError) {
+  console.error('JSON parse error:', parseError);
+  console.error('Failed to parse (sanitized):', safe);
+  patternsData = getMinimalMidiPattern();
+}
+
           if (targetInstruments.includes('chords')) {
             minimal.chords = [{
               time: 0,
