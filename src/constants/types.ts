@@ -38,6 +38,9 @@ export interface ToplineAnalysis {
   chordCandidates: Array<{ section: string; chords: string; roman?: string }>;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Guidebook & Inputs
+// ─────────────────────────────────────────────────────────────
 export interface GuidebookEntry {
   id: string;
   title: string;
@@ -61,14 +64,14 @@ export interface GuidebookEntry {
 }
 
 export interface UserInputs {
-  songTitle?: string; // Added songTitle
+  songTitle?: string;  // Added songTitle
   genre: string[];
   artistReference: string;
   referenceTrackLink?: string; // New: Reference track via link (YouTube, Spotify, etc.)
-  lyrics?: string; // New: Optional lyrics input
-  key?: string; // New: Optional key input
-  scale?: string; // New: Optional scale/mode input
-  chords?: string; // New: Optional chords input
+  lyrics?: string;     // New: Optional lyrics input
+  key?: string;        // New: Optional key input
+  scale?: string;      // New: Optional scale/mode input
+  chords?: string;     // New: Optional chords input
   generalNotes?: string; // New: General notes for AI to consider
   vibe: string[];
   daw: string;
@@ -76,55 +79,64 @@ export interface UserInputs {
   availableInstruments?: string;
 }
 
+// ─────────────────────────────────────────────────────────────
+// MIDI primitives
+// ─────────────────────────────────────────────────────────────
 export interface MidiNote {
-  time: number; // Start time in beats (e.g., 0, 0.5, 1, 1.25) relative to the start of its pattern segment
-  midi: number; // MIDI note number (for actual MIDI generation)
-  duration: number; // Duration in beats
-  velocity?: number; // MIDI velocity (0-127), default 100
-  pitch?: string; // e.g. "C4", used for display/logging
-  name?: string; // For chord display
+  time: number;        // Start time in beats (e.g., 0, 0.5, 1, 1.25) relative to the loop start
+  midi: number;        // MIDI note number (21–108)
+  duration: number;    // Duration in beats
+  velocity?: number;   // MIDI velocity (1–127), default 100
+  pitch?: string;      // e.g. "C4", used for display/logging
+  name?: string;       // For chord display (optional convenience)
 }
 
 export interface ChordNoteEvent {
-  time: number; // Start time in beats
-  name: string; // e.g., "Cmaj7"
-  duration: number; // Duration in beats
+  time: number;        // Start time in beats
+  name: string;        // e.g., "Cmaj7"
+  duration: number;    // Duration in beats
   notes: { pitch: string, midi: number }[]; // e.g. [{pitch: "C4", midi: 60}, ...]
   velocity?: number;
 }
 
-
 export interface DrumHit {
-  time: number; // Start time in beats
-  duration: number; // Duration in beats
-  velocity?: number; // MIDI velocity (0-127)
+  time: number;        // Start time in beats
+  duration: number;    // Duration in beats
+  velocity?: number;   // MIDI velocity (1–127)
 }
 
 export interface DrumPatternData {
   [drumElement: string]: DrumHit[]; // e.g., "kick": [ {time:0, duration:0.1, velocity:120}, ... ]
 }
 
+// ─────────────────────────────────────────────────────────────
+// AI MIDI output container (with topline_melody added)
+// ─────────────────────────────────────────────────────────────
 export interface GeneratedMidiPatterns {
   chords?: ChordNoteEvent[];
   bassline?: MidiNote[];
   melody?: MidiNote[];
+  topline_melody?: MidiNote[];   // NEW: separate track for vocal-derived melody
   drums?: DrumPatternData;
-  error?: string; 
+  error?: string;
 }
+
 export type KeyOfGeneratedMidiPatterns = Exclude<keyof GeneratedMidiPatterns, 'error'>;
 
-
+// ─────────────────────────────────────────────────────────────
+// MIDI generation settings
+// ─────────────────────────────────────────────────────────────
 export interface MidiSettings {
   key: string;
-  scale?: string; // New: Scale/mode selection (relevant to the key)
+  scale?: string;                    // Optional scale/mode selection (relevant to the key)
   tempo: number;
   timeSignature: [number, number];
   chordProgression: string;
-  genre: string; // This should ideally be derived from main inputs
+  genre: string;                     // Usually derived from main inputs
   bars: number;
-  targetInstruments: string[]; // e.g., ['chords', 'melody', 'drums']
-  guidebookContext?: string; // Optional context from the main TrackGuide
-  songSection?: string; // Added for selecting song section context
+  targetInstruments: string[];       // e.g., ['chords', 'melody', 'topline_melody', 'drums']
+  guidebookContext?: string;         // Optional context from the main TrackGuide
+  songSection?: string;              // Added for selecting song section context
 }
 
 // Helper for MIDI generation that uses a vocal topline
@@ -133,7 +145,9 @@ export interface MidiFromToplineSettings extends MidiSettings {
   avoidDoublingMelody?: boolean;
 }
 
-// Types for Mix Feedback Feature
+// ─────────────────────────────────────────────────────────────
+// Mix Feedback / Comparison / Remix flows
+// ─────────────────────────────────────────────────────────────
 export interface MixFeedbackInputs {
   trackName: string;
   focus?: string;
@@ -167,16 +181,24 @@ export interface RemixGuideInputs {
   };
 }
 
+// ─────────────────────────────────────────────────────────────
+// Chat / View
+// ─────────────────────────────────────────────────────────────
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-export type ActiveView = 'landing' | 'trackGuide' | 'mixFeedback' | 'remixGuide' | 'patchGuide' | 'eqGuide';
+export type ActiveView =
+  | 'landing'
+  | 'trackGuide'
+  | 'mixFeedback'
+  | 'remixGuide'
+  | 'patchGuide'
+  | 'eqGuide';
 
 // ─────────────────────────────────────────────────────────────
 // Topline (AI response → normalized) helpers
-// Add these BELOW your existing interfaces
 // ─────────────────────────────────────────────────────────────
 
 /** Narrow “core” fields we expect at minimum from AI. */
