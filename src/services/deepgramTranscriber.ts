@@ -1,6 +1,6 @@
 // src/services/deepgramTranscriber.ts
 
-async function transcribeTopline(file: File): Promise<string | null> {
+export async function transcribeTopline(file: File): Promise<string | null> {
   const apiKey = import.meta.env.VITE_DEEPGRAM_API_KEY;
   if (!apiKey) {
     console.warn("Deepgram API key not set");
