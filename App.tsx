@@ -899,28 +899,26 @@ if (toplineAnalysis) {
   </div>
 )}
 
-                     {activeGuidebookDetails.generatedMidiPatterns && (
+       {activeGuidebookDetails.generatedMidiPatterns && (
   <div className="mt-1 space-y-1">
     <p className="text-green-400">
-      <MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.
+      <MusicNoteIcon className="w-4 h-4 inline mr-1" /> Initial MIDI patterns generated.
     </p>
- {activeGuidebookDetails.generatedMidiPatterns.melody && (
-  <>
-    <p className="text-blue-400 text-sm ml-6">
-      🎤 Topline melody merged into MIDI.
-    </p>
-    {toplineAnalysis?.hasLyrics && (
-      <p className="text-blue-300 text-xs ml-8">
-        ✏️ Lyrics extracted from vocal pitch contour.
-      </p>
+    {activeGuidebookDetails.generatedMidiPatterns.melody && (
+      <>
+        <p className="text-blue-400 text-sm ml-6">
+          🎤 Topline melody merged into MIDI.
+        </p>
+        {toplineAnalysis?.hasLyrics && (
+          <p className="text-blue-300 text-xs ml-8">
+            ✏️ Lyrics extracted from vocal pitch contour.
+          </p>
+        )}
+      </>
     )}
-  </>
-)}
-
-)}
-
   </div>
 )}
+
 
                     </div>
                   )}
