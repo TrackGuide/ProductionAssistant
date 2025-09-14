@@ -760,7 +760,9 @@ Do not include prose, comments, backticks, or code fences.
 - Jazz/Funk: Include ride_cymbal_1, hihat_closed, kick, snare
 - Pop: Balanced use of kick, snare, hihat_closed, crash_cymbal_1, clap
 
-Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
+Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.
+
+Output MUST be valid JSON and nothing else.`;
 
  const stream = await ai.models.generateContentStream({
   model: GEMINI_MODEL_NAME,
