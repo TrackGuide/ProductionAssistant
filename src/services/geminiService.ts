@@ -926,7 +926,6 @@ Generate patterns appropriate for **${settings.genre}** in the **${settings.song
 
 
   return stream;
-};
 
 /**
  * Generate MIDI that supports the vocal topline (streaming JSON).
