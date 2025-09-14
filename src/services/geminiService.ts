@@ -556,9 +556,10 @@ ${tl.phrases.slice(0, 8).map(p =>
     ? `\nTopline phrase map (beats):\n${tl.phrases.slice(0,8).map(p => `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""} (${p.intensity || "med"})`).join("\n")}\n`
     : "";
 
-  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
+const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
 
-Create a detailed TrackGuide for the following specifications:
+Create a professional-level TrackGuide based on the following creative direction:
+
 ${titleContext}
 ${artistContext}
 - Genre: ${genreContext}
@@ -573,11 +574,11 @@ ${referenceContext}
 ${lyricsContext}
 ${notesContext}
 
-Important: A vocal topline was uploaded. Use it as a helpful reference for harmonic fit, energy contour, and space planning, but do not let it overshadow user inputs. The final guide should follow the same format and level of detail as your normal TrackGuides generated without a topline. Only add a short “Lyrics & Topline Overview” section if lyrics are available.
+A vocal topline was uploaded. Use it as a reference for harmonic fit, arrangement pacing, emotional energy, and lyrical inspiration. It should not override the user’s inputs—but it can enrich your suggestions.
 
 At the end of your opening summary sentence, add exactly: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
-Required Sections (keep this structure exactly):
+### Required Sections (keep this structure exactly):
 ${structuralBlueprint}
 
 ## 🎵 Genre DNA Analysis
@@ -598,15 +599,15 @@ ${pluginSection}
 ## 🎼 Arrangement Flow & Energy Management
 - Section transitions, energy curves, variation techniques
 
-${lyricsSection}${phraseHints}
+${lyricsSection}
 
-If lyrics are available, draw inspiration from them throughout the guide—not just in the topline section.
+### Guidelines:
+1. Use the vocal phrasing to inform dynamics and space (e.g., pauses, cadences, phrasing).
+2. If lyrics are available, reference their emotional tone and themes in your musical suggestions.
+3. Repeated or standout words can become motifs in melody or rhythm.
+4. Maintain a clear, DAW-ready writing style. Think like a producer guiding another.
+5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
 
-Guidelines:
-1) Use the topline to make smart harmonic/arrangement choices (leave room during phrases, cadence under phrase ends).
-2) Do not change the overall structure/style of the guide compared to the non-topline flow.
-3) If lyrics were detected, show them in “Lyrics & Topline Overview”. Otherwise omit that section.
-4) Maintain practical, DAW-ready parameter suggestions.`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
