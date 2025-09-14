@@ -373,15 +373,15 @@ const App: React.FC = () => {
   stopPlayback();
 
   // 🧠 Step 3: Transcribe topline to extract lyrics (Deepgram)
-  if (toplineFile) {
-    try {
-      const { analyzeTopline } = await import('./src/services/audioService');
-      const { transcribeTopline } = await import('./src/services/deepgramTranscriber'); // ✅ corrected path
+if (toplineFile && toplineFile instanceof File) {
+  try {
+    const { analyzeTopline } = await import('./src/services/audioService');
+    const transcribeTopline = (await import('./src/services/deepgramTranscriber')).default;
 
-      const [topline, lyrics] = await Promise.all([
-        analyzeTopline(toplineFile),
-        transcribeTopline(toplineFile),
-      ]);
+    const [topline, lyrics] = await Promise.all([
+      analyzeTopline(toplineFile),
+      transcribeTopline(toplineFile),
+    ]);
 
       if (topline && typeof topline === "object") {
         topline.hasLyrics = !!lyrics;
@@ -421,15 +421,14 @@ const App: React.FC = () => {
       setLoadingMessage('TrackGuide is generating...');
 
       let guidebookStream: AsyncIterable<{ text: string }>;
-      if (toplineFile) {
-        guidebookStream = await generateGuidebookFromToplineStream({
-          inputs,
-          file: toplineFile,
-          analysis: toplineAnalysis || undefined,
-        } as any);
-      } else {
-        guidebookStream = await generateGuidebookContent(inputs);
-      }
+if (toplineFile && toplineAnalysis) {
+  guidebookStream = await generateGuidebookFromToplineStream(
+    inputs,
+    toplineAnalysis
+  );
+} else {
+  guidebookStream = await generateGuidebookContent(inputs);
+}
 
       for await (const chunk of guidebookStream) {
         finalGuidebookContent += chunk.text;
