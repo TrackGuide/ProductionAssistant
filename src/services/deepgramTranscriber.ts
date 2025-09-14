@@ -9,13 +9,14 @@ export async function transcribeTopline(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append("audio", file);
 
-  const response = await fetch("https://api.deepgram.com/v1/listen", {
-    method: "POST",
-    headers: {
-      Authorization: `Token ${apiKey}`,
-    },
-    body: file,
-  });
+const response = await fetch("https://api.deepgram.com/v1/listen?punctuate=true&model=general&language=en", {
+  method: "POST",
+  headers: {
+    Authorization: `Token ${apiKey}`,
+  },
+  body: formData,
+});
+
 
   if (!response.ok) {
     console.error("Deepgram transcription failed:", await response.text());
