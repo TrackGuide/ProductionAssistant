@@ -632,10 +632,15 @@ ${lyricsSection}
 4. Maintain a clear, DAW-ready writing style. Think like a producer guiding another.
 5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
 
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: { parts: [{ text: prompt }] },
-  });
+const stream = await ai.models.generateContentStream({
+  model: GEMINI_MODEL_NAME,
+  generationConfig: {
+    responseMimeType: "application/json",
+    temperature: 0.7,
+  },
+  contents: { parts: [{ text: prompt }] },
+});
+
 
   for await (const chunk of stream) {
     if (chunk.text) yield { text: chunk.text };
@@ -1780,11 +1785,17 @@ Output:
 - Quick mix checklist (HPF ranges, de-ess bands, bus comp idea)`;
 
   const resp = await ai.models.generateContent({
-    model: GEMINI_MODEL_NAME,
-    contents: { parts: [{ text: prompt }] },
-  });
-  return resp.text || "";
+  model: GEMINI_MODEL_NAME,
+  generationConfig: {
+    responseMimeType: "application/json",
+    temperature: 0.7,
+  },
+  contents: { parts: [{ text: prompt }] },
+});
+
+return resp.text || "";
 };
+
 
 /**
  * 8. Helper function for simple content generation
