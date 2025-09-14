@@ -451,6 +451,21 @@ const App: React.FC = () => {
           (initialPatternsData as any).drums = lowercasedDrums;
         }
         setMidiError(null);
+
+// Merge topline melody if available
+if (toplineAnalysis) {
+  try {
+    const toplineMidi = generateToplineMidi(toplineAnalysis, finalMidiSettings);
+    if (toplineMidi?.length) {
+      if (!initialPatternsData) initialPatternsData = {};
+      initialPatternsData.melody = toplineMidi;
+    }
+  } catch (err) {
+    console.error("Topline MIDI generation failed", err);
+  }
+}
+
+        
       } catch (midiErr: any) {
         console.error("Initial MIDI generation failed:", midiErr);
         setMidiError((midiErr?.message || "MIDI generation failed.") + " You can try generating MIDI manually in the MIDI tools section.");
@@ -866,7 +881,19 @@ const App: React.FC = () => {
                       <p><strong>DAW:</strong> {activeGuidebookDetails.daw}</p>
                       <p><strong>Plugins:</strong> {activeGuidebookDetails.plugins || "N/A"}</p>
                       <p><strong>Instruments:</strong> {activeGuidebookDetails.availableInstruments || "N/A"}</p>
-                      {activeGuidebookDetails.generatedMidiPatterns && <p className="mt-1 text-green-400"><MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.</p>}
+                     {activeGuidebookDetails.generatedMidiPatterns && (
+  <div className="mt-1 space-y-1">
+    <p className="text-green-400">
+      <MusicNoteIcon className="w-4 h-4 inline mr-1"/> Initial MIDI patterns generated.
+    </p>
+    {activeGuidebookDetails.generatedMidiPatterns.melody && (
+      <p className="text-blue-400 text-sm ml-6">
+        🎤 Topline melody merged into MIDI.
+      </p>
+    )}
+  </div>
+)}
+
                     </div>
                   )}
                   <MarkdownRenderer content={generatedGuidebook} />
