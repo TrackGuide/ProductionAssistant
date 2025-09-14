@@ -359,6 +359,32 @@ function buildStructuralBlueprint(): string {
 </div>`;
 }
 
+// --- New: Focused Vocal Processing & Recording section builder ---
+function buildVocalProcessingSection(daw?: string, plugins?: string): string {
+  const dawTag = daw ? ` (${daw})` : "";
+  const chainHint = plugins
+    ? `**Suggested Chain (${plugins})**`
+    : daw
+      ? `**Suggested Chain (Stock ${daw})**`
+      : `**Suggested Chain (Stock/Generic)**`;
+
+  return `
+## 🎤 Vocal Processing & Recording${dawTag}
+
+${chainHint}  
+1) **Clean-Up:** High-pass ~80–120 Hz (voice-dependent), gentle de-ess (4.5–8 kHz)  
+2) **Dynamics:** Fast attack/medium release compression (2–4:1), follow with slower comp for consistency  
+3) **Tone Shaping:** Broad EQ tilt for clarity (presence 2–5 kHz), notch harshness (6–8 kHz) if needed  
+4) **Space:** Short plate for body (0.8–1.6 s), timed delay (1/8 or 1/4) with low-cut & sidechain ducking  
+5) **Control:** Gate/expander (light), clip-gain silences, automate breaths & plosives  
+6) **Doubles & Ad-libs:**  
+   - Doubles: Lower level, slightly narrower, more HPF, more de-ess  
+   - Ad-libs: Contrast with wider FX or filtered delays  
+7) **Performance Tips:** Record 2–3 takes, comp best lines; maintain consistent mic distance; use pop filter
+`;
+}
+
+
 // ⚡ Updated to include all UserInputs: title, artist, and guidebookContext
 /**
  * 1. Generate the core TrackGuide content (streaming)
@@ -384,6 +410,8 @@ export const generateGuidebookContent = async (
 
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection       = buildPluginParameterSection(inputs.daw, inputs.plugins);
+  const vocalSection        = buildVocalProcessingSection(inputs.daw, inputs.plugins);
+
 
   const prompt = `// ⚡ Including all fields
 
@@ -442,6 +470,7 @@ ${inputs.referenceTrackLink ? `Analyze the provided reference track for key prod
 - Layering strategies for fullness
 
 ${pluginSection}
+${vocalSection}
 
 ## 🎚️ Mixing & Arrangement Strategy
 **Frequency Management:**
@@ -504,6 +533,7 @@ export async function* generateGuidebookFromToplineStream(
 
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
+  const vocalSection  = buildVocalProcessingSection(inputs.daw, inputs.plugins);
 
   const titleContext      = inputs.songTitle       ? `- Project Name: ${inputs.songTitle}`              : "";
   const artistContext     = inputs.artistReference ? `- Artist References: ${inputs.artistReference}`   : "";
@@ -583,6 +613,7 @@ ${structuralBlueprint}
 - Sound Shaping (synthesis, filters, effects, layering)
 
 ${pluginSection}
+${vocalSection}
 
 ## 🎚️ Mixing & Arrangement Strategy
 - Frequency Management (low/mid/high)
