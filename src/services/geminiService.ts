@@ -527,9 +527,15 @@ export async function* generateGuidebookFromToplineStream(
     tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
   ].filter(Boolean).join(" · ");
 
-  const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
-    ? `\n## Lyrics & Topline Overview\nDetected key details: ${toplineOneLiner || "—"}\n\nDetected lyrics (best-effort):\n${tl.lyrics}\n`
-    : "";
+const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
+  ? `\n## Lyrics & Topline Overview\nDetected key details: ${toplineOneLiner || "—"}\n\nLyrics (extracted from topline):\n${tl.lyrics.trim()}\n\nPlease reflect the lyrical themes, mood, and repeating words in your musical guidance. For example:
+- If words suggest motion or falling, suggest matching motifs or transitions.
+- If the lyrics are melancholic or nostalgic, favor moody pads, ambient textures, or reverb-drenched leads.
+- If the lyrics include specific emotional phrases (like "stay", "run", "breathe"), you can map those to arrangement or motif suggestions.
+
+You may refer back to lyrics in sections like Genre DNA, Arrangement Flow, or Instrument & Sound Design when relevant.\n`
+  : "";
+
 
   const phraseHints = tl.phrases?.length
     ? `\nTopline phrase map (beats):\n${tl.phrases.slice(0,8).map(p => `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""} (${p.intensity || "med"})`).join("\n")}\n`
@@ -578,6 +584,8 @@ ${pluginSection}
 - Section transitions, energy curves, variation techniques
 
 ${lyricsSection}${phraseHints}
+
+If lyrics are available, draw inspiration from them throughout the guide—not just in the topline section.
 
 Guidelines:
 1) Use the topline to make smart harmonic/arrangement choices (leave room during phrases, cadence under phrase ends).
