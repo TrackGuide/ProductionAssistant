@@ -652,7 +652,8 @@ export const generateMidiPatternSuggestions = async (
   settings: MidiSettings
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
   const prompt = `// ⚡ Including guidebookContext
-You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID JSON format only.
+You are TrackGuideAI's MIDI Pattern Generator. Return a single minified JSON object only. 
+Do not include prose, comments, backticks, or code fences.
 
 **Requirements:**
 - Key: ${settings.key}
@@ -756,10 +757,16 @@ You are TrackGuideAI's MIDI Pattern Generator. Generate MIDI patterns in VALID J
 
 Generate patterns appropriate for ${settings.genre} in the ${settings.songSection} section, using ${settings.chordProgression} progression in ${settings.key}.`;
 
-  const stream = await ai.models.generateContentStream({
-    model: GEMINI_MODEL_NAME,
-    contents: prompt,
-  });
+ const stream = await ai.models.generateContentStream({
+  model: GEMINI_MODEL_NAME,
+  generationConfig: {
+    // forces a JSON body instead of prose/fences
+    responseMimeType: "application/json",
+    temperature: 0.7
+  },
+  contents: { parts: [{ text: prompt }] },
+});
+
   return stream;
 };
 
