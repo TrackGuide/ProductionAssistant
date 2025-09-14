@@ -486,10 +486,10 @@ export async function* generateGuidebookFromToplineStream(
 ): AsyncGenerator<{ text: string }, void, unknown> {
   if (!apiKey) throw new Error("API key not configured.");
 
-  // Defensive fallback so we don't crash if analysis wasn't provided
+  // Use provided topline if present; otherwise a safe minimal shell
   const tl: ToplineAnalysis = topline ?? {
     bpm: "Unable to detect",
-    timeSignature: "4/4",
+    timeSignature: "Unable to detect",
     key: "Unable to detect",
     scale: "Unable to detect",
     tessitura: null,
@@ -505,81 +505,85 @@ export async function* generateGuidebookFromToplineStream(
   const structuralBlueprint = buildStructuralBlueprint();
   const pluginSection = buildPluginParameterSection(inputs.daw, inputs.plugins);
 
-  const vocalContext = `
-Topline Summary:
-- BPM: ${typeof tl.bpm === "number" ? tl.bpm : tl.bpm}
-- Time Signature: ${tl.timeSignature}
-- Key/Scale: ${tl.key} / ${tl.scale}
-- Tessitura: ${tl.tessitura ? `${tl.tessitura.low} to ${tl.tessitura.high}` : "Unknown"}
-- Register Center: ${tl.registerCenter || "Unknown"}
-- Motif Summary: ${tl.motifSummary || "N/A"}
+  // SAME core prompt as your “no-topline” trackguide, just add a small topline note.
+  const titleContext      = inputs.songTitle       ? `- Project Name: ${inputs.songTitle}`              : "";
+  const artistContext     = inputs.artistReference ? `- Artist References: ${inputs.artistReference}`   : "";
+  const genreContext      = inputs.genre?.join(", ")  || "Not specified";
+  const vibeContext       = inputs.vibe?.join(", ")   || "Not specified";
+  const instrumentContext = inputs.availableInstruments || "Not specified";
+  const dawContext        = inputs.daw               ? inputs.daw : "Not specified";
+  const pluginContext     = inputs.plugins           ? inputs.plugins : "Stock/Generic plugins";
+  const keyContext        = inputs.key               ? `Key: ${inputs.key}`                  : "";
+  const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`         : "";
+  const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}` : "";
+  const referenceContext  = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
+  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`      : "";
+  const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
-Phrase Map (beats):
-${tl.phrases.slice(0,12).map(p => `- ${p.start}–${p.end} (${p.intensity || "med"}) ${p.text ? `: "${p.text}"` : ""}`).join("\n")}
+  const toplineOneLiner = [
+    typeof tl.bpm === "number" ? `${tl.bpm} BPM` : null,
+    tl.timeSignature && tl.timeSignature !== "Unable to detect" ? tl.timeSignature : null,
+    tl.key && tl.key !== "Unable to detect" ? `${tl.key}` : null,
+    tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
+  ].filter(Boolean).join(" · ");
 
-Section Hints:
-${tl.sections.slice(0,8).map(s => `- ${s.label}: ${s.start}–${s.end} (conf ${typeof s.confidence === "number" ? s.confidence.toFixed(2) : s.confidence})`).join("\n")}
+  const lyricsSection = tl.lyrics && tl.lyrics.trim().length > 0
+    ? `\n## Lyrics & Topline Overview\nDetected key details: ${toplineOneLiner || "—"}\n\nDetected lyrics (best-effort):\n${tl.lyrics}\n`
+    : "";
 
-Chord Candidates:
-${tl.chordCandidates.slice(0,4).map(c => `- ${c.section}: ${c.chords}${c.roman ? ` [${c.roman}]` : ""}`).join("\n")}
-`;
+  const phraseHints = tl.phrases?.length
+    ? `\nTopline phrase map (beats):\n${tl.phrases.slice(0,8).map(p => `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""} (${p.intensity || "med"})`).join("\n")}\n`
+    : "";
 
-  const prompt = `You are TrackGuideAI. Create a vocal-first TrackGuide that builds the entire production around the uploaded topline.
+  const prompt = `You are TrackGuideAI, an expert music production assistant specializing in comprehensive track creation guides.
 
-Project Context:
-- Genre: ${inputs.genre?.join(", ") || "Not specified"}
-- Vibe: ${inputs.vibe?.join(", ") || "Not specified"}
-- Available Instruments: ${inputs.availableInstruments || "Not specified"}
-- DAW: ${inputs.daw || "Not specified"}
-- Plugins: ${inputs.plugins || "Stock"}
-${inputs.key ? `- Target Key (user): ${inputs.key}` : ""}
-${inputs.chords ? `- Target Chords (user): ${inputs.chords}` : ""}
+Create a detailed TrackGuide for the following specifications:
+${titleContext}
+${artistContext}
+- Genre: ${genreContext}
+- Vibe: ${vibeContext}
+- Available Instruments: ${instrumentContext}
+- DAW: ${dawContext}
+- Plugins: ${pluginContext}
+${keyContext}
+${scaleContext}
+${chordsContext}
+${referenceContext}
+${lyricsContext}
+${notesContext}
 
-${vocalContext}
+Important: A vocal topline was uploaded. Use it as a helpful reference for harmonic fit, energy contour, and space planning, but do not let it overshadow user inputs. The final guide should follow the same format and level of detail as your normal TrackGuides generated without a topline. Only add a short “Lyrics & Topline Overview” section if lyrics are available.
 
-Rules:
-1) Vocal is the star. Arrangement, chords, drums, and fills should serve the vocal phrases. Leave air under lines; answer in gaps.
-2) Respect the detected melody notes when proposing chords. No chord tones that clash with sustained vocal notes.
-3) Provide a concrete bar-by-bar plan using detected sections/phrases wherever possible.
-4) Include harmony ideas (2–3 parts) and ad-lib spaces, tied to phrase endpoints.
-5) Give DAW/plugin parameter ranges like your existing guides.
-6) End the opening summary sentence with: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
+At the end of your opening summary sentence, add exactly: This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
-Required Sections:
-
-# 🎤 Vocal-First Production Blueprint
-Short overview (one paragraph). This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
-
+Required Sections (keep this structure exactly):
 ${structuralBlueprint}
 
-## 🎵 Harmony & Chords Around The Topline
-- Section-by-section chord map that fits the detected melody.
-- Mark cadences under phrase endings.
-- Note any non-diatonic color choices that still support the vocal.
+## 🎵 Genre DNA Analysis
+- Core Characteristics (tempo feel, harmony, rhythm, sonic palette)
+- Reference Analysis (${inputs.referenceTrackLink ? "Use the provided link." : `Draw from classic examples in ${genreContext}.`})
 
-## 🥁 Groove & Fills (Vocal-Safe)
-- Patterns that avoid masking key consonants.
-- Fill ideas placed only in phrase gaps (reference beats from phrase map).
-- Sidechain/ducking suggestions keyed to the vocal bus.
-
-## 🎹 Instrument & Sound Design (Call/Response)
-- Lead counterlines that never double the vocal unless intentional.
-- Pads/arps that leave space in 2–5 kHz during consonants.
-- Layering that reinforces motif summary.
+## 🎹 Instrument & Sound Design
+- Primary Elements (lead, bass, drums, harmonic layers)
+- Sound Shaping (synthesis, filters, effects, layering)
 
 ${pluginSection}
 
-## 🎚️ Vocal-Centric Mix Notes
-- De-ess ranges, dynamic EQ notches around vocal formants.
-- Duck pads/guitars 1–2 dB on vocal phrases (attack/release timing).
-- Delay throws at phrase ends (note timing tied to BPM).
-- Reverb pre-delay tuned to syllabic clarity.
+## 🎚️ Mixing & Arrangement Strategy
+- Frequency Management (low/mid/high)
+- Spatial Design (stereo, depth, movement)
+- Dynamic Control (compression, sidechain, limiting)
 
-## 📐 Bar-by-Bar Arrangement (align to section hints)
-- For each section, list bars, active elements, and transitions synced to phrase endpoints.
+## 🎼 Arrangement Flow & Energy Management
+- Section transitions, energy curves, variation techniques
 
-Keep it practical, specific, and immediately usable in ${inputs.daw || "the DAW"}.
-`;
+${lyricsSection}${phraseHints}
+
+Guidelines:
+1) Use the topline to make smart harmonic/arrangement choices (leave room during phrases, cadence under phrase ends).
+2) Do not change the overall structure/style of the guide compared to the non-topline flow.
+3) If lyrics were detected, show them in “Lyrics & Topline Overview”. Otherwise omit that section.
+4) Maintain practical, DAW-ready parameter suggestions.`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
@@ -590,6 +594,7 @@ Keep it practical, specific, and immediately usable in ${inputs.daw || "the DAW"
     if (chunk.text) yield { text: chunk.text };
   }
 }
+
 
 
 
@@ -713,39 +718,26 @@ Generate patterns appropriate for ${settings.genre} in the ${settings.songSectio
 
 /**
  * Generate MIDI that supports the vocal topline (streaming JSON).
+ * - Keeps your standard structure: chords, bassline, melody, drums
+ * - Adds an extra track "topline_melody": direct MIDI mapping of the vocal pitchContour
+ *   (UI can start using this whenever you want; extra keys are harmless at runtime)
  */
 export const generateMidiFromTopline = async (
   settings: MidiFromToplineSettings
 ): Promise<AsyncIterable<GenerateContentResponse>> => {
-  const { topline } = settings;
+  const { topline, avoidDoublingMelody } = settings;
+
   const prompt = `You are TrackGuideAI's MIDI Generator. Output VALID JSON only.
 
 Goal:
-Create chords, bass, melody counterline, and drums that support a given vocal topline.
-Respect these constraints:
-1) When the vocal sustains notes over beats t..t+d, the chord at those beats MUST include chord tones that fit the vocal note (no dissonant clashes unless noted as a tension that resolves).
-2) If "avoidDoublingMelody" is true, the generated "melody" should be a COUNTERLINE that avoids unison/doubling the vocal pitchContour. Use contrary or oblique motion and place notes mainly in the vocal gaps.
-3) Use the user's chordProgression/timeSignature/tempo as defaults, but adapt locally to fit vocal notes if needed.
-4) Times are in beats [0..${settings.bars * 4}]. MIDI 21–108. Velocity 1–127.
+Create chords, bass, (optionally) a counterline melody, and drums that support a given vocal topline. Also include a direct MIDI transcription of the vocal as "topline_melody".
 
-Topline Summary:
-- BPM: ${typeof topline.bpm === "number" ? topline.bpm : "Unknown"}
-- Key/Scale: ${topline.key} / ${topline.scale}
-- Tessitura: ${topline.tessitura ? `${topline.tessitura.low} to ${topline.tessitura.high}` : "Unknown"}
-- Phrases: ${topline.phrases.length} total
-- First 6 notes: ${topline.pitchContour.slice(0,6).map(n => `${n.time}:${n.pitch}`).join(", ")}
-
-Required JSON structure:
-{
-  "chords": [...],
-  "bassline": [...],
-  "melody": [...],
-  "drums": {
-    "kick": [...], "snare": [...], "hihat_closed": [...], "open_hihat": [...],
-    "clap": [...], "tom_high": [...], "tom_mid": [...], "tom_low": [...],
-    "crash_cymbal_1": [...], "ride_cymbal_1": [...]
-  }
-}
+Constraints:
+1) For any beat range where the vocal sustains notes (t..t+d), the chord must include tones that fit those notes (allow brief passing tones but avoid long dissonance).
+2) If "avoidDoublingMelody" is true, "melody" should be a COUNTERLINE that avoids unison with the vocal; place notes mainly in vocal gaps.
+   If "avoidDoublingMelody" is false, "melody" may reinforce or answer the topline.
+3) "topline_melody" must mirror the uploaded vocal’s pitchContour as MIDI notes with the same time/duration and reasonable velocities.
+4) Times are in beats [0..${settings.bars * 4}]. MIDI 21–108. Velocity 1–127. Durations > 0.
 
 Global Settings:
 - Key: ${settings.key}
@@ -757,14 +749,41 @@ Global Settings:
 - Bars: ${settings.bars}
 - Song Section: ${settings.songSection || "General Loop"}
 - Guidebook Context: ${settings.guidebookContext || "Not specified"}
-- Avoid Doubling Melody: ${settings.avoidDoublingMelody ? "true" : "false"}
+- Avoid Doubling Melody: ${avoidDoublingMelody ? "true" : "false"}
 
-Critical:
-1) Return ONLY valid JSON, no backticks or text.
-2) Ensure chord tones align with vocal notes at overlapping beats.
-3) Put bass roots that reinforce the harmony chosen to fit the vocal.
-4) Place counterline notes mainly between vocal phrases, not on top of sustained syllables.
-5) Drum accents should land at phrase ends; use fills in vocal gaps.`;
+Topline Summary:
+- Key/Scale (detected): ${topline.key} / ${topline.scale}
+- Tessitura: ${topline.tessitura ? `${topline.tessitura.low}–${topline.tessitura.high}` : "Unknown"}
+- Phrase count: ${topline.phrases?.length ?? 0}
+- First 6 notes: ${topline.pitchContour.slice(0,6).map(n => `${n.time}:${n.pitch}`).join(", ")}
+
+Required JSON structure (return ONLY this JSON; no code fences/backticks/text):
+{
+  "chords": [ { "time": number, "name": "Cmin7", "duration": number, "notes": [{"pitch":"C4","midi":60}], "velocity": number } ],
+  "bassline": [ { "time": number, "midi": number, "duration": number, "velocity": number, "pitch": "C2" } ],
+  "melody": [ { "time": number, "midi": number, "duration": number, "velocity": number, "pitch": "G4" } ],
+  "drums": {
+    "kick": [ { "time": number, "duration": number, "velocity": number } ],
+    "snare": [ { "time": number, "duration": number, "velocity": number } ],
+    "hihat_closed": [ { "time": number, "duration": number, "velocity": number } ],
+    "open_hihat": [ { "time": number, "duration": number, "velocity": number } ],
+    "clap": [ { "time": number, "duration": number, "velocity": number } ],
+    "tom_high": [ { "time": number, "duration": number, "velocity": number } ],
+    "tom_mid": [ { "time": number, "duration": number, "velocity": number } ],
+    "tom_low": [ { "time": number, "duration": number, "velocity": number } ],
+    "crash_cymbal_1": [ { "time": number, "duration": number, "velocity": number } ],
+    "ride_cymbal_1": [ { "time": number, "duration": number, "velocity": number } ]
+  },
+  "topline_melody": [ { "time": number, "midi": number, "duration": number, "velocity": number, "pitch": "G4" } ]
+}
+
+Rules:
+- chords: align with vocal notes underneath; cadence near phrase ends.
+- bassline: reinforce root motion; keep pocket with kick.
+- melody: if avoidDoublingMelody=true, keep mainly in gaps; otherwise you may echo/support topline.
+- drums: pick elements appropriate for ${settings.genre}; accent phrase ends.
+- topline_melody: copy the uploaded vocal melody (pitchContour) into MIDI notes.
+`;
 
   const stream = await ai.models.generateContentStream({
     model: GEMINI_MODEL_NAME,
@@ -772,6 +791,7 @@ Critical:
   });
   return stream;
 };
+
 
 
 /**
