@@ -376,12 +376,9 @@ const App: React.FC = () => {
 if (toplineFile && toplineFile instanceof File) {
   try {
      // Resilient module loads (support both ./src/services/* and project-root fallbacks)
-    const audioMod = await import('./src/services/audioService').catch(() =>
-      import('./audioService')
-    );
-    const dgMod = await import('./src/services/deepgramTranscriber').catch(() =>
-      import('./deepgramTranscriber')
-    );
+const audioMod = await import('./src/services/audioService');
+const dgMod = await import('./src/services/deepgramTranscriber');
+
 
     // Prefer named exports, fall back to default where applicable
     const analyzeTopline =
