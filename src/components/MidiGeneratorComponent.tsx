@@ -8,11 +8,7 @@ import {
   MidiNote,
 } from '../constants/types';
 import { generateMidiPatternSuggestions } from '../services/geminiService';
-import {
-  parseAiMidiResponse,
-  sanitizeJson,
-  getMinimalMidiPattern,
-} from '../utils/jsonParsingUtils';
+import { parseAiMidiResponse, getMinimalMidiPattern } from '../utils/jsonParsingUtils'; // ⬅️ removed sanitizeJson here
 import { generateMidiFile, downloadMidi } from '../services/midiService';
 import { playMidiPatterns, stopPlayback, initializeAudio } from '../services/audioService';
 
@@ -78,6 +74,36 @@ interface MidiGeneratorProps {
   targetTempo?: number;
   targetKey?: string;
   isRemixMode?: boolean;
+}
+
+/** Local JSON sanitizer to harden AI responses (no external import needed) */
+function sanitizeJson(raw: string): string {
+  if (!raw) return raw;
+
+  let s = raw;
+
+  // Remove markdown code fences
+  s = s.replace(/```(?:json|json5)?\s*([\s\S]*?)```/gi, '$1');
+
+  // Take largest {...} block if extra prose surrounds it
+  const first = s.indexOf('{');
+  const last = s.lastIndexOf('}');
+  if (first !== -1 && last !== -1 && last > first) {
+    s = s.slice(first, last + 1);
+  }
+
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, '$1');
+
+  // Replace NaN/Infinity with null
+  s = s.replace(/\bNaN\b/g, 'null').replace(/\b-Infinity\b/g, 'null').replace(/\bInfinity\b/g, 'null');
+
+  // Very light bracket mismatch salvage (best-effort)
+  const opens = (s.match(/{/g) || []).length;
+  const closes = (s.match(/}/g) || []).length;
+  if (opens > closes) s = s + '}'.repeat(opens - closes);
+
+  return s.trim();
 }
 
 /** Pull a concise context block from the guidebook to steer MIDI generation */
@@ -258,7 +284,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
       const converted: GeneratedMidiPatterns = {};
       Object.entries(initialPatterns).forEach(([section, instruments]) => {
         Object.entries(instruments).forEach(([instrument, pattern]) => {
-          // If pattern already matches expected shape, you could assign it here
           if (typeof pattern !== 'string') {
             (converted as any)[`${section}_${instrument}`] = pattern;
           }
@@ -561,8 +586,6 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
 
   /** Regenerate a single track type */
   const handleRegenerateSingleTrack = async (trackType: KeyOfGeneratedMidiPatterns) => {
-    if (!settings) return;
-
     setIsLoading(true);
     setLoadingMessage(`Regenerating ${trackType}...`);
     setError(null);
