@@ -41,7 +41,6 @@ import ToplineBuilderPanel from './src/components/ToplineBuilderPanel.tsx';
 import { stopPlayback } from './src/services/audioService.ts';
 import { generateToplineMidi } from './src/services/toplineMidi';
 import { ensureToplineMelody } from './src/services/toplineMidi'; // adjust path as needed
-import { transcribeTopline } from './src/services/deepgramTranscriber';
 
 import { APP_TITLE, LOCAL_STORAGE_KEY, GENRE_SUGGESTIONS, VIBE_SUGGESTIONS, DAW_SUGGESTIONS, MIDI_DEFAULT_SETTINGS, MIDI_SCALES, MIDI_CHORD_PROGRESSIONS, MIDI_TEMPO_RANGES, LAST_USED_DAW_KEY, LAST_USED_PLUGINS_KEY } from './src/constants/constants';
 
@@ -363,39 +362,51 @@ const App: React.FC = () => {
   }, [toplineFile]);
 
   // ---------- Submit ----------
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setMidiError(null);
-    setGeneratedGuidebook("");
-    setActiveGuidebookDetails(null);
-    setCopyStatus('');
-    stopPlayback();
-    // Step 3: Transcribe topline to extract lyrics (Deepgram)
-if (toplineFile) {
-  try {
-    const { analyzeTopline } = await import('./src/services/audioService'); // adjust if needed
-    const { transcribeTopline } = await import('./src/services/transcribeService'); // adjust if needed
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
+  setMidiError(null);
+  setGeneratedGuidebook("");
+  setActiveGuidebookDetails(null);
+  setCopyStatus('');
+  stopPlayback();
 
-    const [topline, lyrics] = await Promise.all([
-      analyzeTopline(toplineFile),
-      transcribeTopline(toplineFile),
-    ]);
+  // 🧠 Step 3: Transcribe topline to extract lyrics (Deepgram)
+  if (toplineFile) {
+    try {
+      const { analyzeTopline } = await import('./src/services/audioService');
+      const { transcribeTopline } = await import('./src/services/deepgramTranscriber'); // ✅ corrected path
 
-    if (topline && typeof topline === "object") {
-      topline.hasLyrics = !!lyrics;
-      topline.lyrics = lyrics || null;
-      setToplineAnalysis(topline); // optional state setter
+      const [topline, lyrics] = await Promise.all([
+        analyzeTopline(toplineFile),
+        transcribeTopline(toplineFile),
+      ]);
+
+      if (topline && typeof topline === "object") {
+        topline.hasLyrics = !!lyrics;
+        topline.lyrics = lyrics || null;
+        setToplineAnalysis(topline);
+      }
+
+      if (lyrics?.trim()) {
+        inputs.lyrics = lyrics.trim();
+
+        // Optional: Toast-style user feedback
+        if (typeof window !== "undefined") {
+          const toastEvent = new CustomEvent("show-toast", {
+            detail: {
+              message: "Lyrics extracted from vocal file 🎤✏️",
+              type: "success",
+            },
+          });
+          window.dispatchEvent(toastEvent);
+        }
+      }
+    } catch (err) {
+      console.error("Topline transcription failed:", err);
     }
-
-    if (lyrics?.trim()) {
-      inputs.lyrics = lyrics.trim();
-    }
-  } catch (err) {
-    console.error("Topline transcription failed:", err);
   }
-}
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
