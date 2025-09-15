@@ -9,7 +9,7 @@ type Props = {
   onFileSelected: (file: File) => void;
   /** Parent-managed status of background analysis */
   status: ToplineStatus;
-  /** Optional message (e.g., “Detecting BPM…”) to show while analyzing */
+  /** Optional message (e.g., â€œDetecting BPMâ€¦â€) to show while analyzing */
   message?: string;
   /** If analysis finished, show short summary (parent-provided) */
   summary?: React.ReactNode;
@@ -17,7 +17,7 @@ type Props = {
   filename?: string | null;
   /** Optional lyric preview lines to display when provided */
   lyricsPreview?: string[];
-  /** Optional one-liner like "90 BPM · 4/4 · E major" */
+  /** Optional one-liner like "90 BPM Â· 4/4 Â· E major" */
   toplineOneLiner?: string;
 };
 
@@ -32,7 +32,9 @@ export default function ToplineBuilderPanel({
 }: Props) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-200">Topline / Vocal (optional)</label>
+      <label className="block text-sm font-medium text-gray-200">
+        Topline / Vocal (optional)
+      </label>
 
       <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-600 bg-gray-700/30 hover:bg-gray-600 cursor-pointer transition-colors">
         <UploadIcon className="w-4 h-4 text-gray-300" />
@@ -50,37 +52,53 @@ export default function ToplineBuilderPanel({
         />
       </label>
 
-   {status === "analyzing" && (
-  <div className="text-gray-300">
-    <p>{message || "Analyzing topline (BPM / key / scale / lyrics)…"}</p>
-    <p className="mt-1 text-yellow-300/90 text-xs">
-      Guidebook generation is paused until analysis completes.
-    </p>
-  </div>
-)}
+      {(status !== "idle" ||
+        !!summary ||
+        (lyricsPreview && lyricsPreview.length > 0) ||
+        !!toplineOneLiner) && (
+        <Card className="p-3 bg-gray-700/40 border border-gray-600/50 text-sm">
+          {status === "analyzing" && (
+            <div className="text-gray-300">
+              <p>
+                {message ||
+                  "Analyzing topline (BPM / key / scale / lyrics)â€¦"}
+              </p>
+              <p className="mt-1 text-yellow-300/90 text-xs">
+                Guidebook generation is paused until analysis completes.
+              </p>
+            </div>
+          )}
 
-
-          {status === "done" && (summary || (lyricsPreview && lyricsPreview.length > 0) || toplineOneLiner) && (
-            summary ?? (
-              <div>
+          {status === "done" &&
+            (summary ||
+              (lyricsPreview && lyricsPreview.length > 0) ||
+              toplineOneLiner) &&
+            (summary ?? (
+              <div className="text-gray-300 space-y-2">
                 {toplineOneLiner && (
-                  <div className="text-gray-200 mb-1"><strong>Detected:</strong> {toplineOneLiner}</div>
+                  <div className="text-gray-200">
+                    <strong>Detected:</strong> {toplineOneLiner}
+                  </div>
                 )}
                 {lyricsPreview && lyricsPreview.length > 0 && (
                   <div>
-                    <div className="text-gray-300 font-medium mb-1">Lyrics (preview):</div>
+                    <div className="text-gray-300 font-medium mb-1">
+                      Lyrics (preview):
+                    </div>
                     <ul className="list-disc list-inside text-gray-300">
-                      {lyricsPreview.slice(0, 6).map((line, i) => <li key={i}>{line}</li>)}
+                      {lyricsPreview.slice(0, 6).map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
                     </ul>
                   </div>
                 )}
               </div>
-            )
-          )}
+            ))}
 
           {status === "error" && (
             <p className="text-red-400">
-              Topline analysis failed. You can still generate a TrackGuide without it.
+              Topline analysis failed. You can still generate a TrackGuide
+              without it.
             </p>
           )}
         </Card>
