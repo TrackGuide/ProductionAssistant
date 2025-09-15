@@ -345,17 +345,16 @@ function buildStructuralBlueprint(): string {
 
 <div className="overflow-x-auto">
 
-| **Section** | **Duration** | **Key Elements & Instrumentation** |
-| --- | --- | --- |
-| **Intro** | 16-32 bars | Atmospheric build, Teaser elements<br/>*Lead synth, Bass, Drums, Pads* |
-| **Verse 1** | 16 bars | Main groove, Vocal/Lead melody<br/>*Vocals, Full arrangement* |
-| **Pre-Chorus** | 8 bars | Tension build, Filter sweeps<br/>*Reduced arrangement, Focus elements* |
-| **Chorus** | 16 bars | Full energy, Hook elements<br/>*Full arrangement, Vocal harmonies* |
-| **Breakdown** | 8-16 bars | Stripped back, Build tension<br/>*Breakdown elements, Build-up* |
-| **Verse 2/Solo** | 16 bars | Variation, New elements<br/>*Lead elements, Minimal backing* |
-| **Final Chorus** | 16-24 bars | Maximum energy, All elements<br/>*Full arrangement, Climax elements* |
-| **Outro** | 16-32 bars | Gradual fade, Ambient tail<br/>*Fade elements, Ambient textures* |
-
+| **Section** | **Duration** | **Key Elements & Instrumentation** | **Flow / Energy Notes** |
+| --- | --- | --- | --- |
+| **Intro** | 8–16 bars | Teaser elements; filtered drums; pads | Low density; widen slowly; filter sweeps begin |
+| **Verse 1** | 16 bars | Groove foundation; vocal lead | Keep FX minimal; highlight lyrics; automate subtle sends |
+| **Pre-Chorus** | 8 bars | Tension build; arp; risers | LPF rise (300→2kHz); reduce reverb 10%; prepare drop |
+| **Chorus** | 16 bars | Full energy; hook; open hats | Max width; sidechain pad/bass; double hook w/ lead @ unison/+12 |
+| **Breakdown/Bridge** | 8–16 bars | Contrast + rebuild; FX ear-candy | Pull sub; spotlight topline; throw delays on phrase ends |
+| **Verse 2 / Alt** | 16 bars | Variation; new layer or inversion | Motif development; selective fills; keep momentum |
+| **Final Chorus** | 16–24 bars | Stacks; adlibs; extra perc | Add perc layer; chord inversion swap; widen pads +10% |
+| **Outro** | 8–16 bars | Strip elements; ambience | Gradual fade; leave texture tails |
 </div>`;
 }
 
@@ -406,7 +405,8 @@ export const generateGuidebookContent = async (
   const referenceContext  = inputs.referenceTrackLink
                                ? `Reference Track: ${inputs.referenceTrackLink}`
                                : "";
-  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`         : "";
+  const lyricsContext     = inputs.lyrics?.trim() ? `- Provided Lyrics (use to infer imagery, tone; quote sparingly):
+${inputs.lyrics.trim()}` : "";
   const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const structuralBlueprint = buildStructuralBlueprint();
@@ -462,7 +462,7 @@ At the end of your opening summary sentence, always add: This guide is a startin
 **Note:** This guide is a starting point—remember to use your ears and trust your intuition throughout the process.
 
 **IMPORTANT REQUIREMENTS:**
-1. Include the exact Structural Blueprint table with Instrumentation column as provided
+1. Include a single Structural Blueprint table with a fourth column **Flow / Energy Notes** (merge arrangement/energy into this table; **do not** create a separate arrangement section)
 2. Use specific plugin parameters when DAW/plugins are specified
 3. Provide actionable, detailed guidance for each section
 4. Use markdown formatting with proper headers and emphasis
@@ -548,30 +548,6 @@ ${vocalSection}
 - **Music Bus:** 2:1, **20–30ms/150–250ms**, 1–2 dB GR; gentle tilt if pad heavy.
 - **Vox Bus:** De-esser (6–8 kHz), opto +2 dB; plate send **15–25%**.
 - **Master:** gentle glue (1–2 dB GR), **ceiling -0.8 dBFS**, target loudness per genre (**${genreContext}** typical streaming: **${genreContext?.includes('House') ? '-7 to -8 LUFS short-term on drops' : '-10 to -12 LUFS integrated'}**). Keep transients intact.
-## 🎼 Arrangement Flow & Energy Management (Song-Specific)
-
-**Section Map (bars may vary; align to Structural Blueprint):**
-- **Intro (bars ${'e.g., 1–8'}):** Thin drums; tease pad motif in ${tl.key || inputs.key}; low-cut leads at 200 Hz, -5 dB send to hall.
-- **Verse A (bars ${'e.g., 9–16'}):** Sub-bass enters; hats closed; topline sparse phrasing → leave FX throws on phrase ends only.
-- **Pre (bars ${'e.g., 17–24'}):** Add arp **(1/8 @ ${parsedGuidebookBpm || tl.bpm || 'BPM?'})**; automate LPF cutoff **(300→2 kHz)**; reduce reverb 10% to “dry up” before drop.
-- **Drop/Chorus (bars ${'e.g., 25–32'}):** Full kit; open hats; sidechain pad/bass; double topline hook with **Lead Synth** at **unison/+12**.
-- **Break/Bridge (bars ${'e.g., 33–40'}):** Pull sub; keep mid-bass riff ghosted; spotlight topline with plate 20–25% and 1/4 throws.
-- **Final Drop (bars ${'e.g., 41–48'}):** Extra percussion layer; chord inversion swap on repeat; widen pads +10%.
-
-**Energy Curve (1–5):** Intro 2 → Verse 3 → Pre 4 → Drop 5 → Break 2–3 → Final Drop 5.
-
-**Automation Keyframes (bars & values):**
-- **Pad LPF:** 300 Hz → 6 kHz across pre (bars ${'e.g., 17–24'})  
-- **Topline Send:** throws to 1/4 at bars **${'e.g., 8, 16, 32'}** (send +6–8 dB, 1 bar tail)  
-- **Bass Sidechain Depth:** +1 dB at drop bars **${'e.g., 25–26'}** for impact  
-- **Stereo Width:** Pads +10% at drop; leads +5% (avoid phase > 120°)
-
-**Contrast Moves:**
-- **Hats:** closed → open (+3 dB @ 10 kHz) at drops  
-- **Drum Fill:** 1-bar snare build + reverse crash into drops  
-- **Harmony:** invert chord 4 on repeat to freshen chorus  
-
-
 Focus on practical, actionable advice that can be immediately applied in ${dawContext}. Provide specific parameter ranges and creative techniques that align with the ${genreContext} aesthetic and ${vibeContext} mood.`;
 
   const stream = await ai.models.generateContentStream({
@@ -641,7 +617,8 @@ export async function* generateGuidebookFromToplineStream(
   const scaleContext      = inputs.scale             ? `Scale/Mode: ${inputs.scale}`         : "";
   const chordsContext     = inputs.chords            ? `Chord Progression: ${inputs.chords}` : "";
   const referenceContext  = inputs.referenceTrackLink ? `Reference Track: ${inputs.referenceTrackLink}` : "";
-  const lyricsContext     = inputs.lyrics            ? `Lyrics Theme: ${inputs.lyrics}`      : "";
+  const lyricsContext     = inputs.lyrics?.trim() ? `- Provided Lyrics (use to infer imagery, tone; quote sparingly):
+${inputs.lyrics.trim()}` : "";
   const notesContext      = inputs.generalNotes      ? `Additional Notes: ${inputs.generalNotes}` : "";
 
   const toplineOneLiner = [
@@ -789,7 +766,7 @@ ${vocalSection}
 
 ### Guidelines:
 1. Use the vocal phrasing to inform dynamics and space.
-2. If lyrics are available, reference their emotional tone and themes.
+2. Use the provided/extracted lyrics (if any) to drive tone, motifs, and dynamics—quote sparingly.
 3. Repeated or standout words can become motifs in melody or rhythm.
 4. Maintain a clear, DAW-ready writing style.
 5. If something is ambiguous (e.g., key unknown), make a reasonable creative assumption—but state it clearly.`;
