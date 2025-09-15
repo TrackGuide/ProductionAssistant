@@ -15,6 +15,10 @@ type Props = {
   summary?: React.ReactNode;
   /** Currently selected file name (optional) */
   filename?: string | null;
+  /** Optional lyric preview lines to display when provided */
+  lyricsPreview?: string[];
+  /** Optional one-liner like "90 BPM · 4/4 · E major" */
+  toplineOneLiner?: string;
 };
 
 export default function ToplineBuilderPanel({
@@ -23,6 +27,8 @@ export default function ToplineBuilderPanel({
   message,
   summary,
   filename,
+  lyricsPreview,
+  toplineOneLiner,
 }: Props) {
   return (
     <div className="space-y-3">
@@ -44,7 +50,6 @@ export default function ToplineBuilderPanel({
         />
       </label>
 
-      {/* Status / summary box */}
       {(status !== "idle" || summary) && (
         <Card className="p-3 bg-gray-700/40 border border-gray-600/50 text-sm">
           {status === "analyzing" && (
@@ -52,7 +57,25 @@ export default function ToplineBuilderPanel({
               {message || "Analyzing topline (BPM / key / scale / lyrics)…"}
             </p>
           )}
-          {status === "done" && summary}
+
+          {status === "done" && (summary || (lyricsPreview && lyricsPreview.length > 0) || toplineOneLiner) && (
+            summary ?? (
+              <div>
+                {toplineOneLiner && (
+                  <div className="text-gray-200 mb-1"><strong>Detected:</strong> {toplineOneLiner}</div>
+                )}
+                {lyricsPreview && lyricsPreview.length > 0 && (
+                  <div>
+                    <div className="text-gray-300 font-medium mb-1">Lyrics (preview):</div>
+                    <ul className="list-disc list-inside text-gray-300">
+                      {lyricsPreview.slice(0, 6).map((line, i) => <li key={i}>{line}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )
+          )}
+
           {status === "error" && (
             <p className="text-red-400">
               Topline analysis failed. You can still generate a TrackGuide without it.
