@@ -487,7 +487,8 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
           (settingsForGeneration?.bars ?? settings?.bars ?? 8),
           (settingsForGeneration?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
         );
-        console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);.timeSignature?.[0] ?? 4)
+      console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
+
 );
 console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
         if (synthesized?.length) {
