@@ -651,23 +651,25 @@ if (
         }
         patternsData.drums = normalized;
       }
-      // Synthesize topline_melody from analyzed vocal if AI omitted it
-      if        const synthesized = buildToplineMelodyFromAnalysis(
-          currentGuidebookEntry.toplineAnalysis,
-          0.5,
-          (preservedSettings?.bars ?? settings?.bars ?? 8),
-          (preservedSettings?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
-        );
-        console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);nalysis,
-  0.5,
-  (settingsForGeneration?.bars ?? settings?.bars ?? 8),
-  (settingsForGeneration?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
-);
-console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
-        if (synthesized?.length) {
-          (patternsData as any).topline_melody = synthesized;
-        }
-      }
+     // Synthesize topline_melody from analyzed vocal if AI omitted it
+if (
+  (!patternsData.topline_melody || patternsData.topline_melody.length === 0) &&
+  currentGuidebookEntry?.toplineAnalysis?.pitchContour?.length
+) {
+  const synthesized = buildToplineMelodyFromAnalysis(
+    currentGuidebookEntry.toplineAnalysis,
+    0.5,
+    (preservedSettings?.bars ?? settings?.bars ?? 8),
+    (preservedSettings?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
+  );
+
+  console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
+
+  if (synthesized?.length) {
+    (patternsData as any).topline_melody = synthesized;
+  }
+}
+
 
 
       validatePatterns(patternsData);
