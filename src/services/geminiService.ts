@@ -13,7 +13,7 @@ import {
   ToplineAnalysis            // NEW
 } from "../constants/types";
 import { getDawMetadata, suggestPlugins, dawMetadata, DawMetadata } from "../constants/dawMetadata";
-import { parseAiToplineResponse } from "../utils/jsonParsingUtils";
+import { parseAiToplineResponse, sanitizeJsonTopline } from "../utils/jsonParsingUtils";
 import { ToplineAnalysisAIResponse, normalizeTopline } from "../constants/types";
 
 const apiKey = 
@@ -360,6 +360,7 @@ function buildStructuralBlueprint(): string {
 }
 
 // --- New: Focused Vocal Processing & Recording section builder ---
+
 function buildVocalProcessingSection(daw?: string, plugins?: string): string {
   const dawTag = daw ? ` (${daw})` : "";
   const chainHint = plugins
@@ -373,14 +374,14 @@ function buildVocalProcessingSection(daw?: string, plugins?: string): string {
 
 ${chainHint}  
 1) **Clean-Up:** High-pass ~80–120 Hz (voice-dependent), gentle de-ess (4.5–8 kHz)  
-2) **Dynamics:** Fast attack/medium release compression (2–4:1), follow with slower comp for consistency  
-3) **Tone Shaping:** Broad EQ tilt for clarity (presence 2–5 kHz), notch harshness (6–8 kHz) if needed  
-4) **Space:** Short plate for body (0.8–1.6 s), timed delay (1/8 or 1/4) with low-cut & sidechain ducking  
-5) **Control:** Gate/expander (light), clip-gain silences, automate breaths & plosives  
-6) **Doubles & Ad-libs:**  
-   - Doubles: Lower level, slightly narrower, more HPF, more de-ess  
-   - Ad-libs: Contrast with wider FX or filtered delays  
-7) **Performance Tips:** Record 2–3 takes, comp best lines; maintain consistent mic distance; use pop filter
+2) **Dynamics:** Fast attack/medium release compression (2–4:1), optional slower comp after for consistency  
+3) **Tone Shaping:** Broad presence 2–5 kHz; notch harshness 6–8 kHz if needed  
+4) **Space:** Short plate (0.8–1.6 s); timed delay (1/8 or 1/4) with low-cut & ducking  
+
+### 🎙️ Microphone Recommendations  
+Provide **3–4 mic choices** tailored to this song’s **genre, vibe, and topline**.  
+For each: include **model**, **why it fits** (tonal traits vs. the voice/genre), and **budget tier**.  
+Prefer a spread across **dynamic**, **condenser**, and **USB/affordable** options when appropriate.
 `;
 }
 
@@ -556,6 +557,29 @@ Focus on practical, actionable advice that can be immediately applied in ${dawCo
   return stream;
 };
 
+
+// Build a simple lyric transcript from phrases or per-note lyric tokens
+function deriveLyricsFromTopline(tl: ToplineAnalysis): string | null {
+  const phraseLines = (tl.phrases || [])
+    .map(p => (p.text || "").trim())
+    .filter(Boolean);
+  if (phraseLines.length >= 1) {
+    return phraseLines.join("\n");
+  }
+  if (!Array.isArray(tl.pitchContour) || tl.pitchContour.length === 0) return null;
+  const sorted = [...tl.pitchContour].sort((a,b)=>a.time-b.time);
+  const parts: string[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const cur = sorted[i];
+    if (!cur?.lyric) continue;
+    const prev = sorted[i - 1];
+    const gap = prev ? (cur.time - (prev.time + prev.duration)) : 0;
+    if (gap > 0.6) parts.push("\n");
+    parts.push(cur.lyric);
+  }
+  const joined = parts.join(" ").replace(/\s*\n\s*/g, "\n").trim();
+  return joined || null;
+}
 // --- replace the whole function in geminiService.ts ---
 export async function* generateGuidebookFromToplineStream(
   inputs: UserInputs,
@@ -603,8 +627,10 @@ export async function* generateGuidebookFromToplineStream(
     tl.scale && tl.scale !== "Unable to detect" ? `${tl.scale}` : null
   ].filter(Boolean).join(" · ");
 
+  const derivedLyrics = deriveLyricsFromTopline(tl);
+
   const lyricsSection =
-    tl.phrases?.length || (Array.isArray(tl.pitchContour) && tl.pitchContour.length)
+    (derivedLyrics && derivedLyrics.length > 0) || (tl.phrases?.length || 0) > 0
       ? `
 ## 🎤 Vocal Topline & Lyrical Summary
 
@@ -615,7 +641,9 @@ ${tl.registerCenter ? `- Register Center: ${tl.registerCenter}\n` : ""}
 ${tl.phrases?.length ? `**Phrase Map (by beat timing):**
 ${tl.phrases.slice(0, 8).map(p =>
   `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""}${p.intensity ? ` (${p.intensity})` : ""}`
-).join("\n")}` : ""}
+).join("\n")}\n` : ""}
+
+${derivedLyrics ? `**Extracted Lyrics (best-effort):**\n${derivedLyrics}\n` : ""}
 
 **Creative Use:** Let the topline guide your musical decisions:
 - Repeating words can become rhythmic or melodic motifs.
@@ -623,7 +651,6 @@ ${tl.phrases.slice(0, 8).map(p =>
 - Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
 `
       : "";
-
   const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
 
 Create a professional-level TrackGuide based on the following creative direction:
@@ -716,7 +743,6 @@ Use this exact bullet format. Do **not** compress into paragraphs.
 - Delay: 1/8 or 1/4 ping-pong for hooks
 - Chorus: 0.2–0.5 Hz, Mix < 40%
 
-${pluginSection}
 ${vocalSection}
 
 ## 🎚️ Per-Song Mixing & Bus Plan (Specific)
@@ -1061,8 +1087,9 @@ export const analyzeTopline = async (
   // 1) Get strict-JSON string from the model
   const rawJson = await analyzeToplineRawJSON(audio);
 
+  const cleansedRaw = sanitizeJsonTopline(rawJson);
   // 2) Tolerant parse (handles fence text, trailing commas, single quotes, etc.)
-  const parsed = parseAiToplineResponse<ToplineAnalysisAIResponse>(rawJson);
+  const parsed = parseAiToplineResponse<ToplineAnalysisAIResponse>(cleansedRaw);
   if (!parsed.ok) {
     console.error("[Topline JSON parse error]", parsed.error, parsed.raw);
     // Safe default so the UI never crashes
