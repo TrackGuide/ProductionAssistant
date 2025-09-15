@@ -99,17 +99,28 @@ function sanitizeJson(raw: string): string {
 /** Build a simple topline_melody from ToplineAnalysis if AI omits it. */
 function buildToplineMelodyFromAnalysis(
   tl?: GuidebookEntry['toplineAnalysis'],
-  grid: number = 0.5 // 1/8 notes
+  grid: number = 0.5, // 1/8 notes
+  bars: number = 8,
+  beatsPerBar: number = 4
 ): MidiNote[] | undefined {
   if (!tl || !Array.isArray(tl.pitchContour) || tl.pitchContour.length === 0) return undefined;
+  const maxBeats = Math.max(1, Math.round(bars) * Math.max(1, Math.round(beatsPerBar)));
   const q = (v: number) => Math.max(0, Math.round(v / grid) * grid);
-  const notes: MidiNote[] = tl.pitchContour.map(n => ({
-    time: q(n.time),
-    duration: Math.max(grid, q(n.duration)),
-    midi: Math.min(108, Math.max(21, Math.round(n.midi))),
-    velocity: typeof n.velocity === "number" ? Math.max(1, Math.min(127, Math.round(n.velocity))) : 100,
-    pitch: n.pitch,
-  }));
+  const notes: MidiNote[] = [];
+  for (const n of tl.pitchContour) {
+    const time = q(n.time);
+    const dur = Math.max(grid, q(n.duration));
+    if (time >= maxBeats) continue;
+    const end = Math.min(maxBeats, time + dur);
+    const duration = Math.max(grid, end - time);
+    notes.push({
+      time,
+      duration,
+      midi: Math.min(108, Math.max(21, Math.round(n.midi))),
+      velocity: typeof n.velocity === 'number' ? Math.max(1, Math.min(127, Math.round(n.velocity))) : 100,
+      pitch: n.pitch,
+    });
+  }
   return notes;
 }
 
@@ -470,7 +481,15 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         (!patternsData.topline_melody || patternsData.topline_melody.length === 0) &&
         currentGuidebookEntry?.toplineAnalysis?.pitchContour?.length
       ) {
-        const synthesized = buildToplineMelodyFromAnalysis(currentGuidebookEntry.toplineAnalysis, 0.5);
+         const synthesized = buildToplineMelodyFromAnalysis(
+          currentGuidebookEntry.toplineAnalysis,
+          0.5,
+          (settingsForGeneration?.bars ?? settings?.bars ?? 8),
+          (settingsForGeneration?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
+        );
+        console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);.timeSignature?.[0] ?? 4)
+);
+console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
         if (synthesized?.length) {
           (patternsData as any).topline_melody = synthesized;
         }
@@ -632,11 +651,18 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         patternsData.drums = normalized;
       }
       // Synthesize topline_melody from analyzed vocal if AI omitted it
-      if (
-        (!patternsData.topline_melody || patternsData.topline_melody.length === 0) &&
-        currentGuidebookEntry?.toplineAnalysis?.pitchContour?.length
-      ) {
-        const synthesized = buildToplineMelodyFromAnalysis(currentGuidebookEntry.toplineAnalysis, 0.5);
+      if        const synthesized = buildToplineMelodyFromAnalysis(
+          currentGuidebookEntry.toplineAnalysis,
+          0.5,
+          (preservedSettings?.bars ?? settings?.bars ?? 8),
+          (preservedSettings?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
+        );
+        console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);nalysis,
+  0.5,
+  (settingsForGeneration?.bars ?? settings?.bars ?? 8),
+  (settingsForGeneration?.timeSignature?.[0] ?? settings?.timeSignature?.[0] ?? 4)
+);
+console.log('🎤 Synthesized topline_melody from pitchContour:', synthesized?.length || 0);
         if (synthesized?.length) {
           (patternsData as any).topline_melody = synthesized;
         }
