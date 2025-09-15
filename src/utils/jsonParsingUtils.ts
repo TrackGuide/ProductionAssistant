@@ -391,6 +391,7 @@ export function getMinimalMidiPattern(): GeneratedMidiPatterns {
         pitch: "C5",
       },
     ],
+    topline_melody: [],
     drums: {
       kick: [{ time: 0, duration: 0.25, velocity: 120 }],
       snare: [{ time: 2, duration: 0.25, velocity: 100 }],
