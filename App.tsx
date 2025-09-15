@@ -372,51 +372,71 @@ const App: React.FC = () => {
   setCopyStatus('');
   stopPlayback();
 
-  // 🧠 Step 3: Transcribe topline to extract lyrics (Deepgram)
+// 🧠 Step 3: Analyze + transcribe topline (wait before generating guidebook)
+let localToplineAnalysis: ToplineAnalysis | null = null;
+
 if (toplineFile && toplineFile instanceof File) {
   try {
-     // Resilient module loads (support both ./src/services/* and project-root fallbacks)
-const audioMod = await import('./src/services/audioService');
-const dgMod = await import('./src/services/deepgramTranscriber');
+    setLoadingMessage('Analyzing topline…');
 
+    // Resilient module loads (support both ./src/services/* and project-root fallbacks)
+    const audioMod = await import('./src/services/audioService');
+    const dgMod    = await import('./src/services/deepgramTranscriber');
 
-    // Prefer named exports, fall back to default where applicable
-    const analyzeTopline =
+    // Avoid shadowing the geminiService import; use distinct names
+    const analyzeToplineAudioSvc =
       (audioMod as any).analyzeTopline ?? (audioMod as any).default?.analyzeTopline;
 
     const transcribeTopline =
       (dgMod as any).transcribeTopline ?? (dgMod as any).default;
 
-    const [topline, lyrics] = await Promise.all([
-      typeof analyzeTopline === 'function' ? analyzeTopline(toplineFile) : Promise.resolve(null),
-      typeof transcribeTopline === 'function' ? transcribeTopline(toplineFile) : Promise.resolve(null),
+    // Run in parallel; we will await both
+    const [analyzed, lyrics] = await Promise.all([
+      typeof analyzeToplineAudioSvc === 'function'
+        ? analyzeToplineAudioSvc(toplineFile)
+        : Promise.resolve(null),
+      typeof transcribeTopline === 'function'
+        ? transcribeTopline(toplineFile)
+        : Promise.resolve(null),
     ]);
 
+    if (analyzed && typeof analyzed === 'object') {
+      // Attach lyrics result if we got one
+      (analyzed as any).hasLyrics = !!lyrics;
+      (analyzed as any).lyrics    = lyrics || analyzed?.lyrics || null;
 
-      if (topline && typeof topline === "object") {
-        topline.hasLyrics = !!lyrics;
-        topline.lyrics = lyrics || null;
-        setToplineAnalysis(topline);
-      }
-
-      if (lyrics?.trim()) {
-        inputs.lyrics = lyrics.trim();
-
-        // Optional: Toast-style user feedback
-        if (typeof window !== "undefined") {
-          const toastEvent = new CustomEvent("show-toast", {
-            detail: {
-              message: "Lyrics extracted from vocal file 🎤✏️",
-              type: "success",
-            },
-          });
-          window.dispatchEvent(toastEvent);
-        }
-      }
-    } catch (err) {
-      console.error("Topline transcription failed:", err);
+      localToplineAnalysis = analyzed as ToplineAnalysis;
+      setToplineAnalysis(localToplineAnalysis);
     }
+
+    if (lyrics?.trim()) {
+      // feed inputs used by prompt
+      inputs.lyrics = lyrics.trim();
+
+      // Optional: toast
+      if (typeof window !== 'undefined') {
+        const toastEvent = new CustomEvent('show-toast', {
+          detail: { message: 'Lyrics extracted from vocal file 🎤✏️', type: 'success' },
+        });
+        window.dispatchEvent(toastEvent);
+      }
+    }
+
+    // Also opportunistically backfill key/scale/chords if AI found them
+    if (localToplineAnalysis) {
+      setInputs(prev => ({
+        ...prev,
+        lyrics: prev.lyrics || (localToplineAnalysis as any)?.lyrics || prev.lyrics,
+        key:    prev.key    || (localToplineAnalysis as any)?.key    || prev.key,
+        scale:  prev.scale  || (localToplineAnalysis as any)?.scale  || prev.scale,
+        chords: prev.chords || (localToplineAnalysis as any)?.chords || prev.chords,
+      }));
+    }
+  } catch (err) {
+    console.error('Topline analysis/transcription failed:', err);
   }
+}
+
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -429,17 +449,16 @@ const dgMod = await import('./src/services/deepgramTranscriber');
 
     try {
       setLoadingMessage('TrackGuide is generating...');
+      
+let guidebookStream: AsyncIterable<{ text: string }>;
 
-          let guidebookStream: AsyncIterable<{ text: string }>;
+const resolvedTopline = localToplineAnalysis || toplineAnalysis || undefined;
 
-      if (toplineFile) {
-        guidebookStream = await generateGuidebookFromToplineStream(
-          inputs,
-          toplineAnalysis || undefined
-        );
-      } else {
-        guidebookStream = await generateGuidebookContent(inputs);
-      }
+if (resolvedTopline) {
+  guidebookStream = await generateGuidebookFromToplineStream(inputs, resolvedTopline);
+} else {
+  guidebookStream = await generateGuidebookContent(inputs);
+}
 
       for await (const chunk of guidebookStream) {
         finalGuidebookContent += chunk.text;
@@ -862,24 +881,26 @@ if (toplineAnalysis) {
                           {toplineAnalyzeStatus && <p className={`text-xs ${toplineAnalyzeStatus.startsWith('error')?'text-red-400':'text-green-400'}`}>{toplineAnalyzeStatus}</p>}
                         </div>
 
-                        {/* Advanced panel (kept, if you also want the dedicated UI) */}
-                        <ToplineBuilderPanel
-                          inputs={inputs}
-                          defaultMidi={{
-                            tempo: 120,
-                            timeSignature: [4,4],
-                            bars: 8,
-                            targetInstruments: ["chords","bassline","melody","drums"],
-                            songSection: "Verse",
-                          }}
-                          onGuideDone={(fullGuide: string) => {
-                            setGeneratedGuidebook(fullGuide);
-                            setActiveGuidebookDetails(prev => (prev ? { ...prev, content: fullGuide } : prev));
-                          }}
-                          onMidiReady={(midi) => {
-                            setActiveGuidebookDetails(prev => (prev ? { ...prev, generatedMidiPatterns: midi } : prev));
-                          }}
-                        />
+                      <ToplineBuilderPanel
+  inputs={inputs}
+  analysisReady={!!toplineAnalysis}
+  analyzeStatus={toplineAnalyzeStatus}
+  defaultMidi={{
+    tempo: 120,
+    timeSignature: [4,4],
+    bars: 8,
+    targetInstruments: ["chords","bassline","melody","drums"],
+    songSection: "Verse",
+  }}
+  onGuideDone={(fullGuide: string) => {
+    setGeneratedGuidebook(fullGuide);
+    setActiveGuidebookDetails(prev => (prev ? { ...prev, content: fullGuide } : prev));
+  }}
+  onMidiReady={(midi) => {
+    setActiveGuidebookDetails(prev => (prev ? { ...prev, generatedMidiPatterns: midi } : prev));
+  }}
+/>
+
                       </div>
                     </div>
 
