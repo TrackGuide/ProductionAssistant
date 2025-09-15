@@ -9,7 +9,7 @@ type Props = {
   onFileSelected: (file: File) => void;
   /** Parent-managed status of background analysis */
   status: ToplineStatus;
-  /** Optional message (e.g., â€œDetecting BPMâ€¦â€) to show while analyzing */
+  /** Optional message (e.g., “Detecting BPM…”) to show while analyzing */
   message?: string;
   /** If analysis finished, show short summary (parent-provided) */
   summary?: React.ReactNode;
@@ -17,7 +17,7 @@ type Props = {
   filename?: string | null;
   /** Optional lyric preview lines to display when provided */
   lyricsPreview?: string[];
-  /** Optional one-liner like "90 BPM Â· 4/4 Â· E major" */
+  /** Optional one-liner like "90 BPM · 4/4 · E major" */
   toplineOneLiner?: string;
 };
 
@@ -59,10 +59,7 @@ export default function ToplineBuilderPanel({
         <Card className="p-3 bg-gray-700/40 border border-gray-600/50 text-sm">
           {status === "analyzing" && (
             <div className="text-gray-300">
-              <p>
-                {message ||
-                  "Analyzing topline (BPM / key / scale / lyrics)â€¦"}
-              </p>
+              <p>{message || "Analyzing topline (BPM / key / scale / lyrics)…"}</p>
               <p className="mt-1 text-yellow-300/90 text-xs">
                 Guidebook generation is paused until analysis completes.
               </p>
