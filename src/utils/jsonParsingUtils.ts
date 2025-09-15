@@ -212,6 +212,38 @@ export const extractJsonFromAiResponse = (
 
 /* ------------------------------ Generic safe parsing ------------------------------ */
 
+
+/** Strip fences/junk and try to leave a balanced JSON object for topline parsing. */
+export function sanitizeJsonTopline(raw: string): string {
+  if (!raw) return raw;
+  let s = raw;
+
+  // Remove fenced blocks start token even if not closed
+  s = s.replace(/```(?:json|json5)?/gi, "");
+  // Also remove any stray triple backticks
+  s = s.replace(/```/g, "");
+
+  // Keep largest {...} span
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) s = s.slice(first, last + 1);
+
+  // Trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, "$1");
+
+  // Replace NaN/Infinity
+  s = s.replace(/\bNaN\b/g, "null").replace(/\b-Infinity\b/g, "null").replace(/\bInfinity\b/g, "null");
+
+  // Balance braces if truncated
+  const opens = (s.match(/{/g) || []).length;
+  const closes = (s.match(/}/g) || []).length;
+  if (opens > closes) s += "}".repeat(opens - closes);
+
+  // BOM + smart quotes cleanup
+  s = s.replace(/^\uFEFF/, "").replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+
+  return s.trim();
+}
 export function parseJsonSafe<T = any>(
   raw: string,
   opts?: { label?: string; requiredKeys?: string[]; coerce?: (obj: any) => any }
