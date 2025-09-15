@@ -532,23 +532,26 @@ ${vocalSection}
 
 ## 🎤 Vocal Topline & Lyrical Summary
 
+const toplineContext = tl?.phrases?.length || derivedLyrics
+  ? `## 🎤 Vocal Topline & Lyrical Summary
+
 **Topline Attributes:** ${toplineOneLiner || "—"}
-${tl.tessitura ? `- Tessitura: ${tl.tessitura.low ?? ""}–${tl.tessitura.high ?? ""}\n` : ""}
-${tl.registerCenter ? `- Register Center: ${tl.registerCenter}\n` : ""}
+${tl.tessitura ? `- Tessitura: ${tl.tessitura.low ?? ""}–${tl.tessitura.high ?? ""}` : ""}
+${tl.registerCenter ? `- Register Center: ${tl.registerCenter}` : ""}
 
 ${tl.phrases?.length ? `**Phrase Map (by beat timing):**
 ${tl.phrases.slice(0, 8).map(p =>
   `- ${p.start}–${p.end}${p.text ? ` “${p.text}”` : ""}${p.intensity ? ` (${p.intensity})` : ""}`
-).join("\n")}\n` : ""}
+).join("\n")}` : ""}
 
-${derivedLyrics ? `**Extracted Lyrics (best-effort):**\n${derivedLyrics}\n` : ""}
+${derivedLyrics ? `**Extracted Lyrics (best-effort):**\n${derivedLyrics}` : ""}
 
 **Creative Use:** Let the topline guide your musical decisions:
 - Repeating words can become rhythmic or melodic motifs.
 - Emotional themes can shape sound choices (e.g., airy pads, aggressive stabs, filtered builds).
 - Vocal intensity and phrasing can inspire transitions, breakdowns, and dynamic flow.
 `
-      : "";
+  : "";
   const prompt = `You are TrackGuideAI, an expert music production assistant specializing in detailed music production guides.
 
 Create a professional-level TrackGuide based on the following creative direction:
@@ -566,6 +569,8 @@ ${chordsContext}
 ${referenceContext}
 ${lyricsContext}
 ${notesContext}
+${toplineContext}
+
 
 A vocal topline was uploaded. Use it as a reference for harmonic fit, arrangement pacing, emotional energy, and lyrical inspiration. It should not override the user’s inputs—but it can enrich your suggestions.
 
