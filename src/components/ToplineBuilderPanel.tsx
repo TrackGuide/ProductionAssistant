@@ -50,13 +50,15 @@ export default function ToplineBuilderPanel({
         />
       </label>
 
-      {(status !== "idle" || summary) && (
-        <Card className="p-3 bg-gray-700/40 border border-gray-600/50 text-sm">
-          {status === "analyzing" && (
-            <p className="text-gray-300">
-              {message || "Analyzing topline (BPM / key / scale / lyrics)…"}
-            </p>
-          )}
+   {status === "analyzing" && (
+  <div className="text-gray-300">
+    <p>{message || "Analyzing topline (BPM / key / scale / lyrics)…"}</p>
+    <p className="mt-1 text-yellow-300/90 text-xs">
+      Guidebook generation is paused until analysis completes.
+    </p>
+  </div>
+)}
+
 
           {status === "done" && (summary || (lyricsPreview && lyricsPreview.length > 0) || toplineOneLiner) && (
             summary ?? (
