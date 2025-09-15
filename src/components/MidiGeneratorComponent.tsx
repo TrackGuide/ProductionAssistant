@@ -96,6 +96,23 @@ function sanitizeJson(raw: string): string {
   if (opens > closes) s += '}'.repeat(opens - closes);
   return s.trim();
 }
+/** Build a simple topline_melody from ToplineAnalysis if AI omits it. */
+function buildToplineMelodyFromAnalysis(
+  tl?: GuidebookEntry['toplineAnalysis'],
+  grid: number = 0.5 // 1/8 notes
+): MidiNote[] | undefined {
+  if (!tl || !Array.isArray(tl.pitchContour) || tl.pitchContour.length === 0) return undefined;
+  const q = (v: number) => Math.max(0, Math.round(v / grid) * grid);
+  const notes: MidiNote[] = tl.pitchContour.map(n => ({
+    time: q(n.time),
+    duration: Math.max(grid, q(n.duration)),
+    midi: Math.min(108, Math.max(21, Math.round(n.midi))),
+    velocity: typeof n.velocity === "number" ? Math.max(1, Math.min(127, Math.round(n.velocity))) : 100,
+    pitch: n.pitch,
+  }));
+  return notes;
+}
+
 
 /** Pull a concise context block from guidebook to steer MIDI generation */
 const extractRichMidiContext = (guidebookContent: string): string => {
@@ -448,6 +465,17 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         }
         patternsData.drums = normalized;
       }
+      // Synthesize topline_melody from analyzed vocal if AI omitted it
+      if (
+        (!patternsData.topline_melody || patternsData.topline_melody.length === 0) &&
+        currentGuidebookEntry?.toplineAnalysis?.pitchContour?.length
+      ) {
+        const synthesized = buildToplineMelodyFromAnalysis(currentGuidebookEntry.toplineAnalysis, 0.5);
+        if (synthesized?.length) {
+          (patternsData as any).topline_melody = synthesized;
+        }
+      }
+
 
       validatePatterns(patternsData);
       setPatterns(patternsData);
@@ -603,6 +631,17 @@ export const MidiGeneratorComponent: React.FC<MidiGeneratorProps> = ({
         }
         patternsData.drums = normalized;
       }
+      // Synthesize topline_melody from analyzed vocal if AI omitted it
+      if (
+        (!patternsData.topline_melody || patternsData.topline_melody.length === 0) &&
+        currentGuidebookEntry?.toplineAnalysis?.pitchContour?.length
+      ) {
+        const synthesized = buildToplineMelodyFromAnalysis(currentGuidebookEntry.toplineAnalysis, 0.5);
+        if (synthesized?.length) {
+          (patternsData as any).topline_melody = synthesized;
+        }
+      }
+
 
       validatePatterns(patternsData);
       setPatterns(patternsData);
